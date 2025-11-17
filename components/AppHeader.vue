@@ -38,15 +38,22 @@
               <IconSearch class="h-5 w-5 text-gray-400" />
             </div>
           </div>
-          <button class="btn-primary">Sign In</button>
+          <button class="btn-primary" @click="() => showSignInModal = true">Sign In</button>
         </div>
       </div>
     </div>
   </header>
+
+  <!-- Sign In Modal -->
+    <SignInModal 
+      v-if="showSignInModal" 
+      @close="showSignInModal = false"
+    />
 </template>
 
 <script setup>
 const searchQuery = ref('')
+const showSignInModal = ref(false);
 
 // Handle search functionality
 watch(searchQuery, (newQuery) => {

@@ -352,23 +352,7 @@ const durations = [
   'Yearly'
 ]
 
-// Bundle pricing for different durations
-const bundlePricing: { [key: string]: string } = {
-  'Weekly': '7.90',
-  'Monthly': '25.00',
-  '3 Months': '65.00',
-  'Half-Yearly': '120.00',
-  'Yearly': '220.00'
-}
-
-// Premium pricing for different durations
-const premiumPricing: { [key: string]: { price: string; savePercentage: number } } = {
-  'Weekly': { price: '9.90', savePercentage: 0 },
-  'Monthly': { price: '35.00', savePercentage: 12 },
-  '3 Months': { price: '95.00', savePercentage: 15 },
-  'Half-Yearly': { price: '175.00', savePercentage: 18 },
-  'Yearly': { price: '350.00', savePercentage: 22 }
-}
+ 
 
 // Define prices for each subscription plan based on billing cycle
 interface PriceTier {
