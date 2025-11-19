@@ -42,7 +42,7 @@
                 />
               </div>
               <div class="text-center">
-                <NuxtLink to="#" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md mb-3 font-medium flex items-center justify-center">
+                <NuxtLink :to="`/newspapers/${newspaper?.id}/open`" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md mb-3 font-medium flex items-center justify-center">
                   <IconDocument class="w-5 h-5 mr-2" />
                   Open
                 </NuxtLink>

@@ -45,27 +45,26 @@
                 activeFilters.category || activeFilters.publication || 'All Newspapers'
               }}</h2>
               <div class="flex items-center space-x-2">
-                <span class="text-sm text-gray-500">{{ filteredNewspapers.length }} results</span>
+                <span class="text-sm text-gray-500">{{ paginationParams.totalCount }} results</span>
               </div>
             </div>
 
-            <div v-if="isLoading" class="flex justify-center items-center py-12">
+            <div v-if="isShimmerLoading" class="flex justify-center items-center py-12">
               <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
             </div>
             
-            <div v-else-if="filteredNewspapers.length === 0" class="py-12 text-center">
+            <div v-else-if="newsPaperList.length === 0" class="py-12 text-center">
               <p class="text-gray-500">No newspapers found matching your criteria.</p>
               <button 
                 @click="resetFilters"
-                class="mt-4 text-red-600 hover:text-red-700 font-medium"
-              >
+                class="mt-4 text-red-600 hover:text-red-700 font-medium">
                 Clear filters
               </button>
             </div>
 
-            <div v-else class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div v-else class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
               <DetailedNewspaperCard 
-                v-for="newspaper in paginatedNewspapers" 
+                v-for="newspaper in newsPaperList" 
                 :key="newspaper.id"
                 :newspaper="newspaper"
                 @click="viewNewspaper(newspaper)"
@@ -75,18 +74,18 @@
 
           <!-- Pagination -->
           <Pagination 
-            v-if="totalPages > 1"
+            v-if="paginationParams.totalPages > 1"
             :current-page="currentPage" 
-            :total-pages="totalPages"
+            :total-pages="paginationParams.totalPages"
             :max-visible-buttons="5"
-            @page-change="changePage"
+            @page-change="onPageChange"
             class="mb-6"
           />
           
           <!-- Pagination info -->
-          <div class="flex justify-between items-center text-sm text-gray-500" v-if="filteredNewspapers.length > 0">
-            <span>Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredNewspapers.length) }} of {{ filteredNewspapers.length }} results</span>
-            <span>Page {{ currentPage }} of {{ totalPages }}</span>
+          <div class="flex justify-between items-center text-sm text-gray-500" v-if="newsPaperList.length > 0">
+            <span>Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentPage * itemsPerPage, newsPaperList.length) }} of {{ newsPaperList.length }} results</span>
+            <span>Page {{ currentPage }} of {{ paginationParams.totalPages }}</span>
           </div>
           
           <!-- Suggested Articles Section -->
@@ -101,6 +100,29 @@
 </template>
 
 <script setup lang="ts">
+import type { NewsPaper } from "~/models";
+import { isEmpty, debounce } from "lodash-es";
+import { Search } from 'lucide-vue-next'
+
+
+const router = useRouter();
+const route = useRoute();
+
+const filters = reactive({
+  query: '',
+  pageNo: 1,
+  pageSize: 10,
+
+});
+
+
+const paginationParams = reactive({
+  totalPages: 0,
+  totalCount: 0,
+  lowerBound: 0,
+  upperBound: 0
+});
+
 // Page metadata
 useHead({
   title: 'Newspapers - Graphic NewsPlus',
@@ -109,18 +131,7 @@ useHead({
   ]
 })
 
-// Types
-interface Newspaper {
-  id: number;
-  title: string;
-  code: string;
-  type: string;
-  date: string;
-  price: number;
-  image: string;
-  category?: string;
-  publication?: string;
-}
+ 
 
 interface Category {
   id: string;
@@ -152,237 +163,56 @@ const publicationCategories = ref<Category[]>([
 
 // State
 const isLoading = ref(false)
+const isShimmerLoading = ref(false)
 const currentPage = ref(1)
 const itemsPerPage = 12 // Display 12 items per page (2 rows of 6 on xl screens)
-const currentSelectedNewspaper = ref<Newspaper | null>(null)
+const currentSelectedNewspaper = ref<NewsPaper | null>(null)
 const activeFilters = reactive({
   category: '',
   publication: '',
   date: ''
 })
 
-// Sample data based on the screenshot
-const allNewspapers = ref<Newspaper[]>([
-  {
-    id: 1,
-    title: 'Graphic Business',
-    code: 'GB',
-    type: 'Tuesday',
-    date: 'August 25, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/e74c3c/ffffff?text=GB',
-    publication: 'graphic-business',
-    category: 'features'
-  },
-  {
-    id: 2,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Tuesday',
-    date: 'August 25, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'dg-paper-stories'
-  },
-  {
-    id: 3,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Monday',
-    date: 'August 25, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'opinions'
-  },
-  {
-    id: 4,
-    title: 'Graphic Sports',
-    code: 'GS',
-    type: 'Monday',
-    date: 'August 25, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/27ae60/ffffff?text=GS',
-    publication: 'graphic-sports',
-    category: 'features'
-  },
-  {
-    id: 5,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Saturday',
-    date: 'August 23, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'graphic-editorials'
-  },
-  {
-    id: 6,
-    title: 'Mirror',
-    code: 'MR',
-    type: 'Saturday',
-    date: 'August 23, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/f39c12/ffffff?text=MR',
-    publication: 'the-mirror',
-    category: 'features'
-  },
-  {
-    id: 7,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Friday',
-    date: 'August 22, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'dg-paper-stories'
-  },
-  {
-    id: 8,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Thursday',
-    date: 'August 21, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'opinions'
-  },
-  {
-    id: 9,
-    title: 'Graphic Showbiz',
-    code: 'GSB',
-    type: 'Thursday',
-    date: 'August 21, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/9b59b6/ffffff?text=GSB',
-    publication: 'graphic-showbiz',
-    category: 'features'
-  },
-  {
-    id: 10,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Wednesday',
-    date: 'August 20, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'security'
-  },
-  {
-    id: 11,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Wednesday',
-    date: 'August 20, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'ghana-year-book'
-  },
-  {
-    id: 12,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Wednesday',
-    date: 'August 20, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'features'
-    },
-  {
-    id: 13,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Wednesday',
-    date: 'August 20, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'features'
-    },
-  {
-    id: 14,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Wednesday',
-    date: 'August 20, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'features'
-    },
-  {
-    id: 15,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Wednesday',
-    date: 'August 20, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'features'
-    },
-  {
-    id: 16,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Wednesday',
-    date: 'August 20, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'features'
-    },
-  {
-    id: 17,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Wednesday',
-    date: 'August 20, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/300x400/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'features'
-  }
-])
+const newsPaperList = ref<NewsPaper[]>([]);
 
-// Filter newspapers
-const filteredNewspapers = computed(() => {
-  return allNewspapers.value.filter(newspaper => {
-    let matches = true
-    
-    if (activeFilters.category && activeFilters.category !== 'all') {
-      matches = matches && newspaper.category === activeFilters.category
-    }
-    
-    if (activeFilters.publication && activeFilters.publication !== 'all') {
-      matches = matches && newspaper.publication === activeFilters.publication
-    }
-    
-    if (activeFilters.date) {
-      matches = matches && newspaper.date.toLowerCase().includes(activeFilters.date.toLowerCase())
-    }
-    
-    return matches
-  })
-})
+const onPageChange = async (pageNumber: number) => {
 
-// Paginate newspapers
-const totalPages = computed(() => {
-  return Math.ceil(filteredNewspapers.value.length / itemsPerPage)
-})
+	filters.pageNo = pageNumber;
+	const filteredQuery = filterQueryParams({ ...route.query, ...filters });
 
-const paginatedNewspapers = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return filteredNewspapers.value.slice(start, end)
-})
+	router.replace({ name: route.name ?? '', query: filteredQuery });
+    await getPaginatedNewsPapers()
+}
+
+
+
+ const getPaginatedNewsPapers = async () => {
+
+    isShimmerLoading.value = true;
+
+    try {
+
+      let result = await getNewsPapers(filters);
+
+      newsPaperList.value = result.data;
+
+      paginationParams.totalPages = result.totalPages;
+      paginationParams.totalCount = result.totalCount;
+      paginationParams.lowerBound = result.lowerBound;
+      paginationParams.upperBound = result.upperBound;
+
+    } catch (error) {
+        //$toast.error('Unable to fetch finishing options !');
+    } finally {
+        isShimmerLoading.value = false;
+    }
+
+ }
+
+ 
+
+ 
+ 
 
 // Event handlers
 function handleCategorySelect(category: Category) {
@@ -400,7 +230,7 @@ function handleCategorySelect(category: Category) {
   currentPage.value = 1
   
   // Simulate loading
-  simulateLoading()
+ 
 }
 
 function handlePublicationSelect(publication: Category) {
@@ -417,53 +247,16 @@ function handlePublicationSelect(publication: Category) {
   activeFilters.publication = publication.id
   currentPage.value = 1
   
-  // Simulate loading
-  simulateLoading()
+   
 }
 
-function handleFilterApply(filters: { publication: string, date: string }) {
-  if (filters.publication) {
-    // Update publication filter and sync with sidebar
-    activeFilters.publication = filters.publication
-    publicationCategories.value.forEach(p => {
-      p.active = p.id === filters.publication
-    })
-  }
-  
-  activeFilters.date = filters.date
-  currentPage.value = 1
-  
-  // Simulate loading
-  simulateLoading()
-}
+ 
 
-function changePage(page: number) {
-  currentPage.value = page
-  // Scroll to the top of the newspapers section with smooth scrolling
-  const newspapersSection = document.querySelector('.bg-white.rounded-lg.shadow.p-6')
-  if (newspapersSection) {
-    newspapersSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  } else {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-  // Simulate loading state for better UX
-  simulateLoading()
-}
+ 
 
-function resetFilters() {
-  // Reset all filters
-  activeFilters.category = ''
-  activeFilters.publication = ''
-  activeFilters.date = ''
-  
-  // Reset active states
-  newspaperCategories.value.forEach(c => c.active = c.id === 'all')
-  publicationCategories.value.forEach(p => p.active = p.id === 'all')
-  
-  currentPage.value = 1
-}
+ 
 
-function viewNewspaper(newspaper: Newspaper) {
+function viewNewspaper(newspaper: NewsPaper) {
   // Store the selected newspaper
   currentSelectedNewspaper.value = newspaper
   
@@ -471,11 +264,21 @@ function viewNewspaper(newspaper: Newspaper) {
   navigateTo(`/newspapers/${newspaper.id}`)
 }
 
-// Helper function to simulate loading
-function simulateLoading() {
-  isLoading.value = true
-  setTimeout(() => {
-    isLoading.value = false
-  }, 500)
-}
+ 
+
+ const debouncedSearch = debounce(() => {
+    filters.pageNo = 1; // Reset to first page for new search
+    getPaginatedNewsPapers();
+  }, 300);
+
+  watch(() => filters.query, debouncedSearch);
+
+  onMounted(async () => {
+    if (!isEmpty(route.query)) {
+      filters.pageNo = parseInt(route.query.pageNo as string);
+    }
+    
+    await getPaginatedNewsPapers();
+
+  });
 </script>
