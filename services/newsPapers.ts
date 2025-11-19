@@ -8,6 +8,13 @@ export async function getNewsPapers(query: object) {
    return response.result;
 }
 
+export async function getNewsPaperDetails(query: object) {
+ 
+    const response = await httpClient<BaseApiResponse<NewsPaper>>('news-papers/get-details', "", { query });
+    
+   return response.result;
+}
+
 const blobCache: Record<string, string> = {};
 
 export async function getSecureThumbnail(fileId: string) {

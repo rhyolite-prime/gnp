@@ -8,7 +8,8 @@
           <span class="mx-2">›</span>
           <NuxtLink to="/newspapers" class="hover:text-red-600">Newspapers</NuxtLink>
           <span class="mx-2">›</span>
-          <span class="font-medium">{{ newspaper?.code }} - {{ newspaper?.type }}, {{ newspaper?.date }}</span>
+          <span class="font-medium">{{ newsPaperDetail?.title }} </span>
+          <!-- <span class="font-medium">{{ newsPaperDetail?.title }} - {{ newsPaperDetail?.editionNumber }}, {{ newsPaperDetail?.publishedDate }}</span> -->
         </div>
       </div>
     </div>
@@ -20,7 +21,7 @@
       </div>
       
       <!-- Newspaper not found -->
-      <div v-else-if="!newspaper" class="py-32 text-center">
+      <div v-else-if="!newsPaperDetail" class="py-32 text-center">
         <h2 class="text-2xl font-bold text-gray-900 mb-4">Newspaper not found</h2>
         <p class="text-gray-600 mb-6">The newspaper you're looking for doesn't exist or has been removed.</p>
         <NuxtLink to="/newspapers" class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700">
@@ -35,14 +36,20 @@
           <div class="lg:w-1/3">
             <div class="bg-white rounded-lg shadow p-6">
               <div class="aspect-[3/4] overflow-hidden mb-6">
-                <img 
-                  :src="newspaper.image" 
-                  :alt="newspaper.title"
+
+                <div v-if="imageLoading" class="w-full h-full flex items-center justify-center bg-gray-100 animate-pulse">
+                <span class="text-gray-400 text-xs">Loading...</span>
+              </div>
+
+                <img v-else 
+                  :src="blobUrl" 
+                  :alt="newsPaperDetail.title"
                   class="w-full h-full object-cover rounded-md" 
+                  loading="lazy"
                 />
               </div>
               <div class="text-center">
-                <NuxtLink :to="`/newspapers/${newspaper?.id}/open`" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md mb-3 font-medium flex items-center justify-center">
+                <NuxtLink :to="`/newspapers/${newsPaperDetail?.id}/open`" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md mb-3 font-medium flex items-center justify-center">
                   <IconDocument class="w-5 h-5 mr-2" />
                   Open
                 </NuxtLink>
@@ -56,40 +63,33 @@
           <!-- Right column - Newspaper details -->
           <div class="lg:w-2/3">
             <div class="bg-white rounded-lg shadow p-6 mb-6">
-              <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ newspaper.code }} - {{ newspaper.type }}, {{ newspaper.date }}</h1>
-              <p class="text-xl text-gray-700 mb-6">{{ newspaper.title }}</p>
+              <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ newsPaperDetail.title }}</h1>
+              <p class="text-xl text-gray-700 mb-6">{{ newsPaperDetail.publicationName }} | {{ longMonthDateFormat(newsPaperDetail.publishedDate) }}</p>
               
               <div class="flex items-center mb-6">
                 <div class="bg-red-100 text-red-800 text-sm px-3 py-1 rounded-full">
                   Subscribed
                 </div>
                 <div class="ml-4 text-gray-600">
-                  GHS {{ newspaper.price.toFixed(2) }}
+                  GHS {{ newsPaperDetail.price }}
                 </div>
               </div>
 
               <div class="border-t border-b border-gray-200 py-6 mb-6">
                 <h2 class="text-xl font-semibold text-gray-900 mb-4">Information</h2>
                 <p class="text-gray-700">
-                  In the Headlines: Good and bad influence of celebrities; Ways to keep the spark going;
-                  And Afrobeats vs. Hip-Hop: Which has greater global impact?
+                  {{ newsPaperDetail.fullDescription }}
                 </p>
               </div>
 
               <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-                <button class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-md font-medium">
+                <NuxtLink to="/newspapers" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-6 rounded-md font-medium text-center">
+                  Back to News Papers
+                </NuxtLink>
+                <div class="flex flex-1 items-center justify-between rounded-md bg-gray-100 p-2">
+                   <button class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-md font-medium">
                   Share
                 </button>
-                <div class="flex flex-1 items-center justify-between rounded-md bg-gray-100 p-2">
-                  <button class="text-gray-500 hover:text-red-600">
-                    <IconFacebook class="w-6 h-6" />
-                  </button>
-                  <button class="text-gray-500 hover:text-red-600">
-                    <IconTwitter class="w-6 h-6" />
-                  </button>
-                  <button class="text-gray-500 hover:text-red-600">
-                    <IconPinterest class="w-6 h-6" />
-                  </button>
                 </div>
               </div>
             </div>
@@ -98,13 +98,12 @@
             <div class="bg-white rounded-lg shadow p-6">
               <h2 class="text-xl font-semibold text-gray-900 mb-4">Featured Stories</h2>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="border border-gray-200 rounded-md p-4">
-                  <h3 class="font-medium text-gray-900 mb-2">Amapiano stole Azonto groove — 2AM</h3>
-                  <p class="text-sm text-gray-600">Read the full interview with 2AM discussing how South African Amapiano borrowed elements from Ghana's Azonto.</p>
-                </div>
-                <div class="border border-gray-200 rounded-md p-4">
-                  <h3 class="font-medium text-gray-900 mb-2">Greed ruined my bond with Lumba — Kwadwo Antwi</h3>
-                  <p class="text-sm text-gray-600">The renowned Ghanaian artist opens up about his fallout with Daddy Lumba in an exclusive interview.</p>
+                <div 
+                  v-for="story in newsPaperDetail.featuredStories" 
+                  class="border border-gray-200 rounded-md p-4"
+                >
+                  <h3 class="font-medium text-gray-900 mb-2">{{ story.title }}</h3>
+                  <p class="text-sm text-gray-600">{{ story.description }}</p>
                 </div>
               </div>
             </div>
@@ -123,9 +122,18 @@
 
 <script setup lang="ts">
 // Get the route params
+import type { NewsPaper } from "~/models";
+
+import { 
+  Facebook,
+  Twitter,
+  X
+} from 'lucide-vue-next'
+
 const route = useRoute();
+
 const newspaperId = computed(() => {
-  return parseInt(route.params.id as string);
+  return route.params.id as string;
 });
 
 // Page metadata
@@ -136,22 +144,13 @@ useHead({
   ]
 });
 
-// Types
-interface Newspaper {
-  id: number;
-  title: string;
-  code: string;
-  type: string;
-  date: string;
-  price: number;
-  image: string;
-  category?: string;
-  publication?: string;
-}
+ 
 
 // State
 const isLoading = ref(true);
-const newspaper = ref<Newspaper | null>(null);
+const imageLoading = ref(true);
+const blobUrl = ref<string>()
+const newsPaperDetail = ref<NewsPaper | null>(null);
 
 // Simulated API call to get newspaper details
 // Sample newspaper data (in a real app, this would come from a store or API)
@@ -191,35 +190,61 @@ const allNewspapers = [
   }
 ];
 
-onMounted(async () => {
-  try {
-    // In a real app, fetch from API: await fetch(`/api/newspapers/${newspaperId.value}`)
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network request
+
+const loadImageAsBlob = async (fileId: string) => {
+
+    imageLoading.value = true;
     
-    // Find the newspaper with the matching ID
-    const newspaperData = allNewspapers.find(n => n.id === newspaperId.value);
-    newspaper.value = newspaperData || null;
-  } catch (error) {
-    console.error('Error fetching newspaper details:', error);
-    newspaper.value = null;
-  } finally {
-    isLoading.value = false;
-  }
+    try {
+
+        const url = await getSecureThumbnail(fileId);
+        blobUrl.value = url;
+        imageLoading.value = false;
+        
+      } catch (error) {
+
+        imageLoading.value = false;
+      }    
+}
+
+
+const retrieveNewsPaperDetails = async (id: string) => {
+
+    isLoading.value = true;
+
+    try {
+
+      let result = await getNewsPaperDetails({id : id});
+
+      newsPaperDetail.value = result
+
+      loadImageAsBlob(result.thumbnailId)
+
+    } catch (error) {
+        //$toast.error('Unable to fetch finishing options !');
+    } finally {
+        isLoading.value = false;
+    }
+
+ }
+
+onMounted(async () => {
+     await retrieveNewsPaperDetails(newspaperId.value);
 });
 
 // Handle preview button click
 function handlePreviewClick() {
   // In a real application, this would open a preview modal or redirect to a preview page
-  console.log('Preview newspaper:', newspaper.value?.title);
+  console.log('Preview newspaper:', newsPaperDetail.value?.title);
 }
 
 // Update page title when newspaper data is loaded
-watch(newspaper, (newValue) => {
+watch(newsPaperDetail, (newValue) => {
   if (newValue) {
     useHead({
-      title: `${newValue.code} - ${newValue.type}, ${newValue.date} - Graphic NewsPlus`,
+      title: `${newValue.title} - Graphic NewsPlus`,
       meta: [
-        { name: 'description', content: `Read ${newValue.title} newspaper from ${newValue.date}.` }
+        { name: 'description', content: `Read ${newValue.title} newspaper from ${newValue.publishedDate}.` }
       ]
     });
   }

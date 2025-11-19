@@ -32,10 +32,10 @@
   </div>
 </template>
 
-<script setup>
-
+<script setup lang="ts">
+import type { NewsPaper } from "~/models";
 const imageLoading = ref(false)
-const blobUrl = ref(null)
+const blobUrl = ref<string>()
 
 const props = defineProps({
   newspaper: Object
@@ -57,26 +57,25 @@ const titleParts = computed(() => {
   return { main, date }
 })
 
-const loadImageAsBlob = async (fileId) => {
+const loadImageAsBlob = async (fileId: string) => {
 
-      imageLoading.value = true;
-      
-      try {
+    imageLoading.value = true;
+    
+    try {
 
-        const url = await getSecureThumbnail(fileId);
-        blobUrl.value = url;
+      const url = await getSecureThumbnail(fileId);
+      blobUrl.value = url;
+      imageLoading.value = false;
+        
+      } catch (error) {
+
         imageLoading.value = false;
-          
-        } catch (error) {
-
-          imageLoading.value = false;
-        }
-         
+      }    
 }
 
 
 onMounted(() => {
-  loadImageAsBlob(props.newspaper.thumbnailId)
+  loadImageAsBlob(props.newspaper?.thumbnailId as string)
 })
 
 </script>

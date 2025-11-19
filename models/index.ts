@@ -39,11 +39,18 @@ export interface NewsPaper {
     editionNumber: string;
     fileType: string;
     fullDescription: string;
+    publicationName: string;
     id: string;
     price: string;
     publishedDate: string;
     shortDescription: string;
     slug: string;
     thumbnailId: string;
+    featuredStories: FeaturedStory[]
     title: string;
+}
+
+export interface FeaturedStory {
+    title: string;
+    description: string;
 }

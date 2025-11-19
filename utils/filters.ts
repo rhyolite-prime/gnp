@@ -32,6 +32,12 @@ export const longDateAndTimeFormat = (date: string) => {
   }
 };
 
+export const longMonthDateFormat = (date: string) => {
+  if (date) {
+    return dayjs(date).format("MMMM DD, YYYY");
+  }
+};
+
 export const dateFormat = (date: string) => {
   if (date) {
     return dayjs(date).format("MMM DD");
@@ -68,3 +74,4 @@ export const toAbs = (value: string | number) => {
     ? Math.abs(formatVal)
     : Math.abs(formatVal).toFixed(2);
 };
+

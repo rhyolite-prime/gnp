@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,10 +6,14 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    font-size: 14px;
   }
-  
+
   body {
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+    font-family: "Sora", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -18,15 +23,15 @@
   .btn-primary {
     @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
   }
-  
+
   .btn-secondary {
     @apply border border-gray-300 hover:bg-white hover:text-gray-900 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
   }
-  
+
   .card-hover {
     @apply transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl;
   }
-  
+
   .gradient-hero {
     @apply bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900;
   }
