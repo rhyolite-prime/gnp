@@ -10,17 +10,25 @@ export interface EnhancedUserInfo extends AccountInfo {
   surname?: string;
   jobTitle?: string;
   graphProfile?: any;
+  idTokenClaims: {
+    email: string;
+    name: string;
+    picture: string;
+    sub:  string;
+  }
    
 }
 
  
 
-export const useAuthStore = defineStore('auth', () => {
+export const useAuthStore = defineStore('auth',  () => {
+  
   const user = ref<EnhancedUserInfo | null>(null);
   const isAuthenticated = ref(false);
+  const isAuthLoading = ref(false);
   const authProvider = ref<'microsoft' | 'google' | 'email' | null>(null);
   const accessToken = ref<string | null>(null);
-  const userPhotoUrl = ref<string>(null);
+  const userPhotoUrl = ref<string>();
   
   // Set user info after successful authentication
   function setUser(userInfo: EnhancedUserInfo | null, provider: 'microsoft' | 'google' | 'email' | null = null) {
@@ -36,7 +44,7 @@ export const useAuthStore = defineStore('auth', () => {
     // Set user photo URL if available in the userInfo object
     // But don't overwrite an existing photo URL if it's already set (e.g., from Microsoft Graph API)
     if (provider == "microsoft" && userInfo && !userPhotoUrl.value) {
-      userPhotoUrl.value = userInfo?.photoUrl;
+      userPhotoUrl.value = userInfo.photoUrl;
     }
     
     // You could store this info in localStorage/sessionStorage for persistence
@@ -62,6 +70,9 @@ export const useAuthStore = defineStore('auth', () => {
   
   // Restore user session from storage on app initialization
   function initializeFromStorage() {
+
+    isAuthLoading.value = true;
+
     try {
       const storedAuth = sessionStorage.getItem('authUser');
       const storedToken = sessionStorage.getItem('accessToken');
@@ -90,6 +101,8 @@ export const useAuthStore = defineStore('auth', () => {
       if (storedToken) {
         accessToken.value = storedToken;
       }
+
+      isAuthLoading.value = false;
     } catch (e) {
       console.error('Failed to restore auth from storage:', e);
       // Clear potentially corrupted storage
@@ -146,6 +159,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     user,
     isAuthenticated,
+    isAuthLoading,
     authProvider,
     accessToken,
     userPhotoUrl,

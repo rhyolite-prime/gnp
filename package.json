@@ -19,6 +19,7 @@
     "@tailwindcss/typography": "^0.5.16",
     "dayjs": "1.11.10",
     "lucide-vue-next": "^0.294.0",
+    "lodash": "^4.17.21",
     "numeral": "^2.0.6",
     "nuxt": "^3.13.0",
     "pinia": "^3.0.3",
@@ -29,6 +30,8 @@
     "vue3-toastify": "^0.2.8"
   },
   "devDependencies": {
-    "@nuxtjs/tailwindcss": "^6.14.0"
+    "@nuxtjs/tailwindcss": "^6.14.0",
+    "@vueuse/core": "^14.0.0",
+    "@vueuse/nuxt": "^14.0.0"
   }
 }

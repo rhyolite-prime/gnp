@@ -25,6 +25,18 @@ export default defineNuxtConfig({
   imports: {
     dirs: ["services"],
   },
+  typescript: {
+    strict: true
+  },
+  runtimeConfig: {
+    public: {
+      microsoftClientId: process.env.NUXT_MICROSOFT_CLIENT_ID || '',
+      googleClientId: process.env.NUXT_GOOGLE_CLIENT_ID || '',
+      proxyApiBaseURL: "http://localhost:5030/api/v1/",
+    },
+    googleClientSecret: process.env.NUXT_GOOGLE_CLIENT_SECRET || '',
+    
+  },
 
   '@nuxtjs/tailwindcss': {
     configPath: '~/tailwind.config.js'

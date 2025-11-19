@@ -20,7 +20,6 @@
           <NuxtLink to="/" class="nav-link">Home</NuxtLink>
           <NuxtLink to="/newspapers" class="nav-link">Newspapers</NuxtLink>
           <a href="#magazines" class="nav-link">Magazines</a>
-          <NuxtLink to="/services" class="nav-link">Services</NuxtLink>
           <NuxtLink to="/pricing" class="nav-link">Pricing</NuxtLink>
           <NuxtLink to="/about" class="nav-link">About</NuxtLink>
         </nav>
@@ -38,7 +37,14 @@
               <IconSearch class="h-5 w-5 text-gray-400" />
             </div>
           </div>
-          <button class="btn-primary" @click="() => showSignInModal = true">Sign In</button>
+          
+          <!-- user auth button here-->
+           <div class="hidden md:flex items-center space-x-4">
+              <UserAuthButton :showSignInModal="() => showSignInModal = true" />
+          
+           </div>
+
+
         </div>
       </div>
     </div>
