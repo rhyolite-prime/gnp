@@ -20,12 +20,21 @@
         <h1 class="text-2xl font-bold text-gray-900">{{ newspaperTitle }}</h1>
       </div>
       <div class="flex justify-center items-center min-h-[600px] bg-gray-100 rounded-lg overflow-auto" style="position:relative;">
+          <div
+            v-show="isLoading"
+          >
+            <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10 space-y-4">
+              <div class="text-lg font-medium text-gray-700">{{ loaderMessage }}</div>
+              <div class="animate-spin h-12 w-12 border-4 border-gray-300 border-t-gray-600 rounded-full"></div>
+            </div>
+          </div>
           <ClientOnly>
-            <ejs-pdfviewer
-              :serviceUrl="serviceUrl"
-              :documentPath="pdfUrl"
-              style="height: 600px; width: 100%;"
-            />
+            <iframe
+            v-show="!isLoading"
+              title="NewsPaper"
+              :src="assetUrl"
+              class="w-full h-screen"
+            ></iframe>
         </ClientOnly>
       </div>
     </div>
@@ -38,28 +47,36 @@ const route = useRoute();
 const router = useRouter();
 const newspaperId = route.params.id;
 const newspaperTitle = ref('');
-const pdfUrl = ref('');
-const serviceUrl = ref('https://ej2services.syncfusion.com/production/web-services/api/pdfviewer');
+const assetBaseUrl = ref('https://docviewer.graphicnewsplus.com/ResourceShell');
+const assetUrl = ref('');
+const isLoading = ref(true);
 
-// Simulated data: In a real app, fetch PDF URL and title from API
-const sampleData = {
-  1: {
-    title: 'Graphic Business - August 25, 2025',
-    pdf: 'https://res.cloudinary.com/rhyoliteprime/image/upload/v1754998481/wssd_repository/h4cenvdr6sqjqn8zr6ud.pdf'
-  },
-  2: {
-    title: 'Daily Graphic - August 25, 2025',
-    pdf: 'https://res.cloudinary.com/rhyoliteprime/image/upload/v1754998489/wssd_repository/tbzgkx1tzcwechqxs18l.pdf'
-  },
-  9: {
-    title: 'Graphic Showbiz - August 28, 2025',
-    pdf: 'https://cdn.syncfusion.com/content/pdf/pdf-succinctly.pdf'
-  }
-};
+const loaderMessage = ref("Validating Subscription...");
 
-const data = sampleData[newspaperId as keyof typeof sampleData];
-newspaperTitle.value = data?.title || 'Newspaper';
-pdfUrl.value = data?.pdf || '';
+onMounted(() => {
+
+  let time = 2000;
+
+  time += 2000;
+  setTimeout(() => loaderMessage.value = "Preparing File...", time);
+
+  time += 2000;
+  setTimeout(() => {
+    loaderMessage.value = "Almost done...";
+  }, time);
+
+
+  time += 900;
+   
+   setTimeout(() => {
+    isLoading.value = false;
+   }, time);
+
+
+  console.log('newspaperId->', newspaperId);
+
+  assetUrl.value = `${assetBaseUrl.value}?id=${newspaperId}`
+});
 
 function goBack() {
   router.back();

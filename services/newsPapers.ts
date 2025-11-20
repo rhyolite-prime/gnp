@@ -10,7 +10,7 @@ export async function getNewsPapers(query: object) {
 
 export async function getNewsPaperDetails(query: object) {
  
-    const response = await httpClient<BaseApiResponse<NewsPaper>>('news-papers/get-details', "", { query });
+    const response = await httpClient<BaseApiResponse<NewsPaper>>('news-papers/get-reducted-details', "", { query });
     
    return response.result;
 }
