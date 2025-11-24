@@ -15,7 +15,7 @@
       </div>
     </div>
 
-    <div class="max-w-5xl mx-auto mt-8 bg-white rounded-lg shadow p-6">
+    <div class="max-w-7xl mx-auto mt-8 bg-white rounded-lg shadow p-6">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
         <h1 class="text-2xl font-bold text-gray-900">{{ newspaperTitle }}</h1>
       </div>
@@ -71,11 +71,10 @@ onMounted(() => {
    setTimeout(() => {
     isLoading.value = false;
    }, time);
+  
 
+  assetUrl.value = `${assetBaseUrl.value}?id=${newspaperId}`;
 
-  console.log('newspaperId->', newspaperId);
-
-  assetUrl.value = `${assetBaseUrl.value}?id=${newspaperId}`
 });
 
 function goBack() {

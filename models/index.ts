@@ -13,6 +13,11 @@ export interface Error {
     validationErrors: any;
 }
 
+export interface BaseEntityModel {
+    id: string;
+    createdAt: string;
+}
+
 
 export interface BasePaginationModel<T> {
     pageNo: number;
@@ -53,4 +58,20 @@ export interface NewsPaper {
 export interface FeaturedStory {
     title: string;
     description: string;
+}
+
+
+
+export interface UserSubscription extends BaseEntityModel {
+    subscriptionIdentifier: string;
+    userId: string;
+    username: string;
+    email: string;
+    currentSubscriptionPlanId: string;
+    startDate: string;
+    endDate: string;
+    currentBillingCycle: string;
+    isActive: boolean;
+    nextRenewalDate: string;
+    fee: number;
 }

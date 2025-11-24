@@ -2,7 +2,7 @@
   <div class="bg-gray-50 min-h-screen pb-12">
     <!-- Breadcrumb -->
     <div class="bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div class="flex items-center text-sm text-gray-600">
           <NuxtLink to="/" class="hover:text-red-600">Home</NuxtLink>
           <span class="mx-2">›</span>
@@ -10,6 +10,9 @@
           <span class="mx-2">›</span>
           <span class="font-medium">{{ newsPaperDetail?.title }} </span>
           <!-- <span class="font-medium">{{ newsPaperDetail?.title }} - {{ newsPaperDetail?.editionNumber }}, {{ newsPaperDetail?.publishedDate }}</span> -->
+        </div>
+        <div class="flex items-center gap-2">
+          <button @click="goBack" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded">Back</button>
         </div>
       </div>
     </div>
@@ -50,11 +53,11 @@
               </div>
               <div class="text-center">
                 <NuxtLink :to="`/newspapers/${newsPaperDetail?.id}/open`" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md mb-3 font-medium flex items-center justify-center">
-                  <IconDocument class="w-5 h-5 mr-2" />
-                  Open
+                  <FileText class="w-5 h-5 mr-2" />
+                  Open to read
                 </NuxtLink>
                 <button @click="handlePreviewClick" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 px-6 rounded-md font-medium">
-                  Preview
+                    Preview
                 </button>
               </div>
             </div>
@@ -84,11 +87,11 @@
 
               <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                 <NuxtLink to="/newspapers" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-6 rounded-md font-medium text-center">
-                  Back to News Papers
+                  Buy this edition (GHS {{ newsPaperDetail.price }})
                 </NuxtLink>
                 <div class="flex flex-1 items-center justify-between rounded-md bg-gray-100 p-2">
-                   <button class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-md font-medium">
-                  Share
+                   <button class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-md font-medium" @click="openSubscriptionModal" >
+                  Buy Subscription
                 </button>
                 </div>
               </div>
@@ -117,6 +120,106 @@
         />
       </div>
     </div>
+
+    <!-- Subscription Modal -->
+<div 
+  v-if="showSubscriptionModal"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+>
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
+
+    <!-- Close Button -->
+    <button @click="closeSubscriptionModal" class="absolute top-3 right-4 text-gray-600 hover:text-gray-900">
+      ✕
+    </button>
+
+    <h2 class="text-2xl font-bold mb-4">Buy Subscription</h2>
+
+    <!-- Full Name -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Full Name</label>
+      <input
+        v-model="fullName"
+        type="text"
+        class="w-full border rounded px-3 py-2"
+        placeholder="Enter your full name"
+      />
+    </div>
+
+    <!-- Email -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Email</label>
+      <input
+        v-model="email"
+        type="email"
+        class="w-full border rounded px-3 py-2"
+        placeholder="you@graphicnewsplus.com"
+      />
+    </div>
+
+    <!-- Phone -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Phone Number</label>
+      <input
+        v-model="phone"
+        type="tel"
+        class="w-full border rounded px-3 py-2"
+        placeholder="054xxxxxxx"
+      />
+    </div>
+
+    <!-- Subscription Cards -->
+    <label class="block text-sm font-medium mb-2">Choose Subscription Plan</label>
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      
+      <!-- Regular Card -->
+      <div
+        @click="activeSubscriptionType = 'regular'"
+        class="border rounded p-4 cursor-pointer"
+        :class="activeSubscriptionType === 'regular' ? 'border-red-600 bg-red-50' : 'border-gray-300'"
+      >
+        <h3 class="font-semibold mb-2">Regular</h3>
+        <p class="text-sm text-gray-600">Standard subscription packages.</p>
+      </div>
+
+      <!-- Bundle Card -->
+      <div
+        @click="activeSubscriptionType = 'bundle'"
+        class="border rounded p-4 cursor-pointer"
+        :class="activeSubscriptionType === 'bundle' ? 'border-red-600 bg-red-50' : 'border-gray-300'"
+      >
+        <h3 class="font-semibold mb-2">Bundle</h3>
+        <p class="text-sm text-gray-600">Combined multi-paper packages.</p>
+      </div>
+
+    </div>
+
+    <!-- Dropdown -->
+    <div class="mb-6">
+      <label class="block text-sm font-medium mb-2">Select Subscription</label>
+      <select
+        v-model="selectedSubscriptionId"
+        class="w-full border rounded px-3 py-2"
+      >
+        <option disabled value="">Select subscription</option>
+        <option
+          v-for="option in dynamicDropdownOptions"
+          :key="option.id"
+          :value="option.id"
+        >
+          {{ option.name }} — GHS {{ option.price }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Submit -->
+    <button class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded" @click="handleContinueToPay">
+      Continue to Pay
+    </button>
+
+  </div>
+</div>
+
   </div>
 </template>
 
@@ -127,10 +230,12 @@ import type { NewsPaper } from "~/models";
 import { 
   Facebook,
   Twitter,
+  FileText,
   X
 } from 'lucide-vue-next'
 
 const route = useRoute();
+const router = useRouter();
 
 const newspaperId = computed(() => {
   return route.params.id as string;
@@ -151,44 +256,46 @@ const isLoading = ref(true);
 const imageLoading = ref(true);
 const blobUrl = ref<string>()
 const newsPaperDetail = ref<NewsPaper | null>(null);
+// Modal state
+const showSubscriptionModal = ref(false);
 
-// Simulated API call to get newspaper details
-// Sample newspaper data (in a real app, this would come from a store or API)
-const allNewspapers = [
-  {
-    id: 1,
-    title: 'Graphic Business',
-    code: 'GB',
-    type: 'Tuesday',
-    date: 'August 25, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/600x800/e74c3c/ffffff?text=GB',
-    publication: 'graphic-business',
-    category: 'features'
-  },
-  {
-    id: 2,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Tuesday',
-    date: 'August 25, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/600x800/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'dg-paper-stories'
-  },
-  {
-    id: 9,
-    title: 'Graphic Showbiz',
-    code: 'GSB',
-    type: 'Thursday',
-    date: 'August 28, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/600x800/9b59b6/ffffff?text=GSB',
-    publication: 'graphic-showbiz',
-    category: 'features'
-  }
-];
+// Form fields
+const fullName = ref("");
+const email = ref("");
+const phone = ref("");
+
+// Subscription card selection
+const activeSubscriptionType = ref<"regular" | "bundle">("regular");
+
+// Options for each subscription type
+const subscriptionOptions = {
+  regular: [
+    { id: 1, name: "Daily Graphic - Regular", price: 25 },
+    { id: 2, name: "Business Graphic - Regular", price: 30 }
+  ],
+  bundle: [
+    { id: 3, name: "Daily Graphic + Showbiz Bundle", price: 50 },
+    { id: 4, name: "Mega Bundle - All Newspapers", price: 80 }
+  ]
+};
+
+// Selected dropdown value
+const selectedSubscriptionId = ref(null);
+
+// Computed dropdown options based on active card
+const dynamicDropdownOptions = computed(() => {
+  return subscriptionOptions[activeSubscriptionType.value];
+});
+
+// Open modal when button is clicked
+function openSubscriptionModal() {
+  showSubscriptionModal.value = true;
+}
+
+// Close modal
+function closeSubscriptionModal() {
+  showSubscriptionModal.value = false;
+}
 
 
 const loadImageAsBlob = async (fileId: string) => {
@@ -205,6 +312,49 @@ const loadImageAsBlob = async (fileId: string) => {
 
         imageLoading.value = false;
       }    
+}
+
+async function handleContinueToPay() {
+  // Basic validation
+  if (!fullName.value || !email.value || !phone.value || !selectedSubscriptionId.value) {
+    alert("Please fill all fields and select a subscription plan.");
+    return;
+  }
+
+  // Split full name
+  const [firstName, ...rest] = fullName.value.trim().split(" ");
+  const lastName = rest.join(" ");
+
+  // Build payload
+  const payload = {
+    firstName,
+    lastName,
+    email: email.value,
+    phone: phone.value,
+    subscriptionType: activeSubscriptionType.value,
+    subscriptionId: selectedSubscriptionId.value,
+  };
+
+  try {
+    // Optional: Show loading state if you want
+    // isProcessing.value = true;
+
+    // Call backend to initiate payment  
+    // Replace with your real API method
+    const result = await guestSubscription(payload);
+
+    // Redirect user to the payment URL returned by your API
+    if (result) {
+      console.log('result=>', result);
+      //initialize another modal with the checkout url to render an iframe
+      //window.location.href = response.paymentUrl;
+    } else {
+      alert("Payment initiation failed. Please try again.");
+    }
+  } catch (err) {
+    console.error("Payment error:", err);
+    alert("Something went wrong while processing your payment.");
+  }
 }
 
 
@@ -249,4 +399,8 @@ watch(newsPaperDetail, (newValue) => {
     });
   }
 });
+
+function goBack() {
+  router.back();
+}
 </script>
