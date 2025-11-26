@@ -220,12 +220,39 @@
   </div>
 </div>
 
+  <!-- Payment Checkout Modal -->
+  <div 
+    v-if="showPaymentModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6 relative">
+
+      <!-- Close Button -->
+      <button 
+        @click="showPaymentModal = false" 
+        class="absolute top-3 right-4 text-gray-600 hover:text-gray-900"
+      >
+        ✕
+      </button>
+
+      <!-- Iframe -->
+      <iframe
+        title="Payment"
+        v-if="paymentInfo?.paymentUrl"
+        :src="paymentInfo.paymentUrl"
+        class="w-full h-[600px] rounded border overflow-hidden"
+        style="overflow: hidden;"
+      ></iframe>
+
+    </div>
+  </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
 // Get the route params
-import type { NewsPaper } from "~/models";
+import type { NewsPaper, GuestSubscriptionResponseModel } from "~/models";
 
 import { 
   Facebook,
@@ -253,11 +280,14 @@ useHead({
 
 // State
 const isLoading = ref(true);
+const isProcessing = ref(true);
 const imageLoading = ref(true);
-const blobUrl = ref<string>()
+const blobUrl = ref<string>();
+const paymentInfo = ref<GuestSubscriptionResponseModel>();
 const newsPaperDetail = ref<NewsPaper | null>(null);
 // Modal state
 const showSubscriptionModal = ref(false);
+const showPaymentModal = ref(false);
 
 // Form fields
 const fullName = ref("");
@@ -314,7 +344,7 @@ const loadImageAsBlob = async (fileId: string) => {
       }    
 }
 
-async function handleContinueToPay() {
+const handleContinueToPay = async () =>  {
   // Basic validation
   if (!fullName.value || !email.value || !phone.value || !selectedSubscriptionId.value) {
     alert("Please fill all fields and select a subscription plan.");
@@ -330,30 +360,35 @@ async function handleContinueToPay() {
     firstName,
     lastName,
     email: email.value,
-    phone: phone.value,
+    phoneNumber: phone.value,
     subscriptionType: activeSubscriptionType.value,
-    subscriptionId: selectedSubscriptionId.value,
+    subscriptionPlanId: "cf92a6b0-d3f3-41bc-8abb-aedd8d1f40f6",
   };
 
   try {
-    // Optional: Show loading state if you want
-    // isProcessing.value = true;
-
-    // Call backend to initiate payment  
-    // Replace with your real API method
+     
+    isProcessing.value = true;
+     
     const result = await guestSubscription(payload);
 
     // Redirect user to the payment URL returned by your API
     if (result) {
-      console.log('result=>', result);
-      //initialize another modal with the checkout url to render an iframe
-      //window.location.href = response.paymentUrl;
+      console.log('result =>', result);
+      paymentInfo.value = result;
+      showPaymentModal.value = true;
+      showSubscriptionModal.value = false;
+
     } else {
       alert("Payment initiation failed. Please try again.");
     }
   } catch (err) {
     console.error("Payment error:", err);
     alert("Something went wrong while processing your payment.");
+  }
+  finally {
+
+    isProcessing.value = true;
+    
   }
 }
 
@@ -404,3 +439,5 @@ function goBack() {
   router.back();
 }
 </script>
+
+ 

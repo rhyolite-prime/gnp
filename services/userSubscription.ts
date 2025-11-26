@@ -1,4 +1,4 @@
-import type { UserSubscription, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { UserSubscription, GuestSubscriptionResponseModel, BaseApiResponse, BasePaginationModel } from "~/models";
 
  
 export async function getUserSubscription(query: object) {
@@ -10,10 +10,11 @@ export async function getUserSubscription(query: object) {
 
 export async function guestSubscription(payload: object) {
     
-  const response = await httpClient<BaseApiResponse<object>>('subscription/guest', "", {
+  const response = await httpClient<BaseApiResponse<GuestSubscriptionResponseModel>>('subscription/guest', "", {
     method: "post",
     body: payload,
   });
+  console.log(response);
   return response.result;
 }
 

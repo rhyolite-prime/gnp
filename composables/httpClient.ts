@@ -15,7 +15,7 @@ export const httpClient = async <T>(urlPath: string, baseURL?: string, options?:
     // headers: {
     //   Authorization: `Bearer ${authToken}`,
     // },
-    mode: "cors",
+    //mode: "cors",
   };
 
   if (options?.query) {

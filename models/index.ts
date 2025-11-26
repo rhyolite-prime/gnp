@@ -38,6 +38,11 @@ export interface GnpUserAuthModel {
     
 }
 
+export interface GuestSubscriptionResponseModel {
+    paymentUrl: string;
+    reference: string;
+}
+
 
 export interface NewsPaper {
     documentId: string;
