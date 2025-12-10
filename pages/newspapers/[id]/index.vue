@@ -86,9 +86,12 @@
               </div>
 
               <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-                <NuxtLink to="/newspapers" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-6 rounded-md font-medium text-center">
+                <button 
+                  class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-6 rounded-md font-medium text-center" 
+                  @click="openOneTimePurchaseModal"
+                >
                   Buy this edition (GHS {{ newsPaperDetail.price }})
-                </NuxtLink>
+                </button>
                 <div class="flex flex-1 items-center justify-between rounded-md bg-gray-100 p-2">
                    <button class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-md font-medium" @click="openSubscriptionModal" >
                   Buy Subscription
@@ -169,27 +172,27 @@
     </div>
 
     <!-- Subscription Cards -->
-    <label class="block text-sm font-medium mb-2">Choose Subscription Plan</label>
+    <label class="block text-sm font-medium mb-2">Choose a Plan</label>
     <div class="grid grid-cols-2 gap-4 mb-6">
       
       <!-- Regular Card -->
       <div
         @click="activeSubscriptionType = 'regular'"
         class="border rounded p-4 cursor-pointer"
-        :class="activeSubscriptionType === 'regular' ? 'border-red-600 bg-red-50' : 'border-gray-300'"
+        :class="activeSubscriptionType === 'regular' ? 'border-green-600 bg-green-50' : 'border-green-300'"
       >
-        <h3 class="font-semibold mb-2">Regular</h3>
-        <p class="text-sm text-gray-600">Standard subscription packages.</p>
+        <h3 class="font-semibold mb-2">Single Copy</h3>
+        <p class="text-sm text-green-600">Standard subscription packages.</p>
       </div>
 
       <!-- Bundle Card -->
       <div
         @click="activeSubscriptionType = 'bundle'"
         class="border rounded p-4 cursor-pointer"
-        :class="activeSubscriptionType === 'bundle' ? 'border-red-600 bg-red-50' : 'border-gray-300'"
+        :class="activeSubscriptionType === 'bundle' ? 'border-green-600 bg-green-50' : 'border-green-300'"
       >
-        <h3 class="font-semibold mb-2">Bundle</h3>
-        <p class="text-sm text-gray-600">Combined multi-paper packages.</p>
+        <h3 class="font-semibold mb-2">Bundle Subscrption</h3>
+        <p class="text-sm text-green-600">Combined multi-paper packages.</p>
       </div>
 
     </div>
@@ -203,45 +206,129 @@
       >
         <option disabled value="">Select subscription</option>
         <option
-          v-for="option in dynamicDropdownOptions"
+          v-for="(option,index) in dynamicDropdownOptions"
           :key="option.id"
           :value="option.id"
         >
-          {{ option.name }} — GHS {{ option.price }}
+         ({{ index+1 }}) {{ option.name }} — GHS {{ option.price }}
         </option>
       </select>
     </div>
 
-    <!-- Submit -->
-    <button class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded" @click="handleContinueToPay">
-      Continue to Pay
+    <button 
+      class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded"
+      @click="handleContinueToPay"
+      :disabled="isProcessing"
+    >
+      <span v-if="!isProcessing">Continue to Pay</span>
+      <span v-else class="flex items-center justify-center gap-2">
+        <span class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
+        Processing...
+      </span>
     </button>
 
   </div>
 </div>
+
+<!-- One-Time Purchase Modal -->
+<div 
+  v-if="showPurchaseModal"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+>
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
+
+    <!-- Close -->
+    <button @click="closePurchaseModal" class="absolute top-3 right-4 text-gray-600 hover:text-gray-900">
+      ✕
+    </button>
+
+    <h2 class="text-2xl font-bold mb-4">Buy This Edition</h2>
+
+    <!-- Full Name -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Full Name</label>
+      <input
+        v-model="fullName"
+        type="text"
+        class="w-full border rounded px-3 py-2"
+        placeholder="Enter your full name"
+      />
+    </div>
+
+    <!-- Email -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Email</label>
+      <input
+        v-model="email"
+        type="email"
+        class="w-full border rounded px-3 py-2"
+        placeholder="you@graphicnewsplus.com"
+      />
+    </div>
+
+    <!-- Phone -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Phone Number</label>
+      <input
+        v-model="phone"
+        type="tel"
+        class="w-full border rounded px-3 py-2"
+        placeholder="054xxxxxxx"
+      />
+    </div>
+
+    <!-- Price Card -->
+    <div class="border rounded p-4 mb-6 bg-gray-50">
+      <h3 class="font-semibold text-lg mb-1">{{ newsPaperDetail?.title }}</h3>
+      <p class="text-sm text-gray-600 mb-2">
+        {{ longMonthDateFormat(newsPaperDetail.publishedDate) }}
+      </p>
+      <p class="text-xl font-bold text-red-600">
+        GHS {{ newsPaperDetail?.price }}
+      </p>
+    </div>
+
+    <!-- Submit -->
+    <button 
+      class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded font-medium"
+      @click="handleOneTimePurchase"
+      :disabled="isProcessing"
+    >
+      <span v-if="!isProcessing">Continue to Pay</span>
+      <span v-else class="flex items-center justify-center gap-2">
+        <span class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
+        Processing...
+      </span>
+    </button>
+
+  </div>
+</div>
+
+  <!-- Verifying Transaction Modal -->
+  <div 
+    v-if="isCompletingPurchase"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600 mx-auto mb-4"></div>
+      <p class="text-lg font-medium text-gray-800">Verifying transaction...</p>
+    </div>
+  </div>
 
   <!-- Payment Checkout Modal -->
   <div 
     v-if="showPaymentModal"
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
   >
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6 relative">
-
-      <!-- Close Button -->
-      <button 
-        @click="showPaymentModal = false" 
-        class="absolute top-3 right-4 text-gray-600 hover:text-gray-900"
-      >
-        ✕
-      </button>
+    <div class="rounded-lg w-full max-w-2xl p-6 relative bg-transparent shadow-none">
 
       <!-- Iframe -->
       <iframe
         title="Payment"
         v-if="paymentInfo?.paymentUrl"
         :src="paymentInfo.paymentUrl"
-        class="w-full h-[600px] rounded border overflow-hidden"
-        style="overflow: hidden;"
+        class="w-full h-[600px] rounded overflow-hidden border-0"
+        style="overflow: hidden; border: none;"
       ></iframe>
 
     </div>
@@ -253,7 +340,7 @@
 <script setup lang="ts">
 // Get the route params
 import type { NewsPaper, GuestSubscriptionResponseModel } from "~/models";
-
+import { useAuthStore } from '~/stores/auth';
 import { 
   Facebook,
   Twitter,
@@ -263,6 +350,7 @@ import {
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
 
 const newspaperId = computed(() => {
   return route.params.id as string;
@@ -280,8 +368,11 @@ useHead({
 
 // State
 const isLoading = ref(true);
-const isProcessing = ref(true);
+const showPurchaseModal = ref(false);
+
+const isProcessing = ref(false);
 const imageLoading = ref(true);
+const isCompletingPurchase = ref(false);
 const blobUrl = ref<string>();
 const paymentInfo = ref<GuestSubscriptionResponseModel>();
 const newsPaperDetail = ref<NewsPaper | null>(null);
@@ -327,6 +418,14 @@ function closeSubscriptionModal() {
   showSubscriptionModal.value = false;
 }
 
+
+function openOneTimePurchaseModal() {
+  showPurchaseModal.value = true;
+}
+
+function closePurchaseModal() {
+  showPurchaseModal.value = false;
+}
 
 const loadImageAsBlob = async (fileId: string) => {
 
@@ -379,19 +478,125 @@ const handleContinueToPay = async () =>  {
       showSubscriptionModal.value = false;
 
     } else {
-      alert("Payment initiation failed. Please try again.");
+      //alert("Payment initiation failed. Please try again.");
     }
   } catch (err) {
     console.error("Payment error:", err);
-    alert("Something went wrong while processing your payment.");
+    //alert("Something went wrong while processing your payment.");
   }
   finally {
 
     isProcessing.value = true;
-    
   }
+
 }
 
+
+const handleOneTimePurchase = async () => {
+
+  // Basic validation
+  if (!fullName.value || !email.value || !phone.value) {
+    return;
+  }
+
+  // Split full name
+  const [firstName, ...rest] = fullName.value.trim().split(" ");
+  const lastName = rest.join(" ");
+
+  // Build payload
+  const payload = {
+    firstName,
+    lastName,
+    email: email.value,
+    phoneNumber: phone.value,
+    newsPaperId: newsPaperDetail.value?.id,
+  };
+
+  try {
+     
+    isProcessing.value = true;
+     
+    const result = await guestOneTimePurchase(payload);
+
+    // Redirect user to the payment URL returned by your API
+    if (result) {
+
+      console.log('result =>', result);
+      paymentInfo.value = result;
+      showPaymentModal.value = true;
+      showPurchaseModal.value = false;
+
+    } else {
+      console.log(result);
+    }
+  } catch (err) {
+    console.error("Payment error:", err);
+     
+  }
+  finally {
+
+    isProcessing.value = true;
+  }
+
+ }
+
+
+const completeOneTimePurchase = async () => {
+
+
+  try {
+
+    isCompletingPurchase.value = true;
+     
+    const result = await fulfillGuestOneTimePurchase({ reference: paymentInfo.value?.reference });
+
+    if (result) {
+
+      //set result.token in cookies using nuxt cookies
+      const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
+        maxAge: 60 * 60 * 24,
+        secure: true,
+        httpOnly: false,
+        priority: "medium",
+        sameSite: "strict"
+      });
+      
+      gnpUserIdentityCookie.value = result;
+      authStore.setAccessToken(result);
+      //emit an event to the UserAuthButton component
+      
+      //show loader modal automatically (already reactive)
+      //navigate to the document viewer page for the user to read.
+
+    }
+    
+  } catch (error) {
+    
+  }
+  finally {
+    isCompletingPurchase.value = false;
+  }
+  
+ }
+
+
+
+async function payStackCheckoutEventCallback(message: MessageEvent<any>) {
+  if (message.origin === 'https://checkout.paystack.com') {
+    if (message.data?.data?.status) {
+       
+      showPaymentModal.value = false;
+      
+      await completeOneTimePurchase();
+
+    }
+    else {
+      if (message.data?.event === 'close') {
+        //await terminateSession()
+      }
+    }
+  }
+}
 
 const retrieveNewsPaperDetails = async (id: string) => {
 
@@ -413,8 +618,15 @@ const retrieveNewsPaperDetails = async (id: string) => {
 
  }
 
+ onBeforeUnmount(() => {
+  window.removeEventListener('message', payStackCheckoutEventCallback)
+ })
+
 onMounted(async () => {
-     await retrieveNewsPaperDetails(newspaperId.value);
+  await retrieveNewsPaperDetails(newspaperId.value);
+  if (!import.meta.server) {
+    window.addEventListener('message', payStackCheckoutEventCallback)
+  }
 });
 
 // Handle preview button click
@@ -439,5 +651,3 @@ function goBack() {
   router.back();
 }
 </script>
-
- 

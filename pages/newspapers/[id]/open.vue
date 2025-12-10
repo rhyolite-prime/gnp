@@ -1,7 +1,7 @@
 <template>
   <div class="bg-gray-50 min-h-screen pb-12">
     <div class="bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <div class="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div class="flex items-center text-sm text-gray-600">
           <NuxtLink to="/" class="hover:text-red-600">Home</NuxtLink>
           <span class="mx-2">›</span>

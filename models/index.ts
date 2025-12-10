@@ -43,6 +43,40 @@ export interface GuestSubscriptionResponseModel {
     reference: string;
 }
 
+export interface NewsPaperEntitlementResponseModel {
+    hasAccess: boolean;
+    newsPaperId: string;
+}
+
+export interface AccountStatusResponseModel {
+    hasPassword: boolean;
+    hasUsername: boolean;
+    email: string;
+}
+
+export interface OtpResponseModel {
+    requestId: string;
+    expiry: string;
+    email: string;
+}
+
+
+export interface VerifyOtpResponseModel {
+    isValid: boolean;
+    sessionId: string;
+}
+
+
+export interface SigninResponseModel {
+    email: string;
+    fullName: string;
+    token: string;
+    userId: string;
+    username: string;
+}
+
+
+
 
 export interface NewsPaper {
     documentId: string;

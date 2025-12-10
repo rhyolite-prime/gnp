@@ -21,6 +21,8 @@
     "dayjs": "1.11.10",
     "lodash": "^4.17.21",
     "lucide-vue-next": "^0.294.0",
+    "@vueuse/core": "13.7.0",
+    "@vueuse/nuxt": "13.7.0",
     "numeral": "^2.0.6",
     "nuxt": "^3.13.0",
     "pinia": "^3.0.3",

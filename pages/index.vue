@@ -12,6 +12,7 @@
 
 <script setup lang="ts">
 
+
 // Page metadata
 useHead({
   title: 'Graphic NewsPlus - Digital News Platform',

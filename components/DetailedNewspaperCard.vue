@@ -1,6 +1,6 @@
 <template>
   <div class="cursor-pointer transition-all hover:scale-105">
-    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+    <div class="bg-white border border-gray-200 rounded-sm overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       <div class="aspect-[3/4] overflow-hidden">
         <div v-if="imageLoading" class="w-full h-full flex items-center justify-center bg-gray-100 animate-pulse">
           <span class="text-gray-400 text-xs">Loading...</span>

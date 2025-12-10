@@ -4,25 +4,22 @@ export const httpClient = async <T>(urlPath: string, baseURL?: string, options?:
 
   const config = useRuntimeConfig().public;
   
-  //const businessIdentity = useBusinessAuthIdentity();
-  //const authToken = businessIdentity.value?.accessToken;
+  const gnpUserAuthIdentity = useGnpUserAuthIdentity();
+  const authToken = gnpUserAuthIdentity.value;
     
   const defaultOptions = {
     lazy: false,
     immediate: true,
     server: false,
     baseURL: baseURL || config.proxyApiBaseURL,
-    // headers: {
-    //   Authorization: `Bearer ${authToken}`,
-    // },
-    //mode: "cors",
+    headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+    mode: "cors",
   };
 
   if (options?.query) {
     options.query = filterQueryParams(options.query);
   }
-
-   
+  
   return await $fetch<T>(urlPath, {
     ...defu(options, defaultOptions),
 
@@ -35,4 +32,3 @@ export const httpClient = async <T>(urlPath: string, baseURL?: string, options?:
     },
   });
 };
-

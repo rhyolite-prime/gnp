@@ -1,5 +1,5 @@
 <template>
-  <article class="bg-white rounded-xl shadow-lg card-hover overflow-hidden group">
+  <article class="bg-white rounded-lg shadow-lg card-hover overflow-hidden group">
     <div class="aspect-[16/10] overflow-hidden">
       <img 
         v-if="story.image"

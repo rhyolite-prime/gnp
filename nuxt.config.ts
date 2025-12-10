@@ -27,7 +27,7 @@ export default defineNuxtConfig({
   pwa: {
     manifest: {
       name: 'Graphic NewsPlus',
-      short_name: 'NewsPlus',
+      short_name: 'Graphic NewsPlus',
       description: 'Ghana\'s leading digital news platform providing access to trusted newspapers, magazines, and breaking news.',
       theme_color: '#ffffff',
       background_color: '#ffffff',

@@ -1,4 +1,4 @@
-import type { UserSubscription, GuestSubscriptionResponseModel, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { UserSubscription, GuestSubscriptionResponseModel, NewsPaperEntitlementResponseModel, BaseApiResponse, BasePaginationModel } from "~/models";
 
  
 export async function getUserSubscription(query: object) {
@@ -14,7 +14,28 @@ export async function guestSubscription(payload: object) {
     method: "post",
     body: payload,
   });
-  console.log(response);
+  return response.result;
+}
+
+export async function guestOneTimePurchase(payload: object) {
+    
+  const response = await httpClient<BaseApiResponse<GuestSubscriptionResponseModel>>('subscription/guest-onetime', "", {
+    method: "post",
+    body: payload,
+  });
+  
+  return response.result;
+}
+
+export async function fulfillGuestOneTimePurchase(query: object) {
+    
+  const response = await httpClient<BaseApiResponse<string>>('subscription/fulfill-guest-onetime', "", { query });
+  return response.result;
+}
+
+export async function validateNewsPaperEntitlement(query: object) {
+    
+  const response = await httpClient<BaseApiResponse<NewsPaperEntitlementResponseModel>>('subscription/validate-newspaper-entitlement', "", { query });
   return response.result;
 }
 

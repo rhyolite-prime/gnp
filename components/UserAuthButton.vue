@@ -51,13 +51,19 @@
           href="#" 
           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
           @click.prevent="navigateTo('/account')">
-          Your Account
+           Account
+        </a>
+        <a 
+          href="#" 
+          class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          @click.prevent="navigateTo('/notifications')">
+           Notifications
         </a>
         <a 
           href="#" 
           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
           @click.prevent="navigateTo('/subscriptions')">
-          Subscriptions
+          Subscription
         </a>
         <div class="border-t border-gray-100">
           <a 
@@ -102,9 +108,9 @@ const buttonRef = ref(null);
 const userName = computed(() => {
   const user = authStore.user;
   if (!user) return '';
-  
-  if (user.name) return user.name;
-  if (user.username) return user.username;
+
+  if (user.givenName) return user.givenName;
+  if (user.email) return user.email;
   
   // MSAL specific fields
   if (authStore.authProvider === 'microsoft') {
@@ -121,7 +127,7 @@ const userEmail = computed(() => {
   const user = authStore.user;
   if (!user) return '';
   
-  if (user.username) return user.username;
+  if (user.username) return user.email;
   
   // MSAL specific fields
   if (authStore.authProvider === 'microsoft') {
@@ -182,6 +188,8 @@ const handleClickOutside = (event) => {
 onMounted(() => {
    
   authStore.initializeFromStorage();
+   
+   
   isAuthLoading.value = false;
   document.addEventListener('click', handleClickOutside);
 });

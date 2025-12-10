@@ -1,7 +1,7 @@
 <template>
   <div class="group cursor-pointer">
-    <div class="bg-white rounded-xl shadow-lg card-hover">
-      <div class="aspect-[3/4] overflow-hidden rounded-t-xl">
+    <div class="bg-white rounded-sm shadow-md card-hover">
+      <div class="aspect-[3/4] overflow-hidden rounded-t-sm">
         <img 
           :src="newspaper.image" 
           :alt="newspaper.title" 

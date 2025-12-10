@@ -8,7 +8,7 @@
         </p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         <NewspaperCard 
           v-for="newspaper in newspapers" 
           :key="newspaper.id"
@@ -27,6 +27,7 @@
 </template>
 
 <script setup>
+
 const newspapers = [
   {
     id: 1,

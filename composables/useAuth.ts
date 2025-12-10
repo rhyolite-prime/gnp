@@ -26,7 +26,7 @@ export const useAuth = () => {
 
         if (response.success) {
             //save to cookie
-
+            
             gnpUserIdentityCookie.value = JSON.stringify(response.result);
 
             await router.push("/");
