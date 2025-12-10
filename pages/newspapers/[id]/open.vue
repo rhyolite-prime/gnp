@@ -7,22 +7,35 @@
           <span class="mx-2">›</span>
           <NuxtLink to="/newspapers" class="hover:text-red-600">Newspapers</NuxtLink>
           <span class="mx-2">›</span>
-          <span class="font-medium">Open Newspaper</span>
+          <span class="font-medium">{{ newsPaperDetail?.title }} </span>
         </div>
         <div class="flex items-center gap-2">
+
+          <select v-model="selectedPublication" class="border border-gray-300 rounded px-3 py-1 text-gray-700">
+            <option disabled value="">Select Publication</option>
+            <option value="daily-graphic">Daily Graphic</option>
+            <option value="ghanaian-times">Ghanaian Times</option>
+            <option value="graphic-sports">Graphic Sports</option>
+          </select>
+
+          <input
+            type="date"
+            v-model="selectedDate"
+            class="border border-gray-300 rounded px-2 py-1 text-gray-700"
+          />
+
           <button @click="goBack" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded">Back</button>
+
         </div>
       </div>
     </div>
 
-    <div class="max-w-7xl mx-auto mt-8 bg-white rounded-lg shadow p-6">
+    <div class="max-w-8xl mx-auto mt-8 bg-white rounded-lg shadow p-6">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
         <h1 class="text-2xl font-bold text-gray-900">{{ newspaperTitle }}</h1>
       </div>
       <div class="flex justify-center items-center min-h-[600px] bg-gray-100 rounded-lg overflow-auto" style="position:relative;">
-          <div
-            v-show="isLoading"
-          >
+          <div v-show="isLoading" >
             <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10 space-y-4">
               <div class="text-lg font-medium text-gray-700">{{ loaderMessage }}</div>
               <div class="animate-spin h-12 w-12 border-4 border-gray-300 border-t-gray-600 rounded-full"></div>
@@ -42,6 +55,7 @@
 </template>
 
 <script setup lang="ts">
+import type { NewsPaper, GuestSubscriptionResponseModel } from "~/models";
 
 const route = useRoute();
 const router = useRouter();
@@ -52,6 +66,10 @@ const assetUrl = ref('');
 const isLoading = ref(true);
 
 const loaderMessage = ref("Validating Subscription...");
+
+const selectedPublication = ref('');
+const selectedDate = ref('');
+const newsPaperDetail = ref<NewsPaper | null>(null);
 
 onMounted(() => {
 
@@ -77,8 +95,42 @@ onMounted(() => {
 
 });
 
+const retrieveNewsPaperDetails = async (id: string) => {
+
+    isLoading.value = true;
+
+    try {
+
+      let result = await getNewsPaperDetails({id : id});
+
+      newsPaperDetail.value = result
+
+    } catch (error) {
+        //$toast.error('Unable to fetch finishing options !');
+    } finally {
+        isLoading.value = false;
+    }
+
+}
+ 
 function goBack() {
   router.back();
 }
+
+
+onMounted(async () => {
+  await retrieveNewsPaperDetails(newspaperId as string);
+});
+
+watch(newsPaperDetail, (newValue) => {
+  if (newValue) {
+    useHead({
+      title: `${newValue.title} - Graphic NewsPlus`,
+      meta: [
+        { name: 'description', content: `Read ${newValue.title} newspaper from ${newValue.publishedDate}.` }
+      ]
+    });
+  }
+});
 </script>
  

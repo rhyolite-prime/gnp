@@ -69,11 +69,20 @@
               <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ newsPaperDetail.title }}</h1>
               <p class="text-xl text-gray-700 mb-6">{{ newsPaperDetail.publicationName }} | {{ longMonthDateFormat(newsPaperDetail.publishedDate) }}</p>
               
-              <div class="flex items-center mb-6">
+              <div class="flex items-center mb-6" v-if="hasAccess">
                 <div class="bg-red-100 text-red-800 text-sm px-3 py-1 rounded-full">
-                  Subscribed
+                  Purchased — You have access to this publication
                 </div>
-                <div class="ml-4 text-gray-600">
+                <div class="ml-4 text-gray-600 invisible">
+                  GHS {{ newsPaperDetail.price }}
+                </div>
+              </div>
+
+              <div class="flex items-center mb-6" v-else>
+                <div class="bg-red-100 text-red-800 text-sm px-3 py-1 rounded-full">
+                  Buy @  GHS {{ newsPaperDetail.price }}
+                </div>
+                <div class="ml-4 text-gray-600 invisible">
                   GHS {{ newsPaperDetail.price }}
                 </div>
               </div>
@@ -85,19 +94,36 @@
                 </p>
               </div>
 
-              <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+              <!-- Shimmer while loading access entitlement -->
+              <div 
+                v-if="isAccessLoading" 
+                class="flex flex-col sm:flex-row gap-4 animate-pulse mt-4">
+                <div class="flex-1 h-12 bg-gray-300 rounded-md"></div>
+                <div class="flex-1 h-12 bg-gray-200 rounded-md"></div>
+              </div>
+
+              <!-- Actual CTA buttons -->
+              <div 
+                v-else-if="!hasAccess" 
+                class="flex flex-col sm:flex-row sm:items-center gap-4"
+              >
                 <button 
-                  class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-6 rounded-md font-medium text-center" 
+                  class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-6 rounded-md font-medium text-center"
                   @click="openOneTimePurchaseModal"
                 >
                   Buy this edition (GHS {{ newsPaperDetail.price }})
                 </button>
+
                 <div class="flex flex-1 items-center justify-between rounded-md bg-gray-100 p-2">
-                   <button class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-md font-medium" @click="openSubscriptionModal" >
-                  Buy Subscription
-                </button>
+                  <button 
+                    class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-md font-medium"
+                    @click="openSubscriptionModal"
+                  >
+                    Buy Subscription
+                  </button>
                 </div>
               </div>
+
             </div>
 
             <!-- Additional content from the newspaper -->
@@ -369,6 +395,8 @@ useHead({
 // State
 const isLoading = ref(true);
 const showPurchaseModal = ref(false);
+const hasAccess = ref(false);
+const isAccessLoading = ref(true);
 
 const isProcessing = ref(false);
 const imageLoading = ref(true);
@@ -563,8 +591,8 @@ const completeOneTimePurchase = async () => {
       
       gnpUserIdentityCookie.value = result;
       authStore.setAccessToken(result);
-      //emit an event to the UserAuthButton component
-      
+
+      await retrieveNewsPaperEntitlement(newspaperId.value);
       //show loader modal automatically (already reactive)
       //navigate to the document viewer page for the user to read.
 
@@ -616,7 +644,24 @@ const retrieveNewsPaperDetails = async (id: string) => {
         isLoading.value = false;
     }
 
- }
+}
+
+const retrieveNewsPaperEntitlement = async (id: string) => {
+
+  isAccessLoading.value = true;
+
+    try {
+
+      let result = await validateNewsPaperEntitlement({newsPaperId : id});
+
+      hasAccess.value = result.hasAccess;
+
+    } catch (error) {
+        //$toast.error('Unable to fetch finishing options !');
+    } finally {
+        isAccessLoading.value = false;
+    }
+}
 
  onBeforeUnmount(() => {
   window.removeEventListener('message', payStackCheckoutEventCallback)
@@ -624,6 +669,7 @@ const retrieveNewsPaperDetails = async (id: string) => {
 
 onMounted(async () => {
   await retrieveNewsPaperDetails(newspaperId.value);
+  await retrieveNewsPaperEntitlement(newspaperId.value);
   if (!import.meta.server) {
     window.addEventListener('message', payStackCheckoutEventCallback)
   }
