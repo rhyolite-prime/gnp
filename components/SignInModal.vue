@@ -354,7 +354,7 @@ const handleEmailSignIn = async () => {
 
   try {
 
-    let response = await SignIn({ usernameOrEmail: usernameOrEmail.value, password: password.value })
+    let response = await signIn({ usernameOrEmail: usernameOrEmail.value, password: password.value })
     if (response && response.token) {
 
       const gnpUserIdentityCookie = useCookie("gnp-user-identity", {

@@ -24,9 +24,18 @@ export async function validateOtp(payload: object) {
   return response.result;
 }
 
-export async function SignIn(payload: object) {
+export async function signIn(payload: object) {
     
   const response = await httpClient<BaseApiResponse<SigninResponseModel>>('auth/login', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.result;
+}
+
+export async function adminSignIn(payload: object) {
+    
+  const response = await httpClient<BaseApiResponse<SigninResponseModel>>('auth/admin-login', "", {
     method: "post",
     body: payload,
   });
