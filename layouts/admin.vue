@@ -24,29 +24,74 @@
 
       <!-- Navigation -->
       <nav class="flex-1 overflow-y-auto py-6 px-3 space-y-1">
-        <NuxtLink 
-          v-for="item in navigation" 
-          :key="item.name" 
-          :to="item.href"
-          class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200"
-          :class="[
-            route.path === item.href 
-              ? 'bg-primary-50 text-primary-700 shadow-sm' 
-              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-          ]"
-        >
-          <component 
-            :is="item.icon" 
-            class="mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200"
+        <div v-for="item in navigation" :key="item.name" class="space-y-1">
+          <!-- Single menu item -->
+          <NuxtLink
+            v-if="!item.children || !item.children.length"
+            :to="item.href"
+            class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200"
             :class="[
-              route.path === item.href 
-                ? 'text-primary-600' 
-                : 'text-gray-400 group-hover:text-gray-500'
-            ]" 
-            aria-hidden="true" 
-          />
-          {{ item.name }}
-        </NuxtLink>
+              route.path === item.href
+                ? 'bg-primary-50 text-primary-700 shadow-sm'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            ]"
+          >
+            <component
+              :is="item.icon"
+              class="mr-3 h-5 w-5"
+              :class="route.path === item.href ? 'text-primary-600' : 'text-gray-400'"
+            />
+            {{ item.name }}
+          </NuxtLink>
+
+          <!-- Grouped menu -->
+          <div v-else>
+            <button
+              type="button"
+              class="w-full flex items-center px-3 py-2.5 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-50 transition-colors"
+              @click="expandedMenus[item.name] = !expandedMenus[item.name]"
+            >
+              <component
+                :is="item.icon"
+                class="mr-3 h-5 w-5 text-gray-400"
+              />
+              <span class="flex-1 text-left">
+                {{ item.name }}
+              </span>
+
+              <svg
+                class="h-4 w-4 text-gray-400 transition-transform"
+                :class="expandedMenus[item.name] ? 'rotate-90' : ''"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            <transition name="slide-fade">
+              <div
+                v-show="expandedMenus[item.name]"
+                class="ml-8 space-y-1"
+              >
+                <NuxtLink
+                  v-for="child in item.children"
+                  :key="child.name"
+                  :to="child.href"
+                  class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200"
+                  :class="[
+                    route.path === child.href
+                      ? 'bg-primary-50 text-primary-700 shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ]"
+                >
+                  {{ child.name }}
+                </NuxtLink>
+              </div>
+            </transition>
+          </div>
+        </div>
       </nav>
 
       <!-- User Profile (Bottom Sidebar) -->
@@ -112,6 +157,9 @@ import {
   UsersIcon, 
   ChartBarIcon, 
   Cog6ToothIcon,
+  CreditCardIcon,
+  BanknotesIcon,
+  MegaphoneIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   BellIcon
@@ -124,17 +172,46 @@ const authStore = useAuthStore()
 
 const isSidebarOpen = ref(false)
 
+const expandedMenus = ref<Record<string, boolean>>({
+  Content: true,
+})
+
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon },
-  { name: 'Content', href: '/admin/content-management', icon: DocumentTextIcon },
+
+  {
+    name: 'Content',
+    icon: DocumentTextIcon,
+    children: [
+      { name: 'Newspapers', href: '/admin/content-management/newspapers' },
+      { name: 'Ingestion', href: '/admin/content-management/ingestion' },
+      { name: 'Ingestion Jobs', href: '/admin/content-management/ingestion-jobs' },
+    ],
+  },
+
+  { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon },
+  { name: 'Payments', href: '/admin/payments', icon: BanknotesIcon },
+  { name: 'Campaigns', href: '/admin/campaigns', icon: MegaphoneIcon },
   { name: 'Users', href: '/admin/users', icon: UsersIcon },
   { name: 'Analytics', href: '/admin/analytics', icon: ChartBarIcon },
   { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
 ]
 
 const pageTitle = computed(() => {
-  const current = navigation.find(item => item.href === route.path)
-  return current ? current.name : 'Dashboard'
+  for (const item of navigation) {
+    if (item.href === route.path) return item.name
+    if (item.children?.length) {
+      const child = item.children.find(c => c.href === route.path)
+      if (child) return child.name
+    }
+  }
+  return 'Dashboard'
+})
+
+navigation.forEach(item => {
+  if (item.children?.some(c => c.href === route.path)) {
+    expandedMenus.value[item.name] = true
+  }
 })
 
 const handleLogout = () => {
@@ -144,3 +221,15 @@ const handleLogout = () => {
   router.push('/admin/account/login')
 }
 </script>
+
+<style scoped>
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.2s ease;
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+</style>

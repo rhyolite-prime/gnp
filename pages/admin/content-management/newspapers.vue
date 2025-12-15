@@ -1,0 +1,264 @@
+<template>
+  <div class="max-w-8xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+      <div>
+        <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">Newspapers</h1>
+        <p class="mt-2 text-sm text-gray-700">A list of all newspapers and publications including their title, date, price, and status.</p>
+      </div>
+      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+        <NuxtLink 
+          to="/admin/content-management/ingestion"
+          class="block rounded-md bg-primary-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+        >
+          Ingest New
+        </NuxtLink>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="mb-8 grid grid-cols-1 gap-y-4 sm:grid-cols-2 md:grid-cols-4 gap-x-4">
+      <!-- Search -->
+      <div class="relative rounded-md shadow-sm">
+        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+          <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+        </div>
+        <input 
+          type="text" 
+          v-model="searchQuery" 
+          class="block w-full rounded-md border-0 py-1.5 pl-10 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" 
+          placeholder="Search publications..." 
+        />
+      </div>
+
+      <!-- Category Filter -->
+       <select v-model="selectedCategory" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
+        <option value="">All Categories</option>
+        <option value="Newspaper">Newspaper</option>
+        <option value="Magazine">Magazine</option>
+        <option value="Special Edition">Special Edition</option>
+      </select>
+
+      <!-- Date Filter -->
+      <input 
+        type="date" 
+        v-model="dateFilter" 
+        class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
+      />
+      
+      <!-- Status Filter -->
+      <select v-model="selectedStatus" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
+        <option value="">All Statuses</option>
+        <option value="Published">Published</option>
+        <option value="Draft">Draft</option>
+        <option value="Archived">Archived</option>
+      </select>
+    </div>
+
+    <!-- Table -->
+    <div class="flow-root">
+      <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+          <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+            <table class="min-w-full divide-y divide-gray-300">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Title</th>
+                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Category</th>
+                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date</th>
+                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Price</th>
+                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
+                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Stats</th>
+                  <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                    <span class="sr-only">Edit</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 bg-white">
+                <tr v-for="paper in filteredNewspapers" :key="paper.id">
+                  <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                    <div class="flex items-center">
+                      <div class="h-10 w-8 flex-shrink-0 bg-gray-100 rounded overflow-hidden mr-3 border border-gray-200">
+                        <!-- Placeholder for thumbnail -->
+                        <div class="h-full w-full flex items-center justify-center text-xs text-cool-gray-400">IMG</div>
+                      </div>
+                      <div>
+                        {{ paper.title }}
+                        <div class="text-xs font-normal text-gray-500 truncate max-w-[200px]">{{ paper.headlines[0]?.text || 'No headlines' }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ paper.category }}</td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ paper.date }}</td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">₵{{ paper.price.toFixed(2) }}</td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset" 
+                      :class="{
+                        'bg-green-50 text-green-700 ring-green-600/20': paper.status === 'Published',
+                        'bg-yellow-50 text-yellow-800 ring-yellow-600/20': paper.status === 'Draft',
+                        'bg-gray-50 text-gray-600 ring-gray-500/10': paper.status === 'Archived',
+                      }"
+                    >
+                      {{ paper.status }}
+                    </span>
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    <div class="flex flex-col text-xs">
+                       <span class="flex items-center"><EyeIcon class="h-3 w-3 mr-1"/> {{ paper.views }}</span>
+                       <span class="flex items-center mt-0.5"><shopping-cart-icon class="h-3 w-3 mr-1"/> {{ paper.sales }}</span>
+                    </div>
+                  </td>
+                  <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                    <button class="text-primary-600 hover:text-primary-900 mr-4">Edit</button>
+                    <button class="text-red-600 hover:text-red-900">Delete</button>
+                  </td>
+                </tr>
+                <tr v-if="filteredNewspapers.length === 0">
+                  <td colspan="7" class="py-8 text-center text-sm text-gray-500">
+                    No publications found matching your filters.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Simple Pagination -->
+    <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4 rounded-lg shadow-sm" v-if="filteredNewspapers.length > 0">
+      <div class="flex flex-1 justify-between sm:hidden">
+        <a href="#" class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
+        <a href="#" class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
+      </div>
+      <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+        <div>
+          <p class="text-sm text-gray-700">
+            Showing
+            <span class="font-medium">1</span>
+            to
+            <span class="font-medium">{{ filteredNewspapers.length }}</span>
+            of
+            <span class="font-medium">{{ filteredNewspapers.length }}</span>
+            results
+          </p>
+        </div>
+        <div>
+          <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+            <a href="#" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+              <span class="sr-only">Previous</span>
+              <ChevronLeftIcon class="h-5 w-5" aria-hidden="true" />
+            </a>
+            <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-primary-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">1</a>
+            <a href="#" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">2</a>
+            <a href="#" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">3</a>
+            <a href="#" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+              <span class="sr-only">Next</span>
+              <ChevronRightIcon class="h-5 w-5" aria-hidden="true" />
+            </a>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { MagnifyingGlassIcon, EyeIcon, ShoppingCartIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
+
+definePageMeta({
+  layout: 'admin'
+})
+
+// Mock Data
+const newspapers = ref([
+  {
+    id: 1,
+    title: 'Daily Graphic',
+    date: '2025-12-15',
+    category: 'Newspaper',
+    price: 5.00,
+    status: 'Published',
+    views: 1250,
+    sales: 450,
+    headlines: [{ text: 'New Economic Policy Announced' }]
+  },
+  {
+    id: 2,
+    title: 'The Mirror',
+    date: '2025-12-14',
+    category: 'Newspaper',
+    price: 4.50,
+    status: 'Published',
+    views: 890,
+    sales: 320,
+    headlines: [{ text: 'Fashion Trends for 2026' }]
+  },
+  {
+    id: 3,
+    title: 'Graphic Business',
+    date: '2025-12-16',
+    category: 'Newspaper',
+    price: 6.00,
+    status: 'Draft',
+    views: 0,
+    sales: 0,
+    headlines: [{ text: 'Stock Market Rally Continues' }]
+  },
+  {
+    id: 4,
+    title: 'Junior Graphic',
+    date: '2025-12-10',
+    category: 'Newspaper',
+    price: 3.00,
+    status: 'Archived',
+    views: 2100,
+    sales: 850,
+    headlines: [{ text: 'Kids learn coding at summer camp' }]
+  },
+  {
+    id: 5,
+    title: 'Graphic Sports',
+    date: '2025-12-13',
+    category: 'Newspaper',
+    price: 4.00,
+    status: 'Published',
+    views: 1560,
+    sales: 620,
+    headlines: [{ text: 'Black Stars qualify for finals' }]
+  },
+   {
+    id: 6,
+    title: 'Focus Magazine',
+    date: '2025-12-01',
+    category: 'Magazine',
+    price: 15.00,
+    status: 'Published',
+    views: 450,
+    sales: 120,
+    headlines: [{ text: 'The Future of Tech in Africa' }]
+  },
+])
+
+// Filters
+const searchQuery = ref('')
+const selectedCategory = ref('')
+const dateFilter = ref('')
+const selectedStatus = ref('')
+
+// Computed Filtered List
+const filteredNewspapers = computed(() => {
+  return newspapers.value.filter(paper => {
+    const matchesSearch = paper.title.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
+                          (paper.headlines[0]?.text || '').toLowerCase().includes(searchQuery.value.toLowerCase())
+    const matchesCategory = selectedCategory.value === '' || paper.category === selectedCategory.value
+    const matchesDate = dateFilter.value === '' || paper.date === dateFilter.value
+    const matchesStatus = selectedStatus.value === '' || paper.status === selectedStatus.value
+
+    return matchesSearch && matchesCategory && matchesDate && matchesStatus
+  })
+})
+
+</script>

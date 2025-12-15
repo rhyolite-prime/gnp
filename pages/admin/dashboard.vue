@@ -1,5 +1,34 @@
 <template>
   <div>
+    <!-- Date Filter -->
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-xl font-semibold text-gray-900">Dashboard</h1>
+        <p class="text-sm text-gray-500">
+          Showing data from {{ dateFrom }} to {{ dateTo }}
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">From</label>
+          <input
+            type="date"
+            v-model="dateFrom"
+            class="rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">To</label>
+          <input
+            type="date"
+            v-model="dateTo"
+            class="rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500"
+          />
+        </div>
+      </div>
+    </div>
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <div v-for="stat in stats" :key="stat.name" class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
@@ -273,6 +302,20 @@ import {
   MegaphoneIcon
 } from '@heroicons/vue/24/outline'
 import CountUp from 'vue-countup-v3'
+
+
+const today = new Date()
+const oneMonthAgo = new Date()
+oneMonthAgo.setMonth(today.getMonth() - 1)
+
+const dateFrom = ref(oneMonthAgo.toISOString().substring(0, 10))
+const dateTo = ref(today.toISOString().substring(0, 10))
+
+watch([dateFrom, dateTo], () => {
+  if (dateFrom.value > dateTo.value) {
+    dateFrom.value = dateTo.value
+  }
+})
 
 definePageMeta({
   layout: 'admin',
