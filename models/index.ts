@@ -114,3 +114,22 @@ export interface UserSubscription extends BaseEntityModel {
     nextRenewalDate: string;
     fee: number;
 }
+
+export interface Campaign extends BaseEntityModel {
+
+    channel: string;
+    isActive: boolean;
+    messageBody: string;
+    name: string;
+    subject: string;
+    targetAudience: string;
+    status: string;
+    scheduledTime: string;
+    campaignType: string;
+    engagement: number; // number of people who received it/number of people who clicked
+    reach: number; // number of people who received it
+    clicks: number; // number of people who clicks
+
+}
+
+
