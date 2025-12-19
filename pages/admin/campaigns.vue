@@ -168,10 +168,8 @@
           </tr>
         </tbody>
       </table>
- 
-    </div>
 
-    <client-only>
+      <client-only>
         <SimplePagination :lower-bound="paginationParams.lowerBound" 
         :upper-bound="paginationParams.upperBound"
         @on-page-changed="onPageChange"
@@ -180,6 +178,10 @@
         :total-count="paginationParams.totalCount" 
         :disabled="isShimmerLoading" />
       </client-only>
+ 
+    </div>
+
+    
 
     <!-- Create/Edit Modal -->
     <TransitionRoot as="template" :show="isModalOpen">
@@ -478,7 +480,7 @@ const getPaginatedCampaigns = async () => {
         paginationParams.upperBound = result.upperBound;
 
     } catch (error) {
-        $toast.error('Unable to fetch production workflows !');
+        $toast.error('Unable to fetch campaigns !');
     } finally {
         isShimmerLoading.value = false;
     }

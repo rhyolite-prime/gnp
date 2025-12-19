@@ -32,29 +32,58 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 bg-white">
-          <tr v-for="plan in plans" :key="plan.id">
+          <tr v-for="plan in subscriptionPlanList" :key="plan.id">
             <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
               <div class="font-medium text-gray-900">{{ plan.name }}</div>
               <div class="text-gray-500 truncate max-w-xs">{{ plan.description }}</div>
             </td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-              <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">{{ plan.plan_type }}</span>
+              <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 capitalize">{{ plan.planType }}</span>
             </td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-              <div v-for="(price, idx) in plan.pricing" :key="idx">
-                {{ price.duration }}: ₵{{ price.amount }}
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-600">
+              <div
+                v-if="plan.pricing"
+                class="flex flex-col gap-1"
+              >
+                <span class="font-medium text-gray-900">
+                  From GHS {{ getPricingSummary(plan.pricing).lowestPrice }}
+                </span>
+
+                <span class="text-xs text-gray-500">
+                  {{ getPricingSummary(plan.pricing).count }} plans
+                </span>
+
+                <span
+                  v-if="getPricingSummary(plan.pricing).maxSave > 0"
+                  class="inline-flex w-fit items-center rounded-md bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
+                >
+                  Save up to {{ getPricingSummary(plan.pricing).maxSave }}%
+                </span>
               </div>
             </td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
               <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Active</span>
             </td>
             <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+              <button @click="viewPlanDetails(plan)" class="text-primary-600 hover:text-primary-900 mr-4">View Details</button>
               <button @click="editPlan(plan)" class="text-primary-600 hover:text-primary-900 mr-4">Edit</button>
-              <button class="text-red-600 hover:text-red-900">Delete</button>
+              <button class="text-red-600 hover:text-red-900" @click="deletePlan(plan)">Delete</button>
             </td>
           </tr>
         </tbody>
       </table>
+
+      <!-- Pagination -->
+      <client-only>
+        <SimplePagination :lower-bound="paginationParams.lowerBound" 
+        :upper-bound="paginationParams.upperBound"
+        @on-page-changed="onPageChange"
+        :page-no="filters.pageNo " 
+        :total-pages="paginationParams.totalPages"
+        :total-count="paginationParams.totalCount" 
+        :disabled="isShimmerLoading" />
+      </client-only>
+
     </div>
 
     <!-- Create/Edit Modal -->
@@ -85,11 +114,9 @@
 
                         <div class="sm:col-span-2">
                           <label class="block text-sm font-medium leading-6 text-gray-900">Plan Type</label>
-                          <select v-model="form.plan_type" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
-                            <option value="Standard">Standard</option>
-                            <option value="Premium">Premium</option>
-                            <option value="Archive Access">Archive Access</option>
-                            <option value="Corporate">Corporate</option>
+                          <select v-model="form.planType" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
+                            <option value="regular">Regular</option>
+                            <option value="bundle">Bundle</option>
                           </select>
                         </div>
 
@@ -135,7 +162,7 @@
                       <div class="border-t border-gray-200 pt-4">
                         <label class="block text-sm font-medium leading-6 text-gray-900 mb-2">Target Publications (Access Control)</label>
                         <VueMultiselect
-                          v-model="form.target_publications"
+                          v-model="form.targetPublications"
                           :options="publicationOptions"
                           :multiple="true"
                           :close-on-select="false"
@@ -163,19 +190,222 @@
         </div>
       </Dialog>
     </TransitionRoot>
+
+    <!-- View Details Modal -->
+    <TransitionRoot as="template" :show="isViewDetailsOpen">
+      <Dialog as="div" class="relative z-10" @close="closeViewDetails">
+        <TransitionChild
+          as="template"
+          enter="ease-out duration-300"
+          enter-from="opacity-0"
+          enter-to="opacity-100"
+          leave="ease-in duration-200"
+          leave-from="opacity-100"
+          leave-to="opacity-0"
+        >
+          <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+        </TransitionChild>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div class="flex min-h-full items-center justify-center p-4 sm:p-0">
+            <TransitionChild
+              as="template"
+              enter="ease-out duration-300"
+              enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enter-to="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-200"
+              leave-from="opacity-100 translate-y-0 sm:scale-100"
+              leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            >
+              <DialogPanel
+                class="relative transform overflow-hidden rounded-lg bg-white px-6 pb-6 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg"
+              >
+                <DialogTitle class="text-lg font-semibold text-gray-900 mb-4">
+                  Subscription Plan Details
+                </DialogTitle>
+
+                <div v-if="selectedPlan" class="space-y-5">
+                  <!-- Plan Info -->
+                  <div>
+                    <p class="text-sm text-gray-500">Plan Name</p>
+                    <p class="text-base font-medium text-gray-900">
+                      {{ selectedPlan.name }}
+                    </p>
+                    <p class="text-sm text-gray-500 mt-1">
+                      {{ selectedPlan.description }}
+                    </p>
+                  </div>
+
+                  <!-- Pricing Breakdown -->
+                  <div>
+                    <p class="text-sm font-medium text-gray-700 mb-2">
+                      Pricing Breakdown
+                    </p>
+
+                    <div class="divide-y divide-gray-200 rounded-md border border-gray-200">
+                      <div
+                        v-for="(tier, duration) in selectedPlan.pricing"
+                        :key="duration"
+                        class="flex items-center justify-between px-4 py-3"
+                      >
+                        <div>
+                          <p class="text-sm font-medium text-gray-900">
+                            {{ duration }}
+                          </p>
+                          <p
+                            v-if="tier.savePercentage > 0"
+                            class="text-xs text-green-600"
+                          >
+                            Save {{ tier.savePercentage }}%
+                          </p>
+                        </div>
+
+                        <p class="text-sm font-semibold text-gray-900">
+                          GHS {{ tier.price }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                  <button
+                    type="button"
+                    class="inline-flex justify-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                    @click="closeViewDetails"
+                  >
+                    Close
+                  </button>
+                </div>
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </div>
+      </Dialog>
+    </TransitionRoot>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { PlusIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import CountUp from 'vue-countup-v3'
+import { isEmpty, debounce } from "lodash-es";
+import type { SubscriptionPlan } from "~/models";
+const { $toast } = useNuxtApp();
 import VueMultiselect from 'vue-multiselect'
 import 'vue-multiselect/dist/vue-multiselect.css'
 
 definePageMeta({
   layout: 'admin'
 })
+
+useHead({
+  title: 'Subscriptions | Graphic News Plus'
+})
+
+const router = useRouter();
+const route = useRoute();
+
+const filters = reactive({
+  query: '',
+  pageNo: 1,
+  pageSize: 10,
+
+});
+
+const paginationParams = reactive({
+  totalPages: 0,
+  totalCount: 0,
+  lowerBound: 0,
+  upperBound: 0
+});
+
+
+const subscriptionPlanList = ref<SubscriptionPlan[]>([]);
+
+const isShimmerLoading = ref(true);
+
+const onPageChange = async (pageNumber: number) => {
+
+	filters.pageNo = pageNumber;
+	const filteredQuery = filterQueryParams({ ...route.query, ...filters });
+
+	router.replace({ name: route.name ?? '', query: filteredQuery });
+    await getPaginatedSubscriptionPlans()
+}
+
+const getPaginatedSubscriptionPlans = async () => {
+
+    isShimmerLoading.value = true;
+
+    try {
+
+        let result = await getSubscriptionPlans(filters);
+
+        subscriptionPlanList.value = result.data;
+
+        paginationParams.totalPages = result.totalPages;
+        paginationParams.totalCount = result.totalCount;
+        paginationParams.lowerBound = result.lowerBound;
+        paginationParams.upperBound = result.upperBound;
+
+    } catch (error) {
+        $toast.error('Unable to fetch payments !');
+    } finally {
+        isShimmerLoading.value = false;
+    }
+
+ }
+
+const getPricingSummary = (pricing: Record<string, { price: number; savePercentage: number }>) => {
+  const entries = Object.values(pricing)
+
+  const lowestPrice = Math.min(...entries.map(p => p.price))
+  const maxSave = Math.max(...entries.map(p => p.savePercentage))
+  const count = entries.length
+
+  return {
+    lowestPrice,
+    maxSave,
+    count
+  }
+}
+
+const isViewDetailsOpen = ref(false)
+const selectedPlan = ref<SubscriptionPlan | null>(null)
+
+const viewPlanDetails = (plan: SubscriptionPlan) => {
+  selectedPlan.value = plan
+  isViewDetailsOpen.value = true
+}
+
+const closeViewDetails = () => {
+  isViewDetailsOpen.value = false
+  selectedPlan.value = null
+}
+
+
+
+const debouncedSearch = debounce(() => {
+    filters.pageNo = 1; // Reset to first page for new search
+    getPaginatedSubscriptionPlans();
+  }, 300); // 300ms delay
+
+
+  watch(() => filters.query, debouncedSearch);
+
+  onMounted(async () => {
+    if (!isEmpty(route.query)) {
+      filters.pageNo = parseInt(route.query.pageNo as string);
+    }
+    
+    await getPaginatedSubscriptionPlans();
+
+  });
+
+
 
 interface PricingTier {
   duration: string;
@@ -188,42 +418,13 @@ interface Publication {
 }
 
 interface Plan {
-  id?: string;
   name: string;
-  plan_type: string;
+  planType: string;
   description: string;
   pricing: PricingTier[];
-  target_publications: Publication[];
-  created_at?: string;
+  targetPublications: [];
 }
-
-// Mock Data
-const plans = ref<Plan[]>([
-  {
-    id: '1',
-    name: 'Digital Daily Pass',
-    plan_type: 'Standard',
-    description: 'Full access to all daily newspapers for selected duration.',
-    pricing: [
-      { duration: 'Weekly', amount: 15 },
-      { duration: 'Monthly', amount: 50 }
-    ],
-    target_publications: [],
-    created_at: new Date().toISOString()
-  },
-  {
-    id: '2',
-    name: 'Archive Premium',
-    plan_type: 'Archive Access',
-    description: 'Access to historical archives dating back to 2000.',
-    pricing: [
-      { duration: 'Monthly', amount: 30 },
-      { duration: 'Yearly', amount: 300 }
-    ],
-    target_publications: [],
-    created_at: new Date().toISOString()
-  }
-])
+ 
 
 const publicationOptions = [
   { id: 'p1', name: 'Daily Graphic' },
@@ -237,20 +438,20 @@ const isModalOpen = ref(false)
 const isEditing = ref(false)
 const form = ref<Plan>({
   name: '',
-  plan_type: 'Standard',
+  planType: 'regular',
   description: '',
   pricing: [],
-  target_publications: []
+  targetPublications: []
 })
 
 const openCreateModal = () => {
   isEditing.value = false
   form.value = {
     name: '',
-    plan_type: 'Standard',
+    planType: 'regular',
     description: '',
     pricing: [{ duration: 'Monthly', amount: '' }],
-    target_publications: []
+    targetPublications: []
   }
   isModalOpen.value = true
 }
@@ -260,6 +461,25 @@ const editPlan = (plan: Plan) => {
   // Deep copy to avoid reactive edits before saving
   form.value = JSON.parse(JSON.stringify(plan))
   isModalOpen.value = true
+}
+
+const deletePlan = async (plan: SubscriptionPlan) => {
+   
+
+  try {
+    isShimmerLoading.value = true
+
+    const isSuccessful = await deleteSubscriptionPlan({ id: plan.id })
+
+    if (isSuccessful) {
+      $toast.success('Subscription plan deleted successfully')
+      await getPaginatedSubscriptionPlans()
+    }
+  } catch (error) {
+    $toast.error('Unable to delete subscription plan!')
+  } finally {
+    isShimmerLoading.value = false
+  }
 }
 
 const closeModal = () => {
@@ -274,20 +494,57 @@ const removePricingTier = (index: number) => {
   form.value.pricing.splice(index, 1)
 }
 
-const savePlan = () => {
-  if (isEditing.value) {
-    const index = plans.value.findIndex(p => p.id === form.value.id)
-    if (index !== -1) {
-      plans.value[index] = { ...form.value }
-    }
-  } else {
-    plans.value.push({
-      ...form.value,
-      id: crypto.randomUUID(),
-      created_at: new Date().toISOString()
+const savePlan = async () => {
+  try {
+    // Transform pricing array into API payload format
+    const transformedPricing: Record<string, { price: number; savePercentage: number }> = {}
+
+    // Sort tiers by amount (ascending) to compute savings logically
+    const sortedTiers = [...form.value.pricing].sort(
+      (a, b) => Number(a.amount) - Number(b.amount)
+    )
+
+    const basePrice = sortedTiers[0]?.amount
+      ? Number(sortedTiers[0].amount)
+      : 0
+
+    sortedTiers.forEach((tier) => {
+      const price = Number(tier.amount)
+
+      const savePercentage =
+        basePrice > 0 && price < basePrice
+          ? 0
+          : basePrice > 0
+          ? Math.round(((basePrice - price) / basePrice) * 100 * -1)
+          : 0
+
+      transformedPricing[tier.duration] = {
+        price,
+        savePercentage: Math.max(0, savePercentage),
+      }
     })
+
+    const payload = {
+      ...form.value,
+      pricing: transformedPricing,
+    }
+
+    const isSuccessful = await createSubscriptionPlan(payload)
+
+    if (isSuccessful) {
+      $toast.success(
+        isEditing.value
+          ? 'Subscription plan updated successfully'
+          : 'Subscription plan created successfully'
+      )
+      await getPaginatedSubscriptionPlans()
+      closeModal()
+    }
+  } catch (error) {
+    $toast.error('Unable to create subscription plan !')
+  } finally {
+    closeModal()
   }
-  closeModal()
 }
 </script>
 

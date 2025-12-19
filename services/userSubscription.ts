@@ -24,7 +24,17 @@ export async function guestOneTimePurchase(payload: object) {
     body: payload,
   });
   
-  return response.result;
+  if (!response.result) {
+    return {
+      success: false,
+      message: response.message,
+    };
+  }
+
+  return {
+    success: true,
+    data: response.result,
+  };
 }
 
 export async function fulfillGuestOneTimePurchase(query: object) {

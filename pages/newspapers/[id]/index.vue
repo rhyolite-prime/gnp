@@ -268,8 +268,16 @@
       ✕
     </button>
 
+   
     <h2 class="text-2xl font-bold mb-4">Buy This Edition</h2>
 
+     <!-- Error Alert -->
+    <div
+      v-if="errorMessage"
+      class="mb-4 mt-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+    >
+      {{ errorMessage }}
+    </div>
     <!-- Full Name -->
     <div class="mb-4">
       <label class="block text-sm font-medium mb-1">Full Name</label>
@@ -412,6 +420,8 @@ const showPaymentModal = ref(false);
 const fullName = ref("");
 const email = ref("");
 const phone = ref("");
+const errorMessage = ref("");
+
 
 // Subscription card selection
 const activeSubscriptionType = ref<"regular" | "bundle">("regular");
@@ -514,7 +524,7 @@ const handleContinueToPay = async () =>  {
   }
   finally {
 
-    isProcessing.value = true;
+    isProcessing.value = false;
   }
 
 }
@@ -547,23 +557,23 @@ const handleOneTimePurchase = async () => {
     const result = await guestOneTimePurchase(payload);
 
     // Redirect user to the payment URL returned by your API
-    if (result) {
+    if (!result.success) {
 
-      console.log('result =>', result);
-      paymentInfo.value = result;
-      showPaymentModal.value = true;
-      showPurchaseModal.value = false;
+      errorMessage.value = result.message as string;
+      return;
+    } 
 
-    } else {
-      console.log(result);
-    }
+    paymentInfo.value = result.data ;
+    showPaymentModal.value = true;
+    showPurchaseModal.value = false;
+      
   } catch (err) {
     console.error("Payment error:", err);
      
   }
   finally {
 
-    isProcessing.value = true;
+    isProcessing.value = false;
   }
 
  }
@@ -573,6 +583,9 @@ const completeOneTimePurchase = async () => {
 
 
   try {
+
+    // wait for 4 seconds before proceeding...
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
     isCompletingPurchase.value = true;
      
@@ -591,6 +604,9 @@ const completeOneTimePurchase = async () => {
       
       gnpUserIdentityCookie.value = result;
       authStore.setAccessToken(result);
+
+      // wait for 4 seconds before proceeding...
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
       await retrieveNewsPaperEntitlement(newspaperId.value);
       //show loader modal automatically (already reactive)

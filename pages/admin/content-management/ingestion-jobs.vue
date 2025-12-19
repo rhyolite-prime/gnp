@@ -35,13 +35,13 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200 bg-white">
-                <tr v-for="job in jobs" :key="job.id">
+                <tr v-for="job in ingestionJobList" :key="job.id">
                   <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-900 sm:pl-6">
-                    {{ formatDate(job.ingestedAt) }}
-                    <div class="text-xs text-gray-500">{{ formatTime(job.ingestedAt) }}</div>
+                    {{ formatDate(job.createdAt) }}
+                    <div class="text-xs text-gray-500">{{ formatTime(job.createdAt) }}</div>
                   </td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                    {{ job.publicationDate }}
+                    {{ longDateFormat(job.publicationDate) }}
                   </td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                     <div class="flex items-center">
@@ -55,10 +55,10 @@
                     <div v-if="job.status === 'Processing'" class="w-full">
                       <div class="flex justify-between text-xs mb-1">
                         <span class="font-medium text-blue-600">Processing...</span>
-                        <span class="text-gray-500">{{ job.progress }}%</span>
+                        <span class="text-gray-500">{{ job.percentageCompletion }}%</span>
                       </div>
                       <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                        <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" :style="{ width: `${job.progress}%` }"></div>
+                        <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" :style="{ width: `${job.percentageCompletion}%` }"></div>
                       </div>
                     </div>
                     <div v-else-if="job.status === 'Completed'">
@@ -79,6 +79,17 @@
                 </tr>
               </tbody>
             </table>
+
+            <client-only>
+            <SimplePagination :lower-bound="paginationParams.lowerBound" 
+            :upper-bound="paginationParams.upperBound"
+            @on-page-changed="onPageChange"
+            :page-no="filters.pageNo " 
+            :total-pages="paginationParams.totalPages"
+            :total-count="paginationParams.totalCount" 
+            :disabled="isShimmerLoading" />
+          </client-only>
+
           </div>
         </div>
       </div>
@@ -87,7 +98,79 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+
+import { 
+  CurrencyDollarIcon, 
+  CheckCircleIcon, 
+  ClockIcon, 
+  ExclamationCircleIcon,
+  ArrowDownTrayIcon,
+  MagnifyingGlassIcon
+} from '@heroicons/vue/24/outline'
+import CountUp from 'vue-countup-v3'
+import { isEmpty, debounce } from "lodash-es";
+import type { IngestionJob } from "~/models";
+const { $toast } = useNuxtApp();
+
+
+useHead({
+  title: 'Ingestion Jobs| Graphic News Plus'
+})
+
+const router = useRouter();
+const route = useRoute();
+
+const filters = reactive({
+  query: '',
+  pageNo: 1,
+  pageSize: 10,
+
+});
+
+const paginationParams = reactive({
+  totalPages: 0,
+  totalCount: 0,
+  lowerBound: 0,
+  upperBound: 0
+});
+
+const ingestionJobList = ref<IngestionJob[]>([]);
+
+const isShimmerLoading = ref(true);
+const isDeletingJob = ref(false);
+
+
+const onPageChange = async (pageNumber: number) => {
+
+	filters.pageNo = pageNumber;
+	const filteredQuery = filterQueryParams({ ...route.query, ...filters });
+
+	router.replace({ name: route.name ?? '', query: filteredQuery });
+    await getPaginatedIngestionJobs()
+}
+
+const getPaginatedIngestionJobs = async () => {
+
+    isShimmerLoading.value = true;
+
+    try {
+
+        let result = await getIngestionJobs(filters);
+
+        ingestionJobList.value = result.data;
+
+        paginationParams.totalPages = result.totalPages;
+        paginationParams.totalCount = result.totalCount;
+        paginationParams.lowerBound = result.lowerBound;
+        paginationParams.upperBound = result.upperBound;
+
+    } catch (error) {
+        //$toast.error('Unable to fetch payments !');
+    } finally {
+        isShimmerLoading.value = false;
+    }
+
+ }
 
 definePageMeta({
   layout: 'admin'
@@ -186,21 +269,47 @@ const getInitials = (name: string) => {
     .slice(0, 2)
 }
 
-const refreshJobs = () => {
-  // Reset demo data
-   jobs.value.unshift({
-    id: crypto.randomUUID(),
-    ingestedAt: new Date().toISOString(),
-    publicationDate: '2025-12-17',
-    ingestedBy: 'Admin User',
-    status: 'Processing',
-    progress: 0
-  })
+const refreshJobs = async () => {
+   await getPaginatedIngestionJobs();
 }
 
-const deleteJob = (id: string) => {
-  if (confirm('Are you sure you want to delete this job log?')) {
-    jobs.value = jobs.value.filter(j => j.id !== id)
+const deleteJob = async (id: string) => {
+
+  isDeletingJob.value = true;
+
+  try {
+
+    let isSuccessful = await deleteIngestionJob({ jobId: id });
+    if(isSuccessful) {
+      $toast.success('Ingestion job deleted successfully !');
+      await getPaginatedIngestionJobs();
+    }
+
+  } catch (error) {
+    $toast.error('Unable to delete ingestion job !');
+    isDeletingJob.value = false;
+    
+  } finally {
+    isDeletingJob.value = false;
   }
+  
 }
+
+
+const debouncedSearch = debounce(() => {
+    filters.pageNo = 1; // Reset to first page for new search
+    getPaginatedIngestionJobs();
+  }, 300); // 300ms delay
+
+
+  watch(() => filters.query, debouncedSearch);
+
+  onMounted(async () => {
+    if (!isEmpty(route.query)) {
+      filters.pageNo = parseInt(route.query.pageNo as string);
+    }
+    
+    await getPaginatedIngestionJobs();
+
+  });
 </script>

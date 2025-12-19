@@ -1,6 +1,7 @@
 export interface BaseApiResponse<T> {
     result: T;
     success: boolean;
+    message: string;
     unAuthorizedRequest: boolean;
     error: Error;
 }
@@ -115,6 +116,15 @@ export interface UserSubscription extends BaseEntityModel {
     fee: number;
 }
 
+export interface SubscriptionPlan extends BaseEntityModel {
+    name: string;
+    description: string;
+    targetPublications: [],
+    planType: string;
+    createdAt: string;
+    pricing: Record<string, { price: number ,savePercentage: number }>;
+}
+
 export interface Campaign extends BaseEntityModel {
 
     channel: string;
@@ -130,6 +140,26 @@ export interface Campaign extends BaseEntityModel {
     reach: number; // number of people who received it
     clicks: number; // number of people who clicks
 
+}
+
+export interface Payment extends BaseEntityModel {
+
+    userName: string;
+    userEmail: string;
+    packageName: string;
+    amountPaid: string;
+    receiptNo: string;
+    transactionReference: string;
+    status: string;
+}
+
+export interface IngestionJob extends BaseEntityModel {
+
+    publicationDate: string;
+    ingestedBy: string;
+    percentageCompletion: string;
+    status: string;
+    createdAt: string;
 }
 
 
