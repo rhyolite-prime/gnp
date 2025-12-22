@@ -64,43 +64,53 @@
               <thead class="bg-gray-50">
                 <tr>
                   <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Title</th>
-                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Category</th>
-                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date</th>
+                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Publication</th>
+                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Published On</th>
                   <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Price</th>
                   <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
                   <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Stats</th>
+                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Ingested On</th>
                   <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
                     <span class="sr-only">Edit</span>
                   </th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200 bg-white">
-                <tr v-for="paper in filteredNewspapers" :key="paper.id">
+                <tr v-for="paper in newspaperList" :key="paper.id">
                   <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                     <div class="flex items-center">
-                      <div class="h-10 w-8 flex-shrink-0 bg-gray-100 rounded overflow-hidden mr-3 border border-gray-200">
-                        <!-- Placeholder for thumbnail -->
-                        <div class="h-full w-full flex items-center justify-center text-xs text-cool-gray-400">IMG</div>
+                      <div class="h-15 w-10 flex-shrink-0 bg-gray-100 rounded overflow-hidden mr-3 border border-gray-200">
+                        <img
+                          v-if="thumbnailUrls[paper.thumbnailId]"
+                          :src="thumbnailUrls[paper.thumbnailId]"
+                          alt="Thumbnail"
+                          class="h-full w-full object-cover"
+                        />
+                        <div
+                          v-else
+                          class="h-full w-full flex items-center justify-center text-xs text-cool-gray-400"
+                        >
+                          IMG
+                        </div>
                       </div>
                       <div>
                         {{ paper.title }}
-                        <div class="text-xs font-normal text-gray-500 truncate max-w-[200px]">{{ paper.headlines[0]?.text || 'No headlines' }}</div>
+                        <div class="text-xs font-normal text-gray-500 truncate max-w-[200px]">{{ paper.fullDescription}}</div>
                       </div>
                     </div>
                   </td>
-                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ paper.category }}</td>
-                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ paper.date }}</td>
-                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">₵{{ paper.price.toFixed(2) }}</td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ paper.publicationName }}</td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ paper.publishedDate }}</td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">₵{{ paper.price }}</td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                    <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset" 
-                      :class="{
-                        'bg-green-50 text-green-700 ring-green-600/20': paper.status === 'Published',
-                        'bg-yellow-50 text-yellow-800 ring-yellow-600/20': paper.status === 'Draft',
-                        'bg-gray-50 text-gray-600 ring-gray-500/10': paper.status === 'Archived',
-                      }"
+                    <span
+                      class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
+                      :class="paper.isPublished
+                        ? 'bg-green-50 text-green-700 ring-green-600/20'
+                        : 'bg-yellow-50 text-yellow-800 ring-yellow-600/20'"
                     >
-                      {{ paper.status }}
-                    </span>
+                      {{ paper.isPublished ? 'Published' : 'Draft' }}
+                    </span> 
                   </td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                     <div class="flex flex-col text-xs">
@@ -108,9 +118,27 @@
                        <span class="flex items-center mt-0.5"><shopping-cart-icon class="h-3 w-3 mr-1"/> {{ paper.sales }}</span>
                     </div>
                   </td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ longDateAndTimeFormat(paper.createdAt) }}</td>
                   <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                    <button class="text-primary-600 hover:text-primary-900 mr-4">Edit</button>
-                    <button class="text-red-600 hover:text-red-900">Delete</button>
+                    <button
+                      class="text-primary-600 hover:text-primary-900 mr-4"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      v-if="!paper.isPublished"
+                      @click="publishPaper(paper.id)"
+                      class="text-green-600 hover:text-green-800 mr-4"
+                    >
+                      Publish
+                    </button>
+
+                    <button
+                      class="text-red-600 hover:text-red-900"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
                 <tr v-if="filteredNewspapers.length === 0">
@@ -144,6 +172,11 @@
 
 import { MagnifyingGlassIcon, EyeIcon, ShoppingCartIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 
+import CountUp from 'vue-countup-v3'
+import { isEmpty, debounce } from "lodash-es";
+import type { NewsPaper, Payment } from "~/models";
+const { $toast } = useNuxtApp();
+
 const router = useRouter();
 const route = useRoute();
 
@@ -161,7 +194,19 @@ const paginationParams = reactive({
   upperBound: 0
 });
 
+const newspaperList = ref<NewsPaper[]>([]);
+const thumbnailUrls = reactive<Record<string, string>>({});
+
 const isShimmerLoading = ref(true);
+
+definePageMeta({
+  layout: 'admin'
+})
+
+useHead({
+  title: 'Newspapers | Graphic News Plus'
+})
+
 
 const onPageChange = async (pageNumber: number) => {
 
@@ -169,12 +214,75 @@ const onPageChange = async (pageNumber: number) => {
 	const filteredQuery = filterQueryParams({ ...route.query, ...filters });
 
 	router.replace({ name: route.name ?? '', query: filteredQuery });
-    //await getPaginatedProductionWorkflows()
+   await getPaginatedNewsPapers()
 }
 
-definePageMeta({
-  layout: 'admin'
-})
+const getPaginatedNewsPapers = async () => {
+
+    isShimmerLoading.value = true;
+
+    try {
+
+        let result = await getNewsPaperPublications(filters);
+
+        newspaperList.value = result.data;
+
+        paginationParams.totalPages = result.totalPages;
+        paginationParams.totalCount = result.totalCount;
+        paginationParams.lowerBound = result.lowerBound;
+        paginationParams.upperBound = result.upperBound;
+
+    } catch (error) {
+        $toast.error('Unable to fetch newspapers !');
+    } finally {
+        isShimmerLoading.value = false;
+    }
+
+ }
+
+ watch(
+    newspaperList,
+    (papers) => {
+      papers.forEach(paper => {
+        if (paper.thumbnailId) {
+          loadImageAsBlob(paper.thumbnailId);
+        }
+      });
+    },
+    { immediate: true }
+  );
+
+ const loadImageAsBlob = async (fileId: string) => {
+    if (!fileId || thumbnailUrls[fileId]) return;
+
+    try {
+      const response = await getSecureThumbnail(fileId);
+      const blob = await fetch(response).then(r => r.blob());
+      const objectUrl = URL.createObjectURL(blob);
+      thumbnailUrls[fileId] = objectUrl;
+    } catch (error) {
+      console.error('Failed to load thumbnail', error);
+    }
+  };
+
+const publishPaper = async (paperId: string ) => {
+  try {
+    let isPublished = await publishNewspaperPublication({id: paperId});
+    if (!isPublished) {
+      $toast.error('Failed to publish publication');
+      return;
+    }
+
+    $toast.success('Publication published successfully');
+
+    const paper = newspaperList.value.find(p => p.id === paperId);
+    if (paper) {
+      paper.isPublished = true;
+    }
+  } catch (error) {
+    $toast.error('Failed to publish publication.');
+  }
+};
 
 // Mock Data
 const newspapers = ref([
@@ -264,5 +372,22 @@ const filteredNewspapers = computed(() => {
     return matchesSearch && matchesCategory && matchesDate && matchesStatus
   })
 })
+
+const debouncedSearch = debounce(() => {
+    filters.pageNo = 1; // Reset to first page for new search
+    getPaginatedNewsPapers();
+  }, 300); // 300ms delay
+
+
+  watch(() => filters.query, debouncedSearch);
+
+  onMounted(async () => {
+    if (!isEmpty(route.query)) {
+      filters.pageNo = parseInt(route.query.pageNo as string);
+    }
+    
+    await getPaginatedNewsPapers();
+
+  });
 
 </script>

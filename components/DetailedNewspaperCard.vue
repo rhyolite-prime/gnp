@@ -24,7 +24,7 @@
 
         <div class="mt-2">
           <p class="text-xs font-bold text-gray-900 text-center w-full">
-            GHS {{ newspaper.price }}
+            GHS {{ newspaper?.price }}
           </p>
         </div>
       </div>

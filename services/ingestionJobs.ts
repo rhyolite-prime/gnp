@@ -13,3 +13,12 @@ export async function deleteIngestionJob(query: object) {
     return response.success;
 }
 
+
+export async function createIngestionJob(payload: object) {
+    
+  const response = await httpClient<BaseApiResponse<object>>('admin/create-ingestion-job', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.result;
+}

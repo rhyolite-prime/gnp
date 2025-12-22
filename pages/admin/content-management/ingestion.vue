@@ -131,6 +131,30 @@
                 />
               </div>
 
+              <!-- Edition Number -->
+              <div>
+                <label class="block text-sm font-medium leading-6 text-gray-900">Edition Number</label>
+                <input 
+                    type="text" 
+                    v-model="form.editionNumber"
+                    class="block mt-2 w-full rounded-md border-0 py-1.5 pl-7 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" 
+                    placeholder="12354" 
+                  />
+              </div>
+
+              <!-- Storage Service -->
+              <div>
+                <label class="block text-sm font-medium leading-6 text-gray-900">Storage Service</label>
+                <select  v-model="form.storageService"
+                  class="mt-2 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 bg-white focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
+                  <option disabled>Select Option</option>
+                  <option selected value="google-drive">Google Drive</option>
+                  <option disabled value="local-storage">Local Storage</option>
+                  <option disabled value="aws-s3">AWS S3</option>
+                  <option disabled value="cloud-flare-r2">Cloud Flare R2</option>
+                </select>
+              </div>
+
               <!-- Price -->
               <div>
                 <label class="block text-sm font-medium leading-6 text-gray-900">Price (GHS)</label>
@@ -150,20 +174,20 @@
 
               <!-- Category -->
               <div>
-                <label class="block text-sm font-medium leading-6 text-gray-900">Category</label>
-                <Listbox as="div" v-model="form.category" class="mt-2">
+                <label class="block text-sm font-medium leading-6 text-gray-900">Publication</label>
+                <Listbox as="div" v-model="form.publicationId" class="mt-2">
                   <div class="relative">
                     <ListboxButton class="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-600 sm:text-sm sm:leading-6">
-                      <span class="block truncate">{{ form.category?.name || 'Select a category' }}</span>
+                      <span class="block truncate">{{ form.publicationName || 'Select a publication' }}</span>
                       <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                         <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
                       </span>
                     </ListboxButton>
                     <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                       <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                        <ListboxOption as="template" v-for="category in categories" :key="category.id" :value="category" v-slot="{ active, selected }">
+                        <ListboxOption as="template" v-for="publication in publicationList" :key="publication.id" :value="publication.id" v-slot="{ active, selected }">
                           <li :class="[active ? 'bg-primary-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
-                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ category.name }}</span>
+                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ publication.name }}</span>
                             <span v-if="selected" :class="[active ? 'text-white' : 'text-primary-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                               <CheckIcon class="h-5 w-5" aria-hidden="true" />
                             </span>
@@ -201,11 +225,37 @@
           <!-- Actions -->
           <div class="flex items-center justify-end gap-x-6">
             <button type="button" class="text-sm font-semibold leading-6 text-gray-900">Cancel</button>
-            <button 
-              type="submit" 
-              class="rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
-            >
-              Save Publication
+            <button
+              type="button"
+              @click="savePublication"
+              :disabled="isProcessingIngestion"
+              class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm
+                     bg-primary-600 hover:bg-primary-500
+                     disabled:opacity-50 disabled:cursor-not-allowed
+                     focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
+              
+              <svg
+                v-if="isProcessingIngestion"
+                class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24">
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4" />
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+
+              <span>
+                {{ isProcessingIngestion ? 'Processing File…' : 'Save Publication' }}
+              </span>
             </button>
           </div>
 
@@ -216,7 +266,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { 
   CloudArrowUpIcon, 
   DocumentIcon, 
@@ -234,10 +283,35 @@ import {
 } from '@headlessui/vue'
 import VueMultiselect from 'vue-multiselect'
 import 'vue-multiselect/dist/vue-multiselect.css'
+import { isEmpty, debounce } from "lodash-es";
+import type { Publication } from "~/models";
+import { Option } from 'lucide-vue-next';
+const { $toast } = useNuxtApp();
 
 definePageMeta({
   layout: 'admin'
 })
+
+useHead({
+  title: 'Ingestion | Graphic News Plus'
+})
+
+const publicationList = ref<Publication[]>([]);
+const selectedPublication = ref<Publication | null>(null);
+const uploadedPublicationFile = ref<File | null>(null);
+const isProcessingIngestion = ref(false);
+
+
+
+
+const getAllPublications = async () => {
+
+    let result = await getPublications({pageNo: 1, pageSize: 100});
+
+    publicationList.value = result.data;
+ 
+}
+
 
 interface FeaturedStory {
   title: string;
@@ -248,17 +322,9 @@ interface Headline {
   text: string;
 }
 
-interface Category {
-  id: number;
-  name: string;
-}
-
-const categories: Category[] = [
-  { id: 1, name: 'Newspaper' },
-  { id: 2, name: 'Magazine' },
-  { id: 3, name: 'Special Edition' },
-  { id: 4, name: 'Archived' },
-]
+ 
+ 
+ 
 
 const relatedOptions = [
   { id: 101, name: 'Daily Graphic - Dec 14' },
@@ -273,7 +339,11 @@ const form = ref({
   featuredStories: [] as FeaturedStory[],
   publicationDate: new Date().toISOString().split('T')[0],
   price: '',
-  category: null as Category | null,
+  editionNumber: '',
+  storageService: 'google-drive',
+  publicationId: '',
+  publicationName: '',
+  fullDescription: '',
   relatedContent: []
 })
 
@@ -315,11 +385,107 @@ const removeHeadline = (index: number) => {
   form.value.headlines.splice(index, 1)
 }
 
-const submitForm = () => {
-  // Simulate submission
-  console.log('Submitting publication:', form.value)
-  alert('Publication ingested successfully (Simulation)')
-}
+const savePublication = async () => {
+  isProcessingIngestion.value = true;
+
+  // Build fullDescription from headlines, separated by semicolons
+  form.value.fullDescription = form.value.headlines
+    .map(h => h.text)
+    .filter(text => text && text.trim() !== '')
+    .join(' ; ');
+
+  if (!form.value.file) {
+    $toast.error('Upload a PDF file.');
+    isProcessingIngestion.value = false;
+    return;
+  }
+
+  if (!selectedPublication.value) {
+    $toast.error('Select a publication.');
+    isProcessingIngestion.value = false;
+    return;
+  }
+
+  // Build title: e.g. "DG Monday, April 3, 2023"
+  const publicationName = selectedPublication.value.name;
+
+  // Abbreviation from publication name (e.g. "Daily Graphic" -> "DG")
+  const abbreviation = publicationName
+    .split(' ')
+    .map(word => word.charAt(0))
+    .join('')
+    .toUpperCase();
+
+  // Format publication date
+  const dateObj = new Date(form.value.publicationDate);
+  const formattedDate = dateObj.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  const title = `${abbreviation} ${formattedDate}`;
+
+  // Optional slug generation from title
+  const slug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+  try {
+    // Upload file to storage service
+    const uploadResult = await uploadGnpDocument(form.value.file);
+
+    // Create newspaper/publication
+    await createNewsPaper({
+      ...form.value,
+      title,
+      slug,
+      documentId: uploadResult.documentId,
+      thumbnailId: uploadResult.thumbnailId,
+    });
+
+    $toast.success('Publication ingested successfully.');
+    await navigateTo('/admin/content-management/newspapers/');
+  } catch (error) {
+    $toast.error('Ingestion failed');
+  } finally {
+    isProcessingIngestion.value = false;
+    // navigate to the newspaper page.
+    
+
+  }
+
+  console.log('Submitting publication:', { ...form.value, title, slug });
+};
+
+watch(
+  () => form.value.publicationId,
+  (publicationId) => {
+    if (!publicationId) {
+      form.value.publicationName = ''
+      selectedPublication.value = null
+      return
+    }
+
+    const publication = publicationList.value.find(
+      (p) => p.id === publicationId
+    )
+
+    if (publication) {
+      form.value.publicationName = publication.name
+      selectedPublication.value = publication
+    }
+  }
+)
+
+onMounted(async () => {
+     
+    await getAllPublications();
+
+  });
+  
 </script>
 
 <style>

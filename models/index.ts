@@ -84,15 +84,20 @@ export interface NewsPaper {
     editionNumber: string;
     fileType: string;
     fullDescription: string;
+    publicationId: string;
     publicationName: string;
     id: string;
     price: string;
     publishedDate: string;
-    shortDescription: string;
     slug: string;
     thumbnailId: string;
     featuredStories: FeaturedStory[]
     title: string;
+    isPublished: boolean;
+    createdAt: string;
+    views: number;
+    sales: number;
+    
 }
 
 export interface FeaturedStory {
@@ -161,5 +166,25 @@ export interface IngestionJob extends BaseEntityModel {
     status: string;
     createdAt: string;
 }
+
+export interface Publication extends BaseEntityModel {
+
+    createdAt: string;
+    description: string;
+    isActive: boolean;
+    name: string;
+    
+}
+
+export interface GnpDocumentResponseModel extends BaseEntityModel {
+
+    documentId: string;
+    thumbnailId: string;
+    success: true;
+    message: string;
+    
+}
+
+
 
 
