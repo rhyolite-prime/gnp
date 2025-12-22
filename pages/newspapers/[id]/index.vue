@@ -2,13 +2,17 @@
   <div class="bg-gray-50 min-h-screen pb-12">
     <!-- Breadcrumb -->
     <div class="bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div class="flex items-center text-sm text-gray-600">
           <NuxtLink to="/" class="hover:text-red-600">Home</NuxtLink>
           <span class="mx-2">›</span>
           <NuxtLink to="/newspapers" class="hover:text-red-600">Newspapers</NuxtLink>
           <span class="mx-2">›</span>
-          <span class="font-medium">{{ newspaper?.code }} - {{ newspaper?.type }}, {{ newspaper?.date }}</span>
+          <span class="font-medium">{{ newsPaperDetail?.title }} </span>
+          <!-- <span class="font-medium">{{ newsPaperDetail?.title }} - {{ newsPaperDetail?.editionNumber }}, {{ newsPaperDetail?.publishedDate }}</span> -->
+        </div>
+        <div class="flex items-center gap-2">
+          <button @click="goBack" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded">Back</button>
         </div>
       </div>
     </div>
@@ -20,7 +24,7 @@
       </div>
       
       <!-- Newspaper not found -->
-      <div v-else-if="!newspaper" class="py-32 text-center">
+      <div v-else-if="!newsPaperDetail" class="py-32 text-center">
         <h2 class="text-2xl font-bold text-gray-900 mb-4">Newspaper not found</h2>
         <p class="text-gray-600 mb-6">The newspaper you're looking for doesn't exist or has been removed.</p>
         <NuxtLink to="/newspapers" class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700">
@@ -35,19 +39,25 @@
           <div class="lg:w-1/3">
             <div class="bg-white rounded-lg shadow p-6">
               <div class="aspect-[3/4] overflow-hidden mb-6">
-                <img 
-                  :src="newspaper.image" 
-                  :alt="newspaper.title"
+
+                <div v-if="imageLoading" class="w-full h-full flex items-center justify-center bg-gray-100 animate-pulse">
+                <span class="text-gray-400 text-xs">Loading...</span>
+              </div>
+
+                <img v-else 
+                  :src="blobUrl" 
+                  :alt="newsPaperDetail.title"
                   class="w-full h-full object-cover rounded-md" 
+                  loading="lazy"
                 />
               </div>
               <div class="text-center">
-                <NuxtLink :to="`/newspapers/${newspaper?.id}/open`" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md mb-3 font-medium flex items-center justify-center">
-                  <IconDocument class="w-5 h-5 mr-2" />
-                  Open
+                <NuxtLink :to="`/newspapers/${newsPaperDetail?.id}/open`" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md mb-3 font-medium flex items-center justify-center">
+                  <FileText class="w-5 h-5 mr-2" />
+                  Open to read
                 </NuxtLink>
                 <button @click="handlePreviewClick" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 px-6 rounded-md font-medium">
-                  Preview
+                    Preview
                 </button>
               </div>
             </div>
@@ -56,55 +66,76 @@
           <!-- Right column - Newspaper details -->
           <div class="lg:w-2/3">
             <div class="bg-white rounded-lg shadow p-6 mb-6">
-              <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ newspaper.code }} - {{ newspaper.type }}, {{ newspaper.date }}</h1>
-              <p class="text-xl text-gray-700 mb-6">{{ newspaper.title }}</p>
+              <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ newsPaperDetail.title }}</h1>
+              <p class="text-xl text-gray-700 mb-6">{{ newsPaperDetail.publicationName }} | {{ longMonthDateFormat(newsPaperDetail.publishedDate) }}</p>
               
-              <div class="flex items-center mb-6">
+              <div class="flex items-center mb-6" v-if="hasAccess">
                 <div class="bg-red-100 text-red-800 text-sm px-3 py-1 rounded-full">
-                  Subscribed
+                  Purchased — You have access to this publication
                 </div>
-                <div class="ml-4 text-gray-600">
-                  GHS {{ newspaper.price.toFixed(2) }}
+                <div class="ml-4 text-gray-600 invisible">
+                  GHS {{ newsPaperDetail.price }}
+                </div>
+              </div>
+
+              <div class="flex items-center mb-6" v-else>
+                <div class="bg-red-100 text-red-800 text-sm px-3 py-1 rounded-full">
+                  Buy @  GHS {{ newsPaperDetail.price }}
+                </div>
+                <div class="ml-4 text-gray-600 invisible">
+                  GHS {{ newsPaperDetail.price }}
                 </div>
               </div>
 
               <div class="border-t border-b border-gray-200 py-6 mb-6">
                 <h2 class="text-xl font-semibold text-gray-900 mb-4">Information</h2>
                 <p class="text-gray-700">
-                  In the Headlines: Good and bad influence of celebrities; Ways to keep the spark going;
-                  And Afrobeats vs. Hip-Hop: Which has greater global impact?
+                  {{ newsPaperDetail.fullDescription }}
                 </p>
               </div>
 
-              <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-                <button class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-md font-medium">
-                  Share
+              <!-- Shimmer while loading access entitlement -->
+              <div 
+                v-if="isAccessLoading" 
+                class="flex flex-col sm:flex-row gap-4 animate-pulse mt-4">
+                <div class="flex-1 h-12 bg-gray-300 rounded-md"></div>
+                <div class="flex-1 h-12 bg-gray-200 rounded-md"></div>
+              </div>
+
+              <!-- Actual CTA buttons -->
+              <div 
+                v-else-if="!hasAccess" 
+                class="flex flex-col sm:flex-row sm:items-center gap-4"
+              >
+                <button 
+                  class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-6 rounded-md font-medium text-center"
+                  @click="openOneTimePurchaseModal"
+                >
+                  Buy this edition (GHS {{ newsPaperDetail.price }})
                 </button>
+
                 <div class="flex flex-1 items-center justify-between rounded-md bg-gray-100 p-2">
-                  <button class="text-gray-500 hover:text-red-600">
-                    <IconFacebook class="w-6 h-6" />
-                  </button>
-                  <button class="text-gray-500 hover:text-red-600">
-                    <IconTwitter class="w-6 h-6" />
-                  </button>
-                  <button class="text-gray-500 hover:text-red-600">
-                    <IconPinterest class="w-6 h-6" />
+                  <button 
+                    class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-md font-medium"
+                    @click="openSubscriptionModal"
+                  >
+                    Buy Subscription
                   </button>
                 </div>
               </div>
+
             </div>
 
             <!-- Additional content from the newspaper -->
             <div class="bg-white rounded-lg shadow p-6">
               <h2 class="text-xl font-semibold text-gray-900 mb-4">Featured Stories</h2>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="border border-gray-200 rounded-md p-4">
-                  <h3 class="font-medium text-gray-900 mb-2">Amapiano stole Azonto groove — 2AM</h3>
-                  <p class="text-sm text-gray-600">Read the full interview with 2AM discussing how South African Amapiano borrowed elements from Ghana's Azonto.</p>
-                </div>
-                <div class="border border-gray-200 rounded-md p-4">
-                  <h3 class="font-medium text-gray-900 mb-2">Greed ruined my bond with Lumba — Kwadwo Antwi</h3>
-                  <p class="text-sm text-gray-600">The renowned Ghanaian artist opens up about his fallout with Daddy Lumba in an exclusive interview.</p>
+                <div 
+                  v-for="story in newsPaperDetail.featuredStories" 
+                  class="border border-gray-200 rounded-md p-4"
+                >
+                  <h3 class="font-medium text-gray-900 mb-2">{{ story.title }}</h3>
+                  <p class="text-sm text-gray-600">{{ story.description }}</p>
                 </div>
               </div>
             </div>
@@ -118,14 +149,245 @@
         />
       </div>
     </div>
+
+    <!-- Subscription Modal -->
+<div 
+  v-if="showSubscriptionModal"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+>
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
+
+    <!-- Close Button -->
+    <button @click="closeSubscriptionModal" class="absolute top-3 right-4 text-gray-600 hover:text-gray-900">
+      ✕
+    </button>
+
+    <h2 class="text-2xl font-bold mb-4">Buy Subscription</h2>
+
+    <!-- Full Name -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Full Name</label>
+      <input
+        v-model="fullName"
+        type="text"
+        class="w-full border rounded px-3 py-2"
+        placeholder="Enter your full name"
+      />
+    </div>
+
+    <!-- Email -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Email</label>
+      <input
+        v-model="email"
+        type="email"
+        class="w-full border rounded px-3 py-2"
+        placeholder="you@graphicnewsplus.com"
+      />
+    </div>
+
+    <!-- Phone -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Phone Number</label>
+      <input
+        v-model="phone"
+        type="tel"
+        class="w-full border rounded px-3 py-2"
+        placeholder="054xxxxxxx"
+      />
+    </div>
+
+    <!-- Subscription Cards -->
+    <label class="block text-sm font-medium mb-2">Choose a Plan</label>
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      
+      <!-- Regular Card -->
+      <div
+        @click="activeSubscriptionType = 'regular'"
+        class="border rounded p-4 cursor-pointer"
+        :class="activeSubscriptionType === 'regular' ? 'border-green-600 bg-green-50' : 'border-green-300'"
+      >
+        <h3 class="font-semibold mb-2">Single Copy</h3>
+        <p class="text-sm text-green-600">Standard subscription packages.</p>
+      </div>
+
+      <!-- Bundle Card -->
+      <div
+        @click="activeSubscriptionType = 'bundle'"
+        class="border rounded p-4 cursor-pointer"
+        :class="activeSubscriptionType === 'bundle' ? 'border-green-600 bg-green-50' : 'border-green-300'"
+      >
+        <h3 class="font-semibold mb-2">Bundle Subscrption</h3>
+        <p class="text-sm text-green-600">Combined multi-paper packages.</p>
+      </div>
+
+    </div>
+
+    <!-- Dropdown -->
+    <div class="mb-6">
+      <label class="block text-sm font-medium mb-2">Select Subscription</label>
+      <select
+        v-model="selectedSubscriptionId"
+        class="w-full border rounded px-3 py-2"
+      >
+        <option disabled value="">Select subscription</option>
+        <option
+          v-for="(option,index) in dynamicDropdownOptions"
+          :key="option.id"
+          :value="option.id"
+        >
+         ({{ index+1 }}) {{ option.name }} — GHS {{ option.price }}
+        </option>
+      </select>
+    </div>
+
+    <button 
+      class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded"
+      @click="handleContinueToPay"
+      :disabled="isProcessing"
+    >
+      <span v-if="!isProcessing">Continue to Pay</span>
+      <span v-else class="flex items-center justify-center gap-2">
+        <span class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
+        Processing...
+      </span>
+    </button>
+
+  </div>
+</div>
+
+<!-- One-Time Purchase Modal -->
+<div 
+  v-if="showPurchaseModal"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+>
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
+
+    <!-- Close -->
+    <button @click="closePurchaseModal" class="absolute top-3 right-4 text-gray-600 hover:text-gray-900">
+      ✕
+    </button>
+
+   
+    <h2 class="text-2xl font-bold mb-4">Buy This Edition</h2>
+
+     <!-- Error Alert -->
+    <div
+      v-if="errorMessage"
+      class="mb-4 mt-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+    >
+      {{ errorMessage }}
+    </div>
+    <!-- Full Name -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Full Name</label>
+      <input
+        v-model="fullName"
+        type="text"
+        class="w-full border rounded px-3 py-2"
+        placeholder="Enter your full name"
+      />
+    </div>
+
+    <!-- Email -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Email</label>
+      <input
+        v-model="email"
+        type="email"
+        class="w-full border rounded px-3 py-2"
+        placeholder="you@graphicnewsplus.com"
+      />
+    </div>
+
+    <!-- Phone -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Phone Number</label>
+      <input
+        v-model="phone"
+        type="tel"
+        class="w-full border rounded px-3 py-2"
+        placeholder="054xxxxxxx"
+      />
+    </div>
+
+    <!-- Price Card -->
+    <div class="border rounded p-4 mb-6 bg-gray-50">
+      <h3 class="font-semibold text-lg mb-1">{{ newsPaperDetail?.title }}</h3>
+      <p class="text-sm text-gray-600 mb-2">
+        {{ longMonthDateFormat(newsPaperDetail.publishedDate) }}
+      </p>
+      <p class="text-xl font-bold text-red-600">
+        GHS {{ newsPaperDetail?.price }}
+      </p>
+    </div>
+
+    <!-- Submit -->
+    <button 
+      class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded font-medium"
+      @click="handleOneTimePurchase"
+      :disabled="isProcessing"
+    >
+      <span v-if="!isProcessing">Continue to Pay</span>
+      <span v-else class="flex items-center justify-center gap-2">
+        <span class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
+        Processing...
+      </span>
+    </button>
+
+  </div>
+</div>
+
+  <!-- Verifying Transaction Modal -->
+  <div 
+    v-if="isCompletingPurchase"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600 mx-auto mb-4"></div>
+      <p class="text-lg font-medium text-gray-800">Verifying transaction...</p>
+    </div>
+  </div>
+
+  <!-- Payment Checkout Modal -->
+  <div 
+    v-if="showPaymentModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="rounded-lg w-full max-w-2xl p-6 relative bg-transparent shadow-none">
+
+      <!-- Iframe -->
+      <iframe
+        title="Payment"
+        v-if="paymentInfo?.paymentUrl"
+        :src="paymentInfo.paymentUrl"
+        class="w-full h-[600px] rounded overflow-hidden border-0"
+        style="overflow: hidden; border: none;"
+      ></iframe>
+
+    </div>
+  </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
 // Get the route params
+import type { NewsPaper, GuestSubscriptionResponseModel } from "~/models";
+import { useAuthStore } from '~/stores/auth';
+import { 
+  Facebook,
+  Twitter,
+  FileText,
+  X
+} from 'lucide-vue-next'
+
 const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
+
 const newspaperId = computed(() => {
-  return parseInt(route.params.id as string);
+  return route.params.id as string;
 });
 
 // Page metadata
@@ -136,92 +398,318 @@ useHead({
   ]
 });
 
-// Types
-interface Newspaper {
-  id: number;
-  title: string;
-  code: string;
-  type: string;
-  date: string;
-  price: number;
-  image: string;
-  category?: string;
-  publication?: string;
-}
+ 
 
 // State
 const isLoading = ref(true);
-const newspaper = ref<Newspaper | null>(null);
+const showPurchaseModal = ref(false);
+const hasAccess = ref(false);
+const isAccessLoading = ref(true);
 
-// Simulated API call to get newspaper details
-// Sample newspaper data (in a real app, this would come from a store or API)
-const allNewspapers = [
-  {
-    id: 1,
-    title: 'Graphic Business',
-    code: 'GB',
-    type: 'Tuesday',
-    date: 'August 25, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/600x800/e74c3c/ffffff?text=GB',
-    publication: 'graphic-business',
-    category: 'features'
-  },
-  {
-    id: 2,
-    title: 'Daily Graphic',
-    code: 'DG',
-    type: 'Tuesday',
-    date: 'August 25, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/600x800/3498db/ffffff?text=DG',
-    publication: 'daily-graphic',
-    category: 'dg-paper-stories'
-  },
-  {
-    id: 9,
-    title: 'Graphic Showbiz',
-    code: 'GSB',
-    type: 'Thursday',
-    date: 'August 28, 2025',
-    price: 1.50,
-    image: 'https://placehold.co/600x800/9b59b6/ffffff?text=GSB',
-    publication: 'graphic-showbiz',
-    category: 'features'
+const isProcessing = ref(false);
+const imageLoading = ref(true);
+const isCompletingPurchase = ref(false);
+const blobUrl = ref<string>();
+const paymentInfo = ref<GuestSubscriptionResponseModel>();
+const newsPaperDetail = ref<NewsPaper | null>(null);
+// Modal state
+const showSubscriptionModal = ref(false);
+const showPaymentModal = ref(false);
+
+// Form fields
+const fullName = ref("");
+const email = ref("");
+const phone = ref("");
+const errorMessage = ref("");
+
+
+// Subscription card selection
+const activeSubscriptionType = ref<"regular" | "bundle">("regular");
+
+// Options for each subscription type
+const subscriptionOptions = {
+  regular: [
+    { id: 1, name: "Daily Graphic - Regular", price: 25 },
+    { id: 2, name: "Business Graphic - Regular", price: 30 }
+  ],
+  bundle: [
+    { id: 3, name: "Daily Graphic + Showbiz Bundle", price: 50 },
+    { id: 4, name: "Mega Bundle - All Newspapers", price: 80 }
+  ]
+};
+
+// Selected dropdown value
+const selectedSubscriptionId = ref(null);
+
+// Computed dropdown options based on active card
+const dynamicDropdownOptions = computed(() => {
+  return subscriptionOptions[activeSubscriptionType.value];
+});
+
+// Open modal when button is clicked
+function openSubscriptionModal() {
+  showSubscriptionModal.value = true;
+}
+
+// Close modal
+function closeSubscriptionModal() {
+  showSubscriptionModal.value = false;
+}
+
+
+function openOneTimePurchaseModal() {
+  showPurchaseModal.value = true;
+}
+
+function closePurchaseModal() {
+  showPurchaseModal.value = false;
+}
+
+const loadImageAsBlob = async (fileId: string) => {
+
+    imageLoading.value = true;
+    
+    try {
+
+        const url = await getSecureThumbnail(fileId);
+        blobUrl.value = url;
+        imageLoading.value = false;
+        
+      } catch (error) {
+
+        imageLoading.value = false;
+      }    
+}
+
+const handleContinueToPay = async () =>  {
+  // Basic validation
+  if (!fullName.value || !email.value || !phone.value || !selectedSubscriptionId.value) {
+    alert("Please fill all fields and select a subscription plan.");
+    return;
   }
-];
+
+  // Split full name
+  const [firstName, ...rest] = fullName.value.trim().split(" ");
+  const lastName = rest.join(" ");
+
+  // Build payload
+  const payload = {
+    firstName,
+    lastName,
+    email: email.value,
+    phoneNumber: phone.value,
+    subscriptionType: activeSubscriptionType.value,
+    subscriptionPlanId: "cf92a6b0-d3f3-41bc-8abb-aedd8d1f40f6",
+  };
+
+  try {
+     
+    isProcessing.value = true;
+     
+    const result = await guestSubscription(payload);
+
+    // Redirect user to the payment URL returned by your API
+    if (result) {
+      console.log('result =>', result);
+      paymentInfo.value = result;
+      showPaymentModal.value = true;
+      showSubscriptionModal.value = false;
+
+    } else {
+      //alert("Payment initiation failed. Please try again.");
+    }
+  } catch (err) {
+    console.error("Payment error:", err);
+    //alert("Something went wrong while processing your payment.");
+  }
+  finally {
+
+    isProcessing.value = false;
+  }
+
+}
+
+
+const handleOneTimePurchase = async () => {
+
+  // Basic validation
+  if (!fullName.value || !email.value || !phone.value) {
+    return;
+  }
+
+  // Split full name
+  const [firstName, ...rest] = fullName.value.trim().split(" ");
+  const lastName = rest.join(" ");
+
+  // Build payload
+  const payload = {
+    firstName,
+    lastName,
+    email: email.value,
+    phoneNumber: phone.value,
+    newsPaperId: newsPaperDetail.value?.id,
+  };
+
+  try {
+     
+    isProcessing.value = true;
+     
+    const result = await guestOneTimePurchase(payload);
+
+    // Redirect user to the payment URL returned by your API
+    if (!result.success) {
+
+      errorMessage.value = result.message as string;
+      return;
+    } 
+
+    paymentInfo.value = result.data ;
+    showPaymentModal.value = true;
+    showPurchaseModal.value = false;
+      
+  } catch (err) {
+    console.error("Payment error:", err);
+     
+  }
+  finally {
+
+    isProcessing.value = false;
+  }
+
+ }
+
+
+const completeOneTimePurchase = async () => {
+
+
+  try {
+
+    // wait for 4 seconds before proceeding...
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+    isCompletingPurchase.value = true;
+     
+    const result = await fulfillGuestOneTimePurchase({ reference: paymentInfo.value?.reference });
+
+    if (result) {
+
+      //set result.token in cookies using nuxt cookies
+      const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
+        maxAge: 60 * 60 * 24,
+        secure: true,
+        httpOnly: false,
+        priority: "medium",
+        sameSite: "strict"
+      });
+      
+      gnpUserIdentityCookie.value = result;
+      authStore.setAccessToken(result);
+
+      // wait for 4 seconds before proceeding...
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
+      await retrieveNewsPaperEntitlement(newspaperId.value);
+      //show loader modal automatically (already reactive)
+      //navigate to the document viewer page for the user to read.
+
+    }
+    
+  } catch (error) {
+    
+  }
+  finally {
+    isCompletingPurchase.value = false;
+  }
+  
+ }
+
+
+
+async function payStackCheckoutEventCallback(message: MessageEvent<any>) {
+  if (message.origin === 'https://checkout.paystack.com') {
+    if (message.data?.data?.status) {
+       
+      showPaymentModal.value = false;
+      
+      await completeOneTimePurchase();
+
+    }
+    else {
+      if (message.data?.event === 'close') {
+        //await terminateSession()
+      }
+    }
+  }
+}
+
+const retrieveNewsPaperDetails = async (id: string) => {
+
+    isLoading.value = true;
+
+    try {
+
+      let result = await getNewsPaperDetails({id : id});
+
+      newsPaperDetail.value = result
+
+      loadImageAsBlob(result.thumbnailId)
+
+    } catch (error) {
+        //$toast.error('Unable to fetch finishing options !');
+    } finally {
+        isLoading.value = false;
+    }
+
+}
+
+const retrieveNewsPaperEntitlement = async (id: string) => {
+
+  isAccessLoading.value = true;
+
+    try {
+
+      let result = await validateNewsPaperEntitlement({newsPaperId : id});
+
+      hasAccess.value = result.hasAccess;
+
+    } catch (error) {
+        //$toast.error('Unable to fetch finishing options !');
+    } finally {
+        isAccessLoading.value = false;
+    }
+}
+
+ onBeforeUnmount(() => {
+  window.removeEventListener('message', payStackCheckoutEventCallback)
+ })
 
 onMounted(async () => {
-  try {
-    // In a real app, fetch from API: await fetch(`/api/newspapers/${newspaperId.value}`)
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network request
-    
-    // Find the newspaper with the matching ID
-    const newspaperData = allNewspapers.find(n => n.id === newspaperId.value);
-    newspaper.value = newspaperData || null;
-  } catch (error) {
-    console.error('Error fetching newspaper details:', error);
-    newspaper.value = null;
-  } finally {
-    isLoading.value = false;
+  await retrieveNewsPaperDetails(newspaperId.value);
+  await retrieveNewsPaperEntitlement(newspaperId.value);
+  if (!import.meta.server) {
+    window.addEventListener('message', payStackCheckoutEventCallback)
   }
 });
 
 // Handle preview button click
 function handlePreviewClick() {
   // In a real application, this would open a preview modal or redirect to a preview page
-  console.log('Preview newspaper:', newspaper.value?.title);
+  console.log('Preview newspaper:', newsPaperDetail.value?.title);
 }
 
 // Update page title when newspaper data is loaded
-watch(newspaper, (newValue) => {
+watch(newsPaperDetail, (newValue) => {
   if (newValue) {
     useHead({
-      title: `${newValue.code} - ${newValue.type}, ${newValue.date} - Graphic NewsPlus`,
+      title: `${newValue.title} - Graphic NewsPlus`,
       meta: [
-        { name: 'description', content: `Read ${newValue.title} newspaper from ${newValue.date}.` }
+        { name: 'description', content: `Read ${newValue.title} newspaper from ${newValue.publishedDate}.` }
       ]
     });
   }
 });
+
+function goBack() {
+  router.back();
+}
 </script>

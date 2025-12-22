@@ -1,6 +1,6 @@
 <template>
   <div class="cursor-pointer transition-all hover:scale-105">
-    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+    <div class="bg-white border border-gray-200 rounded-sm overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       <div class="aspect-[3/4] overflow-hidden">
         <div v-if="imageLoading" class="w-full h-full flex items-center justify-center bg-gray-100 animate-pulse">
           <span class="text-gray-400 text-xs">Loading...</span>
@@ -24,7 +24,7 @@
 
         <div class="mt-2">
           <p class="text-xs font-bold text-gray-900 text-center w-full">
-            GHS {{ newspaper.price }}
+            GHS {{ newspaper?.price }}
           </p>
         </div>
       </div>
@@ -32,10 +32,10 @@
   </div>
 </template>
 
-<script setup>
-
+<script setup lang="ts">
+import type { NewsPaper } from "~/models";
 const imageLoading = ref(false)
-const blobUrl = ref(null)
+const blobUrl = ref<string>()
 
 const props = defineProps({
   newspaper: Object
@@ -57,26 +57,25 @@ const titleParts = computed(() => {
   return { main, date }
 })
 
-const loadImageAsBlob = async (fileId) => {
+const loadImageAsBlob = async (fileId: string) => {
 
-      imageLoading.value = true;
-      
-      try {
+    imageLoading.value = true;
+    
+    try {
 
-        const url = await getSecureThumbnail(fileId);
-        blobUrl.value = url;
+      const url = await getSecureThumbnail(fileId);
+      blobUrl.value = url;
+      imageLoading.value = false;
+        
+      } catch (error) {
+
         imageLoading.value = false;
-          
-        } catch (error) {
-
-          imageLoading.value = false;
-        }
-         
+      }    
 }
 
 
 onMounted(() => {
-  loadImageAsBlob(props.newspaper.thumbnailId)
+  loadImageAsBlob(props.newspaper?.thumbnailId as string)
 })
 
 </script>

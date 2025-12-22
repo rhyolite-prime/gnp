@@ -16,49 +16,136 @@
         <h2 class="text-2xl font-bold text-gray-800">Sign In</h2>
         <p class="text-gray-600 mt-1">Login to Graphic News Plus</p>
       </div>
+
+      <!-- Guest Purchase Notice -->
+      <!-- <div class="mb-4 p-3 bg-yellow-100 text-yellow-800 rounded text-sm">
+        If you purchased a newspaper as a guest, please set your password to access your account.
+        <button 
+          @click="beginPasswordReset" 
+          class="underline text-red-600 hover:text-red-500 ml-1"
+        >
+          Set Password
+        </button>
+      </div> -->
       
-      <!-- Email/Password Form -->
-      <form @submit.prevent="handleEmailSignIn">
+      <!-- Step 1: Enter Email -->
+      <form v-if="step === 1" @submit.prevent="checkEmailStatus">
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Username or Email Address</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
           <input 
-            type="text" 
+            type="email" 
             v-model="usernameOrEmail" 
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500" 
             required
           />
         </div>
-        
+
+        <button 
+          type="submit"
+          class="w-full py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 flex items-center justify-center"
+          :disabled="emailCheckLoading"
+        >
+          <svg v-if="emailCheckLoading" class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ emailCheckLoading ? 'Checking...' : 'Continue' }}
+        </button>
+      </form>
+
+      <!-- Step 2: Email has password → Show password form -->
+      <form v-if="step === 2 && emailHasPassword" @submit.prevent="handleEmailSignIn">
         <div class="mb-4">
-          <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
           <input 
             type="password" 
-            id="password" 
             v-model="password" 
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500" 
             required
           />
         </div>
-        
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center">
-            <input 
-              type="checkbox" 
-              id="remember" 
-              v-model="remember" 
-              class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-            />
-            <label for="remember" class="ml-2 block text-sm text-gray-700">Remember me</label>
-          </div>
-          
-          <a href="#" class="text-sm text-red-600 hover:text-red-500">Forgot password?</a>
-        </div>
-        
+
         <button 
           type="submit" 
           class="w-full py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
         >
           Sign in
+        </button>
+      </form>
+
+      <!-- Step 2: Email has NO password → Show set-password prompt -->
+      <div v-if="step === 2 && !emailHasPassword" class="mb-4 p-3 bg-yellow-100 text-yellow-800 rounded text-md">
+        You need to set a password on your account to continue.
+        <button 
+          @click="beginPasswordReset" 
+          :disabled="otpLoading"
+          class="underline text-red-600 hover:text-red-500 ml-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+        >
+          <svg v-if="otpLoading" class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          {{ otpLoading ? 'Please wait...' : 'Set Password' }}
+        </button>
+      </div>
+      
+      <!-- Step 3: Enter OTP -->
+      <form v-if="step === 3" @submit.prevent="verifyOtp">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
+          <input 
+            type="text" 
+            v-model="otp" 
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500" 
+            required
+          />
+        </div>
+
+        <button 
+          type="submit"
+          class="w-full py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center justify-center"
+          :disabled="verifyOtpLoading"
+        >
+          <svg v-if="verifyOtpLoading" class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ verifyOtpLoading ? 'Verifying...' : 'Verify OTP' }}
+        </button>
+      </form>
+
+      <!-- Step 4: Set New Password -->
+      <form v-if="step === 4" @submit.prevent="submitNewPassword">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+          <input 
+            type="password" 
+            v-model="newPassword" 
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500" 
+            required
+          />
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+          <input 
+            type="password" 
+            v-model="confirmPassword" 
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500"
+            required
+          />
+        </div>
+
+        <button 
+          type="submit"
+          class="w-full py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center justify-center"
+          :disabled="passwordResetLoading"
+        >
+          <svg v-if="passwordResetLoading" class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ passwordResetLoading ? 'Saving...' : 'Set Password' }}
         </button>
       </form>
       
@@ -121,6 +208,7 @@
   </div>
 </template>
 
+
 <script setup>
 
 import { useMsalAuth } from '~/composables/useMsalAuth';
@@ -129,12 +217,31 @@ import { useAuthStore } from '~/stores/auth';
 import * as msal from '@azure/msal-browser';
 import { useRuntimeConfig } from '#imports';
 
-const email = ref('');
+const emit = defineEmits(['close', 'set-password']);
+
 const password = ref('');
 const remember = ref(false);
+const isGuestUser = ref(false);
 const route = useRoute();
 const authStore = useAuthStore();
 const config = useRuntimeConfig();
+
+const step = ref(1);
+const emailCheckLoading = ref(false);
+const emailHasPassword = ref(false);
+const usernameOrEmail = ref('');
+const otpRequestId = ref('');
+const userId = ref('');
+const sessionId = ref('');
+
+// New state variables for OTP and password reset flow
+const otp = ref('');
+const newPassword = ref('');
+const confirmPassword = ref('');
+const otpLoading = ref(false);
+const verifyOtpLoading = ref(false);
+const passwordResetLoading = ref(false);
+const isSigningIn = ref(false);
 
 // Track Microsoft auth state
 const msAuth = useMsalAuth();
@@ -149,7 +256,7 @@ const googleError = computed(() => googleAuth.error.value);
 // Build redirect URL with the current page as the redirectTo parameter
 const getRedirectUrl = () => {
   //const baseRedirectUrl = 'https://trade.rhyoliteprime.com/ms-login';
-  const baseRedirectUrl = 'http://localhost:3060/ms-login';
+  const baseRedirectUrl = 'http://localhost:3009/ms-login';
   const currentPath = route?.fullPath || '/';
   // Only add the redirectTo parameter if we're not already on the home page
   if (currentPath !== '/') {
@@ -158,12 +265,121 @@ const getRedirectUrl = () => {
   return baseRedirectUrl;
 };
 
-const handleEmailSignIn = () => {
-  // Here you would implement your email authentication logic
-  console.log('Signing in with email:', email.value);
-  // After successful authentication:
-  // authStore.setUser(userObject, 'email');
-  // $emit('close');
+const checkEmailStatus = async () => {
+  emailCheckLoading.value = true;
+  try {
+    // Determine identifierType by checking if value is an email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const identifierType = emailRegex.test(usernameOrEmail.value) ? "email" : "username";
+
+    let response = await checkAccountStatus({ 
+      identifier: usernameOrEmail.value, 
+      identifierType 
+    });
+
+    emailHasPassword.value = response.hasPassword;
+    step.value = 2;
+  } catch (err) {
+    console.error('Email check error:', err);
+  } finally {
+    emailCheckLoading.value = false;
+  }
+};
+
+// Functions for OTP and password reset flow
+const beginPasswordReset = async () => {
+  otpLoading.value = true;
+  try {
+     
+    let response = await sendOtp({email: usernameOrEmail.value , sessionId: "b13ef0e1-1c73-4615-a331-1c4b92a51c11" });
+
+    if (response.requestId) {
+      otpRequestId.value = response.requestId;
+      step.value = 3;
+    }
+
+  } catch (err) {
+    console.error('OTP send error:', err);
+  } finally {
+    otpLoading.value = false;
+  }
+};
+
+const verifyOtp = async () => {
+
+  verifyOtpLoading.value = true;
+
+  try {
+
+    let response = await validateOtp({email: usernameOrEmail.value, otp: otp.value, requestId: otpRequestId.value });
+
+    if (response.isValid) {
+      userId.value = response.userId;
+      sessionId.value = response.sessionId;
+      step.value = 4;
+    }
+  } catch (err) {
+    console.error('OTP verify error:', err);
+  } finally {
+    verifyOtpLoading.value = false;
+  }
+};
+
+const submitNewPassword = async () => {
+  passwordResetLoading.value = true;
+
+  try {
+
+    let isSuccessful = await setPassword({ email: usernameOrEmail.value, userId: userId.value , sessionId: sessionId.value, password: newPassword.value, confirmPassword: confirmPassword.value })
+
+    // go back to normal login flow
+    if (isSuccessful) {
+      step.value = 1;
+      emailHasPassword.value = true;
+    }
+
+    //use toast to display error message.
+    
+  } catch (err) {
+    console.error('Password reset error:', err);
+  } finally {
+    passwordResetLoading.value = false;
+  }
+};
+
+const handleEmailSignIn = async () => {
+
+  isSigningIn.value = true;
+  console.log('Signing in with email:', usernameOrEmail.value);
+
+  try {
+
+    let response = await signIn({ usernameOrEmail: usernameOrEmail.value, password: password.value })
+    if (response && response.token) {
+
+      const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
+        maxAge: 60 * 60 * 24,
+        secure: true,
+        httpOnly: false,
+        priority: "medium",
+        sameSite: "strict"
+      });
+      
+      gnpUserIdentityCookie.value = response.token;
+      authStore.setAccessToken(response.token);
+      emit('close');
+    }
+    
+    //use toast to display error message.
+    
+  } catch (err) {
+    console.error('Email signin error:', err);
+    isSigningIn.value = false;
+  } finally {
+    isSigningIn.value = false;
+  }
+
+  
 };
 
 const handleGoogleSignIn = async () => {

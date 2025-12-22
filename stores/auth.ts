@@ -5,19 +5,26 @@ import type { AccountInfo } from '@azure/msal-browser';
 export interface EnhancedUserInfo extends AccountInfo {
 
   displayName?: string;
+  email?: string;
   photoUrl?: string;
   givenName?: string;
   surname?: string;
   jobTitle?: string;
   graphProfile?: any;
+  provider: string;
+  isAuthenticated: boolean;
   idTokenClaims: {
     email: string;
     name: string;
     picture: string;
-    sub:  string;
+    sub: string;
+    userId: string;
+    username: string;
   }
    
 }
+
+ 
 
  
 
@@ -26,12 +33,12 @@ export const useAuthStore = defineStore('auth',  () => {
   const user = ref<EnhancedUserInfo | null>(null);
   const isAuthenticated = ref(false);
   const isAuthLoading = ref(false);
-  const authProvider = ref<'microsoft' | 'google' | 'email' | null>(null);
+  const authProvider = ref<'microsoft' | 'google' | 'gnp' | null>(null);
   const accessToken = ref<string | null>(null);
   const userPhotoUrl = ref<string>();
   
   // Set user info after successful authentication
-  function setUser(userInfo: EnhancedUserInfo | null, provider: 'microsoft' | 'google' | 'email' | null = null) {
+  function setUser(userInfo: EnhancedUserInfo | null, provider: 'microsoft' | 'google' | 'gnp' | null = null) {
     console.log('Setting user info:', userInfo);
     user.value = userInfo;
     isAuthenticated.value = !!userInfo;
@@ -59,10 +66,49 @@ export const useAuthStore = defineStore('auth',  () => {
   }
   
   // Set access token
-  function setAccessToken(token: string | null) {
+  function setAccessToken(token: string) {
     accessToken.value = token;
     if (token) {
       sessionStorage.setItem('accessToken', token);
+
+      //decode the jwt and store object in authUser in key in localstorage
+      // Decode JWT and store in localStorage
+      try {
+
+        const [, payloadBase64] = token.split('.');
+        const decodedPayload = JSON.parse(atob(payloadBase64));
+
+        const userInfo = {
+            email: decodedPayload.email,
+            givenName: decodedPayload.firstName,
+            surname: decodedPayload.surName,
+            jobTitle:  "",
+            photoUrl: "https://res.cloudinary.com/rhyoliteprime/image/upload/v1533814738/images_6.png",
+            provider: "gnp",
+            isAuthenticated: true,
+            idTokenClaims: {
+              email: decodedPayload.email,
+              name: decodedPayload.fullName,
+              picture: decodedPayload.picture,
+              sub: decodedPayload.sub || "",
+              userId: decodedPayload.userId,
+              username: decodedPayload.username
+            }
+        };
+
+        sessionStorage.setItem('authUser', JSON.stringify(userInfo));
+        
+        // Update state reactively
+        user.value = userInfo as any;
+        isAuthenticated.value = true;
+        authProvider.value = 'gnp';
+        userPhotoUrl.value = userInfo.photoUrl;
+        
+
+      } catch (err) {
+        console.error('Failed to decode JWT:', err);
+      }
+
     } else {
       sessionStorage.removeItem('accessToken');
     }
@@ -74,28 +120,16 @@ export const useAuthStore = defineStore('auth',  () => {
     isAuthLoading.value = true;
 
     try {
+
       const storedAuth = sessionStorage.getItem('authUser');
       const storedToken = sessionStorage.getItem('accessToken');
       
       if (storedAuth) {
+
         const parsedAuth = JSON.parse(storedAuth);
-        user.value = parsedAuth.user;
-        authProvider.value = parsedAuth.provider;
-        isAuthenticated.value = parsedAuth.isAuthenticated;
+        user.value = parsedAuth;
+        isAuthenticated.value = true;
         
-        // Make sure we set the photo URL properly
-        if (parsedAuth.photoUrl) {
-          console.log('Restoring user photo URL from session storage');
-          userPhotoUrl.value = parsedAuth.photoUrl;
-          
-          // Also ensure it's set in the user object
-          if (parsedAuth.user && !parsedAuth.user.photoUrl) {
-            parsedAuth.user.photoUrl = parsedAuth.photoUrl;
-            user.value = parsedAuth.user;
-          }
-        } else {
-          userPhotoUrl.value = null;
-        }
       }
       
       if (storedToken) {
@@ -106,22 +140,21 @@ export const useAuthStore = defineStore('auth',  () => {
     } catch (e) {
       console.error('Failed to restore auth from storage:', e);
       // Clear potentially corrupted storage
-      sessionStorage.removeItem('authUser');
-      sessionStorage.removeItem('accessToken');
+       
     }
   }
   
   // Set user photo URL
   function setUserPhotoUrl(url: string | null) {
     console.log('Setting user photo URL:', url ? 'URL provided' : 'null');
-    userPhotoUrl.value = url;
+    userPhotoUrl.value = url || undefined;
     
     // Update in session storage and user object if user exists
     if (user.value) {
       // Update the photoUrl in the user object
       user.value = {
         ...user.value,
-        photoUrl: url
+        photoUrl: url || undefined
       };
       
       // Update in session storage
@@ -132,7 +165,7 @@ export const useAuthStore = defineStore('auth',  () => {
         
         // Also update the photoUrl in the stored user object
         if (parsedAuth.user) {
-          parsedAuth.user.photoUrl = url;
+          parsedAuth.user.photoUrl = url || undefined;
         }
         
         sessionStorage.setItem('authUser', JSON.stringify(parsedAuth));
@@ -146,7 +179,7 @@ export const useAuthStore = defineStore('auth',  () => {
     isAuthenticated.value = false;
     authProvider.value = null;
     accessToken.value = null;
-    userPhotoUrl.value = null;
+    userPhotoUrl.value = undefined;
     sessionStorage.removeItem('authUser');
     sessionStorage.removeItem('accessToken');
   }
