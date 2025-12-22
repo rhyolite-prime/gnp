@@ -149,21 +149,23 @@
               </tbody>
             </table>
  
+            <!-- Simple Pagination -->
+            <client-only>
+                <SimplePagination :lower-bound="paginationParams.lowerBound" 
+                :upper-bound="paginationParams.upperBound"
+                @on-page-changed="onPageChange"
+                :page-no="filters.pageNo " 
+                :total-pages="paginationParams.totalPages"
+                :total-count="paginationParams.totalCount" 
+                :disabled="isShimmerLoading" />
+              </client-only>
+
           </div>
         </div>
       </div>
     </div>
     
-    <!-- Simple Pagination -->
-     <client-only>
-        <SimplePagination :lower-bound="paginationParams.lowerBound" 
-        :upper-bound="paginationParams.upperBound"
-        @on-page-changed="onPageChange"
-        :page-no="filters.pageNo " 
-        :total-pages="paginationParams.totalPages"
-        :total-count="paginationParams.totalCount" 
-        :disabled="isShimmerLoading" />
-      </client-only>
+    
 
   </div>
 </template>

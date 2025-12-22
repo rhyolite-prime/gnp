@@ -155,23 +155,6 @@
                 </select>
               </div>
 
-              <!-- Price -->
-              <div>
-                <label class="block text-sm font-medium leading-6 text-gray-900">Price (GHS)</label>
-                <div class="relative mt-2 rounded-md shadow-sm">
-                  <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <span class="text-gray-500 sm:text-sm">₵</span>
-                  </div>
-                  <input 
-                    type="number" 
-                    v-model="form.price"
-                    step="0.01"
-                    class="block w-full rounded-md border-0 py-1.5 pl-7 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" 
-                    placeholder="0.00" 
-                  />
-                </div>
-              </div>
-
               <!-- Category -->
               <div>
                 <label class="block text-sm font-medium leading-6 text-gray-900">Publication</label>
@@ -187,7 +170,7 @@
                       <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                         <ListboxOption as="template" v-for="publication in publicationList" :key="publication.id" :value="publication.id" v-slot="{ active, selected }">
                           <li :class="[active ? 'bg-primary-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
-                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ publication.name }}</span>
+                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ publication.name }} (GHS {{ publication.price }})</span>
                             <span v-if="selected" :class="[active ? 'text-white' : 'text-primary-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                               <CheckIcon class="h-5 w-5" aria-hidden="true" />
                             </span>
@@ -298,7 +281,6 @@ useHead({
 
 const publicationList = ref<Publication[]>([]);
 const selectedPublication = ref<Publication | null>(null);
-const uploadedPublicationFile = ref<File | null>(null);
 const isProcessingIngestion = ref(false);
 
 
@@ -338,7 +320,7 @@ const form = ref({
   headlines: [{ text: '' }] as Headline[],
   featuredStories: [] as FeaturedStory[],
   publicationDate: new Date().toISOString().split('T')[0],
-  price: '',
+  price: 0,
   editionNumber: '',
   storageService: 'google-drive',
   publicationId: '',
@@ -347,7 +329,7 @@ const form = ref({
   relatedContent: []
 })
 
-const fileInput = ref<HTMLInputElement | null>(null)
+ 
 
 const handleFileSelect = (event: Event) => {
   const input = event.target as HTMLInputElement
@@ -405,6 +387,9 @@ const savePublication = async () => {
     isProcessingIngestion.value = false;
     return;
   }
+
+  // Set price from selected publication
+  form.value.price = Number(selectedPublication.value.price);
 
   // Build title: e.g. "DG Monday, April 3, 2023"
   const publicationName = selectedPublication.value.name;
