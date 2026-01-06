@@ -161,6 +161,7 @@ import {
   BanknotesIcon,
   MegaphoneIcon,
   ArrowRightOnRectangleIcon,
+  BuildingOfficeIcon,
   Bars3Icon,
   BellIcon
 } from '@heroicons/vue/24/outline'
@@ -188,6 +189,16 @@ const navigation = [
       { name: 'Ingestion Jobs', href: '/admin/content-management/ingestion-jobs' },
     ],
   },
+
+  {
+    name: 'Commercial Partners',
+    icon: BuildingOfficeIcon,
+    children: [
+      { name: 'Partners', href: '/admin/partners/' },
+      { name: 'Invoices & Payments', href: '/admin/partners/invoices' },
+    ],
+  },
+
 
   { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon },
   { name: 'Payments', href: '/admin/payments', icon: BanknotesIcon },
