@@ -87,7 +87,6 @@
 import { useAuthStore } from '~/stores/auth';
 import { useMsalAuth } from '~/composables/useMsalAuth';
 import { useGoogleAuth } from '~/composables/useGoogleAuth';
-import { useRouter } from 'vue-router';
 
 const props = defineProps({
   showSignInModal: {
@@ -174,8 +173,12 @@ const handleSignOut = async () => {
   
   // Always clear the auth store
   authStore.clearUser();
+
+  const gnpUserIdentityCookie = useCookie('gnp-user-identity');
+  gnpUserIdentityCookie.value = null;
   
-  router.push('/');
+  router.push('/newspapers');
+
 };
 
 // Close dropdown when clicking outside

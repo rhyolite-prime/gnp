@@ -170,7 +170,8 @@ export interface IngestionJob extends BaseEntityModel {
 export interface Partner extends BaseEntityModel {
 
     name: string;
-    contactName: string;
+    identifier: string;
+    contactPerson: string;
     contactEmail: string;
     contactPhone: string;
     billingEmail: string;

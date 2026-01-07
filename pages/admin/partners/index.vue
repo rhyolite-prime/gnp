@@ -8,6 +8,13 @@
       </div>
       <div class="mt-4 sm:ml-16 sm:mt-0 flex gap-3">
         <button
+          @click="openCreateModal"
+          type="button"
+          class="block rounded-md bg-primary-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
+          Create New Partner
+        </button>
+
+        <button
           type="button"
           class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
         >
@@ -47,7 +54,7 @@
             type="text"
             v-model="searchQuery"
             class="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
-            placeholder="Search transactions..."
+            placeholder="Search Partners..."
           />
         </div>
       </div>
@@ -87,8 +94,8 @@
             </td>
 
             <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
-              <div class="font-medium text-gray-900">{{ partner.id }}</div>
-              <div class="text-gray-500">{{ partner.packageName }}</div>
+              <div class="font-medium text-gray-900">{{ partner.identifier }}</div>
+              <div class="text-gray-500">{{ partner.name }}</div>
             </td>
             
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
@@ -130,13 +137,20 @@
       </client-only>
 
     </div>
+    <!-- Partner Modal -->
+    <PartnerModal 
+      v-if="showCreateModal" 
+      @close="closeCreateModal" 
+      @save="handleCreatePartner"
+      :loading="isCreating"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 
 import { 
-  CurrencyDollarIcon, 
+  BanknotesIcon, 
   CheckCircleIcon, 
   ClockIcon, 
   ExclamationCircleIcon,
@@ -195,7 +209,7 @@ const getPaginatedPartners = async () => {
 
         let result = await getPayments(filters);
 
-        paymentList.value = result.data;
+        partnerList.value = result.data;
 
         paginationParams.totalPages = result.totalPages;
         paginationParams.totalCount = result.totalCount;
@@ -218,7 +232,7 @@ const partnerStats = [
     value: 125430, 
     change: '+15%', 
     changeType: 'increase', 
-    icon: CurrencyDollarIcon,
+    icon: BanknotesIcon,
     bgColor: 'bg-green-50',
     iconColor: 'text-green-600',
     prefix: 'GHS ',
@@ -256,18 +270,7 @@ const partnerStats = [
     iconColor: 'text-red-600',
     prefix: '',
     suffix: ''
-  },
-  { 
-    name: 'Expiring Subscriptions', 
-    value: 9, 
-    change: '+2%', 
-    changeType: 'decrease', 
-    icon: ExclamationCircleIcon,
-    bgColor: 'bg-red-50',
-    iconColor: 'text-red-600',
-    prefix: '',
-    suffix: ''
-  },
+  }
 ]
 
 const searchQuery = ref('')
@@ -290,6 +293,37 @@ const debouncedSearch = debounce(() => {
     await getPaginatedPartners();
 
   });
+ 
+  // Modal State and Handlers
+  const showCreateModal = ref(false);
+  const isCreating = ref(false);
+
+  const openCreateModal = () => {
+    showCreateModal.value = true;
+  };
+
+  const closeCreateModal = () => {
+    showCreateModal.value = false;
+  };
+
+  const handleCreatePartner = async (partnerData: any) => {
+    isCreating.value = true;
+    try {
+        console.log('Creating partner:', partnerData);
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        $toast.success('Partner created successfully');
+        closeCreateModal();
+        // Refresh list
+        await getPaginatedPartners();
+    } catch (error) {
+        console.error('Error creating partner:', error);
+        $toast.error('Failed to create partner');
+    } finally {
+        isCreating.value = false;
+    }
+  };
  
 </script>
 
