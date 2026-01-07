@@ -167,6 +167,23 @@ export interface IngestionJob extends BaseEntityModel {
     createdAt: string;
 }
 
+export interface Partner extends BaseEntityModel {
+
+    name: string;
+    identifier: string;
+    contactPerson: string;
+    contactEmail: string;
+    contactPhone: string;
+    billingEmail: string;
+    billingCycle: string;
+    currency: string;
+    status: string;
+    subaccountEnabled: boolean;
+    createdAt: string;
+}
+
+
+
 export interface Publication extends BaseEntityModel {
 
     createdAt: string;

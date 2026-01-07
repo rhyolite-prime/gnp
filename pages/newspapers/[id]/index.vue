@@ -349,6 +349,16 @@
     </div>
   </div>
 
+  <div 
+    v-if="isTransitioning"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600 mx-auto mb-4"></div>
+      <p class="text-lg font-medium text-gray-800">Processing Please wait...</p>
+    </div>
+  </div>
+
   <!-- Payment Checkout Modal -->
   <div 
     v-if="showPaymentModal"
@@ -368,6 +378,48 @@
     </div>
   </div>
 
+  <!-- Fingerprint Enrollment Modal -->
+  <div 
+    v-if="showFingerprintModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 text-center relative">
+      <button @click="skipFingerprint" class="absolute top-3 right-4 text-gray-400 hover:text-gray-600">
+        <X class="w-5 h-5" />
+      </button>
+
+      <div class="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+        <Fingerprint class="w-8 h-8 text-red-600" />
+      </div>
+      
+      <h3 class="text-xl font-bold text-gray-900 mb-2">Secure your Purchase</h3>
+      <p class="text-gray-600 mb-6">
+        Link your fingerprint to access this newspaper quickly in the future without entering details.
+      </p>
+
+      <div class="space-y-3">
+        <button 
+          @click="handleLinkFingerprint"
+          :disabled="isRegisteringBiometric"
+          class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-md font-medium flex items-center justify-center gap-2"
+        >
+          <span v-if="!isRegisteringBiometric">Link Fingerprint</span>
+          <span v-else class="flex items-center">
+            <span class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+            Processing...
+          </span>
+        </button>
+        
+        <button 
+          @click="skipFingerprint"
+          class="w-full bg-transparent hover:bg-gray-50 text-gray-600 py-2 px-4 rounded-md font-medium"
+        >
+          No, thanks
+        </button>
+      </div>
+    </div>
+  </div>
+
   </div>
 </template>
 
@@ -379,8 +431,10 @@ import {
   Facebook,
   Twitter,
   FileText,
+  Fingerprint,
   X
 } from 'lucide-vue-next'
+import { useBiometrics } from '~/composables/useBiometrics';
 
 const route = useRoute();
 const router = useRouter();
@@ -407,6 +461,7 @@ const hasAccess = ref(false);
 const isAccessLoading = ref(true);
 
 const isProcessing = ref(false);
+const isTransitioning = ref(false);
 const imageLoading = ref(true);
 const isCompletingPurchase = ref(false);
 const blobUrl = ref<string>();
@@ -415,6 +470,11 @@ const newsPaperDetail = ref<NewsPaper | null>(null);
 // Modal state
 const showSubscriptionModal = ref(false);
 const showPaymentModal = ref(false);
+const showFingerprintModal = ref(false);
+const isBiometricAvailable = ref(false);
+const isRegisteringBiometric = ref(false);
+
+const { isBiometricsAvailable, register } = useBiometrics();
 
 // Form fields
 const fullName = ref("");
@@ -581,13 +641,13 @@ const handleOneTimePurchase = async () => {
 
 const completeOneTimePurchase = async () => {
 
+    isCompletingPurchase.value = true;
 
   try {
 
-    // wait for 4 seconds before proceeding...
-      await new Promise(resolve => setTimeout(resolve, 2000));
 
-    isCompletingPurchase.value = true;
+    // wait for 4 seconds before proceeding...
+    await new Promise(resolve => setTimeout(resolve, 2800));
      
     const result = await fulfillGuestOneTimePurchase({ reference: paymentInfo.value?.reference });
 
@@ -604,13 +664,17 @@ const completeOneTimePurchase = async () => {
       
       gnpUserIdentityCookie.value = result;
       authStore.setAccessToken(result);
-
-      // wait for 4 seconds before proceeding...
-      await new Promise(resolve => setTimeout(resolve, 5000));
-
-      await retrieveNewsPaperEntitlement(newspaperId.value);
-      //show loader modal automatically (already reactive)
-      //navigate to the document viewer page for the user to read.
+      
+      // Check if biometric is available
+      const available = await isBiometricsAvailable();
+      if (available) {
+        isBiometricAvailable.value = true;
+        showFingerprintModal.value = true;
+        // Don't auto-redirect/show success yet, wait for user choice
+      } else {
+        // Fallback for devices without biometrics
+        await retrieveNewsPaperEntitlement(newspaperId.value);
+      }
 
     }
     
@@ -662,21 +726,75 @@ const retrieveNewsPaperDetails = async (id: string) => {
 
 }
 
-const retrieveNewsPaperEntitlement = async (id: string) => {
+const retrieveNewsPaperEntitlement = async (id: string, maxRetries = 3) => {
+
+  console.log('triggered...');
 
   isAccessLoading.value = true;
+  isProcessing.value = true;
 
-    try {
+  let attempt = 0;
+  let delay = 1500; // Start with 1 second
 
-      let result = await validateNewsPaperEntitlement({newsPaperId : id});
-
-      hasAccess.value = result.hasAccess;
-
-    } catch (error) {
-        //$toast.error('Unable to fetch finishing options !');
-    } finally {
-        isAccessLoading.value = false;
+  try {
+    while (attempt < maxRetries) {
+      try {
+        let result = await validateNewsPaperEntitlement({newsPaperId: id});
+        
+        if (result.hasAccess) {
+          hasAccess.value = true;
+          isProcessing.value = false;
+          return; // Success, exit
+        }
+        
+        // If no access yet, throw to trigger retry logic
+        console.log(`Attempt ${attempt + 1}: No access yet, retrying...`);
+        throw new Error("No access returned");
+        
+      } catch (e) {
+        // If it's the last attempt, don't wait, just fail (or keep hasAccess as false)
+        if (attempt === maxRetries - 1) {
+          console.warn("Max retries reached for entitlement check.");
+          break; 
+        }
+        
+        // Wait with backoff
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // Exponential backoff
+        attempt++;
+      }
     }
+  } catch (error) {
+    console.error('Unable to fetch entitlement', error);
+    isAccessLoading.value = false
+    isProcessing.value = false;
+    hasAccess.value = false;
+  } finally {
+    isAccessLoading.value = false;
+    isProcessing.value = false;
+  }
+}
+
+const verifyNewsPaperEntitlement = async (id: string) => {
+
+  try {
+
+    let result = await validateNewsPaperEntitlement({newsPaperId: id});
+    console.log('result -> ', result);
+
+    if (result && result.hasAccess) {
+      hasAccess.value = true;
+      return;
+    }
+
+  } catch {
+    isAccessLoading.value = false
+    hasAccess.value = false;
+  }
+  finally {
+    isAccessLoading.value = false
+  }
+
 }
 
  onBeforeUnmount(() => {
@@ -684,8 +802,11 @@ const retrieveNewsPaperEntitlement = async (id: string) => {
  })
 
 onMounted(async () => {
+
   await retrieveNewsPaperDetails(newspaperId.value);
-  await retrieveNewsPaperEntitlement(newspaperId.value);
+   
+  await verifyNewsPaperEntitlement(newspaperId.value);
+
   if (!import.meta.server) {
     window.addEventListener('message', payStackCheckoutEventCallback)
   }
@@ -711,5 +832,41 @@ watch(newsPaperDetail, (newValue) => {
 
 function goBack() {
   router.back();
+}
+
+const handleLinkFingerprint = async () => {
+    try {
+        isRegisteringBiometric.value = true;
+        
+        // Use current user details for enrollment
+        // In a real app we might want to ensure we have a persistent user ID from the response
+        const user = {
+            id: paymentInfo.value?.reference || 'guest-user',
+            email: email.value,
+            name: fullName.value
+        };
+
+        const credential = await register(user);
+        
+        // Send to backend
+      await registerBiometric(credential);
+
+      await retrieveNewsPaperEntitlement(newspaperId.value);
+
+        // Success - close modal
+        showFingerprintModal.value = false;
+        // Optionally show a success toast here
+        
+    } catch (error) {
+        console.error("Biometric enrollment failed", error);
+        // show error
+    } finally {
+        isRegisteringBiometric.value = false;
+    }
+}
+
+const skipFingerprint = async () => {
+  showFingerprintModal.value = false;
+    await retrieveNewsPaperEntitlement(newspaperId.value)
 }
 </script>
