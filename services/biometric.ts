@@ -1,4 +1,5 @@
 import type { BaseApiResponse } from "~/models";
+import { bufferToBase64URL } from "~/utils/helpers";
 
 export async function registerBiometric(credential: any, userId ?: string) {
   // In a real implementation, this would send the credential to the backend
@@ -7,15 +8,16 @@ export async function registerBiometric(credential: any, userId ?: string) {
 
     const payload = {
       credentialId: credential.id,
-      publicKey: credential.response.publicKey, // already base64
-      publicKeyAlgorithm: credential.response.publicKeyAlgorithm,
-      transports: credential.response.transports,
+      publicKey: credential.response.getPublicKey ? bufferToBase64URL(credential.response.getPublicKey()) : null,
+      publicKeyAlgorithm: credential.response.getPublicKeyAlgorithm ? credential.response.getPublicKeyAlgorithm() : null,
+      transports: credential.response.getTransports ? credential.response.getTransports() : [],
       credentialType: credential.type,
-      attestationObject: credential.response.attestationObject,
+      attestationObject: bufferToBase64URL(credential.response.attestationObject),
+      clientDataJSON: bufferToBase64URL(credential.response.clientDataJSON),
       userId: userId,
     };
   
-  const response = await httpClient<BaseApiResponse<object>>('users/register-pass-keys', "", {
+  const response = await httpClient<BaseApiResponse<object>>('auth/register-pass-keys', "", {
     method: "post",
     body: payload,
   });

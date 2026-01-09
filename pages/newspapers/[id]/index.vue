@@ -840,7 +840,7 @@ const handleLinkFingerprint = async () => {
       // Use current user details for enrollment
       // In a real app we might want to ensure we have a persistent user ID from the response
       const user = {
-          id: paymentInfo.value?.reference || 'guest-user',
+          id: paymentInfo.value?.userId || 'guest-user',
           email: email.value,
           name: fullName.value
       };

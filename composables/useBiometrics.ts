@@ -42,7 +42,7 @@ export const useBiometrics = () => {
                     id: window.location.hostname,
                 },
                 user: {
-                    id: strToUi8(user.id) as any, 
+                    id: strToUi8(user.id) as any,
                     name: user.email,
                     displayName: user.name,
                 },

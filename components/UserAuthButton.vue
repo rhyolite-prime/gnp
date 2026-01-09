@@ -1,6 +1,6 @@
 <template>
   <div v-if="isAuthLoading" class="flex items-center space-x-2">
-    <div class="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+    <div class="w-8x h-8 rounded-full bg-gray-200 animate-pulse"></div>
     <div class="hidden md:block w-24 h-3 bg-gray-200 rounded animate-pulse"></div>
   </div>
 
@@ -41,7 +41,7 @@
       <!-- Dropdown menu -->
       <div 
         v-if="isOpen" 
-        class="absolute right-50 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50"
+        class="absolute right-50 mt-2 w-78 bg-white rounded-md shadow-lg py-1 z-50"
       >
         <div class="px-4 py-3 border-b border-gray-100">
           <p class="text-sm leading-5 font-medium text-gray-900">{{ userName }}</p>
