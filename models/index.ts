@@ -42,6 +42,7 @@ export interface GnpUserAuthModel {
 export interface GuestSubscriptionResponseModel {
     paymentUrl: string;
     reference: string;
+    userId: string;
 }
 
 export interface NewsPaperEntitlementResponseModel {

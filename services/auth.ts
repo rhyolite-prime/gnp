@@ -52,3 +52,12 @@ export async function setPassword(payload: object) {
     
    return response.success;
 }
+
+export async function verifyPasskeyLogin(payload: object) {
+    
+  const response = await httpClient<BaseApiResponse<SigninResponseModel>>('auth/login-via-pass-keys', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.result;
+}

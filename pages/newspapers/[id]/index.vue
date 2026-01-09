@@ -727,9 +727,7 @@ const retrieveNewsPaperDetails = async (id: string) => {
 }
 
 const retrieveNewsPaperEntitlement = async (id: string, maxRetries = 3) => {
-
-  console.log('triggered...');
-
+ 
   isAccessLoading.value = true;
   isProcessing.value = true;
 
@@ -835,21 +833,22 @@ function goBack() {
 }
 
 const handleLinkFingerprint = async () => {
-    try {
-        isRegisteringBiometric.value = true;
-        
-        // Use current user details for enrollment
-        // In a real app we might want to ensure we have a persistent user ID from the response
-        const user = {
-            id: paymentInfo.value?.reference || 'guest-user',
-            email: email.value,
-            name: fullName.value
-        };
+  try {
+      
+      isRegisteringBiometric.value = true;
+      
+      // Use current user details for enrollment
+      // In a real app we might want to ensure we have a persistent user ID from the response
+      const user = {
+          id: paymentInfo.value?.reference || 'guest-user',
+          email: email.value,
+          name: fullName.value
+      };
 
-        const credential = await register(user);
+      const credential = await register(user);
         
-        // Send to backend
-      await registerBiometric(credential);
+      // Send to backend..
+      await registerBiometric(credential, paymentInfo.value?.userId);
 
       await retrieveNewsPaperEntitlement(newspaperId.value);
 
