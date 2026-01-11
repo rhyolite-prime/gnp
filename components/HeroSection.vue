@@ -1,6 +1,6 @@
 <template>
   <section class="gradient-hero text-white py-20 animate-fade-in">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div class="animate-slide-up">
           <h1 class="text-5xl lg:text-6xl font-bold mb-6 leading-tight">

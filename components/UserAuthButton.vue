@@ -45,7 +45,7 @@
       >
         <div class="px-4 py-3 border-b border-gray-100">
           <p class="text-sm leading-5 font-medium text-gray-900">{{ userName }}</p>
-          <p class="text-xs leading-4 text-gray-500 mt-1 truncate">{{ userEmail }}</p>
+          <!-- <p class="text-xs leading-4 text-gray-500 mt-1 truncate">{{ userEmail }}</p> -->
         </div>
         <a 
           href="#" 
@@ -108,7 +108,7 @@ const userName = computed(() => {
   const user = authStore.user;
   if (!user) return '';
 
-  if (user.givenName) return user.givenName;
+  //if (user.givenName) return user.givenName;
   if (user.email) return user.email;
   
   // MSAL specific fields
@@ -122,21 +122,6 @@ const userName = computed(() => {
   return 'User';
 });
 
-const userEmail = computed(() => {
-  const user = authStore.user;
-  if (!user) return '';
-  
-  if (user.username) return user.email;
-  
-  // MSAL specific fields
-  if (authStore.authProvider === 'microsoft') {
-    const email = user.username || 
-                 (user.idTokenClaims && user.idTokenClaims.name);
-    return email || '';
-  }
-  
-  return '';
-});
 
 const userInitials = computed(() => {
   const name = userName.value;
