@@ -192,6 +192,21 @@
           </svg>
           {{ msLoading ? 'Signing in...' : 'Microsoft' }}
         </button>
+
+        <button 
+          @click="handlePasskeySignIn" 
+          :disabled="passkeyLoading"
+          class="col-span-2 flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white hover:bg-gray-50 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg v-if="!passkeyLoading" class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364a9 9 0 00-6.708-3.536m7.854 6.07a11.97 11.97 0 00-4.058-5.77C1.583 6.945.5 5.5.5 5.5" />
+          </svg>
+          <svg v-if="passkeyLoading" class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ passkeyLoading ? 'Signing in...' : 'Sign in with Passkey' }}
+        </button>
       </div>
       
       <!-- Error messages -->
@@ -209,13 +224,16 @@
 </template>
 
 
-<script setup>
+<script setup lang="ts">
 
 import { useMsalAuth } from '~/composables/useMsalAuth';
 import { useGoogleAuth } from '~/composables/useGoogleAuth';
+import { useBiometrics } from '~/composables/useBiometrics';
 import { useAuthStore } from '~/stores/auth';
 import * as msal from '@azure/msal-browser';
 import { useRuntimeConfig } from '#imports';
+import { verifyPasskeyLogin } from '~/services/auth';
+
 
 const emit = defineEmits(['close', 'set-password']);
 
@@ -242,6 +260,7 @@ const otpLoading = ref(false);
 const verifyOtpLoading = ref(false);
 const passwordResetLoading = ref(false);
 const isSigningIn = ref(false);
+const passkeyLoading = ref(false);
 
 // Track Microsoft auth state
 const msAuth = useMsalAuth();
@@ -459,5 +478,57 @@ const handleMicrosoftSignIn = async () => {
     msAuth.error.value = err;
     msAuth.loading.value = false;
   }
+};
+
+const handlePasskeySignIn = async () => {
+    passkeyLoading.value = true;
+    try {
+        const { authenticate, bufferToBase64Url } = useBiometrics();
+        
+        // Generate client-side challenge for now (in a real scenario, get from server)
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+        
+        const credential = await authenticate(challenge);
+        
+        if (credential) {
+             const pubKeyCred = credential as PublicKeyCredential;
+             const response = pubKeyCred.response as AuthenticatorAssertionResponse;
+             
+             const payload = {
+                id: pubKeyCred.id,
+                rawId:  bufferToBase64Url(pubKeyCred.rawId),
+                type: pubKeyCred.type,
+                response: {
+                    authenticatorData: bufferToBase64Url(response.authenticatorData),
+                    clientDataJSON: bufferToBase64Url(response.clientDataJSON),
+                    signature: bufferToBase64Url(response.signature),
+                    userHandle: response.userHandle ? bufferToBase64Url(response.userHandle) : null
+                }
+            };
+            
+            const loginResponse = await verifyPasskeyLogin(payload);
+            
+            if (loginResponse && loginResponse.token) {
+                 const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
+                    maxAge: 60 * 60 * 24,
+                    secure: true,
+                    httpOnly: false,
+                    priority: "medium",
+                    sameSite: "strict"
+                });
+                
+                gnpUserIdentityCookie.value = loginResponse.token;
+                authStore.setAccessToken(loginResponse.token);
+                emit('close');
+            }
+        }
+        
+    } catch (err) {
+        console.error('Passkey sign-in error:', err);
+        // Could set an error message here similar to google/ms error
+    } finally {
+        passkeyLoading.value = false;
+    }
 };
 </script>

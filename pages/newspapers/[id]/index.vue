@@ -52,7 +52,7 @@
                 />
               </div>
               <div class="text-center">
-                <NuxtLink :to="`/newspapers/${newsPaperDetail?.id}/open`" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md mb-3 font-medium flex items-center justify-center">
+                <NuxtLink v-if="hasAccess" :to="`/newspapers/${newsPaperDetail?.id}/open`" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md mb-3 font-medium flex items-center justify-center">
                   <FileText class="w-5 h-5 mr-2" />
                   Open to read
                 </NuxtLink>
@@ -378,7 +378,7 @@
     </div>
   </div>
 
-  <!-- Fingerprint Enrollment Modal -->
+  <!-- Passkey Enrollment Modal/ Express Login -->
   <div 
     v-if="showFingerprintModal"
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -389,12 +389,12 @@
       </button>
 
       <div class="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-        <Fingerprint class="w-8 h-8 text-red-600" />
+        <ScanFace class="w-8 h-8 text-red-600" />
       </div>
       
-      <h3 class="text-xl font-bold text-gray-900 mb-2">Secure your Purchase</h3>
-      <p class="text-gray-600 mb-6">
-        Link your fingerprint to access this newspaper quickly in the future without entering details.
+      <h3 class="text-xl font-bold text-gray-900 mb-2">Setup Express Login</h3>
+      <p class="text-gray-600 mb-6">  
+        Access all your newspapers securely using your device’s built-in authentication—<strong>fingerprint</strong>, <strong>face recognition</strong>, or <strong>secure device lock</strong>.
       </p>
 
       <div class="space-y-3">
@@ -403,7 +403,7 @@
           :disabled="isRegisteringBiometric"
           class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-md font-medium flex items-center justify-center gap-2"
         >
-          <span v-if="!isRegisteringBiometric">Link Fingerprint</span>
+          <span v-if="!isRegisteringBiometric">Enable Express Login</span>
           <span v-else class="flex items-center">
             <span class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
             Processing...
@@ -414,7 +414,7 @@
           @click="skipFingerprint"
           class="w-full bg-transparent hover:bg-gray-50 text-gray-600 py-2 px-4 rounded-md font-medium"
         >
-          No, thanks
+          Maybe later
         </button>
       </div>
     </div>
@@ -432,6 +432,7 @@ import {
   Twitter,
   FileText,
   Fingerprint,
+  ScanFace,
   X
 } from 'lucide-vue-next'
 import { useBiometrics } from '~/composables/useBiometrics';
@@ -727,9 +728,7 @@ const retrieveNewsPaperDetails = async (id: string) => {
 }
 
 const retrieveNewsPaperEntitlement = async (id: string, maxRetries = 3) => {
-
-  console.log('triggered...');
-
+ 
   isAccessLoading.value = true;
   isProcessing.value = true;
 
@@ -835,21 +834,22 @@ function goBack() {
 }
 
 const handleLinkFingerprint = async () => {
-    try {
-        isRegisteringBiometric.value = true;
-        
-        // Use current user details for enrollment
-        // In a real app we might want to ensure we have a persistent user ID from the response
-        const user = {
-            id: paymentInfo.value?.reference || 'guest-user',
-            email: email.value,
-            name: fullName.value
-        };
+  try {
+      
+      isRegisteringBiometric.value = true;
+      
+      // Use current user details for enrollment
+      // In a real app we might want to ensure we have a persistent user ID from the response
+      const user = {
+          id: paymentInfo.value?.userId || 'guest-user',
+          email: email.value,
+          name: fullName.value
+      };
 
-        const credential = await register(user);
+      const credential = await register(user);
         
-        // Send to backend
-      await registerBiometric(credential);
+      // Send to backend..
+      await registerBiometric(credential, paymentInfo.value?.userId);
 
       await retrieveNewsPaperEntitlement(newspaperId.value);
 

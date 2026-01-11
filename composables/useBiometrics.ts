@@ -42,7 +42,7 @@ export const useBiometrics = () => {
                     id: window.location.hostname,
                 },
                 user: {
-                    id: strToUi8(user.id) as any, // Cast to avoid BufferSource type mismatch
+                    id: strToUi8(user.id) as any,
                     name: user.email,
                     displayName: user.name,
                 },
@@ -70,8 +70,44 @@ export const useBiometrics = () => {
         }
     };
 
+    // Authenticate with a credential
+    const authenticate = async (challengeBuffer: Uint8Array) => {
+        try {
+            const publicKeyCredentialRequestOptions: PublicKeyCredentialRequestOptions = {
+                challenge: challengeBuffer as any,
+                timeout: 60000,
+                rpId: window.location.hostname,
+                userVerification: "preferred",
+            };
+
+            const credential = await navigator.credentials.get({
+                publicKey: publicKeyCredentialRequestOptions
+            });
+
+            return credential;
+        } catch (error) {
+            console.error("WebAuthn authentication failed:", error);
+            throw error;
+        }
+    };
+
+    // ArrayBuffer to Base64Url
+    const bufferToBase64Url = (buffer: ArrayBuffer): string => {
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return window.btoa(binary)
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=/g, '');
+    };
+
     return {
         isBiometricsAvailable,
-        register
+        register,
+        authenticate,
+        bufferToBase64Url
     };
 };
