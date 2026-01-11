@@ -10,6 +10,7 @@ export interface NotificationPayload {
 
 export const useNotificationStore = defineStore('notification', () => {
   const notifications = ref<NotificationPayload[]>([])
+  const unreadCount = ref(3) // Mock initial count
 
   const addNotification = (notification: NotificationPayload) => {
     // Avoid duplicates using ID if provided
@@ -17,6 +18,7 @@ export const useNotificationStore = defineStore('notification', () => {
         return
     }
     notifications.value.push(notification)
+    unreadCount.value++
     
     // Auto remove after 30 seconds
     setTimeout(() => {
@@ -31,9 +33,15 @@ export const useNotificationStore = defineStore('notification', () => {
     }
   }
 
+  const clearUnreadCount = () => {
+    unreadCount.value = 0
+  }
+
   return {
     notifications,
+    unreadCount,
     addNotification,
-    removeNotification
+    removeNotification,
+    clearUnreadCount
   }
 })

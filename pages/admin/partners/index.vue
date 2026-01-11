@@ -76,8 +76,7 @@
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Created At</th>
             <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Name</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Contact Person</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Contact Phone</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Contact Email</th>
+            
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Billing Cycle</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
             
@@ -99,12 +98,15 @@
             </td>
             
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-              <div class="text-gray-900">{{ partner.contactPerson }}</div>
+              <div class="text-gray-900">{{ partner.contactName }}</div>
               <div class="text-gray-500">{{ partner.contactPhone }}</div>
               <div class="text-gray-500">{{ partner.contactEmail }}</div>
-              <div class="text-gray-500">{{ partner.billingCycle }}</div>
             </td>
              
+             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+              {{ partner.billingCycle  }}
+            </td>
+
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
               <span 
                 class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
@@ -119,7 +121,37 @@
             </td>
            
             <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-              <button class="text-primary-600 hover:text-primary-900">View Details</button>
+              <div class="relative dropdown-container">
+                <button 
+                    @click.stop="toggleDropdown(partner.id)" 
+                    class="text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                    <EllipsisVerticalIcon class="h-5 w-5" />
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div 
+                    v-if="activeDropdownId === partner.id" 
+                    class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-100 ring-1 ring-black ring-opacity-5"
+                >
+                    <div class="py-1">
+                        <a 
+                            href="#" 
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                            @click.prevent="viewAdminUsers(partner)"
+                        >
+                            View Admin Users
+                        </a>
+                        <a 
+                            href="#" 
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                            @click.prevent="viewSubscribers(partner)"
+                        >
+                            View Subscribers
+                        </a>
+                    </div>
+                </div>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -155,11 +187,12 @@ import {
   ClockIcon, 
   ExclamationCircleIcon,
   ArrowDownTrayIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  EllipsisVerticalIcon
 } from '@heroicons/vue/24/outline'
 import CountUp from 'vue-countup-v3'
 import { isEmpty, debounce } from "lodash-es";
-import type { Partner } from "~/models";
+import type { CommercialPartner, CommercialPartnerStat } from "~/models";
 const { $toast } = useNuxtApp();
 
 
@@ -188,9 +221,12 @@ const paginationParams = reactive({
   upperBound: 0
 });
 
-const partnerList = ref<Partner[]>([]);
+const partnerList = ref<CommercialPartner[]>([]);
+const commercialPartnerStat = ref<CommercialPartnerStat[]>([]);
+
 
 const isShimmerLoading = ref(true);
+const isPartnerStatsLoading = ref(true);
 
 const onPageChange = async (pageNumber: number) => {
 
@@ -207,7 +243,7 @@ const getPaginatedPartners = async () => {
 
     try {
 
-        let result = await getPayments(filters);
+        let result = await getCommercialPartners(filters);
 
         partnerList.value = result.data;
 
@@ -217,9 +253,27 @@ const getPaginatedPartners = async () => {
         paginationParams.upperBound = result.upperBound;
 
     } catch (error) {
-        $toast.error('Unable to fetch payments !');
+        $toast.error('Unable to fetch commercial partners !');
     } finally {
         isShimmerLoading.value = false;
+    }
+
+ }
+
+ const getPartnerStats = async () => {
+
+    isPartnerStatsLoading.value = true;
+
+    try {
+
+        let result = await getCommercialPartnerStats();
+        commercialPartnerStat.value = result;
+
+    } catch (error) {
+        $toast.error('Unable to fetch commercial partner stats !');
+        isPartnerStatsLoading.value = false;
+    } finally {
+        isPartnerStatsLoading.value = false;
     }
 
  }
@@ -291,12 +345,47 @@ const debouncedSearch = debounce(() => {
     }
     
     await getPaginatedPartners();
+    await getPartnerStats();
 
   });
  
   // Modal State and Handlers
   const showCreateModal = ref(false);
   const isCreating = ref(false);
+  const activeDropdownId = ref<string | null>(null);
+
+  const toggleDropdown = (id: string) => {
+    if (activeDropdownId.value === id) {
+        activeDropdownId.value = null;
+    } else {
+        activeDropdownId.value = id;
+    }
+  };
+
+  const closeDropdown = () => {
+    activeDropdownId.value = null;
+  };
+
+  // Close dropdown when clicking outside
+  onMounted(() => {
+    document.addEventListener('click', (e: any) => {
+        if (!e.target.closest('.dropdown-container')) {
+            closeDropdown();
+        }
+    });
+  });
+
+  const viewAdminUsers = (partner: CommercialPartner) => {
+      console.log("View Admin Users", partner);
+      closeDropdown();
+      // Navigate to admin users page
+  }
+
+  const viewSubscribers = (partner: CommercialPartner) => {
+      console.log("View Subscribers", partner);
+      closeDropdown();
+      // Navigate to subscribers page
+  }
 
   const openCreateModal = () => {
     showCreateModal.value = true;

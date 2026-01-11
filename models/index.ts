@@ -168,11 +168,11 @@ export interface IngestionJob extends BaseEntityModel {
     createdAt: string;
 }
 
-export interface Partner extends BaseEntityModel {
+export interface CommercialPartner extends BaseEntityModel {
 
     name: string;
     identifier: string;
-    contactPerson: string;
+    contactName: string;
     contactEmail: string;
     contactPhone: string;
     billingEmail: string;
@@ -183,8 +183,6 @@ export interface Partner extends BaseEntityModel {
     createdAt: string;
 }
 
-
-
 export interface Publication extends BaseEntityModel {
 
     createdAt: string;
@@ -192,7 +190,16 @@ export interface Publication extends BaseEntityModel {
     isActive: boolean;
     name: string;
     price: number;
-    
+}
+
+
+export interface CommercialPartnerStat extends BaseEntityModel {
+
+    createdAt: string;
+    description: string;
+    isActive: boolean;
+    name: string;
+    price: number;
 }
 
 export interface GnpDocumentResponseModel extends BaseEntityModel {
