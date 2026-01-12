@@ -95,6 +95,20 @@
             </div>
           </div>
 
+          <!-- Subscriber Quota -->
+           <div class="sm:col-span-3">
+            <label for="billingEmail" class="block text-sm font-medium leading-6 text-gray-900">Subscriber Quota</label>
+            <div class="mt-2">
+              <input 
+                type="number" 
+                v-model="form.subscriberQuota"
+                name="subscriberQuota" 
+                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" 
+                required
+              />
+            </div>
+          </div>
+
           <!-- Billing Cycle -->
           <div class="sm:col-span-3">
             <label for="billingCycle" class="block text-sm font-medium leading-6 text-gray-900">Billing Cycle</label>
@@ -134,7 +148,7 @@
               <div class="flex h-6 items-center">
                 <input 
                   id="subaccountEnabled" 
-                  v-model="form.subaccountEnabled"
+                  v-model="form.subAccountEnabled"
                   name="subaccountEnabled" 
                   type="checkbox" 
                   class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-600" 
@@ -196,9 +210,10 @@ const form = reactive({
   contactEmail: '',
   contactPhone: '',
   billingEmail: '',
+  subscriberQuota: 1,
   billingCycle: 'Monthly',
   currency: 'GHS',
-  subaccountEnabled: false,
+  subAccountEnabled: false,
 });
 
 // Handle Submit

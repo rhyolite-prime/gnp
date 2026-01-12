@@ -5,6 +5,7 @@ export interface BaseApiResponse<T> {
     unAuthorizedRequest: boolean;
     error: Error;
 }
+
   
 
 export interface Error {
@@ -171,7 +172,7 @@ export interface IngestionJob extends BaseEntityModel {
 export interface CommercialPartner extends BaseEntityModel {
 
     name: string;
-    identifier: string;
+    partnerIdentifier: string;
     contactName: string;
     contactEmail: string;
     contactPhone: string;
@@ -179,6 +180,7 @@ export interface CommercialPartner extends BaseEntityModel {
     billingCycle: string;
     currency: string;
     status: string;
+    subscriberQuota: number;
     subaccountEnabled: boolean;
     createdAt: string;
 }
@@ -195,11 +197,16 @@ export interface Publication extends BaseEntityModel {
 
 export interface CommercialPartnerStat extends BaseEntityModel {
 
-    createdAt: string;
-    description: string;
-    isActive: boolean;
     name: string;
-    price: number;
+    value: number;
+    change: string;
+    changeType: string;
+    icon: any;
+    bgColor: string;
+    iconColor: string;
+    prefix: string;
+    suffix: string;
+     
 }
 
 export interface GnpDocumentResponseModel extends BaseEntityModel {

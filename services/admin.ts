@@ -92,3 +92,21 @@ export async function deleteCommercialPartner(id: string) {
   });
   return response.success;
 }
+
+export async function enablePartnerSubaccount(query: object) {
+ 
+    const response = await httpClient<BaseApiResponse<object>>('admin/enable-partner-subaccount', "", { query });
+    return response.success;
+}
+
+export async function updateCommercialPartnerStatus(query: object) {
+ 
+    const response = await httpClient<BaseApiResponse<object>>('admin/update-partner-status', "", { query });
+    return response.success;
+}
+
+export async function disablePartnerSubaccount(query: object) {
+ 
+    const response = await httpClient<BaseApiResponse<object>>('admin/disable-partner-subaccount', "", { query });
+    return response.success;
+}
