@@ -52,10 +52,14 @@
                 />
               </div>
               <div class="text-center">
-                <NuxtLink v-if="hasAccess" :to="`/newspapers/${newsPaperDetail?.id}/open`" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md mb-3 font-medium flex items-center justify-center">
+                <NuxtLink v-if="hasAccess" :to="`/newspapers/${uniqueId}/open`" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-md mb-3 font-medium flex items-center justify-center">
                   <FileText class="w-5 h-5 mr-2" />
                   Open to read
                 </NuxtLink>
+                <button v-if="hasAccess" @click="openShareModal" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-md mb-3 font-medium flex items-center justify-center">
+                  <Share class="w-5 h-5 mr-2" />
+                  Share with a friend
+                </button>
                 <button @click="handlePreviewClick" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 px-6 rounded-md font-medium">
                     Preview
                 </button>
@@ -421,6 +425,61 @@
   </div>
 
   </div>
+
+  <!-- Share Modal -->
+  <div 
+    v-if="showShareModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
+      <!-- Close Button -->
+      <button @click="closeShareModal" class="absolute top-3 right-4 text-gray-600 hover:text-gray-900">
+        ✕
+      </button>
+
+      <div class="text-center mb-6">
+        <div class="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+          <Share class="w-6 h-6 text-blue-600" />
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900">Share Publication</h2>
+        <p class="text-gray-500 text-sm mt-1">
+          Share access to this edition with another user via their phone number.
+        </p>
+      </div>
+
+      <!-- Recipient Phone -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Recipient Phone Number</label>
+        <div class="relative">
+          <input
+            v-model="recipientPhone"
+            type="tel"
+            class="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+            placeholder="Enter phone number (e.g. 054xxxxxxx)"
+          />
+        </div>
+      </div>
+
+      <button 
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md font-bold text-lg shadow-md transition-all flex items-center justify-center gap-2"
+        @click="handleShare"
+        :disabled="isSharing || !recipientPhone"
+      >
+        <span v-if="!isSharing">Share a Copy</span>
+        <span v-else class="flex items-center">
+          <span class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></span>
+          Sharing...
+        </span>
+      </button>
+      
+      <button 
+        @click="closeShareModal"
+        class="w-full mt-3 bg-transparent text-gray-500 py-2 font-medium hover:text-gray-700 transition-colors"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -433,7 +492,8 @@ import {
   FileText,
   Fingerprint,
   ScanFace,
-  X
+  X,
+  Share
 } from 'lucide-vue-next'
 import { useBiometrics } from '~/composables/useBiometrics';
 
@@ -455,6 +515,9 @@ useHead({
 
  
 
+const { isBiometricsAvailable, register } = useBiometrics();
+const { $toast } = useNuxtApp();
+
 // State
 const isLoading = ref(true);
 const showPurchaseModal = ref(false);
@@ -462,25 +525,27 @@ const hasAccess = ref(false);
 const isAccessLoading = ref(true);
 
 const isProcessing = ref(false);
+const isSharing = ref(false);
 const isTransitioning = ref(false);
 const imageLoading = ref(true);
 const isCompletingPurchase = ref(false);
 const blobUrl = ref<string>();
+const uniqueId = ref<string>("");
 const paymentInfo = ref<GuestSubscriptionResponseModel>();
 const newsPaperDetail = ref<NewsPaper | null>(null);
 // Modal state
 const showSubscriptionModal = ref(false);
+const showShareModal = ref(false);
 const showPaymentModal = ref(false);
 const showFingerprintModal = ref(false);
 const isBiometricAvailable = ref(false);
 const isRegisteringBiometric = ref(false);
 
-const { isBiometricsAvailable, register } = useBiometrics();
-
 // Form fields
 const fullName = ref("");
 const email = ref("");
 const phone = ref("");
+const recipientPhone = ref("");
 const errorMessage = ref("");
 
 
@@ -525,6 +590,41 @@ function openOneTimePurchaseModal() {
 function closePurchaseModal() {
   showPurchaseModal.value = false;
 }
+
+function openShareModal() {
+  showShareModal.value = true;
+  recipientPhone.value = "";
+}
+
+function closeShareModal() {
+  showShareModal.value = false;
+}
+
+const handleShare = async () => {
+  if (!recipientPhone.value) return;
+
+  isSharing.value = true;
+  try {
+    const payload = {
+      newsPaperId: newspaperId.value,
+      phoneNumber: recipientPhone.value
+    };
+
+    const response = await shareNewspaper(payload);
+    
+    if (response.success) {
+      $toast.success(response.message || "Publication shared successfully!");
+      closeShareModal();
+    } else {
+      $toast.error(response.message || "Failed to share publication.");
+    }
+  } catch (error) {
+    console.error("Error sharing newspaper:", error);
+    $toast.error("An error occurred while sharing.");
+  } finally {
+    isSharing.value = false;
+  }
+};
 
 const loadImageAsBlob = async (fileId: string) => {
 
@@ -742,6 +842,7 @@ const retrieveNewsPaperEntitlement = async (id: string, maxRetries = 3) => {
         
         if (result.hasAccess) {
           hasAccess.value = true;
+          uniqueId.value = result.uniqueId;
           isProcessing.value = false;
           return; // Success, exit
         }
@@ -779,10 +880,10 @@ const verifyNewsPaperEntitlement = async (id: string) => {
   try {
 
     let result = await validateNewsPaperEntitlement({newsPaperId: id});
-    console.log('result -> ', result);
 
     if (result && result.hasAccess) {
       hasAccess.value = true;
+      uniqueId.value = result.uniqueId;
       return;
     }
 

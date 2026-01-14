@@ -200,6 +200,19 @@
       :remaining-quota="parterDetails?.remainingQuota || 0"
     />
 
+    <!-- Confirm Modal -->
+    <ConfirmModal 
+      :show="showConfirmModal"
+      title="Remove Subscriber"
+      message="Are you sure you want to remove this subscriber? This action cannot be undone."
+      confirm-text="Remove"
+      cancel-text="Cancel"
+      type="danger"
+      :loading="isRemovingSubscriber"
+      @confirm="handleRemoveSubscriber"
+      @cancel="showConfirmModal = false"
+    />
+
   </div>
 </template>
 
@@ -245,10 +258,13 @@ const showUploadModal = ref(false);
 const isCreatingPartnerSubscriber = ref(false);
 const isUploading = ref(false);
 const isAssigningPlan = ref(false);
+const isRemovingSubscriber = ref(false);
 const uploadProgress = ref(0);
 
 // Selection state
 const selectedSubscriberIds = ref<Set<string>>(new Set());
+const subscriberIdToRemove = ref<string | null>(null);
+const showConfirmModal = ref(false);
 
 const allSelected = computed(() => {
     return subscriberList.value.length > 0 && selectedSubscriberIds.value.size === subscriberList.value.length;
@@ -527,21 +543,33 @@ const fetchCommercialPartnerSubscriptionSummary = async () => {
 
 
 
-const confirmRemoveSubscriber = async (subscriberId: string) => {
-    if (!confirm('Are you sure you want to remove this subscriber? This action cannot be undone.')) return;
+const confirmRemoveSubscriber = (subscriberId: string) => {
+    subscriberIdToRemove.value = subscriberId;
+    showConfirmModal.value = true;
+};
+
+const handleRemoveSubscriber = async () => {
+    if (!subscriberIdToRemove.value) return;
     
+    isRemovingSubscriber.value = true;
     try {
-        const success = await removeCommercialPartnerSubscriber(partnerId, subscriberId);
+        const success = await removeCommercialPartnerSubscriber(partnerId, subscriberIdToRemove.value);
         if (success) {
             $toast.success('Subscriber removed successfully');
             await fetchSubscribers();
-            selectedSubscriberIds.value.delete(subscriberId);
+            if (subscriberIdToRemove.value) {
+                selectedSubscriberIds.value.delete(subscriberIdToRemove.value);
+            }
             await fetchCommercialPartnerDetails();
+            showConfirmModal.value = false;
         } else {
             $toast.error('Failed to remove subscriber');
         }
     } catch (e) {
         $toast.error('Error removing subscriber');
+    } finally {
+        isRemovingSubscriber.value = false;
+        subscriberIdToRemove.value = null;
     }
 }
 
