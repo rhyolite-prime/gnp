@@ -1,4 +1,4 @@
-import type { NewsPaper, Payment, CommercialPartner, CommercialPartnerStat, GnpDocumentResponseModel, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { NewsPaper, Payment, CommercialPartner,AdminUser, SubscriptionSummary, Subscriber, CommercialPartnerStat, GnpDocumentResponseModel, BaseApiResponse, BasePaginationModel } from "~/models";
 
 export async function getNewsPaperPublications(query: object) {
  
@@ -60,6 +60,12 @@ export async function getCommercialPartners(query: object) {
     return response.result;
 }
 
+export async function getCommercialPartnerDetails(partnerId: string) {
+ 
+    const response = await httpClient<BaseApiResponse<CommercialPartner>>(`admin/get-partner-details?partnerId=${partnerId}`, "");
+    return response.result;
+}
+
 export async function getCommercialPartnerStats() {
  
     const response = await httpClient<BaseApiResponse<CommercialPartnerStat[]>>('admin/get-partner-stats', "");
@@ -109,4 +115,55 @@ export async function disablePartnerSubaccount(query: object) {
  
     const response = await httpClient<BaseApiResponse<object>>('admin/disable-partner-subaccount', "", { query });
     return response.success;
+}
+
+export async function getCommercialPartnerSubscribers(partnerId: string) {
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<Subscriber[]>>>(`admin/get-partner-subscribers?partnerId=${partnerId}`, "");
+    return response.result;
+}
+
+export async function getCommercialPartnerSubscriptionSummary(partnerId: string) {
+    const response = await httpClient<BaseApiResponse<SubscriptionSummary[]>>(`admin/get-partner-subscription-summary?partnerId=${partnerId}`, "");
+    return response.result;
+}
+
+export async function uploadCommercialPartnerSubscribers(formData: FormData) {
+    const response = await httpClient<BaseApiResponse<object>>('admin/upload-partner-subscribers', "", {
+        method: "post",
+        body: formData,
+    });
+    return response.success;
+}
+
+export async function removeCommercialPartnerSubscriber(partnerId: string,subscriberId: string) {
+    const response = await httpClient<BaseApiResponse<object>>(`admin/remove-partner-subscriber?partnerId=${partnerId}&subscriberId=${subscriberId}`, "", {
+        method: "delete",
+    });
+    return response.success;
+}
+
+export async function createCommercialPartnerSubscriber(payload: object) {
+    const response = await httpClient<BaseApiResponse<object>>('admin/create-partner-subscriber', "", {
+        method: "post",
+        body: payload,
+    });
+    return response.success;
+}
+
+export async function assignSubscriptionToCommercialPartnerSubscribers(payload: object) {
+    const response = await httpClient<BaseApiResponse<object>>('admin/assign-partner-subscribers-plan', "", {
+        method: "post",
+        body: payload,
+    });
+    return response.success;
+}
+
+
+
+// admin users
+
+export async function getAdminUsers(query: object) {
+ 
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<AdminUser[]>>>('admin/get-all-users', "", { query });
+    return response.result;
 }

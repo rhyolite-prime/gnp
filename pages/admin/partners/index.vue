@@ -18,8 +18,8 @@
           type="button"
           class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
         >
-          <ArrowDownTrayIcon class="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400" aria-hidden="true" />
-          Export CSV
+          <ArrowUpTrayIcon class="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400" aria-hidden="true" />
+          Import Excel/CSV
         </button>
       </div>
     </div>
@@ -273,6 +273,7 @@ import {
   ClockIcon, 
   ExclamationCircleIcon,
   ArrowDownTrayIcon,
+  ArrowUpTrayIcon,
   MagnifyingGlassIcon,
   EllipsisVerticalIcon
 } from '@heroicons/vue/24/outline'
@@ -518,9 +519,10 @@ const debouncedSearch = debounce(() => {
   }
 
   const viewSubscribers = (partner: CommercialPartner) => {
-      console.log("View Subscribers", partner);
       closeDropdown();
-      // Navigate to subscribers page
+      router.push({
+        path: `/admin/partners/${partner.id}/subscribers`
+      });
   }
 
   const openCreateModal = () => {

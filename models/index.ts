@@ -31,6 +31,17 @@ export interface BasePaginationModel<T> {
     upperBound: number;
 }
 
+export interface GnpUser {
+    email: string;
+    firstName: string;
+    lastnameName: string;
+    userId: string;
+    username: string;
+    country: string;
+
+    
+}
+
 export interface GnpUserAuthModel {
     email: string;
     fullName: string;
@@ -169,6 +180,13 @@ export interface IngestionJob extends BaseEntityModel {
     createdAt: string;
 }
 
+export interface SubscriptionSummary {
+    subscriptionPlanDescription: string;
+    subscriberCount: number;
+    subscriptionPlanId: string;
+}
+
+
 export interface CommercialPartner extends BaseEntityModel {
 
     name: string;
@@ -181,9 +199,31 @@ export interface CommercialPartner extends BaseEntityModel {
     currency: string;
     status: string;
     subscriberQuota: number;
+    remainingQuota: number;
     subaccountEnabled: boolean;
     createdAt: string;
 }
+
+export interface Subscriber extends BaseEntityModel {
+
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber?: string;
+    createdAt: string;
+    partnerId: string;
+    subscriptionPlanDescription: string;
+}
+
+export interface AdminUser extends BaseEntityModel {
+
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber?: string;
+    createdAt: string;
+}
+
 
 export interface Publication extends BaseEntityModel {
 
