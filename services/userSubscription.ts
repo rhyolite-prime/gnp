@@ -1,8 +1,8 @@
 import type { UserSubscription, GuestSubscriptionResponseModel, NewsPaperEntitlementResponseModel, BaseApiResponse, BasePaginationModel } from "~/models";
 
- 
+
 export async function getUserSubscription(query: object) {
- 
+
     const response = await httpClient<BaseApiResponse<BasePaginationModel<UserSubscription[]>>>('subscription/get-all', "", { query });
     return response.result;
 }
@@ -56,4 +56,12 @@ export async function userSubscription(payload: object) {
     body: payload,
   });
   return response.success;
+}
+
+export async function shareNewspaper(payload: { newsPaperId: string, phoneNumber: string }) {
+  const response = await httpClient<BaseApiResponse<object>>('subscription/share-newspaper', "", {
+    method: "post",
+    body: payload,
+  });
+  return response;
 }

@@ -60,6 +60,7 @@ export interface GuestSubscriptionResponseModel {
 export interface NewsPaperEntitlementResponseModel {
     hasAccess: boolean;
     newsPaperId: string;
+    uniqueId: string;
 }
 
 export interface AccountStatusResponseModel {

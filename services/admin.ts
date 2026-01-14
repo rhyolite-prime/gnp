@@ -136,7 +136,7 @@ export async function uploadCommercialPartnerSubscribers(formData: FormData) {
 }
 
 export async function removeCommercialPartnerSubscriber(partnerId: string,subscriberId: string) {
-    const response = await httpClient<BaseApiResponse<object>>(`admin/remove-partner-subscriber?partnerId=${partnerId}&subscriberId=${subscriberId}`, "", {
+    const response = await httpClient<BaseApiResponse<object>>(`admin/delete-partner-subscriber?partnerId=${partnerId}&subscriberId=${subscriberId}`, "", {
         method: "delete",
     });
     return response.success;
