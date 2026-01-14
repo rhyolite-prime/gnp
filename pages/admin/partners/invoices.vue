@@ -69,6 +69,7 @@
             <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Transaction</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">User</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Amount</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Balance</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date</th>
             <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
@@ -86,6 +87,10 @@
               <div class="text-gray-900">{{ transaction.userName }}</div>
               <div class="text-gray-500">{{ transaction.userEmail }}</div>
             </td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900">
+              GHS {{ transaction.amountPaid}}
+            </td>
+
             <td class="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900">
               GHS {{ transaction.amountPaid}}
             </td>

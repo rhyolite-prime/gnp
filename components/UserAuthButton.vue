@@ -53,18 +53,16 @@
           @click.prevent="navigateTo('/account')">
            Account
         </a>
-        <a 
-          href="#" 
-          class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          @click.prevent="navigateTo('/notifications')">
-           Notifications
+         <a 
+           href="#" 
+           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between"
+           @click.prevent="navigateTo('/notifications')">
+            <span>Notifications</span>
+            <span v-if="notificationStore.unreadCount > 0" class="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+              {{ notificationStore.unreadCount }}
+            </span>
         </a>
-        <a 
-          href="#" 
-          class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          @click.prevent="navigateTo('/subscriptions')">
-          Subscription
-        </a>
+         
         <div class="border-t border-gray-100">
           <a 
             href="#" 
@@ -85,6 +83,7 @@
 <script lang="ts" setup>
 
 import { useAuthStore } from '~/stores/auth';
+import { useNotificationStore } from '~/stores/notification';
 import { useMsalAuth } from '~/composables/useMsalAuth';
 import { useGoogleAuth } from '~/composables/useGoogleAuth';
 
@@ -96,6 +95,7 @@ const props = defineProps({
 });
 
 const authStore = useAuthStore();
+const notificationStore = useNotificationStore();
 const msalAuth = useMsalAuth();
 const googleAuth = useGoogleAuth();
 const router = useRouter();

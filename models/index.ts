@@ -5,6 +5,7 @@ export interface BaseApiResponse<T> {
     unAuthorizedRequest: boolean;
     error: Error;
 }
+
   
 
 export interface Error {
@@ -28,6 +29,17 @@ export interface BasePaginationModel<T> {
 
     lowerBound: number;
     upperBound: number;
+}
+
+export interface GnpUser {
+    email: string;
+    firstName: string;
+    lastnameName: string;
+    userId: string;
+    username: string;
+    country: string;
+
+    
 }
 
 export interface GnpUserAuthModel {
@@ -168,21 +180,49 @@ export interface IngestionJob extends BaseEntityModel {
     createdAt: string;
 }
 
-export interface Partner extends BaseEntityModel {
+export interface SubscriptionSummary {
+    subscriptionPlanDescription: string;
+    subscriberCount: number;
+    subscriptionPlanId: string;
+}
+
+
+export interface CommercialPartner extends BaseEntityModel {
 
     name: string;
-    identifier: string;
-    contactPerson: string;
+    partnerIdentifier: string;
+    contactName: string;
     contactEmail: string;
     contactPhone: string;
     billingEmail: string;
     billingCycle: string;
     currency: string;
     status: string;
+    subscriberQuota: number;
+    remainingQuota: number;
     subaccountEnabled: boolean;
     createdAt: string;
 }
 
+export interface Subscriber extends BaseEntityModel {
+
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber?: string;
+    createdAt: string;
+    partnerId: string;
+    subscriptionPlanDescription: string;
+}
+
+export interface AdminUser extends BaseEntityModel {
+
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber?: string;
+    createdAt: string;
+}
 
 
 export interface Publication extends BaseEntityModel {
@@ -192,7 +232,21 @@ export interface Publication extends BaseEntityModel {
     isActive: boolean;
     name: string;
     price: number;
-    
+}
+
+
+export interface CommercialPartnerStat extends BaseEntityModel {
+
+    name: string;
+    value: number;
+    change: string;
+    changeType: string;
+    icon: any;
+    bgColor: string;
+    iconColor: string;
+    prefix: string;
+    suffix: string;
+     
 }
 
 export interface GnpDocumentResponseModel extends BaseEntityModel {
