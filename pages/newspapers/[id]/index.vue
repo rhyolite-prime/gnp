@@ -376,8 +376,7 @@
         v-if="paymentInfo?.paymentUrl"
         :src="paymentInfo.paymentUrl"
         class="w-full h-[600px] rounded overflow-hidden border-0"
-        style="overflow: hidden; border: none;"
-      ></iframe>
+        style="overflow: hidden; border: none;"></iframe>
 
     </div>
   </div>

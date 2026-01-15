@@ -1,31 +1,38 @@
 <template>
   <div class="bg-gray-50 min-h-screen pb-12">
-    <div class="bg-white shadow-sm">
-      <div class="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-        <div class="flex items-center text-sm text-gray-600">
-          <NuxtLink to="/" class="hover:text-red-600">Home</NuxtLink>
-          <span class="mx-2">›</span>
-          <NuxtLink to="/newspapers" class="hover:text-red-600">Newspapers</NuxtLink>
-          <span class="mx-2">›</span>
-          <span class="font-medium">{{ newsPaperDetail?.title }} </span>
+    <div class="bg-white shadow-sm border-b border-gray-100">
+      <div class="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- Breadcrumb -->
+        <div class="flex items-center text-xs sm:text-sm text-gray-600 overflow-x-auto whitespace-nowrap scrollbar-hide pb-1 md:pb-0">
+          <NuxtLink to="/" class="hover:text-red-600 transition-colors">Home</NuxtLink>
+          <span class="mx-1.5 text-gray-400">›</span>
+          <NuxtLink to="/newspapers" class="hover:text-red-600 transition-colors">Newspapers</NuxtLink>
+          <span class="mx-1.5 text-gray-400">›</span>
+          <span class="font-medium text-gray-900">{{ newsPaperDetail?.title }} </span>
         </div>
-        <div class="flex items-center gap-2">
 
-          <select v-model="selectedPublication" class="border border-gray-300 rounded px-3 py-1 text-gray-700">
-            <option disabled value="">Select Publication</option>
-            <option value="daily-graphic">Daily Graphic</option>
-            <option value="ghanaian-times">Ghanaian Times</option>
-            <option value="graphic-sports">Graphic Sports</option>
-          </select>
+        <!-- Desktop/Mobile Controls -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="flex-1 md:flex-none">
+            <select v-model="selectedPublication" class="w-full md:w-auto border border-gray-300 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 bg-white focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all">
+              <option disabled value="">Select Publication</option>
+              <option value="daily-graphic">Daily Graphic</option>
+              <option value="ghanaian-times">Ghanaian Times</option>
+              <option value="graphic-sports">Graphic Sports</option>
+            </select>
+          </div>
 
-          <input
-            type="date"
-            v-model="selectedDate"
-            class="border border-gray-300 rounded px-2 py-1 text-gray-700"
-          />
+          <div class="flex-shrink-0">
+            <input
+              type="date"
+              v-model="selectedDate"
+              class="border border-gray-300 rounded-lg px-2 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 bg-white focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all"
+            />
+          </div>
 
-          <button @click="goBack" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded">Back</button>
-
+          <button @click="goBack" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-all border border-gray-200">
+            Back
+          </button>
         </div>
       </div>
     </div>
@@ -89,9 +96,10 @@ onMounted(() => {
    setTimeout(() => {
     isLoading.value = false;
    }, time);
-  
 
-  assetUrl.value = `${assetBaseUrl.value}?id=${newspaperId}`;
+  const gnpUserAuthIdentity = useGnpUserAuthIdentity();
+
+  assetUrl.value = `${assetBaseUrl.value}?id=${newspaperId}&tkn=${gnpUserAuthIdentity.value}`;
 
 });
 
