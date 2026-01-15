@@ -14,11 +14,11 @@
         <!-- Desktop/Mobile Controls -->
         <div class="flex items-center gap-2 sm:gap-3">
           <div class="flex-1 md:flex-none">
-            <select v-model="selectedPublication" class="w-full md:w-auto border border-gray-300 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 bg-white focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all">
+            <select v-model="selectedPublication" class="w-full md:w-auto border border-gray-300 rounded-lg px-2 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 bg-white focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all">
               <option disabled value="">Select Publication</option>
-              <option value="daily-graphic">Daily Graphic</option>
-              <option value="ghanaian-times">Ghanaian Times</option>
-              <option value="graphic-sports">Graphic Sports</option>
+              <option v-for="publication in publicationList" :key="publication.id" :value="publication.id">
+                {{ publication.name }}
+              </option>
             </select>
           </div>
 
@@ -37,65 +37,105 @@
       </div>
     </div>
 
-    <div class="max-w-8xl mx-auto mt-8 bg-white rounded-lg shadow p-6">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
+    <div class="max-w-8xl mx-auto mt-8 bg-white rounded-lg shadow p-2 sm:p-6 overflow-hidden">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4 px-4 sm:px-0">
         <h1 class="text-2xl font-bold text-gray-900">{{ newspaperTitle }}</h1>
       </div>
-      <div class="flex justify-center items-center min-h-[600px] bg-gray-100 rounded-lg overflow-auto" style="position:relative;">
-          <div v-show="isLoading" >
-            <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10 space-y-4">
-              <div class="text-lg font-medium text-gray-700">{{ loaderMessage }}</div>
-              <div class="animate-spin h-12 w-12 border-4 border-gray-300 border-t-gray-600 rounded-full"></div>
+      
+      <div class="flex justify-center items-center min-h-[600px] bg-gray-100 rounded-lg overflow-hidden relative border border-gray-200">
+          <!-- Loading state -->
+          <div v-if="isLoading" class="absolute inset-0 flex flex-col items-center justify-center bg-white z-20 transition-all duration-300">
+              <div class="relative w-20 h-20 mb-6">
+                <div class="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-red-600 rounded-full border-t-transparent animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                   <FileText class="w-8 h-8 text-red-600" />
+                </div>
+              </div>
+              <p class="text-xl font-bold text-gray-900 tracking-tight">{{ loaderMessage }}</p>
+              <p class="text-sm text-gray-500 mt-2">Please wait while we fetch your publication</p>
+          </div>
+
+          <!-- No Access state -->
+          <div v-else-if="!accessGranted" class="flex flex-col items-center justify-center p-8 sm:p-16 text-center w-full bg-white z-10 animate-fade-in">
+            <div class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-8 shadow-sm">
+              <Lock class="w-12 h-12 text-red-600" />
+            </div>
+            <h2 class="text-3xl font-extrabold text-gray-900 mb-4">Access Denied</h2>
+            <p class="text-gray-500 mb-10 max-w-md text-lg leading-relaxed">
+              We couldn't verify an active subscription or purchase for this edition. Join thousands of readers today to get full access.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+              <NuxtLink to="/newspapers" class="inline-flex items-center justify-center px-10 py-4 border border-gray-200 text-base font-bold rounded-xl text-gray-700 bg-white hover:bg-gray-50 shadow-sm transition-all duration-300">
+                Browse More
+              </NuxtLink>
             </div>
           </div>
-          <ClientOnly>
+
+          <!-- Reader state -->
+          <ClientOnly v-else>
             <iframe
-            v-show="!isLoading"
               title="NewsPaper"
+              v-show="!isLoading"
               :src="assetUrl"
-              class="w-full h-screen"
+              class="w-full h-screen border-0 shadow-2xl"
             ></iframe>
-        </ClientOnly>
+          </ClientOnly>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { NewsPaper, GuestSubscriptionResponseModel } from "~/models";
+import type { NewsPaper,Publication,GuestSubscriptionResponseModel } from "~/models";
+import { Lock, FileText } from 'lucide-vue-next';
 
 const route = useRoute();
 const router = useRouter();
-const newspaperId = route.params.id;
+const newspaperId = route.params.id as string;
 const newspaperTitle = ref('');
 const assetBaseUrl = ref('https://docviewer.graphicnewsplus.com/ResourceShell');
 const assetUrl = ref('');
 const isLoading = ref(true);
+const accessGranted = ref(false);
 
 const loaderMessage = ref("Validating Subscription...");
 
 const selectedPublication = ref('');
 const selectedDate = ref('');
 const newsPaperDetail = ref<NewsPaper | null>(null);
-
-onMounted(() => {
-
-  let time = 2000;
-
-  time += 2000;
-  setTimeout(() => loaderMessage.value = "Preparing File...", time);
-
-  time += 2000;
-  setTimeout(() => {
-    loaderMessage.value = "Almost done...";
-  }, time);
+const publicationList = ref<Publication[]>([]);
 
 
-  time += 900;
-   
-   setTimeout(() => {
+  const getAllPublications = async () => {
+
+    let result = await getPublications({pageNo: 1, pageSize: 100});
+
+    publicationList.value = result.data;
+ 
+}
+
+onMounted( async() => {
+
+  await getAllPublications();
+
+  var response = await getRedactedNewsPaperDetailsViaUniqueId(newspaperId);
+  if (!response.success)
+  { 
+    accessGranted.value = false;
+    // display a no access div in place of the iframe
     isLoading.value = false;
-   }, time);
+    return;
+
+  }
+
+  newsPaperDetail.value = response.data;
+  newspaperTitle.value = response.data.title;
+  selectedPublication.value = response.data.publicationId;
+  selectedDate.value = response.data.publishedDate.split('T')[0];
+  accessGranted.value = true;
+  
+  isLoading.value = false;
 
   const gnpUserAuthIdentity = useGnpUserAuthIdentity();
 
@@ -103,32 +143,12 @@ onMounted(() => {
 
 });
 
-const retrieveNewsPaperDetails = async (id: string) => {
-
-    isLoading.value = true;
-
-    try {
-
-      let result = await getNewsPaperDetails({id : id});
-
-      newsPaperDetail.value = result
-
-    } catch (error) {
-        //$toast.error('Unable to fetch finishing options !');
-    } finally {
-        isLoading.value = false;
-    }
-
-}
  
-function goBack() {
+ 
+ function goBack() {
   router.back();
 }
 
-
-onMounted(async () => {
-  await retrieveNewsPaperDetails(newspaperId as string);
-});
 
 watch(newsPaperDetail, (newValue) => {
   if (newValue) {

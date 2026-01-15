@@ -283,6 +283,18 @@
         </div>
       </Dialog>
     </TransitionRoot>
+    
+    <!-- Delete Confirmation Modal -->
+    <ConfirmModal
+      :show="isDeleteModalOpen"
+      title="Delete Subscription Plan"
+      :message="`Are you sure you want to delete the plan '${planToDelete?.name}'? This action cannot be undone.`"
+      confirm-text="Delete Plan"
+      type="danger"
+      :loading="isDeletingPlan"
+      @confirm="confirmDeletePlan"
+      @cancel="closeDeleteModal"
+    />
 
   </div>
 </template>
@@ -290,6 +302,7 @@
 <script setup lang="ts">
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { PlusIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import ConfirmModal from '~/components/ConfirmModal.vue'
 import CountUp from 'vue-countup-v3'
 import { isEmpty, debounce } from "lodash-es";
 import type { SubscriptionPlan } from "~/models";
@@ -444,6 +457,11 @@ const form = ref<Plan>({
   targetPublications: []
 })
 
+// Delete State
+const isDeleteModalOpen = ref(false)
+const planToDelete = ref<SubscriptionPlan | null>(null)
+const isDeletingPlan = ref(false)
+
 const openCreateModal = () => {
   isEditing.value = false
   form.value = {
@@ -463,13 +481,18 @@ const editPlan = (plan: Plan) => {
   isModalOpen.value = true
 }
 
-const deletePlan = async (plan: SubscriptionPlan) => {
-   
+const deletePlan = (plan: SubscriptionPlan) => {
+  planToDelete.value = plan
+  isDeleteModalOpen.value = true
+}
+
+const confirmDeletePlan = async () => {
+  if (!planToDelete.value) return
 
   try {
-    isShimmerLoading.value = true
+    isDeletingPlan.value = true
 
-    const isSuccessful = await deleteSubscriptionPlan({ id: plan.id })
+    const isSuccessful = await deleteSubscriptionPlan({ id: planToDelete.value.id })
 
     if (isSuccessful) {
       $toast.success('Subscription plan deleted successfully')
@@ -478,8 +501,14 @@ const deletePlan = async (plan: SubscriptionPlan) => {
   } catch (error) {
     $toast.error('Unable to delete subscription plan!')
   } finally {
-    isShimmerLoading.value = false
+    isDeletingPlan.value = false
+    closeDeleteModal()
   }
+}
+
+const closeDeleteModal = () => {
+  isDeleteModalOpen.value = false
+  planToDelete.value = null
 }
 
 const closeModal = () => {

@@ -1,4 +1,4 @@
-import type { UserSubscription, GuestSubscriptionResponseModel, NewsPaperEntitlementResponseModel, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { UserSubscription, GuestSubscriptionResponseModel, NewsPaperEntitlementResponseModel, BaseApiResponse, BasePaginationModel, NewsPaper } from "~/models";
 
 
 export async function getUserSubscription(query: object) {
@@ -64,4 +64,13 @@ export async function shareNewspaper(payload: { newsPaperId: string, phoneNumber
     body: payload,
   });
   return response;
+}
+
+
+export async function getRedactedNewsPaperDetailsViaUniqueId(id: string) {
+  const response = await httpClient<BaseApiResponse<NewsPaper>>(`subscription/get-newspaper-redacted-details-via-unique-id?id=${id}`, "",);
+  return {
+    success: response.success,
+    data: response.result,
+  };
 }

@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between mb-8">
       <div>
-        <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">Commercial Partners</h1>
-        <p class="mt-2 text-sm text-gray-700"> Manage and monitor all commercial partners, their subscribers and revenue </p>
+        <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">Invoices & Payments</h1>
+        <p class="mt-2 text-sm text-gray-700"> Manage commercial partner invoices and payments. </p>
       </div>
       <div class="mt-4 sm:ml-16 sm:mt-0 flex gap-3">
         <button
