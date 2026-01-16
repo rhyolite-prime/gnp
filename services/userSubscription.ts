@@ -74,3 +74,11 @@ export async function getRedactedNewsPaperDetailsViaUniqueId(id: string) {
     data: response.result,
   };
 }
+
+export async function findNewspaperByDate(publicationId: string,publicationDate: string) {
+  const response = await httpClient<BaseApiResponse<NewsPaper>>(`subscription/find-newspaper-by-date?publicationId=${publicationId}&publicationDate=${publicationDate}`, "",);
+  return {
+    success: response.success,
+    data: response.result,
+  };
+}

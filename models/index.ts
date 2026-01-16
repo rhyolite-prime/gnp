@@ -111,6 +111,7 @@ export interface NewsPaper {
     createdAt: string;
     views: number;
     sales: number;
+    uniqueId: string;
     
 }
 
