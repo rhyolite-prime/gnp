@@ -30,6 +30,14 @@
             />
           </div>
 
+          <button 
+            @click="getNewspaperByDate" 
+            class="bg-red-600 hover:bg-red-700 text-white px-3 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center gap-2 shadow-sm"
+          >
+            <Search class="w-4 h-4" />
+            <span>Search</span>
+          </button>
+          
           <button @click="goBack" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-all border border-gray-200">
             Back
           </button>
@@ -76,7 +84,6 @@
           <ClientOnly v-else>
             <iframe
               title="NewsPaper"
-              v-show="!isLoading"
               :src="assetUrl"
               class="w-full h-screen border-0 shadow-2xl"
             ></iframe>
@@ -88,10 +95,11 @@
 
 <script setup lang="ts">
 import type { NewsPaper,Publication,GuestSubscriptionResponseModel } from "~/models";
-import { Lock, FileText } from 'lucide-vue-next';
+import { Lock, FileText, Search } from 'lucide-vue-next';
 
 const route = useRoute();
 const router = useRouter();
+const { $toast } = useNuxtApp();
 const newspaperId = route.params.id as string;
 const newspaperTitle = ref('');
 const assetBaseUrl = ref('https://docviewer.graphicnewsplus.com/ResourceShell');
@@ -107,12 +115,47 @@ const newsPaperDetail = ref<NewsPaper | null>(null);
 const publicationList = ref<Publication[]>([]);
 
 
-  const getAllPublications = async () => {
+const getAllPublications = async () => {
 
     let result = await getPublications({pageNo: 1, pageSize: 100});
 
     publicationList.value = result.data;
  
+}
+
+const getNewspaperByDate = async () => {
+
+  isLoading.value = true;
+
+  try {
+
+    let response = await findNewspaperByDate(selectedPublication.value, selectedDate.value);
+
+    if (!response.success) {
+      accessGranted.value = false;
+      isLoading.value = false;
+      return;
+    }
+
+    // Force a full browser reload to the new newspaper uniqueId.
+    // This ensures a clean slate and re-runs all initialization logic.
+    if (response.data.uniqueId !== route.params.id) {
+       window.location.href = `/newspapers/${response.data.uniqueId}/open`;
+    } else {
+       isLoading.value = false;
+    }
+
+  }
+  catch (error) {
+         
+    $toast.error('Error fetching newspaper. Please try again later.');
+    
+    } finally {
+        isLoading.value = false;
+    }
+ 
+
+
 }
 
 onMounted( async() => {
@@ -132,7 +175,7 @@ onMounted( async() => {
   newsPaperDetail.value = response.data;
   newspaperTitle.value = response.data.title;
   selectedPublication.value = response.data.publicationId;
-  selectedDate.value = response.data.publishedDate.split('T')[0];
+  selectedDate.value = response.data.publicationDate.split('T')[0];
   accessGranted.value = true;
   
   isLoading.value = false;
@@ -155,10 +198,12 @@ watch(newsPaperDetail, (newValue) => {
     useHead({
       title: `${newValue.title} - Graphic NewsPlus`,
       meta: [
-        { name: 'description', content: `Read ${newValue.title} newspaper from ${newValue.publishedDate}.` }
+        { name: 'description', content: `Read ${newValue.title} newspaper from ${newValue.publicationDate}.` }
       ]
     });
   }
 });
+
+// Note: Automatic fetch watchers removed in favor of manual Search button
 </script>
  

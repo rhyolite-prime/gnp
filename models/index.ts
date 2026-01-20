@@ -102,7 +102,7 @@ export interface NewsPaper {
     publicationName: string;
     id: string;
     price: string;
-    publishedDate: string;
+    publicationDate: string;
     slug: string;
     thumbnailId: string;
     featuredStories: FeaturedStory[]
@@ -111,6 +111,8 @@ export interface NewsPaper {
     createdAt: string;
     views: number;
     sales: number;
+    uniqueId: string;
+    isFree: boolean;
     
 }
 

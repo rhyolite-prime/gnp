@@ -28,7 +28,7 @@
         <div class="flex items-center space-x-4">
           <button 
             @click="isSearchOpen = true"
-            class="p-2 text-gray-500 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+            class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg border border-red-400 transition-colors"
           >
             <MagnifyingGlassIcon class="h-6 w-6" />
           </button>
@@ -73,8 +73,7 @@
               type="text" 
               placeholder="Search for news, topics, or authors..." 
               class="flex-1 text-lg border-none focus:ring-0 placeholder-gray-400 py-4"
-              autofocus
-            >
+              autofocus>
             <button 
               @click="closeSearch"
               class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
@@ -118,7 +117,7 @@
           <a href="#magazines" class="mobile-nav-link" @click="closeMobileMenu">Magazines</a>
           <NuxtLink to="/pricing" class="mobile-nav-link" @click="closeMobileMenu">Pricing</NuxtLink>
           <NuxtLink to="/about" class="mobile-nav-link" @click="closeMobileMenu">About</NuxtLink>
-          
+
           <div class="pt-4 border-t border-gray-100">
              <UserAuthButton :showSignInModal="() => { showSignInModal = true; closeMobileMenu(); }" />
           </div>

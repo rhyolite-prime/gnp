@@ -65,7 +65,7 @@
                 <tr>
                   <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Title</th>
                   <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Publication</th>
-                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Published On</th>
+                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"> Date</th>
                   <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Price</th>
                   <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
                   <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Stats</th>
@@ -100,8 +100,11 @@
                     </div>
                   </td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ paper.publicationName }}</td>
-                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ paper.publishedDate }}</td>
-                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">₵{{ paper.price }}</td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ standardDateFormat(paper.publicationDate) }}</td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    <span v-if="paper.isFree" class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">Free</span>
+                    <span v-else>₵{{ paper.price }}</span>
+                  </td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                     <span
                       class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
@@ -120,25 +123,33 @@
                   </td>
                   <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ longDateAndTimeFormat(paper.createdAt) }}</td>
                   <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                    <button
-                      class="text-primary-600 hover:text-primary-900 mr-4"
-                    >
-                      Edit
-                    </button>
+                    <Menu as="div" class="relative inline-block text-left">
+                      <div>
+                        <MenuButton class="flex items-center rounded-full bg-gray-100 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-gray-100">
+                          <span class="sr-only">Open options</span>
+                          <EllipsisVerticalIcon class="h-6 w-6" aria-hidden="true" />
+                        </MenuButton>
+                      </div>
 
-                    <button
-                      v-if="!paper.isPublished"
-                      @click="publishPaper(paper.id)"
-                      class="text-green-600 hover:text-green-800 mr-4"
-                    >
-                      Publish
-                    </button>
-
-                    <button
-                      class="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </button>
+                      <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
+                        <MenuItems class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                          <div class="py-1">
+                            <MenuItem v-slot="{ active }">
+                              <button :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block w-full px-4 py-2 text-left text-sm']">Edit</button>
+                            </MenuItem>
+                            <MenuItem v-if="!paper.isPublished" v-slot="{ active }">
+                              <button @click="publishPaper(paper.id)" :class="[active ? 'bg-gray-100 text-green-700' : 'text-green-700', 'block w-full px-4 py-2 text-left text-sm']">Publish</button>
+                            </MenuItem>
+                             <MenuItem v-if="!paper.isFree" v-slot="{ active }">
+                              <button :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block w-full px-4 py-2 text-left text-sm']">Make Free</button>
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                              <button :class="[active ? 'bg-gray-100 text-red-900' : 'text-red-700', 'block w-full px-4 py-2 text-left text-sm']">Delete</button>
+                            </MenuItem>
+                          </div>
+                        </MenuItems>
+                      </transition>
+                    </Menu>
                   </td>
                 </tr>
                 <tr v-if="filteredNewspapers.length === 0">
@@ -172,7 +183,8 @@
 
 <script setup lang="ts">
 
-import { MagnifyingGlassIcon, EyeIcon, ShoppingCartIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
+import { MagnifyingGlassIcon, EyeIcon, ShoppingCartIcon, ChevronLeftIcon, ChevronRightIcon, EllipsisVerticalIcon } from '@heroicons/vue/24/outline'
+import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 
 import CountUp from 'vue-countup-v3'
 import { isEmpty, debounce } from "lodash-es";
