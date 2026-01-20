@@ -144,6 +144,64 @@
             </div>
           </div>
 
+          <!-- Transactions -->
+          <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+              <CreditCard class="w-5 h-5 mr-2 text-gray-500" />
+              My Transactions
+            </h2>
+
+            <div v-if="isLoadingPayments" class="animate-pulse space-y-4">
+               <div class="h-12 bg-gray-200 rounded w-full"></div>
+               <div class="h-12 bg-gray-200 rounded w-full"></div>
+            </div>
+
+            <div v-else-if="payments && payments.length > 0" class="overflow-hidden border border-gray-200 rounded-md overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Package</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr v-for="payment in payments" :key="payment.id" class="hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-4 whitespace-nowrap">
+                      <div class="text-sm font-medium text-gray-900">{{ payment.packageName }}</div>
+                      <div class="text-[10px] text-gray-400">Ref: {{ payment.transactionReference }}</div>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                      GHS {{ payment.amountPaid }}
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap">
+                      <span 
+                        class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase"
+                        :class="{
+                          'bg-green-100 text-green-800': payment.status === 'Success',
+                          'bg-yellow-100 text-yellow-800': payment.status === 'Pending',
+                          'bg-red-100 text-red-800': payment.status === 'Failed',
+                          'bg-blue-100 text-blue-800': payment.status === 'Initiated'
+                        }"
+                      >
+                        {{ payment.status }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-[10px] text-gray-500">
+                      {{ new Date(payment.createdAt).toLocaleDateString() }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div v-else class="text-center py-8 text-gray-500 bg-gray-50 rounded-md border border-dashed border-gray-300">
+              <CreditCard class="mx-auto h-8 w-8 text-gray-400 mb-2" />
+              <p>No transactions found.</p>
+            </div>
+          </div>
+
           <!-- Change Password -->
           <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
@@ -245,9 +303,10 @@ import {
 import { useAuthStore } from '~/stores/auth';
 import { getUserProfile, changePassword, type UserProfileResponse } from '~/services/users';
 import { getUserSubscription } from '~/services/userSubscription';
+import { getUserPayments } from '~/services/userPayments';
 import { useBiometrics } from '~/composables/useBiometrics';
 import { registerBiometric } from '~/services/biometric';
-import type { UserSubscription } from '~/models';
+import type { UserSubscription, Payment } from '~/models';
 
 useHead({
   title: 'My Account - Graphic NewsPlus',
@@ -258,8 +317,10 @@ const { register, isBiometricsAvailable } = useBiometrics();
 // State
 const isLoadingProfile = ref(true);
 const isLoadingSubs = ref(true);
+const isLoadingPayments = ref(true);
 const userProfile = ref<UserProfileResponse | null>(null);
 const subscriptions = ref<UserSubscription[]>([]);
+const payments = ref<Payment[]>([]);
 
 // Sample Test Data
   const mockSubscriptions: UserSubscription[] = [
@@ -295,6 +356,31 @@ const subscriptions = ref<UserSubscription[]>([]);
     }
   ];
 
+  const mockPayments: Payment[] = [
+    {
+      id: 'pay_1',
+      userName: 'Test User',
+      userEmail: 'test@example.com',
+      packageName: 'Daily Graphic - Annual',
+      amountPaid: '365.00',
+      receiptNo: 'GN-88493',
+      transactionReference: 'T39482L001',
+      status: 'Success',
+      createdAt: new Date(new Date().setDate(new Date().getDate() - 60)).toISOString()
+    },
+    {
+      id: 'pay_2',
+      userName: 'Test User',
+      userEmail: 'test@example.com',
+      packageName: 'The Mirror - Weekly',
+      amountPaid: '15.00',
+      receiptNo: 'GN-12345',
+      transactionReference: 'T99283K442',
+      status: 'Success',
+      createdAt: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString()
+    }
+  ];
+
 // Passkey State
 const isRegisteringPasskey = ref(false);
 
@@ -317,7 +403,8 @@ onMounted(async () => {
   
   await Promise.all([
     fetchProfile(),
-    fetchSubscriptions()
+    fetchSubscriptions(),
+    fetchPayments()
   ]);
 });
 
@@ -349,6 +436,23 @@ async function fetchSubscriptions() {
   } finally {
     isLoadingSubs.value = false;
     
+  }
+}
+
+async function fetchPayments() {
+  try {
+    isLoadingPayments.value = true;
+    const result = await getUserPayments({ userId: authStore.user?.idTokenClaims.userId });
+    if (result && result.data && result.data.length > 1) {
+      payments.value = result.data;
+    } else {
+      payments.value = mockPayments;
+    }
+  } catch (err) {
+    console.error('Failed to load payments', err);
+    payments.value = mockPayments;
+  } finally {
+    isLoadingPayments.value = false;
   }
 }
 

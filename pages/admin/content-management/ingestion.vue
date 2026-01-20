@@ -12,7 +12,7 @@
       </div>
     </div>
 
-    <form @submit.prevent="submitForm" class="space-y-8">
+    <form class="space-y-8">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Main Column (2/3) -->
         <div class="lg:col-span-2 space-y-8">
@@ -182,6 +182,23 @@
                 </Listbox>
               </div>
 
+              <!-- Is Free -->
+              <div class="relative flex items-start pt-2">
+                <div class="flex h-6 items-center">
+                  <input
+                    id="isFree"
+                    name="isFree"
+                    type="checkbox"
+                    v-model="form.isFree"
+                    class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-600"
+                  />
+                </div>
+                <div class="ml-3 text-sm leading-6">
+                  <label for="isFree" class="font-medium text-gray-900">Make Free</label>
+                  <p class="text-gray-500">Make this specific edition free for all users.</p>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -321,6 +338,7 @@ const form = ref({
   featuredStories: [] as FeaturedStory[],
   publicationDate: new Date().toISOString().split('T')[0],
   price: 0,
+  isFree: false,
   editionNumber: '',
   storageService: 'google-drive',
   publicationId: '',

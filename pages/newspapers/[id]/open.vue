@@ -175,7 +175,7 @@ onMounted( async() => {
   newsPaperDetail.value = response.data;
   newspaperTitle.value = response.data.title;
   selectedPublication.value = response.data.publicationId;
-  selectedDate.value = response.data.publishedDate.split('T')[0];
+  selectedDate.value = response.data.publicationDate.split('T')[0];
   accessGranted.value = true;
   
   isLoading.value = false;
@@ -198,7 +198,7 @@ watch(newsPaperDetail, (newValue) => {
     useHead({
       title: `${newValue.title} - Graphic NewsPlus`,
       meta: [
-        { name: 'description', content: `Read ${newValue.title} newspaper from ${newValue.publishedDate}.` }
+        { name: 'description', content: `Read ${newValue.title} newspaper from ${newValue.publicationDate}.` }
       ]
     });
   }
