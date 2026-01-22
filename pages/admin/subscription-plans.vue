@@ -117,6 +117,7 @@
                           <select v-model="form.planType" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
                             <option value="regular">Regular</option>
                             <option value="bundle">Bundle</option>
+                            <option value="premium">Premium</option>
                           </select>
                         </div>
 
@@ -475,6 +476,8 @@ const openCreateModal = () => {
 
 const editPlan = (plan: any) => {
   isEditing.value = true
+
+  console.log(plan);
   
   // Transform pricing object to array format for the form
   const pricingArray: PricingTier[] = Object.entries(plan.pricing || {}).map(([duration, details]: [string, any]) => ({
@@ -482,11 +485,16 @@ const editPlan = (plan: any) => {
     amount: details.price
   }));
 
+  // Map targetPublications string IDs to publication objects for VueMultiselect
+  const targetPublicationsObjects = (plan.targetPublications || []).map((id: string) => 
+    publicationList.value.find(p => p.id === id)
+  ).filter(Boolean);
+
   // Create a clean copy for the form
   form.value = {
     ...plan,
     pricing: pricingArray,
-    targetPublications: plan.targetPublications || []
+    targetPublications: targetPublicationsObjects
   };
   
   isModalOpen.value = true
@@ -567,6 +575,7 @@ const savePlan = async () => {
     const payload: any = {
       ...form.value,
       pricing: transformedPricing,
+      targetPublications: (form.value.targetPublications || []).map((p: any) => p.id)
     }
 
     if (isEditing.value && form.value.id) {
