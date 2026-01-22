@@ -16,6 +16,15 @@ export async function createSubscriptionPlan(payload: object) {
   return response.success;
 }
 
+export async function updateSubscriptionPlan(payload: object) {
+    
+  const response = await httpClient<BaseApiResponse<object>>('admin/update-subscription-plan', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
 export async function deleteSubscriptionPlan(query: object) {
  
     const response = await httpClient<BaseApiResponse<object>>('admin/delete-subscription-plan', "", { query, method: "delete", });
