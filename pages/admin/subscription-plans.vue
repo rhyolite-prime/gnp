@@ -140,7 +140,8 @@
                               <select v-model="tier.duration" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
                                 <option value="Weekly">Weekly</option>
                                 <option value="Monthly">Monthly</option>
-                                <option value="Quarterly">Quarterly</option>
+                                <option value="3 Months">3 Months</option>
+                                <option value="Half-Yearly">Half-Yearly</option>
                                 <option value="Yearly">Yearly</option>
                               </select>
                             </div>
@@ -148,7 +149,7 @@
                               <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                 <span class="text-gray-500 sm:text-sm">₵</span>
                               </div>
-                              <input type="number" v-model="tier.amount" placeholder="Amount" class="block w-full rounded-md border-0 py-1.5 pl-7 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" />
+                              <input type="number" v-model="tier.amount" step="0.01" placeholder="Amount" class="block w-full rounded-md border-0 py-1.5 pl-7 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" />
                             </div>
                             <button type="button" @click="removePricingTier(index)" class="text-gray-400 hover:text-red-500 mt-2">
                               <TrashIcon class="h-5 w-5" />
@@ -163,7 +164,7 @@
                         <label class="block text-sm font-medium leading-6 text-gray-900 mb-2">Target Publications (Access Control)</label>
                         <VueMultiselect
                           v-model="form.targetPublications"
-                          :options="publicationOptions"
+                          :options="publicationList"
                           :multiple="true"
                           :close-on-select="false"
                           placeholder="Select accessible publications"
@@ -305,7 +306,7 @@ import { PlusIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import ConfirmModal from '~/components/ConfirmModal.vue'
 import CountUp from 'vue-countup-v3'
 import { isEmpty, debounce } from "lodash-es";
-import type { SubscriptionPlan } from "~/models";
+import type { SubscriptionPlan, Publication } from "~/models";
 const { $toast } = useNuxtApp();
 import VueMultiselect from 'vue-multiselect'
 import 'vue-multiselect/dist/vue-multiselect.css'
@@ -349,6 +350,14 @@ const onPageChange = async (pageNumber: number) => {
     await getPaginatedSubscriptionPlans()
 }
 
+const getAllPublications = async () => {
+
+    let result = await getPublications({pageNo: 1, pageSize: 100});
+
+    publicationList.value = result.data;
+ 
+}
+
 const getPaginatedSubscriptionPlans = async () => {
 
     isShimmerLoading.value = true;
@@ -387,7 +396,8 @@ const getPricingSummary = (pricing: Record<string, { price: number; savePercenta
 }
 
 const isViewDetailsOpen = ref(false)
-const selectedPlan = ref<SubscriptionPlan | null>(null)
+const selectedPlan = ref<SubscriptionPlan | null>(null);
+const publicationList = ref<Publication []>( []);
 
 const viewPlanDetails = (plan: SubscriptionPlan) => {
   selectedPlan.value = plan
@@ -398,8 +408,6 @@ const closeViewDetails = () => {
   isViewDetailsOpen.value = false
   selectedPlan.value = null
 }
-
-
 
 const debouncedSearch = debounce(() => {
     filters.pageNo = 1; // Reset to first page for new search
@@ -415,6 +423,7 @@ const debouncedSearch = debounce(() => {
     }
     
     await getPaginatedSubscriptionPlans();
+    await getAllPublications();
 
   });
 
@@ -425,12 +434,8 @@ interface PricingTier {
   amount: number | '';
 }
 
-interface Publication {
-  id: string;
-  name: string;
-}
-
 interface Plan {
+  id?: string;
   name: string;
   planType: string;
   description: string;
@@ -439,12 +444,6 @@ interface Plan {
 }
  
 
-const publicationOptions = [
-  { id: 'p1', name: 'Daily Graphic' },
-  { id: 'p2', name: 'The Mirror' },
-  { id: 'p3', name: 'Graphic Showbiz' },
-  { id: 'p4', name: 'Junior Graphic' },
-]
 
 // Modal State
 const isModalOpen = ref(false)
@@ -474,10 +473,22 @@ const openCreateModal = () => {
   isModalOpen.value = true
 }
 
-const editPlan = (plan: Plan) => {
+const editPlan = (plan: any) => {
   isEditing.value = true
-  // Deep copy to avoid reactive edits before saving
-  form.value = JSON.parse(JSON.stringify(plan))
+  
+  // Transform pricing object to array format for the form
+  const pricingArray: PricingTier[] = Object.entries(plan.pricing || {}).map(([duration, details]: [string, any]) => ({
+    duration,
+    amount: details.price
+  }));
+
+  // Create a clean copy for the form
+  form.value = {
+    ...plan,
+    pricing: pricingArray,
+    targetPublications: plan.targetPublications || []
+  };
+  
   isModalOpen.value = true
 }
 
@@ -553,12 +564,18 @@ const savePlan = async () => {
       }
     })
 
-    const payload = {
+    const payload: any = {
       ...form.value,
       pricing: transformedPricing,
     }
 
-    const isSuccessful = await createSubscriptionPlan(payload)
+    if (isEditing.value && form.value.id) {
+      payload.id = form.value.id;
+    }
+
+    const isSuccessful = isEditing.value
+      ? await updateSubscriptionPlan(payload)
+      : await createSubscriptionPlan(payload)
 
     if (isSuccessful) {
       $toast.success(
@@ -570,7 +587,7 @@ const savePlan = async () => {
       closeModal()
     }
   } catch (error) {
-    $toast.error('Unable to create subscription plan !')
+    $toast.error(`Unable to ${isEditing.value ? 'update' : 'create'} subscription plan !`)
   } finally {
     closeModal()
   }

@@ -203,8 +203,15 @@ const navigation = [
   { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon },
   { name: 'Payments', href: '/admin/payments', icon: BanknotesIcon },
   { name: 'Campaigns', href: '/admin/campaigns', icon: MegaphoneIcon },
-  { name: 'Users', href: '/admin/users', icon: UsersIcon },
-  { name: 'Analytics', href: '/admin/analytics', icon: ChartBarIcon },
+  {
+    name: 'User Management',
+    icon: UsersIcon,
+    children: [
+      { name: 'Users', href: '/admin/users/' },
+      { name: 'Roles', href: '/admin/users/roles' },
+    ],
+  },
+  { name: 'Reports', href: '/admin/analytics', icon: ChartBarIcon },
   { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
 ]
 
