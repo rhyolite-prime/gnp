@@ -14,7 +14,7 @@
       <!-- Modal header -->
       <div class="text-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Sign In</h2>
-        <p class="text-gray-600 mt-1">Login to Graphic News Plus</p>
+        <p class="text-gray-600 mt-1">Login to Graphic NewsPlus</p>
       </div>
 
       <!-- Guest Purchase Notice -->

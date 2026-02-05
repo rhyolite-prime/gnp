@@ -208,6 +208,7 @@ const navigation = [
     icon: UsersIcon,
     children: [
       { name: 'Users', href: '/admin/users/' },
+      { name: 'Subscribers', href: '/admin/users/subscribers' },
       { name: 'Roles', href: '/admin/users/roles' },
     ],
   },
