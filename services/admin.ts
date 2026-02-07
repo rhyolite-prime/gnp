@@ -1,4 +1,4 @@
-import type { NewsPaper, Payment, CommercialPartner,AdminUser, SubscriptionSummary, Subscriber, CommercialPartnerStat, GnpDocumentResponseModel, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { NewsPaper, Payment, CommercialPartner,AdminUser, SubscriptionSummary, Subscriber, CommercialPartnerStat, GnpDocumentResponseModel, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey } from "~/models";
 
 export async function getNewsPaperPublications(query: object) {
  
@@ -142,6 +142,11 @@ export async function removeCommercialPartnerSubscriber(partnerId: string,subscr
     return response.success;
 }
 
+export async function updateCommercialPartnerSubscriberStatus(query: { partnerId: string, subscriberId: string, status: string }) {
+    const response = await httpClient<BaseApiResponse<object>>('admin/update-partner-subscriber-status', "", { query });
+    return response.success;
+}
+
 export async function createCommercialPartnerSubscriber(payload: object) {
     const response = await httpClient<BaseApiResponse<object>>('admin/create-partner-subscriber', "", {
         method: "post",
@@ -166,4 +171,32 @@ export async function getAdminUsers(query: object) {
  
     const response = await httpClient<BaseApiResponse<BasePaginationModel<AdminUser[]>>>('admin/get-all-users', "", { query });
     return response.result;
+}
+
+export async function getPartnerApiKeys(partnerId: string) {
+    const response = await httpClient<BaseApiResponse<CommercialPartnerApiKey[]>>(`admin/get-partner-api-keys?partnerId=${partnerId}`, "");
+    return response.result;
+}
+
+export async function generatePartnerApiKey(payload: object) {
+    const response = await httpClient<BaseApiResponse<CommercialPartnerApiKey>>('admin/generate-partner-api-key', "", {
+        method: "post",
+        body: payload,
+    });
+    return response.result;
+}
+
+export async function revokePartnerApiKey(keyId: string) {
+    const response = await httpClient<BaseApiResponse<object>>(`admin/revoke-partner-api-key?keyId=${keyId}`, "", {
+        method: "delete",
+    });
+    return response.success;
+}
+
+export async function updatePartnerApiKey(payload: object) {
+    const response = await httpClient<BaseApiResponse<object>>('admin/update-partner-api-key', "", {
+        method: "post",
+        body: payload,
+    });
+    return response.success;
 }

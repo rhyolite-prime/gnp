@@ -87,7 +87,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 bg-white">
-          <tr v-for="partner in partnerList" :key="partner.id" class="hover:bg-gray-50">
+          <tr v-for="(partner, index) in partnerList" :key="partner.id" class="hover:bg-gray-50">
 
              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
               {{ longDateAndTimeFormat(partner.createdAt) }}
@@ -149,7 +149,8 @@
                 <!-- Dropdown Menu -->
                 <div 
                     v-if="activeDropdownId === partner.id" 
-                    class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-100 ring-1 ring-black ring-opacity-5"
+                    class="absolute right-0 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-100 ring-1 ring-black ring-opacity-5"
+                    :class="index > partnerList.length - 4 ? 'bottom-full mb-2' : 'top-full mt-2'"
                 >
                     <div class="py-1">
                         <a 
@@ -181,6 +182,14 @@
                             @click.prevent="editCommercialPartnerStatus(partner.id)"
                         >
                             Update Status
+                        </a>
+
+                        <a 
+                            href="#" 
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                            @click.prevent="openApiKeysModal(partner)"
+                        >
+                            Manage API Keys
                         </a>
 
                         <a 
@@ -262,6 +271,19 @@
             </div>
         </div>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <ConfirmModal 
+      :show="showDeleteConfirmModal"
+      title="Delete Commercial Partner"
+      message="Are you sure you want to delete this commercial partner? This action cannot be undone and will remove all associated data."
+      confirm-text="Delete Partner"
+      cancel-text="Cancel"
+      type="danger"
+      :loading="isDeletingPartner"
+      @confirm="handleConfirmDelete"
+      @cancel="showDeleteConfirmModal = false"
+    />
   </div>
 </template>
 
@@ -279,7 +301,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import CountUp from 'vue-countup-v3'
 import { isEmpty, debounce } from "lodash-es";
-import type { CommercialPartner, CommercialPartnerStat } from "~/models";
+import type { CommercialPartner, CommercialPartnerStat, CommercialPartnerApiKey } from "~/models";
 const { $toast } = useNuxtApp();
 
 
@@ -400,29 +422,41 @@ const getPaginatedPartners = async () => {
 
 const statusFilter = ref('all')
 
-const delCommercialPartner = async (id: string) => {
-   
+const showDeleteConfirmModal = ref(false);
+const partnerToDeleteId = ref<string | null>(null);
+const isDeletingPartner = ref(false);
 
-  try {
-    isShimmerLoading.value = true
+const delCommercialPartner = (id: string) => {
+    partnerToDeleteId.value = id;
+    showDeleteConfirmModal.value = true;
+    closeDropdown();
+};
 
-    const isSuccessful = await deleteCommercialPartner(id);
+const handleConfirmDelete = async () => {
+    if (!partnerToDeleteId.value) return;
 
-    if (isSuccessful) {
-      $toast.success('Commercial Partner deleted successfully')
-      await getPaginatedPartners()
+    isDeletingPartner.value = true;
+    try {
+        const isSuccessful = await deleteCommercialPartner(partnerToDeleteId.value);
+
+        if (isSuccessful) {
+            $toast.success('Commercial Partner deleted successfully');
+            await getPaginatedPartners();
+            showDeleteConfirmModal.value = false;
+        }
+    } catch (error) {
+        $toast.error('Unable to delete commercial partner!');
+    } finally {
+        isDeletingPartner.value = false;
+        partnerToDeleteId.value = null;
     }
-  } catch (error) {
-    $toast.error('Unable to delete commercial partner!')
-  } finally {
-    isShimmerLoading.value = false
-  }
-}
+};
 
 // Status Update Logic
 const showStatusModal = ref(false);
 const isUpdatingStatus = ref(false);
 const selectedPartnerId = ref<string>('');
+const selectedPartner = ref<CommercialPartner | null>(null);
 const newStatus = ref<string>('');
 
 const editCommercialPartnerStatus = (id: string) => {
@@ -465,6 +499,13 @@ const handleUpdateStatus = async () => {
     } finally {
         isUpdatingStatus.value = false;
     }
+};
+
+const openApiKeysModal = (partner: CommercialPartner) => {
+    closeDropdown();
+    router.push({
+        path: `/admin/partners/${partner.id}/api-keys`
+    });
 };
 
 

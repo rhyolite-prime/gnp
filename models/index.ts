@@ -51,7 +51,7 @@ export interface GnpUserAuthModel {
     
 }
 
-export interface GuestSubscriptionResponseModel {
+export interface SubscriptionResponseModel {
     paymentUrl: string;
     reference: string;
     userId: string;
@@ -216,6 +216,7 @@ export interface Subscriber extends BaseEntityModel {
     createdAt: string;
     partnerId: string;
     subscriptionPlanDescription: string;
+    status: string;
 }
 
 export interface AdminUser extends BaseEntityModel {
@@ -263,4 +264,15 @@ export interface GnpDocumentResponseModel extends BaseEntityModel {
 
 
 
-
+export interface CommercialPartnerApiKey extends BaseEntityModel {
+    partnerId: string;
+    partnerName: string;
+    clientId: string;
+    clientSecret?: string; // Only present on creation result
+    label: string;
+    scopes: string[];
+    allowedIps: string[];
+    isActive: boolean;
+    expiresAt?: string;
+    lastUsedAt?: string;
+}

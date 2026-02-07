@@ -160,7 +160,7 @@ import {
   CreditCardIcon,
   BanknotesIcon,
   MegaphoneIcon,
-  ArrowRightOnRectangleIcon,
+  RectangleGroupIcon,
   BuildingOfficeIcon,
   Bars3Icon,
   BellIcon
@@ -203,6 +203,16 @@ const navigation = [
   { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon },
   { name: 'Payments', href: '/admin/payments', icon: BanknotesIcon },
   { name: 'Campaigns', href: '/admin/campaigns', icon: MegaphoneIcon },
+  {
+    name: 'Advert Management',
+    icon: RectangleGroupIcon,
+    children: [
+      { name: 'Advert Categories', href: '/admin/categories/' },
+      { name: 'Advert Sizes', href: '/admin/users/sizes' },
+      { name: 'Publication Slots', href: '/admin/publication-slots' },
+      { name: 'Ad Requests', href: '/admin/ad-requests' },
+    ],
+  },
   {
     name: 'User Management',
     icon: UsersIcon,

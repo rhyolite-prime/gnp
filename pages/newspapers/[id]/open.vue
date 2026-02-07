@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import type { NewsPaper,Publication,GuestSubscriptionResponseModel } from "~/models";
+import type { NewsPaper,Publication, SubscriptionResponseModel } from "~/models";
 import { Lock, FileText, Search } from 'lucide-vue-next';
 
 const route = useRoute();

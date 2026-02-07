@@ -483,7 +483,7 @@
 
 <script setup lang="ts">
 // Get the route params
-import type { NewsPaper, GuestSubscriptionResponseModel } from "~/models";
+import type { NewsPaper, SubscriptionResponseModel } from "~/models";
 import { useAuthStore } from '~/stores/auth';
 import { 
   Facebook,
@@ -530,7 +530,7 @@ const imageLoading = ref(true);
 const isCompletingPurchase = ref(false);
 const blobUrl = ref<string>();
 const uniqueId = ref<string>("");
-const paymentInfo = ref<GuestSubscriptionResponseModel>();
+const paymentInfo = ref<SubscriptionResponseModel>();
 const newsPaperDetail = ref<NewsPaper | null>(null);
 // Modal state
 const showSubscriptionModal = ref(false);
@@ -583,12 +583,36 @@ function closeSubscriptionModal() {
 
 
 function openOneTimePurchaseModal() {
-  showPurchaseModal.value = true;
+  if (!!authStore.accessToken) {
+    handleAuthenticatedOneTimePurchase();
+  } else {
+    showPurchaseModal.value = true;
+  }
 }
 
 function closePurchaseModal() {
   showPurchaseModal.value = false;
 }
+
+const handleAuthenticatedOneTimePurchase = async () => {
+  isProcessing.value = true;
+  try {
+    const result = await initializeUserOneTimeBuy(newspaperId.value);
+    
+    if (!result.success) {
+      $toast.error(result.message || "Failed to initiate purchase.");
+      return;
+    }
+
+    paymentInfo.value = result.data as SubscriptionResponseModel;
+    showPaymentModal.value = true;
+  } catch (err) {
+    console.error("Authenticated purchase error:", err);
+    $toast.error("An error occurred while processing your purchase.");
+  } finally {
+    isProcessing.value = false;
+  }
+};
 
 function openShareModal() {
   showShareModal.value = true;
@@ -745,37 +769,43 @@ const completeOneTimePurchase = async () => {
 
   try {
 
-
     // wait for 4 seconds before proceeding...
     await new Promise(resolve => setTimeout(resolve, 2800));
      
-    const result = await fulfillGuestOneTimePurchase({ reference: paymentInfo.value?.reference });
+    const reference = paymentInfo.value?.reference;
 
-    if (result) {
+    if (authStore.accessToken) {
+      // Authenticated user path
+      await fulfillUserOneTimePurchase({ reference });
+       await new Promise(resolve => setTimeout(resolve, 500));
+      await verifyNewsPaperEntitlement(newspaperId.value);
+    } else {
+      // Guest path
+      const result = await fulfillGuestOneTimePurchase({ reference });
+      if (result) {
+        //set result.token in cookies using nuxt cookies
+        const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
+          maxAge: 60 * 60 * 24,
+          secure: true,
+          httpOnly: false,
+          priority: "medium",
+          sameSite: "strict"
+        });
+        
+        gnpUserIdentityCookie.value = result;
+        authStore.setAccessToken(result);
 
-      //set result.token in cookies using nuxt cookies
-      const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
-        maxAge: 60 * 60 * 24,
-        secure: true,
-        httpOnly: false,
-        priority: "medium",
-        sameSite: "strict"
-      });
-      
-      gnpUserIdentityCookie.value = result;
-      authStore.setAccessToken(result);
-      
-      // Check if biometric is available
-      const available = await isBiometricsAvailable();
-      if (available) {
-        isBiometricAvailable.value = true;
-        showFingerprintModal.value = true;
-        // Don't auto-redirect/show success yet, wait for user choice
-      } else {
-        // Fallback for devices without biometrics
-        await retrieveNewsPaperEntitlement(newspaperId.value);
+        // Check if biometric is available
+        const available = await isBiometricsAvailable();
+        if (available) {
+          isBiometricAvailable.value = true;
+          showFingerprintModal.value = true;
+          // Don't auto-redirect/show success yet, wait for user choice
+        } else {
+          // Fallback for devices without biometrics
+          await retrieveNewsPaperEntitlement(newspaperId.value);
+        }
       }
-
     }
     
   } catch (error) {

@@ -1,4 +1,4 @@
-import type { UserSubscription, GuestSubscriptionResponseModel, NewsPaperEntitlementResponseModel, BaseApiResponse, BasePaginationModel, NewsPaper } from "~/models";
+import type { UserSubscription, SubscriptionResponseModel, NewsPaperEntitlementResponseModel, BaseApiResponse, BasePaginationModel, NewsPaper } from "~/models";
 
 
 export async function getUserSubscription(query: object) {
@@ -10,16 +10,32 @@ export async function getUserSubscription(query: object) {
 
 export async function guestSubscription(payload: object) {
     
-  const response = await httpClient<BaseApiResponse<GuestSubscriptionResponseModel>>('subscription/guest', "", {
+  const response = await httpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/guest', "", {
     method: "post",
     body: payload,
   });
   return response.result;
 }
 
+
+export async function initializeUserOneTimeBuy(newsPaperId: string) {
+  const response = await httpClient<BaseApiResponse<SubscriptionResponseModel>>(`subscription/user-onetime-buy?newsPaperId=${newsPaperId}`, "",);
+  if (!response.result) {
+    return {
+      success: false,
+      message: response.message,
+    };
+  }
+
+  return {
+    success: true,
+    data: response.result,
+  };
+}
+
 export async function guestOneTimePurchase(payload: object) {
     
-  const response = await httpClient<BaseApiResponse<GuestSubscriptionResponseModel>>('subscription/guest-onetime', "", {
+  const response = await httpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/guest-onetime-buy', "", {
     method: "post",
     body: payload,
   });
@@ -40,6 +56,12 @@ export async function guestOneTimePurchase(payload: object) {
 export async function fulfillGuestOneTimePurchase(query: object) {
     
   const response = await httpClient<BaseApiResponse<string>>('subscription/fulfill-guest-onetime', "", { query });
+  return response.result;
+}
+
+export async function fulfillUserOneTimePurchase(query: object) {
+    
+  const response = await httpClient<BaseApiResponse<string>>('subscription/fulfill-user-onetime', "", { query });
   return response.result;
 }
 
