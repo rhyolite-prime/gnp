@@ -31,13 +31,6 @@
         />
       </div>
 
-      <!-- Category Filter -->
-       <select v-model="selectedCategory" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
-        <option value="">All Categories</option>
-        <option value="Newspaper">Newspaper</option>
-        <option value="Magazine">Magazine</option>
-        <option value="Special Edition">Special Edition</option>
-      </select>
 
       <!-- Date Filter -->
       <input 

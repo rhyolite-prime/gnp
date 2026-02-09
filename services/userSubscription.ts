@@ -33,6 +33,26 @@ export async function initializeUserOneTimeBuy(newsPaperId: string) {
   };
 }
 
+export async function buyCopy(payload: object) {
+  
+  const response = await httpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/buy-copy', "", {
+    method: "post",
+    body: payload,
+  });
+  
+  if (!response.result) {
+    return {
+      success: false,
+      message: response.message,
+    };
+  }
+
+  return {
+    success: true,
+    data: response.result,
+  };
+}
+
 export async function guestOneTimePurchase(payload: object) {
     
   const response = await httpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/guest-onetime-buy', "", {
@@ -65,6 +85,12 @@ export async function fulfillUserOneTimePurchase(query: object) {
   return response.result;
 }
 
+export async function fulfillBuyCopy(query: object) {
+    
+  const response = await httpClient<BaseApiResponse<string>>('subscription/fulfill-buy-copy', "", { query });
+  return response.success;
+}
+
 export async function validateNewsPaperEntitlement(query: object) {
     
   const response = await httpClient<BaseApiResponse<NewsPaperEntitlementResponseModel>>('subscription/validate-newspaper-entitlement', "", { query });
@@ -80,13 +106,7 @@ export async function userSubscription(payload: object) {
   return response.success;
 }
 
-export async function shareNewspaper(payload: { newsPaperId: string, phoneNumber: string }) {
-  const response = await httpClient<BaseApiResponse<object>>('subscription/share-newspaper', "", {
-    method: "post",
-    body: payload,
-  });
-  return response;
-}
+ 
 
 
 export async function getRedactedNewsPaperDetailsViaUniqueId(id: string) {
