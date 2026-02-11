@@ -891,7 +891,7 @@ const completeOneTimePurchase = async () => {
          showInfo({
            type: 'success',
            title: 'Purchase Successful',
-           message: 'Successfully shared copy with recipient!'
+           message: `Successfully shared copy with ${recipientName.value}!`
          });
          showPaymentModal.value = false;
          

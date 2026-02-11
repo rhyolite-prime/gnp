@@ -163,7 +163,8 @@ import {
   RectangleGroupIcon,
   BuildingOfficeIcon,
   Bars3Icon,
-  BellIcon
+  BellIcon,
+  CurrencyDollarIcon
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '~/stores/auth'
 
@@ -196,6 +197,18 @@ const navigation = [
     children: [
       { name: 'Partners', href: '/admin/partners/' },
       { name: 'Invoices & Payments', href: '/admin/partners/invoices' },
+    ],
+  },
+  {
+    name: 'Affiliate Marketing',
+    icon: CurrencyDollarIcon,
+    children: [
+      { name: 'Dashboard', href: '/admin/affiliates/dashboard' },
+      { name: 'Affiliates', href: '/admin/affiliates/' },
+      { name: 'Applications', href: '/admin/affiliates/applications' },
+      { name: 'Commissions', href: '/admin/affiliates/commissions' },
+      { name: 'Payouts', href: '/admin/affiliates/payouts' },
+      { name: 'Settings', href: '/admin/affiliates/settings' },
     ],
   },
 

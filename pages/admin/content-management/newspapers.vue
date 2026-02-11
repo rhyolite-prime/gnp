@@ -24,7 +24,7 @@
         class="inline-flex items-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
       >
         <FunnelIcon class="-ml-0.5 h-5 w-5 text-gray-400" aria-hidden="true" />
-        Filters
+        {{ showFilters ? 'Hide filters' : 'Show filters' }}
       </button>
     </div>
 
@@ -37,24 +37,34 @@
         </div>
         <input 
           type="text" 
-          v-model="tempSearchQuery" 
+          v-model="filters.query" 
           class="block w-full rounded-md border-0 py-1.5 pl-10 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" 
           placeholder="Search publications..." 
         />
       </div>
 
-      <!-- Date Filter -->
-      <input 
-        type="date" 
-        v-model="tempDateFilter" 
-        class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
-      />
+      <!-- Date Range Filter -->
+      <div class="flex items-center space-x-2 bg-white rounded-md ring-1 ring-inset ring-gray-300 px-2 py-1 shadow-sm">
+        <input 
+          type="date" 
+          v-model="filters.startDate" 
+          class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+          placeholder="Start Date"
+        />
+        <span class="text-gray-400 text-sm">to</span>
+        <input 
+          type="date" 
+          v-model="filters.endDate" 
+          class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+          placeholder="End Date"
+        />
+      </div>
       
       <!-- Status Filter -->
-      <select v-model="tempSelectedStatus" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
+      <select v-model="filters.status" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
         <option value="">All Statuses</option>
-        <option value="Published">Published</option>
-        <option value="Draft">Draft</option>
+        <option value="published">Published</option>
+        <option value="draft">Draft</option>
       </select>
 
       <!-- Filter Actions -->
@@ -220,7 +230,8 @@ const filters = reactive({
   pageNo: 1,
   pageSize: 10,
   status: '',
-  date: ''
+  startDate: '',
+  endDate: ''
 });
 
 const paginationParams = reactive({
@@ -323,23 +334,20 @@ const publishPaper = async (paperId: string ) => {
 // Filters
 const showFilters = ref(false)
 
-// Temporary filter models
-const tempSearchQuery = ref('')
-const tempSelectedStatus = ref('')
-const tempDateFilter = ref('')
 
 const applyFilters = () => {
-  filters.query = tempSearchQuery.value
-  filters.status = tempSelectedStatus.value
-  filters.date = tempDateFilter.value
   filters.pageNo = 1
+  const filteredQuery = filterQueryParams({ ...route.query, ...filters });
+  router.replace({ name: route.name ?? '', query: filteredQuery });
+
   getPaginatedNewsPapers()
 }
 
 const resetFilters = () => {
-  tempSearchQuery.value = ''
-  tempSelectedStatus.value = ''
-  tempDateFilter.value = ''
+  filters.query = ''
+  filters.status = ''
+  filters.startDate = ''
+  filters.endDate = ''
   applyFilters()
 }
 
@@ -353,14 +361,16 @@ const debouncedSearch = debounce(() => {
 
   onMounted(async () => {
     if (!isEmpty(route.query)) {
-      filters.pageNo = parseInt(route.query.pageNo as string);
+      filters.pageNo = parseInt(route.query.pageNo as string) || 1;
       filters.query = (route.query.query as string) || '';
       filters.status = (route.query.status as string) || '';
-      filters.date = (route.query.date as string) || '';
+      filters.startDate = (route.query.startDate as string) || '';
+      filters.endDate = (route.query.endDate as string) || '';
       
       tempSearchQuery.value = filters.query;
       tempSelectedStatus.value = filters.status;
-      tempDateFilter.value = filters.date;
+      tempStartDate.value = filters.startDate;
+      tempEndDate.value = filters.endDate;
     }
     
     await getPaginatedNewsPapers();
