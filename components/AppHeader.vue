@@ -5,8 +5,12 @@
         <!-- Logo -->
         <div class="flex items-center">
           <NuxtLink to="/" class="flex items-center group">
-            <div class="w-10 h-10 bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
-              <span class="text-white font-bold text-lg">G</span>
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform overflow-hidden">
+              <img 
+                src="/favicon-mag.png" 
+                alt="Graphic NewsPlus Logo" 
+                class="w-full h-full object-contain"
+              />
             </div>
             <div class="ml-3">
               <h1 class="text-xl font-bold text-gray-900">Graphic NewsPlus</h1>
@@ -21,6 +25,7 @@
           <NuxtLink to="/newspapers" class="nav-link">Newspapers</NuxtLink>
           <a href="#magazines" class="nav-link">Magazines</a>
           <NuxtLink to="/pricing" class="nav-link">Pricing</NuxtLink>
+          <NuxtLink :to="authStore.isAuthenticated ? '/affiliates/dashboard' : '/affiliates'" class="nav-link">Affiliates</NuxtLink>
           <NuxtLink to="/about" class="nav-link">About</NuxtLink>
         </nav>
 
@@ -98,8 +103,8 @@
     <div v-if="isMobileMenuOpen" class="fixed inset-0 z-50 bg-white md:hidden">
       <div class="p-4 flex justify-between items-center border-b border-gray-200">
          <div class="flex items-center">
-            <div class="w-8 h-8 bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg flex items-center justify-center mr-2">
-              <span class="text-white font-bold text-sm">G</span>
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-2 overflow-hidden">
+              <img  src="/favicon-mag.png"  alt="Graphic NewsPlus Logo"   class="w-full h-full object-contain" />
             </div>
             <span class="text-lg font-bold text-gray-900">Menu</span>
          </div>
@@ -116,6 +121,7 @@
           <NuxtLink to="/newspapers" class="mobile-nav-link" @click="closeMobileMenu">Newspapers</NuxtLink>
           <a href="#magazines" class="mobile-nav-link" @click="closeMobileMenu">Magazines</a>
           <NuxtLink to="/pricing" class="mobile-nav-link" @click="closeMobileMenu">Pricing</NuxtLink>
+          <NuxtLink :to="authStore.isAuthenticated ? '/affiliates/dashboard' : '/affiliates'" class="mobile-nav-link" @click="closeMobileMenu">Affiliates</NuxtLink>
           <NuxtLink to="/about" class="mobile-nav-link" @click="closeMobileMenu">About</NuxtLink>
 
           <div class="pt-4 border-t border-gray-100">
@@ -140,8 +146,10 @@ import {
   Bars3Icon,
   XMarkIcon
 } from '@heroicons/vue/24/outline'
+import { useAuthStore } from '~/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const searchQuery = ref('')
 const showSignInModal = ref(false);
 const isSearchOpen = ref(false)

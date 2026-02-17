@@ -168,6 +168,13 @@
       </div>
     </div>
   </div>
+
+  <AffiliateModal 
+    v-if="showAddModal" 
+    :loading="loading"
+    @close="showAddModal = false" 
+    @save="handleCreateAffiliate" 
+  />
 </template>
 
 <script setup lang="ts">
@@ -180,6 +187,7 @@ import {
   ChevronRightIcon 
 } from '@heroicons/vue/24/outline'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
+import AffiliateModal from '~/components/AffiliateModal.vue'
 
 definePageMeta({
   layout: 'admin'
@@ -189,8 +197,9 @@ const showAddModal = ref(false)
 const searchQuery = ref('')
 const statusFilter = ref('')
 const sortBy = ref('newest')
+const loading = ref(false)
 
-const affiliates = [
+const affiliates = ref([
   {
     name: 'Lindsay Walton',
     email: 'lindsay.walton@example.com',
@@ -245,10 +254,10 @@ const affiliates = [
     image:
       'https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
   },
-]
+])
 
 const filteredAffiliates = computed(() => {
-  return affiliates.filter(affiliate => {
+  return affiliates.value.filter(affiliate => {
     const matchesSearch = affiliate.name.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
                           affiliate.email.toLowerCase().includes(searchQuery.value.toLowerCase())
     const matchesStatus = statusFilter.value ? affiliate.status === statusFilter.value : true
@@ -261,4 +270,10 @@ const filteredAffiliates = computed(() => {
       return 0
   })
 })
+
+const handleCreateAffiliate = async (formData: any) => {
+
+
+  
+}
 </script>
