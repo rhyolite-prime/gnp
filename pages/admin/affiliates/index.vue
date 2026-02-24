@@ -273,7 +273,7 @@ const filteredAffiliates = computed(() => {
 
 const handleCreateAffiliate = async (formData: any) => {
 
-
+  console.log("formData =>", formData);
   
 }
 </script>

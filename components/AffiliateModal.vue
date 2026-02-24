@@ -162,13 +162,8 @@ const platformOptions = [
   'LinkedIn',
   'YouTube',
   'Blog/Website',
-  'Email Newsletter',
-  'Podcast',
   'WhatsApp',
   'Telegram',
-  'Pinterest',
-  'Reddit',
-  'Review Site',
   'Other'
 ];
 

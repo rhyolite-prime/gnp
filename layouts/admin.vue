@@ -164,6 +164,7 @@ import {
   BuildingOfficeIcon,
   Bars3Icon,
   BellIcon,
+  TicketIcon,
   CurrencyDollarIcon
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '~/stores/auth'
@@ -216,6 +217,7 @@ const navigation = [
   { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon },
   { name: 'Payments', href: '/admin/payments', icon: BanknotesIcon },
   { name: 'Campaigns', href: '/admin/campaigns', icon: MegaphoneIcon },
+  { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon },
   {
     name: 'Advert Management',
     icon: RectangleGroupIcon,

@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="sm:flex sm:items-center sm:justify-between mb-8">
       <div>
-        <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">Users</h1>
-        <p class="mt-2 text-sm text-gray-700">Manage users</p>
+        <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">Coupons</h1>
+        <p class="mt-2 text-sm text-gray-700">Manage Coupons</p>
       </div>
       <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
         <button
@@ -12,7 +12,7 @@
           type="button"
           class="block rounded-md bg-primary-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
         >
-          Create User
+          Create Coupon
         </button>
       </div>
     </div>
@@ -84,10 +84,10 @@
       <table class="min-w-full divide-y divide-gray-300">
         <thead class="bg-gray-50">
           <tr>
-            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Created At</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">First Name</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Last Name</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Reach</th>
+            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Coupon Code</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Username</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Discount</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Valid Till </th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Engagement</th>
             <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
@@ -96,12 +96,12 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 bg-white">
-          <tr v-for="user in userList" :key="user.id">
+          <tr v-for="campaign in campaignList" :key="campaign.id">
             <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
-              <div class="font-medium text-gray-900">{{ user.name }}</div>
+              <div class="font-medium text-gray-900">{{ campaign.name }}</div>
               <!-- send action as campaignType -->
               <span
-                v-if="user.campaignType === 'send_now'"
+                v-if="campaign.campaignType === 'send_now'"
                 class="inline-flex items-center rounded-md bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20 mt-1"
               >
                 Instant
@@ -415,7 +415,7 @@
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { EnvelopeIcon, BellAlertIcon, MagnifyingGlassIcon, FunnelIcon } from '@heroicons/vue/24/outline'
 import { isEmpty, debounce } from "lodash-es";
-import type { Campaign, GnpUser } from "~/models";
+import type { Campaign } from "~/models";
 const { $toast } = useNuxtApp();
 
 
@@ -424,7 +424,7 @@ definePageMeta({
 })
 
 useHead({
-  title: 'Users | Graphic News Plus'
+  title: 'Campaigns | Graphic News Plus'
 })
 
 const router = useRouter();
@@ -444,7 +444,7 @@ const paginationParams = reactive({
   upperBound: 0
 });
 
-const userList = ref<GnpUser[]>([]);
+const campaignList = ref<Campaign[]>([]);
 
 const isShimmerLoading = ref(true);
 
@@ -454,18 +454,18 @@ const onPageChange = async (pageNumber: number) => {
 	const filteredQuery = filterQueryParams({ ...route.query, ...filters });
 
 	router.replace({ name: route.name ?? '', query: filteredQuery });
-    await getPaginatedUsers()
+    await getPaginatedCampaigns()
 }
 
-const getPaginatedUsers = async () => {
+const getPaginatedCampaigns = async () => {
 
     isShimmerLoading.value = true;
 
     try {
 
-        let result = await getAdminUsers(filters);
+        let result = await getCampaigns(filters);
 
-        userList.value = result.data;
+        campaignList.value = result.data;
 
         paginationParams.totalPages = result.totalPages;
         paginationParams.totalCount = result.totalCount;
@@ -473,12 +473,18 @@ const getPaginatedUsers = async () => {
         paginationParams.upperBound = result.upperBound;
 
     } catch (error) {
-        $toast.error('Unable to fetch admin users !');
+        $toast.error('Unable to fetch campaigns !');
     } finally {
         isShimmerLoading.value = false;
     }
 
  }
+
+const stats = [
+  { name: 'Total Campaigns', stat: '71' },
+  { name: 'Avg. Open Rate', stat: '58.16%' },
+  { name: 'Avg. Click Rate', stat: '24.57%' },
+]
 
 
 // Filters
@@ -549,24 +555,34 @@ const saveCampaign = async () => {
     await createCampaign(form.value);
     // Optimistic update or refresh needed here ideally, but for now just close
     isModalOpen.value = false;
-    await getPaginatedUsers();
-    $toast.success('Users created successfully');
+    await getPaginatedCampaigns();
+    $toast.success('Campaign created successfully');
   } catch (error) {
-    console.error('Failed to create uer', error)
-    $toast.success('Failed to create campaign. Please try again.');
+    console.error('Failed to create campaign', error)
+    alert('Failed to create campaign. Please try again.')
   }
   finally {
     isSaving.value = false;
   }
 }
 
+const broadcastCampaign = async (campaign: Campaign) => {
+  try {
+    await publishCampaign({campaignId: campaign.id});
+    $toast.success('Campaign published successfully');
+    await getPaginatedCampaigns();
+  } catch (error) {
+    console.error('Failed to publish campaign', error);
+    $toast.error('Failed to publish campaign');
+  }
+};
 
 const delCampaign = async (campaign: Campaign) => {
 
   try {
     await deleteCampaign({campaignId: campaign.id });
     $toast.success('Campaign deleted successfully');
-    await getPaginatedUsers();
+    await getPaginatedCampaigns();
   } catch (error) {
     console.error('Failed to delete campaign', error);
     $toast.error('Failed to delete campaign');
@@ -575,7 +591,7 @@ const delCampaign = async (campaign: Campaign) => {
 
 const debouncedSearch = debounce(() => {
     filters.pageNo = 1; // Reset to first page for new search
-    getPaginatedUsers();
+    getPaginatedCampaigns();
   }, 300); // 300ms delay
 
 
