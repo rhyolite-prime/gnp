@@ -8,6 +8,13 @@ export async function getNewsPapers(query: object) {
    return response.result;
 }
 
+export async function getLatestNewsPapers(query: object) {
+ 
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<NewsPaper[]>>>('news-papers/get-latest', "", { query });
+    
+   return response.result;
+}
+
 export async function getNewsPaperDetails(query: object) {
  
     const response = await httpClient<BaseApiResponse<NewsPaper>>('news-papers/get-redacted-details', "", { query });

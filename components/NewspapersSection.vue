@@ -8,7 +8,7 @@
         </p>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
         <NewspaperCard 
           v-for="newspaper in newspapers" 
           :key="newspaper.id"
@@ -29,44 +29,37 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { getLatestNewsPapers } from '~/services/newsPapers';
+import type { NewsPaper } from '~/models';
 
-const newspapers = [
-  {
-    id: 1,
-    title: 'Graphic Business',
-    date: 'Tuesday, August 25, 2025',
-    image: 'https://ext.same-assets.com/111305068/1514599064.jpeg'
-  },
-  {
-    id: 2,
-    title: 'Daily Graphic',
-    date: 'Tuesday, August 25, 2025',
-    image: 'https://ext.same-assets.com/111305068/2864186025.jpeg'
-  },
-  {
-    id: 3,
-    title: 'Daily Graphic',
-    date: 'Monday, August 25, 2025',
-    image: 'https://ext.same-assets.com/111305068/2030528556.jpeg'
-  },
-  {
-    id: 4,
-    title: 'Graphic Sports',
-    date: 'Monday, August 25, 2025',
-    image: 'https://ext.same-assets.com/111305068/3071757749.jpeg'
-  },
-  {
-    id: 5,
-    title: 'The Mirror',
-    date: 'Saturday, August 23, 2025',
-    image: 'https://ext.same-assets.com/111305068/1153830836.jpeg'
-  },
-  {
-    id: 6,
-    title: 'Daily Graphic',
-    date: 'Saturday, August 23, 2025',
-    image: 'https://ext.same-assets.com/111305068/3361168442.jpeg'
-  }
-]
+const newspapers = ref<any[]>([]);
+
+const formatNiceDate = (dateString: string) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
+onMounted(async () => {
+    try {
+        const result = await getLatestNewsPapers({  pageNo:1, pageSize: 5 });
+        if (result && result.data) {
+            newspapers.value = result.data.map((paper: NewsPaper) => ({
+                id: paper.id,
+                title: paper.title,
+                date: formatNiceDate(paper.publicationDate),
+                thumbnailId: paper.thumbnailId
+            }));
+        }
+    } catch (error) {
+        console.error("Error fetching latest newspapers:", error);
+    }
+});
 </script>
