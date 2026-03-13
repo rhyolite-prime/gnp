@@ -19,7 +19,7 @@
             <button class="btn-secondary">Learn More</button>
           </div>
         </div>
-        <div class="relative animate-scale-in">
+        <div class="hidden lg:block relative animate-scale-in">
           <div class="relative z-10">
             <img 
               src="https://ext.same-assets.com/111305068/3183639741.png" 

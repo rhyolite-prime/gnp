@@ -8,7 +8,7 @@
         </p>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
         <NewspaperCard 
           v-for="newspaper in newspapers" 
           :key="newspaper.id"
@@ -49,7 +49,7 @@ const formatNiceDate = (dateString: string) => {
 
 onMounted(async () => {
     try {
-        const result = await getLatestNewsPapers({  pageNo:1, pageSize: 5 });
+        const result = await getLatestNewsPapers({  pageNo:1, pageSize: 6 });
         if (result && result.data) {
             newspapers.value = result.data.map((paper: NewsPaper) => ({
                 id: paper.id,
