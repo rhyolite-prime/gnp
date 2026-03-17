@@ -207,13 +207,21 @@
                        <div class="h-14 w-14 bg-white/10 rounded-2xl flex items-center justify-center group-hover:bg-white/20 transition-colors">
                           <PhoneIcon class="h-8 w-8 text-white" />
                        </div>
-                       <span class="text-2xl font-semibold">+233 (0) 30 268 4021</span>
+                       <span class="text-2xl font-semibold">+233 (0) 551 484 843</span>
                     </div>
+
+                    <div class="flex items-center space-x-6 group">
+                       <div class="h-14 w-14 bg-white/10 rounded-2xl flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                          <PhoneIcon class="h-8 w-8 text-white" />
+                       </div>
+                       <span class="text-2xl font-semibold">+233 (0) 242 573 763</span>
+                    </div>
+
                     <div class="flex items-center space-x-6 group">
                        <div class="h-14 w-14 bg-white/10 rounded-2xl flex items-center justify-center group-hover:bg-white/20 transition-colors">
                           <EnvelopeIcon class="h-8 w-8 text-white" />
                        </div>
-                       <span class="text-2xl font-semibold">partnerships@graphic.com.gh</span>
+                       <span class="text-2xl font-semibold">support@graphicnewsplus.com</span>
                     </div>
                  </div>
               </div>
