@@ -19,17 +19,17 @@
             <button class="btn-secondary">Learn More</button>
           </div>
         </div>
-        <div class="hidden lg:block relative animate-scale-in">
+        <!-- <div class="hidden lg:block relative animate-scale-in">
           <div class="relative z-10">
             <img 
-              src="https://ext.same-assets.com/111305068/3183639741.png" 
+              src="/news-plus-mobile.jpg" 
               alt="Mobile App" 
               class="w-80 mx-auto drop-shadow-2xl hover:scale-105 transition-transform duration-300"
               loading="lazy"
             >
           </div>
           <div class="absolute inset-0 bg-gradient-to-r from-primary-600/20 to-orange-600/20 rounded-3xl blur-3xl"></div>
-        </div>
+        </div> -->
       </div>
     </div>
   </section>

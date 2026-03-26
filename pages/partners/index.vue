@@ -28,7 +28,7 @@
                   Become a Partner
                 </button>
                 <NuxtLink 
-                  to="/partners/login" 
+                  to="/partners/account/login" 
                   class="inline-flex items-center justify-center px-10 py-4 border border-slate-700 text-lg font-bold rounded-xl text-white bg-slate-800/50 hover:bg-slate-800 transition-all transform hover:-translate-y-1 active:scale-95 backdrop-blur-sm"
                 >
                   Partner Login
