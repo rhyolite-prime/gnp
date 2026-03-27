@@ -27,12 +27,12 @@
                 
                 <div>
                    <label class="block text-sm font-bold text-slate-700 mb-2">Company Name</label>
-                   <input type="text" value="Bank of Ghana" class="block w-full rounded-xl border-slate-200 py-2.5 text-slate-900 focus:ring-2 focus:ring-primary-500 bg-slate-50" />
+                   <input type="text" value="MTN Ghana Limited" class="block w-full rounded-xl border-slate-200 py-2.5 text-slate-900 focus:ring-2 focus:ring-primary-500 bg-slate-50" />
                 </div>
                 
                 <div>
                    <label class="block text-sm font-bold text-slate-700 mb-2">Support Email</label>
-                   <input type="email" value="support@bog.gov.gh" class="block w-full rounded-xl border-slate-200 py-2.5 text-slate-900 focus:ring-2 focus:ring-primary-500 bg-slate-50" />
+                   <input type="email" value="support@mtngh.com" class="block w-full rounded-xl border-slate-200 py-2.5 text-slate-900 focus:ring-2 focus:ring-primary-500 bg-slate-50" />
                    <p class="text-xs text-slate-500 mt-1.5">Where member inquiries should be directed.</p>
                 </div>
              </div>

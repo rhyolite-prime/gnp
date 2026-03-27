@@ -127,30 +127,6 @@
       </div>
     </div>
 
-    <!-- Roles Explaination -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-       <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-          <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center border border-purple-100 mb-4">
-             <ShieldCheckIcon class="w-6 h-6" />
-          </div>
-          <h4 class="font-bold text-slate-900 mb-2">Owner</h4>
-          <p class="text-sm text-slate-500 leading-relaxed">Full access to all portal settings, billing, API keys, and user management. Only owners can delete the organization.</p>
-       </div>
-       <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-          <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center border border-blue-100 mb-4">
-             <BriefcaseIcon class="w-6 h-6" />
-          </div>
-          <h4 class="font-bold text-slate-900 mb-2">Admin</h4>
-          <p class="text-sm text-slate-500 leading-relaxed">Can manage members, add new sub-administrators, edit API keys, and view reports. Cannot modify billing.</p>
-       </div>
-       <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-          <div class="w-12 h-12 bg-slate-100 text-slate-600 rounded-2xl flex items-center justify-center border border-slate-200 mb-4">
-             <EyeIcon class="w-6 h-6" />
-          </div>
-          <h4 class="font-bold text-slate-900 mb-2">Viewer</h4>
-          <p class="text-sm text-slate-500 leading-relaxed">Read-only access to subscriber directories and analytics reports. Cannot modify portal settings or API keys.</p>
-       </div>
-    </div>
   </div>
 </template>
 

@@ -26,7 +26,7 @@
         <NuxtLink 
           v-for="item in mockMovies" 
           :key="item.id"
-          to="#"
+          :to="'/originals/movies/' + item.id"
           class="relative group cursor-pointer transition-transform duration-300 hover:scale-105 hover:z-20 w-full rounded-md overflow-hidden bg-gray-800 shadow-lg border border-gray-800 hover:border-red-500/50"
         >
           <div class="aspect-[2/3] w-full relative">
