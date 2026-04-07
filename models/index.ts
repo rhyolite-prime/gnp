@@ -31,10 +31,10 @@ export interface BasePaginationModel<T> {
     upperBound: number;
 }
 
-export interface GnpUser {
+export interface GnpUser extends BaseEntityModel  {
     email: string;
     firstName: string;
-    lastnameName: string;
+    lastName: string;
     userId: string;
     username: string;
     country: string;
@@ -174,6 +174,21 @@ export interface Payment extends BaseEntityModel {
     status: string;
 }
 
+export interface Coupon extends BaseEntityModel {
+
+    code: string;
+    userId: string;
+    username: string;
+    discount: string;
+    description: string
+    discountAsPercentage: boolean;
+    validTill: string;
+    usageQuota: number;
+    usageCount: number;
+    status: string;
+    
+}
+
 export interface IngestionJob extends BaseEntityModel {
 
     publicationDate: string;
@@ -205,6 +220,14 @@ export interface CommercialPartner extends BaseEntityModel {
     remainingQuota: number;
     subaccountEnabled: boolean;
     createdAt: string;
+}
+
+export interface UserProfileResponse {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  hasPasskey: boolean;
 }
 
 export interface Subscriber extends BaseEntityModel {

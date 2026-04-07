@@ -26,14 +26,14 @@
           <a href="#magazines" class="nav-link">Magazines</a>
           
           <!-- Originals Dropdown -->
-          <div class="relative group flex items-center h-full">
+          <!-- <div class="relative group flex items-center h-full">
             <NuxtLink to="/originals" class="nav-link !text-red-600 hover:!text-red-700 flex items-center gap-1">
               <PlayIcon class="w-5 h-5" />
               <span>Originals</span>
               <ChevronDownIcon class="w-4 h-4 ml-0.5 transition-transform group-hover:rotate-180" />
             </NuxtLink>
 
-            <!-- Dropdown Menu -->
+            
             <div class="absolute left-1/2 -translate-x-1/2 top-[80%] pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 w-56">
               <div class="bg-white rounded-xl shadow-xl border border-gray-100 p-2 space-y-1 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                 <NuxtLink to="/originals/live" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-gray-700 hover:text-red-600 transition-colors group/item">
@@ -63,7 +63,7 @@
                 </NuxtLink>
               </div>
             </div>
-          </div>
+          </div> -->
 
           <NuxtLink to="/pricing" class="nav-link">Pricing</NuxtLink>
           <NuxtLink :to="authStore.isAuthenticated ? '/affiliates/dashboard' : '/affiliates'" class="nav-link">Affiliates</NuxtLink>
@@ -164,7 +164,7 @@
           <a href="#magazines" class="mobile-nav-link" @click="closeMobileMenu">Magazines</a>
           
           <!-- Mobile Originals Accordion -->
-          <div>
+          <!-- <div>
             <button @click="isOriginalsOpen = !isOriginalsOpen" class="w-full flex items-center justify-between mobile-nav-link !text-red-600">
               <div class="flex items-center gap-2">
                 <PlayIcon class="w-6 h-6" />
@@ -193,7 +193,7 @@
                 <BookOpenIcon class="w-5 h-5 text-red-500" /> GN Books
               </NuxtLink>
             </div>
-          </div>
+          </div> -->
 
           <NuxtLink to="/pricing" class="mobile-nav-link" @click="closeMobileMenu">Pricing</NuxtLink>
           <NuxtLink :to="authStore.isAuthenticated ? '/affiliates/dashboard' : '/affiliates'" class="mobile-nav-link" @click="closeMobileMenu">Affiliates</NuxtLink>

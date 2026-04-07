@@ -1,11 +1,9 @@
-import type { BaseApiResponse } from "~/models";
+import type { BaseApiResponse, GnpUser, BasePaginationModel, UserProfileResponse } from "~/models";
 
-export interface UserProfileResponse {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber: string;
-  hasPasskey: boolean;
+export async function getUsers(query: object) {
+ 
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<GnpUser[]>>>('admin/get-all-users', "", { query });
+    return response.result;
 }
 
 export async function getUserProfile() {
