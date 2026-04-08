@@ -104,8 +104,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { BuildingOfficeIcon, EnvelopeIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
-import { signIn } from '~/services/auth'
-import { useAuthStore } from '~/stores/auth'
+import { usePartnerAuthStore } from '~/stores/partnerAuth'
 
 definePageMeta({
   layout: 'default'
@@ -119,7 +118,7 @@ useHead({
 })
 
 const loading = ref(false)
-const authStore = useAuthStore()
+const partnerAuthStore = usePartnerAuthStore()
 const router = useRouter()
 
 const form = reactive({
@@ -131,13 +130,13 @@ const form = reactive({
 const handleLogin = async () => {
   loading.value = true
   try {
-    const response = await signIn({ 
+    const response = await partnerSignIn({ 
       usernameOrEmail: form.email, 
       password: form.password 
     })
     
     if (response && response.token) {
-      const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
+      const gnpPartnerIdentityCookie = useCookie("gnp-partner-identity", {
         maxAge: 60 * 60 * 24,
         secure: true,
         httpOnly: false,
@@ -145,13 +144,14 @@ const handleLogin = async () => {
         sameSite: "strict"
       });
       
-      gnpUserIdentityCookie.value = response.token;
-      authStore.setAccessToken(response.token);
+      gnpPartnerIdentityCookie.value = response.token;
+      partnerAuthStore.setPartner(response);
       
       // Navigate to partner-specific dashboard
       router.push('/partners/dashboard')
     } else {
-      alert('Invalid institutional credentials')
+      // use a modal to alert the user of wrong credentials.
+      //alert('Invalid institutional credentials')
     }
   } catch (error) {
     console.error('Login error:', error)

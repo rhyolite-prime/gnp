@@ -40,7 +40,7 @@
                    <div class="h-6 w-6 bg-primary-500/10 rounded-full flex items-center justify-center mr-3 border border-primary-500/20">
                      <svg class="h-4 w-4 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
                    </div>
-                   <span>Bulk Licensing</span>
+                   <span>Bulk Subscription</span>
                 </div>
                 <div class="flex items-center">
                    <div class="h-6 w-6 bg-primary-500/10 rounded-full flex items-center justify-center mr-3 border border-primary-500/20">

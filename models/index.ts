@@ -90,6 +90,40 @@ export interface SigninResponseModel {
     username: string;
 }
 
+export interface PartnerSigninResponseModel {
+    partnerEmail: string;
+    fullName: string;
+    token: string;
+    partnerName: string;
+    partnerUserId: string;
+}
+
+//partner sub account
+export interface PartnerStats {
+    partnerEmail: string;
+    fullName: string;
+    
+}
+
+export interface PartnerEngagementReport {
+    partnerEmail: string;
+    fullName: string;
+    
+}
+
+
+export interface PartnerAnalyticsCharts {
+    partnerEmail: string;
+    fullName: string;
+    
+}
+
+export interface PartnerSubscriber {
+    partnerEmail: string;
+    fullName: string;
+    
+}
+
 
 
 

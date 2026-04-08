@@ -24,6 +24,10 @@
                <UserPlusIcon class="w-5 h-5 mr-2" />
                Invite Team Member
              </button>
+             <button @click="handleLogout" class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-red-600/10 text-red-400 border border-red-500/20 font-bold hover:bg-red-600/20 transition-all transform hover:scale-[1.02] shadow-md cursor-pointer whitespace-nowrap text-sm">
+               <ArrowRightOnRectangleIcon class="w-5 h-5 mr-2" />
+               Logout
+             </button>
            </div>
          </div>
 
@@ -92,11 +96,14 @@ import {
   UsersIcon,
   Cog6ToothIcon,
   QuestionMarkCircleIcon,
-  UserPlusIcon
+  UserPlusIcon,
+  ArrowRightOnRectangleIcon
 } from '@heroicons/vue/24/outline'
+import { usePartnerAuthStore } from '~/stores/partnerAuth'
 
 definePageMeta({
-  layout: 'default'
+  layout: 'default',
+  middleware: 'partner-auth'
 })
 
 useHead({
@@ -105,6 +112,14 @@ useHead({
     { name: 'description', content: 'Institutional partner dashboard for managing corporate subscriptions and integrations.' }
   ]
 })
+
+const partnerAuthStore = usePartnerAuthStore()
+const router = useRouter()
+
+const handleLogout = () => {
+  partnerAuthStore.clearPartner()
+  router.push('/partners/account/login')
+}
 </script>
 
 <style scoped>

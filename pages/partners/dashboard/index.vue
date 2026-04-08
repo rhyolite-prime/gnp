@@ -4,9 +4,9 @@
       <div>
         <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl mb-3 shadow-sm border border-slate-100">
            <div class="w-6 h-6 bg-gradient-to-tr from-primary-600 to-indigo-600 rounded-md flex items-center justify-center shadow-sm text-white font-bold text-xs">
-             MT
+             {{ partnerInitials }}
            </div>
-           <span class="text-md font-bold text-slate-800 tracking-tight">MTN Ghana</span>
+           <span class="text-md font-bold text-slate-800 tracking-tight">{{ partnerName }}</span>
            <span class="px-2 py-0.5 ml-1 bg-slate-100 text-slate-500 text-[10px] font-black uppercase rounded-md tracking-wider">Partner</span>
         </div>
         <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Overview</h2>
@@ -218,7 +218,7 @@ import {
   ClockIcon 
 } from '@heroicons/vue/24/outline'
 
-import { useAuthStore } from '~/stores/auth'
+import { usePartnerAuthStore } from '~/stores/partnerAuth'
 
 definePageMeta({
   layout: 'default'
@@ -231,12 +231,19 @@ useHead({
   ]
 })
 
-const authStore = useAuthStore()
+const partnerAuthStore = usePartnerAuthStore()
 
 const partnerName = computed(() => {
-  const user = authStore.user
-  if (!user) return 'Daily Graphic'
-  return user.idTokenClaims?.name || user.displayName || user.name || user.givenName || 'Daily Graphic'
+  return partnerAuthStore.partner?.partnerName || 'Daily Graphic'
+})
+
+const partnerInitials = computed(() => {
+  const name = partnerName.value
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
+})
+
+const partnerDomain = computed(() => {
+  return partnerName.value.toLowerCase().replace(/\s+/g, '') + '.com'
 })
 
 const stats = [
@@ -246,13 +253,13 @@ const stats = [
   { name: 'Active Sessions', value: '432', change: '-2.1%', isPositive: false, icon: ChartBarIcon },
 ]
 
-const recentMembers = [
-  { id: 1, name: 'Sarah Jenkins', email: 's.jenkins@mtngh.com', department: 'Finance', status: 'Active', lastActive: '2 mins ago' },
-  { id: 2, name: 'Michael Chen', email: 'm.chen@mtngh.com', department: 'Engineering', status: 'Active', lastActive: '1 hr ago' },
-  { id: 3, name: 'Amanda Smith', email: 'a.smith@mtngh.com', department: 'HR', status: 'Pending', lastActive: 'Never' },
-  { id: 4, name: 'David Wilson', email: 'd.wilson@mtngh.com', department: 'Marketing', status: 'Inactive', lastActive: '5 days ago' },
-  { id: 5, name: 'Emily Davis', email: 'e.davis@mtngh.com', department: 'Operations', status: 'Active', lastActive: 'Active now' },
-]
+const recentMembers = computed(() => [
+  { id: 1, name: 'Sarah Jenkins', email: `s.jenkins@${partnerDomain.value}`, department: 'Finance', status: 'Active', lastActive: '2 mins ago' },
+  { id: 2, name: 'Michael Chen', email: `m.chen@${partnerDomain.value}`, department: 'Engineering', status: 'Active', lastActive: '1 hr ago' },
+  { id: 3, name: 'Amanda Smith', email: `a.smith@${partnerDomain.value}`, department: 'HR', status: 'Pending', lastActive: 'Never' },
+  { id: 4, name: 'David Wilson', email: `d.wilson@${partnerDomain.value}`, department: 'Marketing', status: 'Inactive', lastActive: '5 days ago' },
+  { id: 5, name: 'Emily Davis', email: `e.davis@${partnerDomain.value}`, department: 'Operations', status: 'Active', lastActive: 'Active now' },
+])
 
 const getStatusColor = (status: string) => {
   switch(status) {

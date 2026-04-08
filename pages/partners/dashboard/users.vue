@@ -38,82 +38,30 @@
              </tr>
            </thead>
            <tbody class="divide-y divide-slate-100">
-             <tr class="hover:bg-slate-50 transition-colors group">
+             <tr v-for="user in portalUsers" :key="user.id" class="hover:bg-slate-50 transition-colors group">
                <td class="px-6 py-4">
                  <div class="flex items-center">
                    <div class="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-md">
-                     E
+                     {{ user.initial }}
                    </div>
                    <div class="ml-4">
-                     <p class="text-sm font-bold text-slate-900">Emmanuel Addo</p>
-                     <p class="text-xs text-slate-500 font-medium">emmanuel@organization.com</p>
+                     <p class="text-sm font-bold text-slate-900">{{ user.name }}</p>
+                     <p class="text-xs text-slate-500 font-medium">{{ user.email }}</p>
                    </div>
                  </div>
                </td>
                <td class="px-6 py-4">
-                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-50 text-purple-700 border border-purple-100">
-                   Owner
+                 <span :class="['inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border', 
+                   user.role === 'Owner' ? 'bg-purple-50 text-purple-700 border-purple-100' : 
+                   user.role === 'Admin' ? 'bg-blue-50 text-blue-700 border-blue-100' : 
+                   'bg-slate-100 text-slate-700 border-slate-200']">
+                   {{ user.role }}
                  </span>
                </td>
                <td class="px-6 py-4">
-                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
-                   Active
-                 </span>
-               </td>
-               <td class="px-6 py-4 text-right">
-                 <button class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
-                   <EllipsisHorizontalIcon class="w-5 h-5" />
-                 </button>
-               </td>
-             </tr>
-             <tr class="hover:bg-slate-50 transition-colors group">
-               <td class="px-6 py-4">
-                 <div class="flex items-center">
-                   <div class="w-10 h-10 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm shadow-sm border border-slate-300">
-                     S
-                   </div>
-                   <div class="ml-4">
-                     <p class="text-sm font-bold text-slate-900">Sarah Jenkins</p>
-                     <p class="text-xs text-slate-500 font-medium">s.jenkins@organization.com</p>
-                   </div>
-                 </div>
-               </td>
-               <td class="px-6 py-4">
-                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
-                   Admin
-                 </span>
-               </td>
-               <td class="px-6 py-4">
-                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
-                   Active
-                 </span>
-               </td>
-               <td class="px-6 py-4 text-right">
-                 <button class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
-                   <EllipsisHorizontalIcon class="w-5 h-5" />
-                 </button>
-               </td>
-             </tr>
-             <tr class="hover:bg-slate-50 transition-colors group">
-               <td class="px-6 py-4">
-                 <div class="flex items-center">
-                   <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-sm border border-slate-200 border-dashed">
-                     D
-                   </div>
-                   <div class="ml-4">
-                     <p class="text-sm font-bold text-slate-900">David Smith</p>
-                     <p class="text-xs text-slate-500 font-medium">d.smith@organization.com</p>
-                   </div>
-                 </div>
-               </td>
-               <td class="px-6 py-4">
-                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                   Viewer
-                 </span>
-               </td>
-               <td class="px-6 py-4">
-                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-50 text-yellow-700 border border-yellow-200">
-                   Pending Invite
+                 <span :class="['inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border', 
+                   user.status === 'Active' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200']">
+                   {{ user.status }}
                  </span>
                </td>
                <td class="px-6 py-4 text-right">
@@ -135,10 +83,19 @@ import {
   UserPlusIcon, 
   MagnifyingGlassIcon, 
   EllipsisHorizontalIcon,
-  ShieldCheckIcon,
-  BriefcaseIcon,
-  EyeIcon
 } from '@heroicons/vue/24/outline'
+import { usePartnerAuthStore } from '~/stores/partnerAuth'
 
-// Logic could easily be added here later
+const partnerAuthStore = usePartnerAuthStore()
+
+const partnerDomain = computed(() => {
+  const name = partnerAuthStore.partner?.partnerName || 'Organization'
+  return name.toLowerCase().replace(/\s+/g, '') + '.com'
+})
+
+const portalUsers = computed(() => [
+  { id: 1, name: 'Emmanuel Addo', email: `emmanuel@${partnerDomain.value}`, role: 'Owner', status: 'Active', initial: 'E' },
+  { id: 2, name: 'Sarah Jenkins', email: `s.jenkins@${partnerDomain.value}`, role: 'Admin', status: 'Active', initial: 'S' },
+  { id: 3, name: 'David Smith', email: `d.smith@${partnerDomain.value}`, role: 'Viewer', status: 'Pending Invite', initial: 'D' },
+])
 </script>
