@@ -96,17 +96,21 @@
 
       <!-- User Profile (Bottom Sidebar) -->
       <div class="p-4 border-t border-gray-100">
-        <div class="flex items-center p-2 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
+        <div class="flex items-center p-2 rounded-xl">
           <img 
             class="h-9 w-9 rounded-full object-cover border border-gray-200" 
-            src="https://ui-avatars.com/api/?name=Admin+User&background=random" 
-            alt="Admin User" 
+            :src="authStore.userPhotoUrl || `https://ui-avatars.com/api/?name=${authStore.user?.displayName || 'User'}&background=random`" 
+            :alt="authStore.user?.displayName || 'User'" 
           />
-          <div class="ml-3">
-            <p class="text-sm font-medium text-gray-900">Admin User</p>
-            <p class="text-xs text-gray-500">admin@graphic.com.gh</p>
+          <div class="ml-3 min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate">{{ authStore.user?.displayName || 'Admin User' }}</p>
+            <p class="text-xs text-gray-500 truncate">{{ authStore.user?.email || 'admin@graphic.com.gh' }}</p>
           </div>
-          <button @click="handleLogout" class="ml-auto text-gray-400 hover:text-red-600 transition-colors">
+          <button 
+            @click="handleLogout" 
+            class="ml-auto p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+            title="Logout"
+          >
             <ArrowRightOnRectangleIcon class="h-5 w-5" />
           </button>
         </div>
@@ -160,10 +164,13 @@ import {
   CreditCardIcon,
   BanknotesIcon,
   MegaphoneIcon,
-  ArrowRightOnRectangleIcon,
+  RectangleGroupIcon,
   BuildingOfficeIcon,
   Bars3Icon,
-  BellIcon
+  BellIcon,
+  TicketIcon,
+  CurrencyDollarIcon,
+  ArrowRightOnRectangleIcon
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '~/stores/auth'
 
@@ -198,16 +205,40 @@ const navigation = [
       { name: 'Invoices & Payments', href: '/admin/partners/invoices' },
     ],
   },
+  {
+    name: 'Affiliate Marketing',
+    icon: CurrencyDollarIcon,
+    children: [
+      { name: 'Dashboard', href: '/admin/affiliates/dashboard' },
+      { name: 'Affiliates', href: '/admin/affiliates/' },
+      { name: 'Applications', href: '/admin/affiliates/applications' },
+      { name: 'Commissions', href: '/admin/affiliates/commissions' },
+      { name: 'Payouts', href: '/admin/affiliates/payouts' },
+      { name: 'Settings', href: '/admin/affiliates/settings' },
+    ],
+  },
 
 
   { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon },
   { name: 'Payments', href: '/admin/payments', icon: BanknotesIcon },
   { name: 'Campaigns', href: '/admin/campaigns', icon: MegaphoneIcon },
+  { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon },
+  {
+    name: 'Advert Management',
+    icon: RectangleGroupIcon,
+    children: [
+      { name: 'Advert Categories', href: '/admin/categories/' },
+      { name: 'Advert Sizes', href: '/admin/users/sizes' },
+      { name: 'Publication Slots', href: '/admin/publication-slots' },
+      { name: 'Ad Requests', href: '/admin/ad-requests' },
+    ],
+  },
   {
     name: 'User Management',
     icon: UsersIcon,
     children: [
       { name: 'Users', href: '/admin/users/' },
+      { name: 'Subscribers', href: '/admin/users/subscribers' },
       { name: 'Roles', href: '/admin/users/roles' },
     ],
   },

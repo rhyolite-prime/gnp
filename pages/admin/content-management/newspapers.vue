@@ -16,8 +16,20 @@
       </div>
     </div>
 
+    <!-- Filters Toggle -->
+    <div class="flex justify-end mb-4">
+      <button 
+        @click="showFilters = !showFilters" 
+        type="button" 
+        class="inline-flex items-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+      >
+        <FunnelIcon class="-ml-0.5 h-5 w-5 text-gray-400" aria-hidden="true" />
+        {{ showFilters ? 'Hide filters' : 'Show filters' }}
+      </button>
+    </div>
+
     <!-- Filters -->
-    <div class="mb-8 grid grid-cols-1 gap-y-4 sm:grid-cols-2 md:grid-cols-4 gap-x-4">
+    <div v-show="showFilters" class="mb-8 grid grid-cols-1 gap-y-4 sm:grid-cols-2 md:grid-cols-4 gap-x-4 bg-gray-50 p-4 rounded-lg animate-fadeIn">
       <!-- Search -->
       <div class="relative rounded-md shadow-sm">
         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -25,34 +37,53 @@
         </div>
         <input 
           type="text" 
-          v-model="searchQuery" 
+          v-model="filters.query" 
           class="block w-full rounded-md border-0 py-1.5 pl-10 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" 
           placeholder="Search publications..." 
         />
       </div>
 
-      <!-- Category Filter -->
-       <select v-model="selectedCategory" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
-        <option value="">All Categories</option>
-        <option value="Newspaper">Newspaper</option>
-        <option value="Magazine">Magazine</option>
-        <option value="Special Edition">Special Edition</option>
-      </select>
-
-      <!-- Date Filter -->
-      <input 
-        type="date" 
-        v-model="dateFilter" 
-        class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
-      />
+      <!-- Date Range Filter -->
+      <div class="flex items-center space-x-2 bg-white rounded-md ring-1 ring-inset ring-gray-300 px-2 py-1 shadow-sm">
+        <input 
+          type="date" 
+          v-model="filters.startDate" 
+          class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+          placeholder="Start Date"
+        />
+        <span class="text-gray-400 text-sm">to</span>
+        <input 
+          type="date" 
+          v-model="filters.endDate" 
+          class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+          placeholder="End Date"
+        />
+      </div>
       
       <!-- Status Filter -->
-      <select v-model="selectedStatus" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
+      <select v-model="filters.status" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
         <option value="">All Statuses</option>
-        <option value="Published">Published</option>
-        <option value="Draft">Draft</option>
-        <option value="Archived">Archived</option>
+        <option value="published">Published</option>
+        <option value="draft">Draft</option>
       </select>
+
+      <!-- Filter Actions -->
+      <div class="flex items-center gap-2">
+        <button 
+          @click="applyFilters" 
+          type="button" 
+          class="rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 flex-1"
+        >
+          Search
+        </button>
+        <button 
+          @click="resetFilters" 
+          type="button" 
+          class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 flex-1"
+        >
+          Reset
+        </button>
+      </div>
     </div>
 
     <!-- Table -->
@@ -152,7 +183,7 @@
                     </Menu>
                   </td>
                 </tr>
-                <tr v-if="filteredNewspapers.length === 0">
+                <tr v-if="newspaperList.length === 0">
                   <td colspan="7" class="py-8 text-center text-sm text-gray-500">
                     No publications found matching your filters.
                   </td>
@@ -183,7 +214,7 @@
 
 <script setup lang="ts">
 
-import { MagnifyingGlassIcon, EyeIcon, ShoppingCartIcon, ChevronLeftIcon, ChevronRightIcon, EllipsisVerticalIcon } from '@heroicons/vue/24/outline'
+import { MagnifyingGlassIcon, EyeIcon, ShoppingCartIcon, ChevronLeftIcon, ChevronRightIcon, EllipsisVerticalIcon, FunnelIcon } from '@heroicons/vue/24/outline'
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 
 import CountUp from 'vue-countup-v3'
@@ -198,7 +229,9 @@ const filters = reactive({
   query: '',
   pageNo: 1,
   pageSize: 10,
-
+  status: '',
+  startDate: '',
+  endDate: ''
 });
 
 const paginationParams = reactive({
@@ -298,106 +331,46 @@ const publishPaper = async (paperId: string ) => {
   }
 };
 
-// Mock Data
-const newspapers = ref([
-  {
-    id: 1,
-    title: 'Daily Graphic',
-    date: '2025-12-15',
-    category: 'Newspaper',
-    price: 5.00,
-    status: 'Published',
-    views: 1250,
-    sales: 450,
-    headlines: [{ text: 'New Economic Policy Announced' }]
-  },
-  {
-    id: 2,
-    title: 'The Mirror',
-    date: '2025-12-14',
-    category: 'Newspaper',
-    price: 4.50,
-    status: 'Published',
-    views: 890,
-    sales: 320,
-    headlines: [{ text: 'Fashion Trends for 2026' }]
-  },
-  {
-    id: 3,
-    title: 'Graphic Business',
-    date: '2025-12-16',
-    category: 'Newspaper',
-    price: 6.00,
-    status: 'Draft',
-    views: 0,
-    sales: 0,
-    headlines: [{ text: 'Stock Market Rally Continues' }]
-  },
-  {
-    id: 4,
-    title: 'Junior Graphic',
-    date: '2025-12-10',
-    category: 'Newspaper',
-    price: 3.00,
-    status: 'Archived',
-    views: 2100,
-    sales: 850,
-    headlines: [{ text: 'Kids learn coding at summer camp' }]
-  },
-  {
-    id: 5,
-    title: 'Graphic Sports',
-    date: '2025-12-13',
-    category: 'Newspaper',
-    price: 4.00,
-    status: 'Published',
-    views: 1560,
-    sales: 620,
-    headlines: [{ text: 'Black Stars qualify for finals' }]
-  },
-   {
-    id: 6,
-    title: 'Focus Magazine',
-    date: '2025-12-01',
-    category: 'Magazine',
-    price: 15.00,
-    status: 'Published',
-    views: 450,
-    sales: 120,
-    headlines: [{ text: 'The Future of Tech in Africa' }]
-  },
-])
-
 // Filters
-const searchQuery = ref('')
-const selectedCategory = ref('')
-const dateFilter = ref('')
-const selectedStatus = ref('')
+const showFilters = ref(false)
 
-// Computed Filtered List
-const filteredNewspapers = computed(() => {
-  return newspapers.value.filter(paper => {
-    const matchesSearch = paper.title.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-                          (paper.headlines[0]?.text || '').toLowerCase().includes(searchQuery.value.toLowerCase())
-    const matchesCategory = selectedCategory.value === '' || paper.category === selectedCategory.value
-    const matchesDate = dateFilter.value === '' || paper.date === dateFilter.value
-    const matchesStatus = selectedStatus.value === '' || paper.status === selectedStatus.value
 
-    return matchesSearch && matchesCategory && matchesDate && matchesStatus
-  })
-})
+const applyFilters = () => {
+  filters.pageNo = 1
+  const filteredQuery = filterQueryParams({ ...route.query, ...filters });
+  router.replace({ name: route.name ?? '', query: filteredQuery });
+
+  getPaginatedNewsPapers()
+}
+
+const resetFilters = () => {
+  filters.query = ''
+  filters.status = ''
+  filters.startDate = ''
+  filters.endDate = ''
+  applyFilters()
+}
 
 const debouncedSearch = debounce(() => {
     filters.pageNo = 1; // Reset to first page for new search
     getPaginatedNewsPapers();
-  }, 300); // 300ms delay
+  }, 300);
 
 
   watch(() => filters.query, debouncedSearch);
 
   onMounted(async () => {
     if (!isEmpty(route.query)) {
-      filters.pageNo = parseInt(route.query.pageNo as string);
+      filters.pageNo = parseInt(route.query.pageNo as string) || 1;
+      filters.query = (route.query.query as string) || '';
+      filters.status = (route.query.status as string) || '';
+      filters.startDate = (route.query.startDate as string) || '';
+      filters.endDate = (route.query.endDate as string) || '';
+      
+      tempSearchQuery.value = filters.query;
+      tempSelectedStatus.value = filters.status;
+      tempStartDate.value = filters.startDate;
+      tempEndDate.value = filters.endDate;
     }
     
     await getPaginatedNewsPapers();
@@ -405,3 +378,14 @@ const debouncedSearch = debounce(() => {
   });
 
 </script>
+
+<style scoped>
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>

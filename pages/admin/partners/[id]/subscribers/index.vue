@@ -117,6 +117,7 @@
                          <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Phone</th>
                         <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"> Date Joined</th>
                         <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Subscription Plan</th>
+                        <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
                          <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
                             <span class="sr-only">Actions</span>
                         </th>
@@ -152,9 +153,54 @@
                          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ sub.phoneNumber || 'N/A' }}</td>
                          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ formatDate(sub.createdAt) }}</td>
                          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ sub.subscriptionPlanDescription }}</td>
+                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                             <span 
+                                class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
+                                :class="{
+                                  'bg-green-50 text-green-700 ring-green-600/20': sub.status === 'Active' || sub.status === 'active',
+                                  'bg-red-50 text-red-700 ring-red-600/20': sub.status === 'Inactive' || sub.status === 'inactive'
+                                }"
+                             >
+                                {{ sub.status || 'Active' }}
+                             </span>
+                         </td>
                           
                          <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                            <button class="text-red-600 hover:text-red-900 transition-colors" @click="confirmRemoveSubscriber(sub.id)">Delete</button>
+                            <div class="relative dropdown-container flex justify-end">
+                                <button 
+                                    @click.stop="toggleDropdown(sub.id)" 
+                                    class="text-gray-400 hover:text-gray-600 focus:outline-none"
+                                >
+                                    <EllipsisVerticalIcon class="h-5 w-5" />
+                                </button>
+
+                                <!-- Dropdown Menu -->
+                                <div 
+                                    v-if="activeDropdownId === sub.id" 
+                                    class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-100 ring-1 ring-black ring-opacity-5"
+                                >
+                                    <div class="py-1">
+                                        <button 
+                                            class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                                            @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Active')"
+                                        >
+                                            Activate
+                                        </button>
+                                        <button 
+                                            class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                                            @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Inactive')"
+                                        >
+                                            Deactivate
+                                        </button>
+                                        <button 
+                                            class="block w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left"
+                                            @click.prevent="confirmRemoveSubscriber(sub.id)"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                          </td>
                      </tr>
                 </tbody>
@@ -217,9 +263,10 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowLeftIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, CheckCircleIcon } from '@heroicons/vue/24/outline';
+import { ArrowLeftIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, CheckCircleIcon, EllipsisVerticalIcon } from '@heroicons/vue/24/outline';
 import dayjs from 'dayjs';
 import type { CommercialPartner, Subscriber, SubscriptionSummary } from "~/models";
+import { updateCommercialPartnerSubscriberStatus, removeCommercialPartnerSubscriber, getCommercialPartnerSubscribers, getCommercialPartnerDetails, getCommercialPartnerSubscriptionSummary, createCommercialPartnerSubscriber, assignSubscriptionToCommercialPartnerSubscribers, uploadCommercialPartnerSubscribers } from "~/services/admin";
 
 definePageMeta({
   layout: 'admin'
@@ -265,6 +312,7 @@ const uploadProgress = ref(0);
 const selectedSubscriberIds = ref<Set<string>>(new Set());
 const subscriberIdToRemove = ref<string | null>(null);
 const showConfirmModal = ref(false);
+const activeDropdownId = ref<string | null>(null);
 
 const allSelected = computed(() => {
     return subscriberList.value.length > 0 && selectedSubscriberIds.value.size === subscriberList.value.length;
@@ -289,6 +337,18 @@ const toggleSelection = (id: string) => {
     } else {
         selectedSubscriberIds.value.add(id);
     }
+};
+
+const toggleDropdown = (id: string) => {
+    if (activeDropdownId.value === id) {
+        activeDropdownId.value = null;
+    } else {
+        activeDropdownId.value = id;
+    }
+};
+
+const closeDropdown = () => {
+    activeDropdownId.value = null;
 };
 
 const formatDate = (date: string) => {
@@ -573,12 +633,41 @@ const handleRemoveSubscriber = async () => {
     }
 }
 
+const handleUpdateSubscriberStatus = async (subscriberId: string, status: string) => {
+    try {
+        const success = await updateCommercialPartnerSubscriberStatus({
+            partnerId,
+            subscriberId,
+            status
+        });
+        
+        if (success) {
+            $toast.success(`Subscriber ${status === 'Active' ? 'activated' : 'deactivated'} successfully`);
+            await fetchSubscribers();
+        } else {
+            $toast.error('Failed to update status');
+        }
+    } catch (error) {
+        console.error('Error updating status:', error);
+        $toast.error('An error occurred while updating status');
+    } finally {
+        closeDropdown();
+    }
+};
+
 onMounted( async () => {
     if (partnerId) {
        await fetchSubscribers();
         await fetchCommercialPartnerDetails();
         await fetchCommercialPartnerSubscriptionSummary();
     }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e: any) => {
+        if (!e.target.closest('.dropdown-container')) {
+            closeDropdown();
+        }
+    });
 });
 
 useHead({

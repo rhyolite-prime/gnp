@@ -1,4 +1,4 @@
-import type { UserSubscription, GuestSubscriptionResponseModel, NewsPaperEntitlementResponseModel, BaseApiResponse, BasePaginationModel, NewsPaper } from "~/models";
+import type { UserSubscription, SubscriptionResponseModel, NewsPaperEntitlementResponseModel, BaseApiResponse, BasePaginationModel, NewsPaper } from "~/models";
 
 
 export async function getUserSubscription(query: object) {
@@ -10,16 +10,52 @@ export async function getUserSubscription(query: object) {
 
 export async function guestSubscription(payload: object) {
     
-  const response = await httpClient<BaseApiResponse<GuestSubscriptionResponseModel>>('subscription/guest', "", {
+  const response = await httpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/guest', "", {
     method: "post",
     body: payload,
   });
   return response.result;
 }
 
+
+export async function initializeUserOneTimeBuy(newsPaperId: string) {
+  const response = await httpClient<BaseApiResponse<SubscriptionResponseModel>>(`subscription/user-onetime-buy?newsPaperId=${newsPaperId}`, "",);
+  if (!response.result) {
+    return {
+      success: false,
+      message: response.message,
+    };
+  }
+
+  return {
+    success: true,
+    data: response.result,
+  };
+}
+
+export async function buyCopy(payload: object) {
+  
+  const response = await httpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/buy-copy', "", {
+    method: "post",
+    body: payload,
+  });
+  
+  if (!response.result) {
+    return {
+      success: false,
+      message: response.message,
+    };
+  }
+
+  return {
+    success: true,
+    data: response.result,
+  };
+}
+
 export async function guestOneTimePurchase(payload: object) {
     
-  const response = await httpClient<BaseApiResponse<GuestSubscriptionResponseModel>>('subscription/guest-onetime', "", {
+  const response = await httpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/guest-onetime-buy', "", {
     method: "post",
     body: payload,
   });
@@ -43,6 +79,18 @@ export async function fulfillGuestOneTimePurchase(query: object) {
   return response.result;
 }
 
+export async function fulfillUserOneTimePurchase(query: object) {
+    
+  const response = await httpClient<BaseApiResponse<string>>('subscription/fulfill-user-onetime', "", { query });
+  return response.result;
+}
+
+export async function fulfillBuyCopy(query: object) {
+    
+  const response = await httpClient<BaseApiResponse<string>>('subscription/fulfill-buy-copy', "", { query });
+  return response.success;
+}
+
 export async function validateNewsPaperEntitlement(query: object) {
     
   const response = await httpClient<BaseApiResponse<NewsPaperEntitlementResponseModel>>('subscription/validate-newspaper-entitlement', "", { query });
@@ -58,13 +106,7 @@ export async function userSubscription(payload: object) {
   return response.success;
 }
 
-export async function shareNewspaper(payload: { newsPaperId: string, phoneNumber: string }) {
-  const response = await httpClient<BaseApiResponse<object>>('subscription/share-newspaper', "", {
-    method: "post",
-    body: payload,
-  });
-  return response;
-}
+ 
 
 
 export async function getRedactedNewsPaperDetailsViaUniqueId(id: string) {

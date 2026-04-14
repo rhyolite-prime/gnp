@@ -37,6 +37,7 @@
             <li><a href="#magazines" class="footer-link">Magazines</a></li>
             <li><NuxtLink to="/news" class="footer-link">News</NuxtLink></li>
             <li><NuxtLink to="/services" class="footer-link">Graphic Services</NuxtLink></li>
+            <li><NuxtLink to="/partners" class="footer-link">Commercial Partners</NuxtLink></li>
             <li><NuxtLink to="/contact" class="footer-link">Contact Us</NuxtLink></li>
           </ul>
         </div>

@@ -207,8 +207,7 @@
       
       <!-- Regular Card -->
       <div
-        @click="activeSubscriptionType = 'regular'"
-        class="border rounded p-4 cursor-pointer"
+        @click="activeSubscriptionType = 'regular'" class="border rounded p-4 cursor-pointer"
         :class="activeSubscriptionType === 'regular' ? 'border-green-600 bg-green-50' : 'border-green-300'"
       >
         <h3 class="font-semibold mb-2">Single Copy</h3>
@@ -440,10 +439,24 @@
         <div class="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
           <Share class="w-6 h-6 text-blue-600" />
         </div>
-        <h2 class="text-2xl font-bold text-gray-900">Share Publication</h2>
+        <h2 class="text-2xl font-bold text-gray-900">Buy a Copy for Someone</h2>
         <p class="text-gray-500 text-sm mt-1">
-          Share access to this edition with another user via their phone number.
+          This action <strong>buys a new digital copy</strong> of this newspaper for the recipient. 
+          Each person must have their own paid copy to access the content.
         </p>
+      </div>
+
+      <!-- Emmanuel Addo Odame -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Recipient Name</label>
+        <div class="relative">
+          <input
+            v-model="recipientName"
+            type="text"
+            class="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+            placeholder="Kwabena Imhotep"
+          />
+        </div>
       </div>
 
       <!-- Recipient Phone -->
@@ -454,20 +467,22 @@
             v-model="recipientPhone"
             type="tel"
             class="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-            placeholder="Enter phone number (e.g. 054xxxxxxx)"
+            placeholder="0548743120"
           />
         </div>
       </div>
 
-      <button 
-        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md font-bold text-lg shadow-md transition-all flex items-center justify-center gap-2"
+      <div class="mb-4 rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+        <strong>Important:</strong> This is not content sharing. A separate paid digital copy will be created for the recipient.
+      </div>
+
+      <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md font-bold text-lg shadow-md transition-all flex items-center justify-center gap-2"
         @click="handleShare"
-        :disabled="isSharing || !recipientPhone"
-      >
-        <span v-if="!isSharing">Share a Copy</span>
+        :disabled="isSharing || !recipientPhone">
+        <span v-if="!isSharing">Buy & Send Copy</span>
         <span v-else class="flex items-center">
           <span class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></span>
-          Sharing...
+          Processing...
         </span>
       </button>
       
@@ -479,11 +494,21 @@
       </button>
     </div>
   </div>
+
+  <!-- Information Modal -->
+  <InfoModal
+    :show="showInfoModal"
+    :type="infoModalType"
+    :title="infoModalTitle"
+    :message="infoModalMessage"
+    :button-text="infoModalButtonText"
+    @close="closeInfoModal"
+  />
 </template>
 
 <script setup lang="ts">
 // Get the route params
-import type { NewsPaper, GuestSubscriptionResponseModel } from "~/models";
+import type { NewsPaper, SubscriptionResponseModel } from "~/models";
 import { useAuthStore } from '~/stores/auth';
 import { 
   Facebook,
@@ -530,7 +555,7 @@ const imageLoading = ref(true);
 const isCompletingPurchase = ref(false);
 const blobUrl = ref<string>();
 const uniqueId = ref<string>("");
-const paymentInfo = ref<GuestSubscriptionResponseModel>();
+const paymentInfo = ref<SubscriptionResponseModel>();
 const newsPaperDetail = ref<NewsPaper | null>(null);
 // Modal state
 const showSubscriptionModal = ref(false);
@@ -539,12 +564,14 @@ const showPaymentModal = ref(false);
 const showFingerprintModal = ref(false);
 const isBiometricAvailable = ref(false);
 const isRegisteringBiometric = ref(false);
+const purchaseType = ref<'ONE_TIME' | 'SHARE' | 'SUBSCRIPTION'>('ONE_TIME');
 
 // Form fields
 const fullName = ref("");
 const email = ref("");
 const phone = ref("");
 const recipientPhone = ref("");
+const recipientName = ref("");
 const errorMessage = ref("");
 
 
@@ -562,6 +589,25 @@ const subscriptionOptions = {
     { id: 4, name: "Mega Bundle - All Newspapers", price: 80 }
   ]
 };
+
+// Info Modal State
+const showInfoModal = ref(false);
+const infoModalType = ref<'success' | 'error' | 'info'>('info');
+const infoModalTitle = ref("");
+const infoModalMessage = ref("");
+const infoModalButtonText = ref("Close");
+
+function showInfo({ type = 'info', title, message, buttonText = "Close" }: { type?: 'success' | 'error' | 'info', title: string, message: string, buttonText?: string }) {
+  infoModalType.value = type;
+  infoModalTitle.value = title;
+  infoModalMessage.value = message;
+  infoModalButtonText.value = buttonText;
+  showInfoModal.value = true;
+}
+
+function closeInfoModal() {
+  showInfoModal.value = false;
+}
 
 // Selected dropdown value
 const selectedSubscriptionId = ref(null);
@@ -583,12 +629,37 @@ function closeSubscriptionModal() {
 
 
 function openOneTimePurchaseModal() {
-  showPurchaseModal.value = true;
+  if (!!authStore.accessToken) {
+    handleAuthenticatedOneTimePurchase();
+  } else {
+    showPurchaseModal.value = true;
+  }
 }
 
 function closePurchaseModal() {
   showPurchaseModal.value = false;
 }
+
+const handleAuthenticatedOneTimePurchase = async () => {
+  purchaseType.value = 'ONE_TIME';
+  isProcessing.value = true;
+  try {
+    const result = await initializeUserOneTimeBuy(newspaperId.value);
+    
+    if (!result.success) {
+      $toast.error(result.message || "Failed to initiate purchase.");
+      return;
+    }
+
+    paymentInfo.value = result.data as SubscriptionResponseModel;
+    showPaymentModal.value = true;
+  } catch (err) {
+    console.error("Authenticated purchase error:", err);
+    $toast.error("An error occurred while processing your purchase.");
+  } finally {
+    isProcessing.value = false;
+  }
+};
 
 function openShareModal() {
   showShareModal.value = true;
@@ -600,20 +671,29 @@ function closeShareModal() {
 }
 
 const handleShare = async () => {
-  if (!recipientPhone.value) return;
+  if (!recipientPhone.value && !recipientName.value) return;
 
+  //split recipientName into first name and last name by the space
+  const [firstName, ...rest] = recipientName.value.trim().split(" ");
+  const lastName = rest.join(" ");
   isSharing.value = true;
   try {
     const payload = {
-      newsPaperId: newspaperId.value,
-      phoneNumber: recipientPhone.value
+      newspaperId: newspaperId.value,
+      phoneNo: recipientPhone.value,
+      firstName,
+      lastName,
     };
 
-    const response = await shareNewspaper(payload);
+    const response = await buyCopy(payload);
     
     if (response.success) {
-      $toast.success(response.message || "Publication shared successfully!");
-      closeShareModal();
+
+      paymentInfo.value = response.data ;
+      showPaymentModal.value = true;
+      showShareModal.value = false;
+      purchaseType.value = 'SHARE';
+    
     } else {
       $toast.error(response.message || "Failed to share publication.");
     }
@@ -726,6 +806,7 @@ const handleOneTimePurchase = async () => {
     paymentInfo.value = result.data ;
     showPaymentModal.value = true;
     showPurchaseModal.value = false;
+    purchaseType.value = 'ONE_TIME';
       
   } catch (err) {
     console.error("Payment error:", err);
@@ -745,37 +826,49 @@ const completeOneTimePurchase = async () => {
 
   try {
 
-
     // wait for 4 seconds before proceeding...
     await new Promise(resolve => setTimeout(resolve, 2800));
+
+    if (purchaseType.value === 'SHARE') {
+      await completeBuyCopy();
+      return;
+    }
+
      
-    const result = await fulfillGuestOneTimePurchase({ reference: paymentInfo.value?.reference });
+    const reference = paymentInfo.value?.reference;
 
-    if (result) {
+    if (authStore.accessToken) {
+      // Authenticated user path
+      await fulfillUserOneTimePurchase({ reference });
+       await new Promise(resolve => setTimeout(resolve, 500));
+      await verifyNewsPaperEntitlement(newspaperId.value);
+    } else {
+      // Guest path
+      const result = await fulfillGuestOneTimePurchase({ reference });
+      if (result) {
+        //set result.token in cookies using nuxt cookies
+        const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
+          maxAge: 60 * 60 * 24,
+          secure: true,
+          httpOnly: false,
+          priority: "medium",
+          sameSite: "strict"
+        });
+        
+        gnpUserIdentityCookie.value = result;
+        authStore.setAccessToken(result);
 
-      //set result.token in cookies using nuxt cookies
-      const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
-        maxAge: 60 * 60 * 24,
-        secure: true,
-        httpOnly: false,
-        priority: "medium",
-        sameSite: "strict"
-      });
-      
-      gnpUserIdentityCookie.value = result;
-      authStore.setAccessToken(result);
-      
-      // Check if biometric is available
-      const available = await isBiometricsAvailable();
-      if (available) {
-        isBiometricAvailable.value = true;
-        showFingerprintModal.value = true;
-        // Don't auto-redirect/show success yet, wait for user choice
-      } else {
-        // Fallback for devices without biometrics
-        await retrieveNewsPaperEntitlement(newspaperId.value);
+        // Check if biometric is available
+        const available = await isBiometricsAvailable();
+        if (available) {
+          isBiometricAvailable.value = true;
+          showFingerprintModal.value = true;
+          // Don't auto-redirect/show success yet, wait for user choice
+        } else {
+          // Fallback for devices without biometrics
+          await retrieveNewsPaperEntitlement(newspaperId.value);
+        }
       }
-
     }
     
   } catch (error) {
@@ -788,6 +881,43 @@ const completeOneTimePurchase = async () => {
  }
 
 
+  const completeBuyCopy = async () => {
+     isCompletingPurchase.value = true;
+     try {
+       const reference = paymentInfo.value?.reference;
+       const isSuccessful = await fulfillBuyCopy({ reference });
+ 
+       if (isSuccessful) {
+         showInfo({
+           type: 'success',
+           title: 'Purchase Successful',
+           message: `Successfully shared copy with ${recipientName.value}!`
+         });
+         showPaymentModal.value = false;
+         
+         // Reset fields
+         recipientName.value = "";
+         recipientPhone.value = "";
+         purchaseType.value = 'ONE_TIME'; // Reset to default
+       } else {
+         showInfo({
+           type: 'error',
+           title: 'Purchase Failed',
+           message: 'Payment successful but failed to finalize share. Please contact support.'
+         });
+       }
+ 
+     } catch(err) {
+       console.error("Error completing buy copy:", err);
+       showInfo({
+         type: 'error',
+         title: 'Error',
+         message: 'An error occurred while finalizing share.'
+       });
+     } finally {
+       isCompletingPurchase.value = false;
+     }
+  }
 
 async function payStackCheckoutEventCallback(message: MessageEvent<any>) {
   if (message.origin === 'https://checkout.paystack.com') {

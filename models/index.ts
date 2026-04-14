@@ -31,10 +31,10 @@ export interface BasePaginationModel<T> {
     upperBound: number;
 }
 
-export interface GnpUser {
+export interface GnpUser extends BaseEntityModel  {
     email: string;
     firstName: string;
-    lastnameName: string;
+    lastName: string;
     userId: string;
     username: string;
     country: string;
@@ -51,7 +51,7 @@ export interface GnpUserAuthModel {
     
 }
 
-export interface GuestSubscriptionResponseModel {
+export interface SubscriptionResponseModel {
     paymentUrl: string;
     reference: string;
     userId: string;
@@ -88,6 +88,40 @@ export interface SigninResponseModel {
     token: string;
     userId: string;
     username: string;
+}
+
+export interface PartnerSigninResponseModel {
+    partnerEmail: string;
+    fullName: string;
+    token: string;
+    partnerName: string;
+    partnerUserId: string;
+}
+
+//partner sub account
+export interface PartnerStats {
+    partnerEmail: string;
+    fullName: string;
+    
+}
+
+export interface PartnerEngagementReport {
+    partnerEmail: string;
+    fullName: string;
+    
+}
+
+
+export interface PartnerAnalyticsCharts {
+    partnerEmail: string;
+    fullName: string;
+    
+}
+
+export interface PartnerSubscriber {
+    partnerEmail: string;
+    fullName: string;
+    
 }
 
 
@@ -174,6 +208,21 @@ export interface Payment extends BaseEntityModel {
     status: string;
 }
 
+export interface Coupon extends BaseEntityModel {
+
+    code: string;
+    userId: string;
+    username: string;
+    discount: string;
+    description: string
+    discountAsPercentage: boolean;
+    validTill: string;
+    usageQuota: number;
+    usageCount: number;
+    status: string;
+    
+}
+
 export interface IngestionJob extends BaseEntityModel {
 
     publicationDate: string;
@@ -207,6 +256,14 @@ export interface CommercialPartner extends BaseEntityModel {
     createdAt: string;
 }
 
+export interface UserProfileResponse {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  hasPasskey: boolean;
+}
+
 export interface Subscriber extends BaseEntityModel {
 
     firstName: string;
@@ -216,6 +273,7 @@ export interface Subscriber extends BaseEntityModel {
     createdAt: string;
     partnerId: string;
     subscriptionPlanDescription: string;
+    status: string;
 }
 
 export interface AdminUser extends BaseEntityModel {
@@ -263,4 +321,15 @@ export interface GnpDocumentResponseModel extends BaseEntityModel {
 
 
 
-
+export interface CommercialPartnerApiKey extends BaseEntityModel {
+    partnerId: string;
+    partnerName: string;
+    clientId: string;
+    clientSecret?: string; // Only present on creation result
+    label: string;
+    scopes: string[];
+    allowedIps: string[];
+    isActive: boolean;
+    expiresAt?: string;
+    lastUsedAt?: string;
+}

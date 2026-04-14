@@ -1,4 +1,4 @@
-import type { AccountStatusResponseModel, OtpResponseModel, VerifyOtpResponseModel, SigninResponseModel, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { AccountStatusResponseModel, OtpResponseModel, VerifyOtpResponseModel, SigninResponseModel, BaseApiResponse, PartnerSigninResponseModel, BasePaginationModel } from "~/models";
 
  
 export async function checkAccountStatus(query: object) {
@@ -36,6 +36,15 @@ export async function signIn(payload: object) {
 export async function adminSignIn(payload: object) {
     
   const response = await httpClient<BaseApiResponse<SigninResponseModel>>('auth/admin-login', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.result;
+}
+
+export async function partnerSignIn(payload: object) {
+    
+  const response = await httpClient<BaseApiResponse<PartnerSigninResponseModel>>('auth/partner-login', "", {
     method: "post",
     body: payload,
   });

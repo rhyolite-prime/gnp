@@ -53,6 +53,12 @@
           @click.prevent="navigateTo('/account')">
            Account
         </a>
+        <a 
+          href="#" 
+          class="block px-4 py-2 text-sm text-primary-600 font-bold hover:bg-primary-50"
+          @click.prevent="navigateTo('/affiliates/dashboard')">
+           Affiliate Dashboard
+        </a>
          <a 
            href="#" 
            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between"

@@ -84,9 +84,9 @@
       <table class="min-w-full divide-y divide-gray-300">
         <thead class="bg-gray-50">
           <tr>
-            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Campaign Name</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Type</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Target Audience</th>
+            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Created At</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">First Name</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Last Name</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Reach</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Engagement</th>
@@ -96,12 +96,12 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 bg-white">
-          <tr v-for="campaign in campaignList" :key="campaign.id">
+          <tr v-for="user in userList" :key="user.id">
             <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
-              <div class="font-medium text-gray-900">{{ campaign.name }}</div>
+              <div class="font-medium text-gray-900">{{ user.name }}</div>
               <!-- send action as campaignType -->
               <span
-                v-if="campaign.campaignType === 'send_now'"
+                v-if="user.campaignType === 'send_now'"
                 class="inline-flex items-center rounded-md bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20 mt-1"
               >
                 Instant
@@ -415,7 +415,7 @@
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { EnvelopeIcon, BellAlertIcon, MagnifyingGlassIcon, FunnelIcon } from '@heroicons/vue/24/outline'
 import { isEmpty, debounce } from "lodash-es";
-import type { Campaign } from "~/models";
+import type { Campaign, GnpUser } from "~/models";
 const { $toast } = useNuxtApp();
 
 
@@ -424,7 +424,7 @@ definePageMeta({
 })
 
 useHead({
-  title: 'Campaigns | Graphic News Plus'
+  title: 'Users | Graphic News Plus'
 })
 
 const router = useRouter();
@@ -444,7 +444,7 @@ const paginationParams = reactive({
   upperBound: 0
 });
 
-const campaignList = ref<Campaign[]>([]);
+const userList = ref<GnpUser[]>([]);
 
 const isShimmerLoading = ref(true);
 
@@ -454,18 +454,18 @@ const onPageChange = async (pageNumber: number) => {
 	const filteredQuery = filterQueryParams({ ...route.query, ...filters });
 
 	router.replace({ name: route.name ?? '', query: filteredQuery });
-    await getPaginatedCampaigns()
+    await getPaginatedUsers()
 }
 
-const getPaginatedCampaigns = async () => {
+const getPaginatedUsers = async () => {
 
     isShimmerLoading.value = true;
 
     try {
 
-        let result = await getCampaigns(filters);
+        let result = await getAdminUsers(filters);
 
-        campaignList.value = result.data;
+        userList.value = result.data;
 
         paginationParams.totalPages = result.totalPages;
         paginationParams.totalCount = result.totalCount;
@@ -473,18 +473,12 @@ const getPaginatedCampaigns = async () => {
         paginationParams.upperBound = result.upperBound;
 
     } catch (error) {
-        $toast.error('Unable to fetch campaigns !');
+        $toast.error('Unable to fetch admin users !');
     } finally {
         isShimmerLoading.value = false;
     }
 
  }
-
-const stats = [
-  { name: 'Total Campaigns', stat: '71' },
-  { name: 'Avg. Open Rate', stat: '58.16%' },
-  { name: 'Avg. Click Rate', stat: '24.57%' },
-]
 
 
 // Filters
@@ -555,34 +549,24 @@ const saveCampaign = async () => {
     await createCampaign(form.value);
     // Optimistic update or refresh needed here ideally, but for now just close
     isModalOpen.value = false;
-    await getPaginatedCampaigns();
-    $toast.success('Campaign created successfully');
+    await getPaginatedUsers();
+    $toast.success('Users created successfully');
   } catch (error) {
-    console.error('Failed to create campaign', error)
-    alert('Failed to create campaign. Please try again.')
+    console.error('Failed to create uer', error)
+    $toast.success('Failed to create campaign. Please try again.');
   }
   finally {
     isSaving.value = false;
   }
 }
 
-const broadcastCampaign = async (campaign: Campaign) => {
-  try {
-    await publishCampaign({campaignId: campaign.id});
-    $toast.success('Campaign published successfully');
-    await getPaginatedCampaigns();
-  } catch (error) {
-    console.error('Failed to publish campaign', error);
-    $toast.error('Failed to publish campaign');
-  }
-};
 
 const delCampaign = async (campaign: Campaign) => {
 
   try {
     await deleteCampaign({campaignId: campaign.id });
     $toast.success('Campaign deleted successfully');
-    await getPaginatedCampaigns();
+    await getPaginatedUsers();
   } catch (error) {
     console.error('Failed to delete campaign', error);
     $toast.error('Failed to delete campaign');
@@ -591,7 +575,7 @@ const delCampaign = async (campaign: Campaign) => {
 
 const debouncedSearch = debounce(() => {
     filters.pageNo = 1; // Reset to first page for new search
-    getPaginatedCampaigns();
+    getPaginatedUsers();
   }, 300); // 300ms delay
 
 
