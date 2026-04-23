@@ -28,18 +28,108 @@
        
        <!-- Stats Grid -->
        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-         <div v-for="stat in stats" :key="stat.name" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col group hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1">
+
+         <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col group hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1">
             <div class="flex items-center justify-between mb-4">
               <div class="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-primary-50 group-hover:border-primary-100 transition-colors">
-                <component :is="stat.icon" class="w-6 h-6 text-slate-500 group-hover:text-primary-600 transition-colors" />
+                <component :is="UsersIcon" class="w-6 h-6 text-slate-500 group-hover:text-primary-600 transition-colors" />
               </div>
-              <span :class="['text-sm font-bold flex items-center bg-opacity-10 px-2 py-1 rounded-lg', stat.isPositive ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50']">
-                 {{ stat.change }}
+              <span
+                :class="[
+                  'text-sm font-bold flex items-center bg-opacity-10 px-2 py-1 rounded-lg', partnerOverviewStats?.activeMembersChangeType === 'increase'
+                    ? 'text-green-600 bg-green-50' : partnerOverviewStats?.activeMembersChangeType === 'decrease'
+                    ? 'text-red-600 bg-red-50'
+                    : 'text-slate-600 bg-slate-100'
+                ]">
+
+                 <span v-if="partnerOverviewStats?.activeMembersChangeType === 'increase'">
+                  +{{ partnerOverviewStats?.activeMembersChange }}
+                </span>  
+                <span v-else-if="partnerOverviewStats?.activeMembersChangeType === 'decrease'">
+                  -{{ partnerOverviewStats?.activeMembersChange }}
+                </span>  
+                <span v-else>
+                 No change
+                </span>
               </span>
             </div>
-            <h3 class="text-slate-500 text-sm font-medium">{{ stat.name }}</h3>
-            <p class="text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{{ stat.value }}</p>
+            <h3 class="text-slate-500 text-sm font-medium">Active Members</h3>
+            <p class="text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{{ partnerOverviewStats?.activeMembers }}</p>
          </div>
+
+         <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col group hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-primary-50 group-hover:border-primary-100 transition-colors">
+                <component :is="TicketIcon" class="w-6 h-6 text-slate-500 group-hover:text-primary-600 transition-colors" />
+              </div>
+              <span class="text-sm font-bold flex items-center bg-opacity-10 px-2 py-1 rounded-lg text-green-600 bg-green-50">
+                 {{ partnerOverviewStats?.remainingQuota }} available
+              </span>
+            </div>
+            <h3 class="text-slate-500 text-sm font-medium">Total Quota</h3>
+            <p class="text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{{ partnerOverviewStats?.totalQuota }}</p>
+         </div>
+          
+         <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col group hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-primary-50 group-hover:border-primary-100 transition-colors">
+                <component :is="ArrowTrendingUpIcon" class="w-6 h-6 text-slate-500 group-hover:text-primary-600 transition-colors" />
+              </div>
+              <span :class="[
+                  'text-sm font-bold flex items-center bg-opacity-10 px-2 py-1 rounded-lg',
+                  partnerOverviewStats?.engagementRateChangeType === 'increase'
+                    ? 'text-green-600 bg-green-50'
+                    : partnerOverviewStats?.engagementRateChangeType === 'decrease'
+                    ? 'text-red-600 bg-red-50'
+                    : 'text-slate-600 bg-slate-100'
+                ]"
+              >
+                 <span v-if="partnerOverviewStats?.engagementRateChangeType === 'increase'">
+                  +{{ partnerOverviewStats?.engagementRateChange }}
+                </span>  
+                <span v-else-if="partnerOverviewStats?.engagementRateChangeType === 'decrease'">
+                  -{{ partnerOverviewStats?.engagementRateChange }}
+                </span>  
+                <span v-else>
+                  No change
+                </span>
+
+              </span>
+            </div>
+            <h3 class="text-slate-500 text-sm font-medium">Engagement Rate</h3>
+            <p class="text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{{ partnerOverviewStats?.engagementRate }} %</p>
+         </div>
+
+         <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col group hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-primary-50 group-hover:border-primary-100 transition-colors">
+                <component :is="ChartBarIcon" class="w-6 h-6 text-slate-500 group-hover:text-primary-600 transition-colors" />
+              </div>
+              <span :class="[
+                  'text-sm font-bold flex items-center bg-opacity-10 px-2 py-1 rounded-lg',
+                  partnerOverviewStats?.activeSessionsChangeType === 'increase'
+                    ? 'text-green-600 bg-green-50'
+                    : partnerOverviewStats?.activeSessionsChangeType === 'decrease'
+                    ? 'text-red-600 bg-red-50'
+                    : 'text-slate-600 bg-slate-100'
+                ]">
+                <span v-if="partnerOverviewStats?.activeSessionsChangeType === 'increase'">
+                  +{{ partnerOverviewStats?.activeSessionsChange }}
+                </span>  
+                <span v-else-if="partnerOverviewStats?.activeSessionsChangeType === 'decrease'">
+                  -{{ partnerOverviewStats?.activeSessionsChange }}
+                </span>  
+                <span v-else>
+                  No change
+                </span>
+              
+              </span>
+            </div>
+            <h3 class="text-slate-500 text-sm font-medium">Active Sessions</h3>
+            <p class="text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{{ partnerOverviewStats?.activeSessions }} %</p>
+         </div>
+          
+
        </div>
 
        <!-- Main Content Area -->
@@ -56,7 +146,7 @@
                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                    <MagnifyingGlassIcon class="w-5 h-5 text-slate-400" />
                  </div>
-                 <input type="text" placeholder="Search members..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border-slate-200 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all shadow-inner" />
+                 <input type="text" v-model="filters.query" placeholder="Search name or Phone Number..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border-slate-200 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all shadow-inner" />
                </div>
             </div>
             
@@ -66,39 +156,30 @@
                    <tr class="bg-slate-50/80 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-bold">
                      <th class="px-6 py-4">Name</th>
                      <th class="px-6 py-4">Phone</th>
-                     <th class="px-6 py-4">Status</th>
                      <th class="px-6 py-4">Last Active</th>
                      <th class="px-6 py-4 text-right">Actions</th>
                    </tr>
                  </thead>
                  <tbody class="divide-y divide-slate-100">
-                   <tr v-for="member in recentMembers" :key="member.id" class="hover:bg-slate-50 transition-colors group">
+                   <tr v-for="subscriber in subscriberList" :key="subscriber.id" class="hover:bg-slate-50 transition-colors group">
                      <td class="px-6 py-4">
                        <div class="flex items-center">
                          <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-primary-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-primary-500/20 group-hover:scale-105 transition-transform">
-                           {{ member.name.charAt(0) }}
+                           {{ subscriber.firstName.charAt(0) }}
                          </div>
                          <div class="ml-4">
-                           <p class="text-sm font-bold text-slate-900">{{ member.name }}</p>
-                           <p class="text-xs text-slate-500 font-medium">{{ member.email }}</p>
+                           <p class="text-sm font-bold text-slate-900">{{ subscriber.firstName }} {{ subscriber.lastName }}</p>
+                           <p class="text-xs text-slate-500 font-medium">{{ subscriber.email }}</p>
                          </div>
                        </div>
                      </td>
 
                       <td class="px-6 py-4 text-sm text-slate-600 font-medium">
-                       0244256445
+                      {{ subscriber.phoneNumber }}
                       </td>
-                    
-                     <td class="px-6 py-4">
-                       <span :class="['inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border', getStatusColor(member.status)]">
-                         <span class="w-1.5 h-1.5 rounded-full mr-1.5" :class="{'bg-green-500': member.status === 'Active', 'bg-yellow-500': member.status === 'Pending', 'bg-gray-400': member.status === 'Inactive'}"></span>
-                         {{ member.status }}
-                       </span>
-                     </td>
-
-
+                     
                      <td class="px-6 py-4 text-sm text-slate-500 font-medium">
-                       {{ member.lastActive }}
+                       {{ longDateAndTimeFormat(subscriber.lastActive) }}
                      </td>
                      <td class="px-6 py-4 text-right">
                        <button class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
@@ -111,10 +192,10 @@
             </div>
             
             <div class="px-6 py-5 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
-              <span class="text-sm text-slate-500 font-medium">Showing <span class="font-bold text-slate-900">1</span> to <span class="font-bold text-slate-900">5</span> of <span class="font-bold text-slate-900">2,845</span> members</span>
+              <span class="text-sm text-slate-500 font-medium">Showing <span class="font-bold text-slate-900">{{ paginationParams.lowerBound }}</span> to <span class="font-bold text-slate-900">{{ paginationParams.upperBound }}</span> of <span class="font-bold text-slate-900"> {{ paginationParams.totalCount }}</span> members</span>
               <div class="flex space-x-2">
-                <button class="px-4 py-2 border border-slate-200 bg-white rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50 hover:border-slate-300 transition-all shadow-sm" disabled>Previous</button>
-                <button class="px-4 py-2 border border-slate-200 bg-white rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition-all shadow-sm">Next</button>
+                <button class="px-4 py-2 border border-slate-200 bg-white rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50 hover:border-slate-300 transition-all shadow-sm" :disabled="paginationParams.lowerBound === 1" @click="onPreviousPage()">Previous</button>
+                <button class="px-4 py-2 border border-slate-200 bg-white rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition-all shadow-sm" :disabled="paginationParams.upperBound === paginationParams.totalCount" @click="onNextPage()">Next</button>
               </div>
             </div>
          </div>
@@ -218,7 +299,10 @@ import {
   ClockIcon 
 } from '@heroicons/vue/24/outline'
 
-import { usePartnerAuthStore } from '~/stores/partnerAuth'
+import { usePartnerAuthStore } from '~/stores/partnerAuth';
+import type { PartnerSubscriber, PartnerStats } from "~/models";
+import { isEmpty, debounce } from "lodash-es";
+const { $toast } = useNuxtApp();
 
 definePageMeta({
   layout: 'default'
@@ -231,7 +315,146 @@ useHead({
   ]
 })
 
-const partnerAuthStore = usePartnerAuthStore()
+
+const router = useRouter();
+const route = useRoute();
+
+const filters = reactive({
+  query: '',
+  pageNo: 1,
+  pageSize: 10,
+});
+
+const paginationParams = reactive({
+  totalPages: 0,
+  totalCount: 0,
+  lowerBound: 0,
+  upperBound: 0
+});
+
+const subscriberList = ref<PartnerSubscriber[]>([]);
+const isShimmerLoading = ref(true);
+const isEditing = ref(false)
+const isSubscriberModalOpen = ref(false)
+const isSaving = ref(false)
+const isDeleteModalOpen = ref(false)
+const subscriberToDelete = ref<PartnerSubscriber | null>(null)
+const partnerOverviewStats = ref<PartnerStats | null>(null)
+
+const partnerSubscriberForm = ref({
+  id: '',
+  code: '',
+  username: '',
+  userId: "*",
+  discount: "",
+  description: "",
+  validTill: "",
+  usageQuota: 0,
+  discountAsPercentage: false,
+})
+
+const onPageChange = async (pageNumber: number) => {
+
+	filters.pageNo = pageNumber;
+	const filteredQuery = filterQueryParams({ ...route.query, ...filters });
+
+	router.replace({ name: route.name ?? '', query: filteredQuery });
+    await getPaginatedPartnerSubscribers()
+}
+
+const onPreviousPage = async () => {
+    if (paginationParams.lowerBound === 1) return;
+
+    filters.pageNo -= 1;
+    router.replace({ name: route.name ?? '', query: { ...route.query, pageNo: filters.pageNo } });
+    await getPaginatedPartnerSubscribers();
+  };
+
+  const onNextPage = async () => {
+    if (paginationParams.upperBound === paginationParams.totalCount) return;
+
+    filters.pageNo += 1;
+    router.replace({ name: route.name ?? '', query: { ...route.query, pageNo: filters.pageNo } });
+    await getPaginatedPartnerSubscribers();
+  };
+
+const getPaginatedPartnerSubscribers = async () => {
+
+    isShimmerLoading.value = true;
+
+    try {
+
+        let result = await getPartnerSubscribers(filters);
+
+        subscriberList.value = result.data;
+
+        paginationParams.totalPages = result.totalPages;
+        paginationParams.totalCount = result.totalCount;
+        paginationParams.lowerBound = result.lowerBound;
+        paginationParams.upperBound = result.upperBound;
+
+    } catch (error) {
+        $toast.error('Unable to fetch subscribers !');
+    } finally {
+        isShimmerLoading.value = false;
+    }
+
+ }
+
+
+ const getParterOverviewStats = async () => {
+
+    try {
+
+        partnerOverviewStats.value = await getPartnerStats();
+        
+ 
+    } catch (error) {
+        $toast.error('Unable to fetch partner stats !');
+    } finally {
+        isShimmerLoading.value = false;
+    }
+
+ }
+ const closeModal = () => {
+  isSubscriberModalOpen.value = false
+}
+
+const savePartnerSubscriber = async () => {
+   
+  isSaving.value = true;
+
+  try {
+    if (isEditing.value) {
+      await updatePartnerSubscriber(partnerSubscriberForm.value);
+      $toast.success('Subscriber updated successfully');
+    } else {
+      await createPartnerSubscriber(partnerSubscriberForm.value);
+      $toast.success('Subscriber created successfully');
+    }
+    
+    isSubscriberModalOpen.value = false;
+    await getPaginatedPartnerSubscribers();
+  } catch (error) {
+    console.error('Failed to save subscriber', error)
+    $toast.error('Failed to save subscriber. Please try again.')
+  }
+  finally {
+    isSaving.value = false;
+  }
+}
+
+const delPartnerSubscriber = (coupon: PartnerSubscriber) => {
+  subscriberToDelete.value = coupon
+  isDeleteModalOpen.value = true
+}
+
+const closeDeleteModal = () => {
+  isDeleteModalOpen.value = false
+  subscriberToDelete.value = null
+}
+
+const partnerAuthStore = usePartnerAuthStore();
 
 const partnerName = computed(() => {
   return partnerAuthStore.partner?.partnerName || 'Daily Graphic'
@@ -253,13 +476,6 @@ const stats = [
   { name: 'Active Sessions', value: '432', change: '-2.1%', isPositive: false, icon: ChartBarIcon },
 ]
 
-const recentMembers = computed(() => [
-  { id: 1, name: 'Sarah Jenkins', email: `s.jenkins@${partnerDomain.value}`, department: 'Finance', status: 'Active', lastActive: '2 mins ago' },
-  { id: 2, name: 'Michael Chen', email: `m.chen@${partnerDomain.value}`, department: 'Engineering', status: 'Active', lastActive: '1 hr ago' },
-  { id: 3, name: 'Amanda Smith', email: `a.smith@${partnerDomain.value}`, department: 'HR', status: 'Pending', lastActive: 'Never' },
-  { id: 4, name: 'David Wilson', email: `d.wilson@${partnerDomain.value}`, department: 'Marketing', status: 'Inactive', lastActive: '5 days ago' },
-  { id: 5, name: 'Emily Davis', email: `e.davis@${partnerDomain.value}`, department: 'Operations', status: 'Active', lastActive: 'Active now' },
-])
 
 const getStatusColor = (status: string) => {
   switch(status) {
@@ -269,6 +485,40 @@ const getStatusColor = (status: string) => {
     default: return 'bg-gray-100 text-gray-800 border-gray-200'
   }
 }
+
+
+const confirmDelete = async () => {
+  if (!subscriberToDelete.value) return;
+
+  try {
+    await deleteCoupon({ id: subscriberToDelete.value.id });
+    $toast.success('Subscriber deleted successfully.');
+    await getPaginatedPartnerSubscribers();
+  } catch (error) {
+    console.error('Failed to delete subscriber.', error);
+    $toast.error('Failed to delete subscriber.');
+  } finally {
+    closeDeleteModal();
+  }
+};
+
+const debouncedSearch = debounce(() => {
+    filters.pageNo = 1; // Reset to first page for new search
+    getPaginatedPartnerSubscribers();
+  }, 300); // 300ms delay
+
+
+  watch(() => filters.query, debouncedSearch);
+
+  onMounted(async () => {
+    if (!isEmpty(route.query)) {
+      filters.pageNo = parseInt(route.query.pageNo as string);
+    }
+    
+    await getPaginatedPartnerSubscribers();
+    await getParterOverviewStats();
+
+  });
 </script>
 
 <style scoped>

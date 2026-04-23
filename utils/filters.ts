@@ -30,6 +30,8 @@ export const longDateAndTimeFormat = (date: string) => {
   if (date) {
     return dayjs(date).format("DD MMM YYYY, h:mm A");
   }
+
+  return "-- --- ----, -:-- -"
 };
 
 export const longMonthDateFormat = (date: string) => {
