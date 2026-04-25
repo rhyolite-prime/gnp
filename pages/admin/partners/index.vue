@@ -77,7 +77,7 @@
             <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Name/ID</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Contact Person</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Subscriber Quota</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Billing Cycle</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Default Plan</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Sub Account Enabled</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
             
@@ -109,7 +109,7 @@
             </td>
 
              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 capitalize">
-              {{ partner.billingCycle  }}
+              {{ partner.defaultSubscriptionPlanName }}
             </td>
 
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
@@ -131,8 +131,8 @@
                   'bg-green-50 text-green-700 ring-green-600/20': partner.status === 'Active' || partner.status === 'active',
                   'bg-yellow-50 text-yellow-700 ring-yellow-600/20': partner.status === 'Suspended',
                   'bg-red-50 text-red-700 ring-red-600/20': partner.status === 'Terminated'
-                }"
-              >
+                }">
+                
                 {{ partner.status }}
               </span>
             </td>

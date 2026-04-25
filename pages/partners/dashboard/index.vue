@@ -13,12 +13,17 @@
         <p class="text-sm text-slate-500 mt-1">High-level insights about your subscriptions and organization usage.</p>
       </div>
       <div class="flex items-center gap-3">
-        <button class="inline-flex items-center justify-center px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors shadow-sm cursor-pointer whitespace-nowrap font-bold text-sm">
+        <button 
+          @click="openUploadModal"
+          class="inline-flex items-center justify-center px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors shadow-sm cursor-pointer whitespace-nowrap font-bold text-sm">
           <DocumentArrowUpIcon class="w-5 h-5 mr-2 text-slate-400" />
           Upload CSV
         </button>
 
-        <button class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors shadow-sm text-sm">
+        <button 
+          @click="isSubscriberModalOpen = true"
+          class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors shadow-sm text-sm"
+        >
           <PlusCircleIcon class="w-5 h-5 mr-2" />
           Add Subscriber
         </button>
@@ -63,11 +68,11 @@
                 <component :is="TicketIcon" class="w-6 h-6 text-slate-500 group-hover:text-primary-600 transition-colors" />
               </div>
               <span class="text-sm font-bold flex items-center bg-opacity-10 px-2 py-1 rounded-lg text-green-600 bg-green-50">
-                 {{ partnerOverviewStats?.remainingQuota }} available
+                 {{ toNumber(partnerOverviewStats?.remainingQuota) }} available
               </span>
             </div>
             <h3 class="text-slate-500 text-sm font-medium">Total Quota</h3>
-            <p class="text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{{ partnerOverviewStats?.totalQuota }}</p>
+            <p class="text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{{ toNumber(partnerOverviewStats?.totalQuota) }}</p>
          </div>
           
          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col group hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1">
@@ -280,7 +285,24 @@
            
          </div>
        </div>
+       
+       <!-- Add Subscriber Modal -->
+       <PartnerSubscriberModal 
+         v-if="isSubscriberModalOpen" 
+         @close="closeModal" 
+         @save="savePartnerSubscriber"
+         :loading="isSaving"
+       />
 
+       <!-- Subscriber Upload Modal -->
+       <SubscriberUploadModal 
+         v-if="showUploadModal" 
+         @close="closeUploadModal" 
+         @upload="handleFileUpload"
+         :uploading="isUploading"
+         :upload-progress="uploadProgress"
+         :remaining-quota="partnerOverviewStats?.remainingQuota || 0"
+       />
   </div>
 </template>
 
@@ -334,24 +356,14 @@ const paginationParams = reactive({
 
 const subscriberList = ref<PartnerSubscriber[]>([]);
 const isShimmerLoading = ref(true);
-const isEditing = ref(false)
 const isSubscriberModalOpen = ref(false)
 const isSaving = ref(false)
 const isDeleteModalOpen = ref(false)
 const subscriberToDelete = ref<PartnerSubscriber | null>(null)
 const partnerOverviewStats = ref<PartnerStats | null>(null)
-
-const partnerSubscriberForm = ref({
-  id: '',
-  code: '',
-  username: '',
-  userId: "*",
-  discount: "",
-  description: "",
-  validTill: "",
-  usageQuota: 0,
-  discountAsPercentage: false,
-})
+const showUploadModal = ref(false);
+const isUploading = ref(false);
+const uploadProgress = ref(0);
 
 const onPageChange = async (pageNumber: number) => {
 
@@ -420,29 +432,110 @@ const getPaginatedPartnerSubscribers = async () => {
   isSubscriberModalOpen.value = false
 }
 
-const savePartnerSubscriber = async () => {
+const savePartnerSubscriber = async (subscriberData: any) => {
    
   isSaving.value = true;
 
   try {
-    if (isEditing.value) {
-      await updatePartnerSubscriber(partnerSubscriberForm.value);
-      $toast.success('Subscriber updated successfully');
-    } else {
-      await createPartnerSubscriber(partnerSubscriberForm.value);
-      $toast.success('Subscriber created successfully');
-    }
+    await createPartnerSubscriber(subscriberData);
+    $toast.success('Subscriber added successfully');
     
     isSubscriberModalOpen.value = false;
     await getPaginatedPartnerSubscribers();
-  } catch (error) {
+    await getParterOverviewStats();
+  } catch (error: any) {
     console.error('Failed to save subscriber', error)
-    $toast.error('Failed to save subscriber. Please try again.')
+    if (error.response?.data?.message?.includes('Quota')) {
+      $toast.error(error.response.data.message);
+    } else {
+      $toast.error('Failed to add subscriber. Please try again.')
+    }
   }
   finally {
     isSaving.value = false;
   }
 }
+
+const openUploadModal = () => {
+    showUploadModal.value = true;
+};
+
+const closeUploadModal = () => {
+    showUploadModal.value = false;
+    uploadProgress.value = 0;
+};
+
+const handleFileUpload = async (file: File) => {
+    const fileName = file.name.toLowerCase();
+    
+    if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+        $toast.error('Invalid file type. Please upload CSV or Excel.');
+        return;
+    }
+
+    if (fileName.endsWith('.csv')) {
+         try {
+             const text = await file.text();
+             const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
+             const count = rows.length > 0 ? rows.length - 1 : 0; 
+             
+             if (count === 0) {
+                 $toast.error('The uploaded file appears to be empty or only contains a header.');
+                 return;
+             }
+
+             if ((partnerOverviewStats.value?.remainingQuota || 0) < count) {
+                 $toast.error(`Upload aborted. You have ${partnerOverviewStats.value?.remainingQuota || 0} slots remaining but the file contains ${count} subscribers.`);
+                 return;
+             }
+         } catch (e) {
+             console.error('Error parsing CSV', e);
+         }
+    } 
+    
+    await uploadFile(file);
+};
+
+const uploadFile = async (file: File) => {
+    isUploading.value = true;
+    uploadProgress.value = 0;
+    
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const progressInterval = setInterval(() => {
+            if (uploadProgress.value < 90) {
+                uploadProgress.value += 10;
+            }
+        }, 200);
+        
+        const success = await bulkUploadSubscriber(formData);
+        
+        clearInterval(progressInterval);
+        uploadProgress.value = 100;
+        
+        if (success) {
+            $toast.success('Subscribers uploaded successfully');
+            await getPaginatedPartnerSubscribers();
+            await getParterOverviewStats();
+            closeUploadModal();
+        } else {
+             $toast.error('Failed to upload subscribers. Please check the file format and try again.');
+        }
+
+    } catch (error: any) {
+        if (error.response?.data?.message?.includes('Quota')) {
+             $toast.error(error.response.data.message);
+        } else {
+             $toast.error('An error occurred during upload.');
+        }
+        console.error(error);
+    } finally {
+        isUploading.value = false;
+        uploadProgress.value = 0;
+    }
+};
 
 const delPartnerSubscriber = (coupon: PartnerSubscriber) => {
   subscriberToDelete.value = coupon

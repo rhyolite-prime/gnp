@@ -56,11 +56,11 @@ export const shortDateFormat = (date: string) => {
   return dayjs(date).format("YYYY-MM-DD");
 };
 
-export const _currency = (value: string | number) => {
+export const _currency = (value: string | number | null | undefined) => {
   return numeral(value).format("0,000.00");
 };
 
-export const toNumber = (value: string | number) => {
+export const toNumber = (value: string | number | null | undefined) => {
   return numeral(value).format("0,0");
 };
 

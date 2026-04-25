@@ -1,10 +1,54 @@
-import type { PartnerStats, PartnerEngagementReport, PartnerSubscriber, PartnerAnalyticsCharts, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { PartnerStats, PartnerEngagementReport, PartnerSubscriber, CommercialPartnerApiKey, PartnerAnalyticsCharts, BaseApiResponse, BasePaginationModel } from "~/models";
 
  
 export async function getPartnerStats() {
  
     const response = await partnerHttpClient<BaseApiResponse<PartnerStats>>('partners/get-stats', "");
     return response.result;
+}
+
+
+export async function getCommercialPartnerApiKeys() {
+ 
+    const response = await partnerHttpClient<BaseApiResponse<CommercialPartnerApiKey[]>>('partners/get-api-keys', "");
+    return response.result;
+}
+
+
+export async function updateCommercialPartnerApiKey(payload: object) {
+    const response = await partnerHttpClient<BaseApiResponse<object>>('partners/update-partner-api-key', "", {
+        method: "post",
+        body: payload,
+    });
+    return response.success;
+}
+
+export async function generateCommercialPartnerApiKey(payload: object) {
+    const response = await partnerHttpClient<BaseApiResponse<CommercialPartnerApiKey>>('partners/generate-partner-api-key', "", {
+        method: "post",
+        body: payload,
+    });
+    return response.result;
+}
+
+
+export async function revokeCommercialPartnerApiKey(keyId: string) {
+    const response = await partnerHttpClient<BaseApiResponse<object>>(`partners/revoke-partner-api-key?id=${keyId}`, "");
+    return response.success;
+}
+
+export async function activateCommercialPartnerApiKey(keyId: string) {
+    const response = await partnerHttpClient<BaseApiResponse<object>>(`partners/activate-partner-api-key?id=${keyId}`, "");
+    return response.success;
+}
+
+
+
+export async function deleteCommercialPartnerApiKey(keyId: string) {
+    const response = await partnerHttpClient<BaseApiResponse<object>>(`partners/update-partner-api-key?id=${keyId}`, "", {
+        method: "delete",
+    });
+    return response.success;
 }
 
 export async function getPartnerEngagementReport(query: object) {

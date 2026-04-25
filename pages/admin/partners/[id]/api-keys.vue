@@ -26,20 +26,7 @@
 
     <!-- API Keys List -->
     <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-hidden">
-      <div v-if="isFetchingKeys" class="flex justify-center py-12">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-      </div>
-      <div v-else-if="apiKeys.length === 0" class="text-center py-12">
-        <KeyIcon class="mx-auto h-12 w-12 text-gray-400" />
-        <h3 class="mt-2 text-sm font-semibold text-gray-900">No API keys</h3>
-        <p class="mt-1 text-sm text-gray-500">Get started by generating a new API key.</p>
-        <div class="mt-6">
-          <button @click="openGenerateModal" class="inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500">
-            Generate New Key
-          </button>
-        </div>
-      </div>
-      <div v-else class="overflow-x-auto">
+      <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-300">
           <thead class="bg-gray-50">
             <tr>
@@ -54,7 +41,28 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 bg-white">
-            <template v-for="key in apiKeys" :key="key.id">
+            <tr v-if="isFetchingKeys">
+              <td colspan="6" class="px-3 py-12 text-center text-sm text-gray-500">
+                <div class="flex justify-center items-center space-x-2">
+                    <div class="w-4 h-4 bg-gray-300 rounded-full animate-bounce"></div>
+                    <div class="w-4 h-4 bg-gray-300 rounded-full animate-bounce delay-75"></div>
+                    <div class="w-4 h-4 bg-gray-300 rounded-full animate-bounce delay-150"></div>
+                </div>
+              </td>
+            </tr>
+            <tr v-else-if="apiKeys.length === 0">
+              <td colspan="6" class="px-3 py-12 text-center">
+                <KeyIcon class="mx-auto h-12 w-12 text-gray-400" />
+                <h3 class="mt-2 text-sm font-semibold text-gray-900">No API keys</h3>
+                <p class="mt-1 text-sm text-gray-500">Get started by generating a new API key.</p>
+                <div class="mt-6">
+                  <button @click="openGenerateModal" class="inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500">
+                    Generate New Key
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <template v-else v-for="key in apiKeys" :key="key.id">
               <tr class="hover:bg-gray-50 cursor-pointer" @click="toggleKeyDetails(key.id)">
                 <td class="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900">
                   <div class="flex items-center">

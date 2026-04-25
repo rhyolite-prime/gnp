@@ -262,7 +262,8 @@ export interface CommercialPartner extends BaseEntityModel {
     contactEmail: string;
     contactPhone: string;
     billingEmail: string;
-    billingCycle: string;
+    defaultSubscriptionPlanId: string;
+    defaultSubscriptionPlanName: string;
     currency: string;
     status: string;
     subscriberQuota: number;

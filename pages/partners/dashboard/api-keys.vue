@@ -8,8 +8,7 @@
       <div>
         <button
           @click="openGenerateModal"
-          class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors shadow-sm text-sm"
-        >
+          class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors shadow-sm text-sm">
           <KeyIcon class="w-4 h-4 mr-2" />
           Generate New Key
         </button>
@@ -25,7 +24,7 @@
         <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-100">
           <KeyIcon class="h-8 w-8 text-slate-400" />
         </div>
-        <h3 class="text-lg font-bold text-slate-900">No API keys yet</h3>
+        <h3 class="text-lg font-bold text-slate-900">No API keys created yet</h3>
         <p class="mt-2 text-sm text-slate-500 max-w-sm mx-auto">Get started by generating your first API key to integrate with Graphic NewsPlus.</p>
         <div class="mt-6">
           <button @click="openGenerateModal" class="inline-flex items-center rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-primary-700 transition-all">
@@ -41,6 +40,7 @@
               <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Client ID</th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Scopes</th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Allowed IPs</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Last Used</th>
               <th scope="col" class="relative py-4 pl-3 pr-6">
                 <span class="sr-only">Actions</span>
@@ -81,12 +81,24 @@
                     </span>
                   </div>
                 </td>
+
+                <td class="px-6 py-4">
+                 <span :class="['inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border', 
+                   key.isActive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200']">
+                   {{ key.isActive ? "Active" : "Inactive" }}
+                 </span>
+               </td>
+
                 <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-500 font-medium">
                   {{ key.lastUsedAt ? formatDate(key.lastUsedAt) : 'Never' }}
                 </td>
                 <td class="relative whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium">
-                  <button @click.stop="confirmRevoke(key)" class="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">Revoke</button>
+                  <button v-if="key.isActive" @click.stop="confirmRevoke(key)" class="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">Revoke</button>
+                  <button v-else @click.stop="confirmActivation(key)" class="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">Activate</button>
+                  <button @click.stop="confirmDelete(key)" class="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">Delete</button>
                 </td>
+
+                
               </tr>
               <!-- Expanded details -->
               <tr v-if="expandedKeyIds.has(key.id)">
@@ -261,6 +273,45 @@
           </div>
        </div>
     </div>
+
+    <!-- Revoke Confirmation Modal -->
+    <ConfirmModal 
+      :show="showConfirmModal"
+      title="Revoke API Key"
+      message="Are you sure you want to revoke this API key? This will permanently disable all integrations using this key."
+      confirm-text="Revoke Key"
+      cancel-text="Cancel"
+      type="danger"
+      :loading="isRevoking"
+      @confirm="handleRevokeKey"
+      @cancel="showConfirmModal = false"
+    />
+
+    <!-- Delete Confirmation Modal -->
+    <ConfirmModal 
+      :show="showConfirmDeleteModal"
+      title="Delete API Key"
+      message="Are you sure you want to delete this API key? This will permanently remove all integrations using this key."
+      confirm-text="Delete Key"
+      cancel-text="Cancel"
+      type="danger"
+      :loading="isDeleting"
+      @confirm="handleDeleteKey"
+      @cancel="showConfirmDeleteModal = false"
+    />
+
+    <!-- Activation Confirmation Modal -->
+    <ConfirmModal
+      :show="showConfirmActivationModal"
+      title="Activate API Key"
+      message="Are you sure you want to activate this API key? This will grant access to your account's resources and allow the key to make API calls immediately."
+      confirm-text="Activate Key"
+      cancel-text="Cancel"
+      type="alert"
+      :loading="isActivating"
+      @confirm="handleActivateKey"
+      @cancel="showConfirmActivationModal = false"
+    />
   </div>
 </template>
 
@@ -278,8 +329,7 @@ import {
 import dayjs from 'dayjs';
 import type { CommercialPartnerApiKey } from "~/models";
 
-// Use generic / internal methods or mock them here for partner dashboard scope
-// Assuming the backend has `/api/v1/partners/me/keys` for partners themselves
+ 
 const { $toast } = useNuxtApp();
 const partnerId = 'me'; // Use logical 'me' for current partner
 
@@ -294,10 +344,9 @@ const isUpdatingKey = ref<string | null>(null);
 const availableScopes = [
   { name: 'Read Content', value: 'content:read' },
   { name: 'Read Subscribers', value: 'subscribers:read' },
-  { name: 'Write Subscribers', value: 'subscribers:write' },
+  { name: 'Create Subscribers', value: 'subscribers:write' },
   { name: 'Manage Subscribers', value: 'subscribers:manage' },
   { name: 'Check Access', value: 'access:check' },
-  { name: 'Grant Access', value: 'access:grant' },
 ];
 
 const showGenerateModal = ref(false);
@@ -305,6 +354,14 @@ const isGenerating = ref(false);
 const newKeyData = reactive({ label: '' });
 const revealedSecret = ref<string | null>(null);
 const revealedClientId = ref<string | null>(null);
+
+const showConfirmModal = ref(false);
+const showConfirmDeleteModal = ref(false);
+const showConfirmActivationModal = ref(false);
+const isActivating = ref(false);
+const keyToRevoke = ref<CommercialPartnerApiKey | null>(null);
+const isRevoking = ref(false);
+const isDeleting = ref(false);
 
 const sampleCurl = computed(() => {
   return `curl --location 'https://api.graphicnewsplus.com/api/v1/partner-api/onboard-subscriber' \\
@@ -332,27 +389,14 @@ const toggleKeyDetails = (id: string) => {
 const fetchApiKeysData = async () => {
     isFetchingKeys.value = true;
     try {
-        // MOCK: Replace with actual fetch `await $fetch('/api/v1/partners/me/keys')`
-        apiKeys.value = [
-          {
-            id: 'key-12345',
-            partnerId: 'partner-uuid',
-            label: 'Production Web App',
-            clientId: 'client_8A9B2C',
-            clientSecretHash: '', // Hash isn't sent to UI
-            scopes: ['subscribers:read', 'subscribers:write', 'access:check'],
-            allowedIps: ['192.168.1.1', '10.0.0.5'],
-            isActive: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            lastUsedAt: new Date(Date.now() - 3600000).toISOString()
-          }
-        ];
+
+      apiKeys.value = await getCommercialPartnerApiKeys();
         // Initialize reactive objects for each key
         apiKeys.value.forEach(key => {
             if (!(key.id in newScope)) newScope[key.id] = '';
             if (!(key.id in newIp)) newIp[key.id] = '';
         });
+      
     } catch (error) {
         if($toast) $toast.error('Failed to load API keys');
     } finally {
@@ -370,14 +414,19 @@ const closeGenerateModal = () => {
 };
 
 const handleGenerateKey = async () => {
+
     isGenerating.value = true;
     try {
-        // MOCK: Replace with actual generation
-        await new Promise(resolve => setTimeout(resolve, 800));
+
+        const result = await generateCommercialPartnerApiKey({
+            label: newKeyData.label,
+            scopes: ['subscribers:read'],
+            allowedIps: []
+        });
+        $toast.success('API key generated');
+        revealedSecret.value = result.clientSecret || null;
+        revealedClientId.value = result.clientId || null;
         
-        if($toast) $toast.success('API key generated');
-        revealedSecret.value = 'secret_' + Math.random().toString(36).substring(2, 15);
-        revealedClientId.value = 'client_' + Math.random().toString(36).substring(2, 9).toUpperCase();
         closeGenerateModal();
         await fetchApiKeysData();
     } catch (error) {
@@ -388,18 +437,74 @@ const handleGenerateKey = async () => {
 };
 
 const confirmRevoke = (key: CommercialPartnerApiKey) => {
-    if(confirm('Are you sure you want to revoke this API key? This will permanently disable integrations using it.')) {
-      handleRevokeKey(key);
+    keyToRevoke.value = key;
+    showConfirmModal.value = true;
+};
+
+const confirmActivation = (key: CommercialPartnerApiKey) => {
+    keyToRevoke.value = key;
+    showConfirmActivationModal.value = true;
+};
+ 
+const handleRevokeKey = async () => {
+    if (!keyToRevoke.value) return;
+    isRevoking.value = true;
+    try {
+        const success = await revokeCommercialPartnerApiKey(keyToRevoke.value.id);
+        if (success) {
+            $toast.success('Key revoked successfully');
+            await fetchApiKeysData();
+            showConfirmModal.value = false;
+        }
+    } catch (error) {
+        $toast.error('Failed to revoke key');
+    } finally {
+        isRevoking.value = false;
+        keyToRevoke.value = null;
     }
 };
 
-const handleRevokeKey = async (key: CommercialPartnerApiKey) => {
+const handleActivateKey = async () => {
+    if (!keyToRevoke.value) return;
+    isActivating.value = true;
     try {
-        // MOCK
-        if($toast) $toast.success('Key revoked successfully');
-        apiKeys.value = apiKeys.value.filter(k => k.id !== key.id);
+        const success = await activateCommercialPartnerApiKey(keyToRevoke.value.id);
+        if (success) {
+            $toast.success('Key activated successfully');
+            await fetchApiKeysData();
+            showConfirmActivationModal.value = false;
+        }
     } catch (error) {
-        if($toast) $toast.error('Failed to revoke key');
+        $toast.error('Failed to activate key');
+    } finally {
+        isActivating.value = false;
+        keyToRevoke.value = null;
+    }
+};
+
+
+
+const confirmDelete = (key: CommercialPartnerApiKey) => {
+    keyToRevoke.value = key;
+    showConfirmDeleteModal.value = true;
+};
+
+
+const handleDeleteKey = async () => {
+    if (!keyToRevoke.value) return;
+    isDeleting.value = true;
+    try {
+        const success = await deleteCommercialPartnerApiKey(keyToRevoke.value.id);
+        if (success) {
+            $toast.success('Key deleted successfully');
+            await fetchApiKeysData();
+            showConfirmDeleteModal.value = false;
+        }
+    } catch (error) {
+        $toast.error('Failed to delete key');
+    } finally {
+        isDeleting.value = false;
+        keyToRevoke.value = null;
     }
 };
 
@@ -437,8 +542,15 @@ const saveKeyChanges = async (key: CommercialPartnerApiKey) => {
     isUpdatingKey.value = key.id;
     try {
         // MOCK update
-        await new Promise(resolve => setTimeout(resolve, 500));
-        if($toast) $toast.success('Key updated successfully');
+        const success = await updateCommercialPartnerApiKey({
+            id: key.id,
+            scopes: key.scopes,
+            allowedIps: key.allowedIps
+        });
+        if (success) {
+            $toast.success('Key updated successfully');
+        }
+         
     } catch (error) {
         if($toast) $toast.error('Failed to update key');
     } finally {
