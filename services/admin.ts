@@ -147,7 +147,7 @@ export async function updateCommercialPartnerSubscriberStatus(query: { partnerId
     return response.success;
 }
 
-export async function createCommercialPartnerSubscriber(payload: object) {
+export async function createPartnerSubscriber(payload: object) {
     const response = await httpClient<BaseApiResponse<object>>('admin/create-partner-subscriber', "", {
         method: "post",
         body: payload,

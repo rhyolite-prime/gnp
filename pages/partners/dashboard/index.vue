@@ -21,7 +21,7 @@
         </button>
 
         <button 
-          @click="isSubscriberModalOpen = true"
+          @click="openAddSubscriberModal"
           class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-colors shadow-sm text-sm"
         >
           <PlusCircleIcon class="w-5 h-5 mr-2" />
@@ -187,9 +187,14 @@
                        {{ longDateAndTimeFormat(subscriber.lastActive) }}
                      </td>
                      <td class="px-6 py-4 text-right">
-                       <button class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
-                         <EllipsisVerticalIcon class="w-5 h-5" />
-                       </button>
+                       <div class="flex items-center justify-end space-x-2">
+                         <button @click="editSubscriber(subscriber)" class="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors" title="Edit">
+                           <PencilSquareIcon class="w-5 h-5" />
+                         </button>
+                         <button @click="delPartnerSubscriber(subscriber)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
+                           <TrashIcon class="w-5 h-5" />
+                         </button>
+                       </div>
                      </td>
                    </tr>
                  </tbody>
@@ -289,9 +294,21 @@
        <!-- Add Subscriber Modal -->
        <PartnerSubscriberModal 
          v-if="isSubscriberModalOpen" 
+         :subscriber="selectedSubscriber"
          @close="closeModal" 
          @save="savePartnerSubscriber"
          :loading="isSaving"
+       />
+
+       <ConfirmModal
+         :show="isDeleteModalOpen"
+         title="Delete Subscriber"
+         :message="`Are you sure you want to delete ${subscriberToDelete?.firstName}? This action cannot be undone.`"
+         confirmText="Delete"
+         type="danger"
+         :loading="isDeleting"
+         @confirm="confirmDelete"
+         @cancel="closeDeleteModal"
        />
 
        <!-- Subscriber Upload Modal -->
@@ -315,7 +332,8 @@ import {
   ChartBarIcon, 
   TicketIcon, 
   ArrowTrendingUpIcon, 
-  EllipsisVerticalIcon, 
+  PencilSquareIcon,
+  TrashIcon, 
   MagnifyingGlassIcon, 
   CheckCircleIcon, 
   ClockIcon 
@@ -358,8 +376,10 @@ const subscriberList = ref<PartnerSubscriber[]>([]);
 const isShimmerLoading = ref(true);
 const isSubscriberModalOpen = ref(false)
 const isSaving = ref(false)
+const isDeleting = ref(false)
 const isDeleteModalOpen = ref(false)
 const subscriberToDelete = ref<PartnerSubscriber | null>(null)
+const selectedSubscriber = ref<PartnerSubscriber | null>(null)
 const partnerOverviewStats = ref<PartnerStats | null>(null)
 const showUploadModal = ref(false);
 const isUploading = ref(false);
@@ -432,13 +452,28 @@ const getPaginatedPartnerSubscribers = async () => {
   isSubscriberModalOpen.value = false
 }
 
+const openAddSubscriberModal = () => {
+  selectedSubscriber.value = null;
+  isSubscriberModalOpen.value = true;
+};
+
+const editSubscriber = (subscriber: PartnerSubscriber) => {
+  selectedSubscriber.value = subscriber;
+  isSubscriberModalOpen.value = true;
+};
+
 const savePartnerSubscriber = async (subscriberData: any) => {
    
   isSaving.value = true;
 
   try {
-    await createPartnerSubscriber(subscriberData);
-    $toast.success('Subscriber added successfully');
+    if (selectedSubscriber.value) {
+      await updateCommercialPartnerSubscriber({ ...subscriberData, id: selectedSubscriber.value.id });
+      $toast.success('Subscriber updated successfully');
+    } else {
+      await createCommercialPartnerSubscriber(subscriberData);
+      $toast.success('Subscriber added successfully');
+    }
     
     isSubscriberModalOpen.value = false;
     await getPaginatedPartnerSubscribers();
@@ -448,7 +483,7 @@ const savePartnerSubscriber = async (subscriberData: any) => {
     if (error.response?.data?.message?.includes('Quota')) {
       $toast.error(error.response.data.message);
     } else {
-      $toast.error('Failed to add subscriber. Please try again.')
+      $toast.error('Failed to save subscriber. Please try again.')
     }
   }
   finally {
@@ -583,14 +618,17 @@ const getStatusColor = (status: string) => {
 const confirmDelete = async () => {
   if (!subscriberToDelete.value) return;
 
+  isDeleting.value = true;
   try {
-    await deleteCoupon({ id: subscriberToDelete.value.id });
+    await deleteCommercialSubscriber({ id: subscriberToDelete.value.id });
     $toast.success('Subscriber deleted successfully.');
     await getPaginatedPartnerSubscribers();
+    await getParterOverviewStats();
   } catch (error) {
     console.error('Failed to delete subscriber.', error);
     $toast.error('Failed to delete subscriber.');
   } finally {
+    isDeleting.value = false;
     closeDeleteModal();
   }
 };

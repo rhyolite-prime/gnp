@@ -266,7 +266,6 @@
 import { ArrowLeftIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, CheckCircleIcon, EllipsisVerticalIcon } from '@heroicons/vue/24/outline';
 import dayjs from 'dayjs';
 import type { CommercialPartner, Subscriber, SubscriptionSummary } from "~/models";
-import { updateCommercialPartnerSubscriberStatus, removeCommercialPartnerSubscriber, getCommercialPartnerSubscribers, getCommercialPartnerDetails, getCommercialPartnerSubscriptionSummary, createCommercialPartnerSubscriber, assignSubscriptionToCommercialPartnerSubscribers, uploadCommercialPartnerSubscribers } from "~/services/admin";
 
 definePageMeta({
   layout: 'admin'
@@ -401,7 +400,7 @@ const handleCreatePartnerSubscriber = async (subscriberData: any) => {
             partnerId
         };
         
-        const success = await createCommercialPartnerSubscriber(payload);
+        const success = await createPartnerSubscriber(payload);
         
         if (success) {
             $toast.success('Subscriber added successfully');

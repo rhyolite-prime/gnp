@@ -132,7 +132,7 @@
                   'bg-yellow-50 text-yellow-700 ring-yellow-600/20': partner.status === 'Suspended',
                   'bg-red-50 text-red-700 ring-red-600/20': partner.status === 'Terminated'
                 }">
-                
+
                 {{ partner.status }}
               </span>
             </td>
@@ -219,6 +219,7 @@
       </client-only>
 
     </div>
+    
     <!-- Partner Modal -->
     <PartnerModal 
       v-if="showCreateModal" 

@@ -42,8 +42,6 @@ export async function activateCommercialPartnerApiKey(keyId: string) {
     return response.success;
 }
 
-
-
 export async function deleteCommercialPartnerApiKey(keyId: string) {
     const response = await partnerHttpClient<BaseApiResponse<object>>(`partners/update-partner-api-key?id=${keyId}`, "", {
         method: "delete",
@@ -75,13 +73,13 @@ export async function getPartnerDefaultSubscriptionPlan(query: object) {
     return response.result;
 }
 
-export async function createPartnerSubscriber(payload: object) {
-    
-  const response = await partnerHttpClient<BaseApiResponse<object>>('partners/create-subscriber', "", {
-    method: "post",
-    body: payload,
-  });
-  return response.success;
+
+export async function createCommercialPartnerSubscriber(payload: object) {
+    const response = await partnerHttpClient<BaseApiResponse<object>>('partners/create-subscriber', "", {
+        method: "post",
+        body: payload,
+    });
+    return response.success;
 }
 
 export async function bulkUploadSubscriber(payload: object) {
@@ -94,7 +92,7 @@ export async function bulkUploadSubscriber(payload: object) {
 }
 
  
-export async function updatePartnerSubscriber(payload: object) {
+export async function updateCommercialPartnerSubscriber(payload: object) {
     
   const response = await partnerHttpClient<BaseApiResponse<object>>('partners/update-subscriber', "", {
     method: "post",
@@ -103,7 +101,7 @@ export async function updatePartnerSubscriber(payload: object) {
   return response.success;
 }
 
-export async function deleteSubscriber(query: object) {
+export async function deleteCommercialSubscriber(query: object) {
  
     const response = await partnerHttpClient<BaseApiResponse<object>>('partners/delete-subscriber', "", { query, method: "delete", });
     return response.success;
