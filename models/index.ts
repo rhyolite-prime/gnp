@@ -100,8 +100,17 @@ export interface PartnerSigninResponseModel {
 
 //partner sub account
 export interface PartnerStats {
-    partnerEmail: string;
-    fullName: string;
+    activeMembers: number;
+    activeMembersChange: number;
+    activeMembersChangeType: string;
+    activeSessions: number;
+    activeSessionsChange: number;
+    activeSessionsChangeType: string;
+    engagementRate: number;
+    engagementRateChange: number;
+    engagementRateChangeType: string;
+    remainingQuota: number;
+    totalQuota: number;
     
 }
 
@@ -119,8 +128,14 @@ export interface PartnerAnalyticsCharts {
 }
 
 export interface PartnerSubscriber {
-    partnerEmail: string;
-    fullName: string;
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    profileImageUrl: string;
+    isActive: string;
+    lastActive: string;
     
 }
 
@@ -247,7 +262,8 @@ export interface CommercialPartner extends BaseEntityModel {
     contactEmail: string;
     contactPhone: string;
     billingEmail: string;
-    billingCycle: string;
+    defaultSubscriptionPlanId: string;
+    defaultSubscriptionPlanName: string;
     currency: string;
     status: string;
     subscriberQuota: number;

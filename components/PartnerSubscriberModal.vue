@@ -22,10 +22,12 @@
               <UserPlusIcon class="h-6 w-6 text-primary-600" aria-hidden="true" />
             </div>
             <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-              <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">Add New Subscriber</h3>
+              <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">
+                {{ subscriber ? 'Edit Subscriber' : 'Add New Subscriber' }}
+              </h3>
               <div class="mt-2">
                 <p class="text-sm text-gray-500">
-                  Enter the details of the new subscriber to add to this partner.
+                  {{ subscriber ? 'Update the details of the subscriber.' : 'Enter the details of the new subscriber to add to this partner.' }}
                 </p>
                 
                 <form @submit.prevent="handleSubmit" class="mt-4 space-y-4">
@@ -60,8 +62,22 @@
                             </div>
                         </div>
 
+                         <div class="sm:col-span-6">
+                            <label for="phone" class="block text-sm font-medium leading-6 text-gray-900">Phone Number </label>
+                            <div class="mt-2">
+                                <input 
+                                  v-model="form.phoneNumber"
+                                  type="text" 
+                                  name="phone" 
+                                  id="phone" 
+                                  autocomplete="tel" 
+                                  class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" 
+                                />
+                            </div>
+                        </div>
+
                         <div class="sm:col-span-6">
-                            <label for="email" class="block text-sm font-medium leading-6 text-gray-900">Email Address</label>
+                            <label for="email" class="block text-sm font-medium leading-6 text-gray-900">Email Address (Optional)</label>
                             <div class="mt-2">
                                 <input 
                                   v-model="form.email"
@@ -75,20 +91,6 @@
                             </div>
                         </div>
                         
-                         <div class="sm:col-span-6">
-                            <label for="phone" class="block text-sm font-medium leading-6 text-gray-900">Phone Number (Optional)</label>
-                            <div class="mt-2">
-                                <input 
-                                  v-model="form.phoneNumber"
-                                  type="text" 
-                                  name="phone" 
-                                  id="phone" 
-                                  autocomplete="tel" 
-                                  class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" 
-                                />
-                            </div>
-                        </div>
-                        
                     </div>
 
                     <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
@@ -97,7 +99,7 @@
                           :disabled="loading"
                           class="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {{ loading ? 'Saving...' : 'Add Subscriber' }}
+                          {{ loading ? 'Saving...' : (subscriber ? 'Save Changes' : 'Add Subscriber') }}
                         </button>
                         <button 
                           type="button" 
@@ -119,12 +121,16 @@
 
 <script setup lang="ts">
 import { XMarkIcon, UserPlusIcon } from '@heroicons/vue/24/outline'
-import { reactive } from 'vue'
+import { reactive, watch, type PropType } from 'vue'
 
 const props = defineProps({
   loading: {
     type: Boolean,
     default: false
+  },
+  subscriber: {
+    type: Object as PropType<any>,
+    default: null
   }
 })
 
@@ -136,6 +142,20 @@ const form = reactive({
   email: '',
   phoneNumber: ''
 })
+
+watch(() => props.subscriber, (newVal) => {
+  if (newVal) {
+    form.firstName = newVal.firstName || '';
+    form.lastName = newVal.lastName || '';
+    form.email = newVal.email || '';
+    form.phoneNumber = newVal.phoneNumber || '';
+  } else {
+    form.firstName = '';
+    form.lastName = '';
+    form.email = '';
+    form.phoneNumber = '';
+  }
+}, { immediate: true })
 
 const handleSubmit = () => {
   emit('save', { ...form })
