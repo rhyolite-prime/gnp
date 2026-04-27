@@ -234,11 +234,11 @@
                    </div>
                    <div class="flex justify-between items-center text-sm">
                      <span class="text-slate-400 font-medium">Licenses Used</span>
-                     <span class="font-bold">2,845 <span class="text-slate-500 font-normal">/ 3,000</span></span>
+                     <span class="font-bold">{{ toNumber(parseInt(partnerOverviewStats?.totalQuota) - parseInt(partnerOverviewStats?.remainingQuota)) }} <span class="text-slate-500 font-normal">/ {{ toNumber(partnerOverviewStats?.totalQuota) }}</span></span>
                    </div>
                  </div>
                  
-                 <button class="w-full py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-bold transition-all transform hover:scale-[1.02] active:scale-95 shadow-sm">
+                 <button v-if="false" class="w-full py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-bold transition-all transform hover:scale-[1.02] active:scale-95 shadow-sm">
                    Manage Billing
                  </button>
                </div>
@@ -351,7 +351,6 @@ import {
 import { usePartnerAuthStore } from '~/stores/partnerAuth';
 import type { PartnerSubscriber, PartnerStats } from "~/models";
 import { isEmpty, debounce } from "lodash-es";
-import * as XLSX from 'xlsx';
 const { $toast } = useNuxtApp();
 
 definePageMeta({
@@ -512,6 +511,7 @@ const closeUploadModal = () => {
 };
 
 const extractDataFromFile = async (file: File): Promise<any[]> => {
+    const XLSX = await import('xlsx');
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
