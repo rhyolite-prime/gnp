@@ -158,6 +158,7 @@ import {
   DocumentTextIcon
 } from '@heroicons/vue/24/outline'
 import { ref } from 'vue'
+import * as XLSX from 'xlsx'
 
 const props = defineProps({
   uploading: {
@@ -182,7 +183,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const downloadTemplate = (type: 'csv' | 'excel') => {
   if (type === 'csv') {
     // Create CSV template
-    const csvContent = 'firstName,lastName,email,phoneNumber\nJohn,Doe,john.doe@example.com,+1234567890\nJane,Smith,jane.smith@example.com,+0987654321'
+    const csvContent = 'FirstName,LastName,Email,PhoneNumber\nKwabena,Imhotep,kwabena.imhotep@graphic.com.gh,+233244256444\nFrancis,Odame,francis.odame@raphic.com.gh,+233242573763'
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
@@ -193,18 +194,16 @@ const downloadTemplate = (type: 'csv' | 'excel') => {
     link.click()
     document.body.removeChild(link)
   } else {
-    // For Excel, we'll create a simple CSV that can be opened in Excel
-    // In a real implementation, you might want to use a library like xlsx
-    const csvContent = 'firstName,lastName,email,phoneNumber\nJohn,Doe,john.doe@example.com,+1234567890\nJane,Smith,jane.smith@example.com,+0987654321'
-    const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel' })
-    const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    link.setAttribute('href', url)
-    link.setAttribute('download', 'subscriber_template.xlsx')
-    link.style.visibility = 'hidden'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    // Generate actual Excel file using sheetjs
+    const data = [
+      ['FirstName', 'LastName', 'Email', 'PhoneNumber'],
+      ['Kwabena', 'Imhotep', 'kwabena.imhotep@graphic.com.gh', '+233244256444'],
+      ['Francis', 'Odame', 'francis.odame@raphic.com.gh', '+233242573763']
+    ]
+    const worksheet = XLSX.utils.aoa_to_sheet(data)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Template')
+    XLSX.writeFile(workbook, 'subscriber_template.xlsx')
   }
 }
 
