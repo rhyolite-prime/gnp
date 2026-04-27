@@ -277,6 +277,19 @@ import {
   ChevronDownIcon
 } from '@heroicons/vue/24/outline'
 
+ 
+const router = useRouter()
+
+onMounted(() => {
+  const partnerAuthIdentity = usePartnerAuthIdentity();
+    
+  if (partnerAuthIdentity.value) {
+    router.push('/partners/dashboard')
+  } else {
+    router.push('/partners/account/login')
+  }
+})
+
 definePageMeta({
   layout: 'default'
 })

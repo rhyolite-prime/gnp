@@ -18,7 +18,8 @@
 
       <div class="bg-slate-800/50 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white/10 overflow-hidden">
         <div class="p-8 sm:p-10">
-          <form @submit.prevent="handleLogin" class="space-y-6">
+          <!-- Standard Login Form -->
+          <form v-if="!showOtp" @submit.prevent="handleLogin" class="space-y-6">
             <div>
               <label for="email" class="block text-sm font-bold text-slate-300 mb-2">Work Email or Username</label>
               <div class="relative group">
@@ -85,6 +86,47 @@
             </button>
           </form>
 
+          <!-- OTP Verification Form -->
+          <form v-else @submit.prevent="handleOtpSubmit" class="space-y-6 animate-fade-in">
+            <div class="text-center mb-6">
+              <h3 class="text-xl font-bold text-white mb-2">Two-Factor Authentication</h3>
+              <p class="text-sm text-slate-400">Enter the 6-digit code sent to your email.</p>
+            </div>
+            
+            <div>
+              <label for="otp" class="block text-sm font-bold text-slate-300 mb-2">Verification Code</label>
+              <div class="relative group">
+                <input 
+                  id="otp" 
+                  v-model="otpForm.code" 
+                  type="text" 
+                  required 
+                  maxlength="6"
+                  class="block w-full px-4 py-4 rounded-2xl bg-slate-900/50 border-white/10 text-white text-center tracking-widest text-2xl placeholder-slate-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all shadow-inner"
+                  placeholder="000000"
+                />
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              :disabled="loading"
+              class="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-2xl shadow-xl text-lg font-bold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ loading ? 'Verifying...' : 'Verify Code' }}
+            </button>
+            
+            <div class="text-center mt-4">
+              <button type="button" @click="showOtp = false" class="text-sm font-bold text-primary-500 hover:text-primary-400 transition-colors">
+                Back to Login
+              </button>
+            </div>
+          </form>
+
           <div class="mt-10 text-center">
             <p class="text-sm text-slate-400">
               Interested in becoming a partner? 
@@ -105,6 +147,7 @@
 import { reactive, ref } from 'vue'
 import { BuildingOfficeIcon, EnvelopeIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
 import { usePartnerAuthStore } from '~/stores/partnerAuth'
+const { $toast } = useNuxtApp();
 
 definePageMeta({
   layout: 'default'
@@ -118,6 +161,8 @@ useHead({
 })
 
 const loading = ref(false)
+const showOtp = ref(false)
+const tempAuthData = ref<any>(null)
 const partnerAuthStore = usePartnerAuthStore()
 const router = useRouter()
 
@@ -127,6 +172,26 @@ const form = reactive({
   remember: false
 })
 
+const otpForm = reactive({
+  code: ''
+})
+
+const completeLogin = (response: any) => {
+  const gnpPartnerIdentityCookie = useCookie("gnp-partner-identity", {
+    maxAge: 60 * 60 * 24,
+    secure: true,
+    httpOnly: false,
+    priority: "medium",
+    sameSite: "strict"
+  });
+  
+  gnpPartnerIdentityCookie.value = response.token;
+  partnerAuthStore.setPartner(response);
+  
+  // Navigate to partner-specific dashboard
+  router.push('/partners/dashboard')
+}
+
 const handleLogin = async () => {
   loading.value = true
   try {
@@ -135,27 +200,51 @@ const handleLogin = async () => {
       password: form.password 
     })
     
-    if (response && response.token) {
-      const gnpPartnerIdentityCookie = useCookie("gnp-partner-identity", {
-        maxAge: 60 * 60 * 24,
-        secure: true,
-        httpOnly: false,
-        priority: "medium",
-        sameSite: "strict"
-      });
-      
-      gnpPartnerIdentityCookie.value = response.token;
-      partnerAuthStore.setPartner(response);
-      
-      // Navigate to partner-specific dashboard
-      router.push('/partners/dashboard')
+    if (response) {
+      if (response.requiresTwoFactorAuth) {
+        showOtp.value = true
+        tempAuthData.value = response
+        return
+      }
+
+      if (response.token) {
+        completeLogin(response)
+      } else {
+        // use a modal to alert the user of wrong credentials.
+        //alert('Invalid institutional credentials')
+      }
+    }
+  } catch (error) {    
+    $toast.error('An authentication error occurred. Please try again.');
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleOtpSubmit = async () => {
+  loading.value = true
+  try {
+    const response: any = await validateOtp({
+      email: form.email,
+      otp: otpForm.code,
+      requestId: tempAuthData.value?.requestId
+    })
+    
+    if (response && (response.isValid || response.token)) {
+      const finalResponse = response.token ? response : tempAuthData.value
+      if (finalResponse && finalResponse.token) {
+        completeLogin(finalResponse)
+      } else {
+         
+        $toast.error('Authentication failed after OTP verification.');
+      }
     } else {
-      // use a modal to alert the user of wrong credentials.
-      //alert('Invalid institutional credentials')
+       
+      $toast.error('Invalid verification code');
     }
   } catch (error) {
-    console.error('Login error:', error)
-    alert('An authentication error occurred. Please try again.')
+    console.error('OTP validation error:', error)
+    $toast.error('Invalid verification code. Please try again.');
   } finally {
     loading.value = false
   }

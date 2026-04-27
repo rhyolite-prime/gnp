@@ -96,6 +96,8 @@ export interface PartnerSigninResponseModel {
     token: string;
     partnerName: string;
     partnerUserId: string;
+    requiresTwoFactorAuth: boolean;
+    requestId: string;
 }
 
 //partner sub account
