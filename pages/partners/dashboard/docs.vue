@@ -60,7 +60,7 @@
 
         <DocBlock title="Option 1 — Obtain an Access Token">
           <p class="text-sm text-slate-600 mb-4">Exchange your <code class="code-inline">client_id</code> and <code class="code-inline">client_secret</code> for a short-lived JWT token.</p>
-          <EndpointBadge method="POST" path="/auth/partner/token" />
+          <EndpointBadge method="POST" path="/auth/token" />
           <CodeBlock lang="json" label="Request Body" :code="authRequest" />
           <CodeBlock lang="json" label="Response" :code="authResponse" />
         </DocBlock>
@@ -91,13 +91,16 @@
         <DocHeader title="Subscriber Onboarding" description="Onboard subscribers on behalf of your organisation directly via the API." />
 
         <DocBlock title="Create a Subscriber">
-          <EndpointBadge method="POST" path="/partner/subscribers/create" />
+          <EndpointBadge method="POST" path="/subscribers/onboard" />
+          <p class="text-sm text-slate-500 mb-3">
+            <code class="code-inline">startDate</code> and <code class="code-inline">endDate</code> must be formatted as <code class="code-inline">dd-MM-yyyy</code> (e.g. <code class="code-inline">27-04-2025</code>).
+          </p>
           <CodeBlock lang="json" label="Request Body" :code="createSubscriberRequest" />
           <CodeBlock lang="json" label="Response" :code="createSubscriberResponse" />
         </DocBlock>
 
         <DocBlock title="Bulk Upload Subscribers">
-          <EndpointBadge method="POST" path="/partner/subscribers/bulk-upload" />
+          <EndpointBadge method="POST" path="/subscribers/bulk-upload" />
           <p class="text-sm text-slate-600 mb-3">Send an array of subscriber objects to onboard multiple users at once.</p>
           <CodeBlock lang="json" label="Request Body" :code="bulkUploadRequest" />
           <CodeBlock lang="json" label="Response" :code="bulkUploadResponse" />
@@ -198,7 +201,7 @@ const sections = [
   { id: 'errors',       label: 'Error Codes',            icon: ExclamationTriangleIcon },
 ]
 
-const baseUrl = `https://dev-api.graphicnewsplus.com/api/v1`
+const baseUrl = `https://dev-api.graphicnewsplus.com/api/v1/partner`
 
 const authRequest = `{
   "clientId": "your_client_id",
@@ -211,19 +214,21 @@ const authResponse = `{
   "tokenType": "Bearer"
 }`
 
-const authUsage = `GET /partner/subscribers HTTP/1.1
+const authUsage = `GET /subscribers HTTP/1.1
 Host: dev-api.graphicnewsplus.com
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
 
-const authHeaderUsage = `GET /partner/subscribers HTTP/1.1
+const authHeaderUsage = `GET /subscribers HTTP/1.1
 Host: dev-dev-api.graphicnewsplus.com
 ClientId: your_client_id
 ClientSecret: your_client_secret`
 
 const createSubscriberRequest = `{
-  "fullName": "Kofi",
+  "fullName": "Kofi Mensah",
   "email": "kofi.mensah@example.com",
-  "phoneNumber": "0241234567"
+  "phoneNumber": "0241234567",
+  "startDate": "27-04-2025",  // dd-MM-yyyy
+  "endDate": "27-05-2025"     // dd-MM-yyyy
 }`
 
 const createSubscriberResponse = `{
@@ -238,8 +243,8 @@ const createSubscriberResponse = `{
 
 const bulkUploadRequest = `{
   "subscribers": [
-    { "firstName": "Ama",  "lastName": "Asante", "email": "ama@example.com",  "phoneNumber": "0551234567" },
-    { "firstName": "Kweku","lastName": "Boateng","email": "kweku@example.com", "phoneNumber": "0261234567" }
+    { "fullName": "Ama Asante", "email": "ama@example.com",  "phoneNumber": "0551234567",  "startDate": "02-04-2026", "endDate": "02-05-2026" },
+    { "fullName": "Kweku Boateng", "email": "kweku@example.com", "phoneNumber": "0261234567", "startDate": "02-04-2026", "endDate": "02-05-2026" }
   ]
 }`
 
