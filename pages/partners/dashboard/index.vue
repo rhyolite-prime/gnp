@@ -252,7 +252,7 @@
                <button class="text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors">View All</button>
              </div>
              
-             <div class="space-y-6">
+             <div v-if="recentActivities && recentActivities.length > 0" class="space-y-6">
                <div class="flex items-start gap-4 group">
                  <div class="w-10 h-10 rounded-xl bg-green-50 flex-shrink-0 flex items-center justify-center border border-green-100 group-hover:bg-green-100 transition-colors">
                    <CheckCircleIcon class="w-5 h-5 text-green-600" />
@@ -285,6 +285,15 @@
                    <span class="text-xs text-slate-400 mt-1.5 block font-medium">3 days ago</span>
                  </div>
                </div>
+             </div>
+             
+             <!-- Empty State -->
+             <div v-else class="flex flex-col items-center justify-center py-10 text-center">
+               <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 border border-slate-100 shadow-sm">
+                 <ClockIcon class="w-8 h-8 text-slate-400" />
+               </div>
+               <h4 class="text-slate-900 font-bold text-base mb-2">No Recent Activity</h4>
+               <p class="text-sm text-slate-500 max-w-[240px] leading-relaxed">Activities like subscriber uploads and plan renewals will appear here.</p>
              </div>
            </div>
            
@@ -342,6 +351,7 @@ import {
 import { usePartnerAuthStore } from '~/stores/partnerAuth';
 import type { PartnerSubscriber, PartnerStats } from "~/models";
 import { isEmpty, debounce } from "lodash-es";
+import * as XLSX from 'xlsx';
 const { $toast } = useNuxtApp();
 
 definePageMeta({
@@ -384,6 +394,7 @@ const partnerOverviewStats = ref<PartnerStats | null>(null)
 const showUploadModal = ref(false);
 const isUploading = ref(false);
 const uploadProgress = ref(0);
+const recentActivities = ref([]);
 
 const onPageChange = async (pageNumber: number) => {
 
@@ -500,6 +511,35 @@ const closeUploadModal = () => {
     uploadProgress.value = 0;
 };
 
+const extractDataFromFile = async (file: File): Promise<any[]> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = e.target?.result;
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+                // Map to required format
+                const formattedData = jsonData.map((row: any) => ({
+                    FirstName: String(row.FirstName || '').trim(),
+                    LastName: String(row.LastName || '').trim(),
+                    Email: String(row.Email || '').trim(),
+                    PhoneNumber: String(row.PhoneNumber || '').trim()
+                })).filter((row: any) => row.FirstName || row.LastName || row.Email || row.PhoneNumber);
+
+                resolve(formattedData);
+            } catch (error) {
+                reject(error);
+            }
+        };
+        reader.onerror = (error) => reject(error);
+        reader.readAsArrayBuffer(file);
+    });
+};
+
 const handleFileUpload = async (file: File) => {
     const fileName = file.name.toLowerCase();
     
@@ -508,44 +548,41 @@ const handleFileUpload = async (file: File) => {
         return;
     }
 
-    if (fileName.endsWith('.csv')) {
-         try {
-             const text = await file.text();
-             const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
-             const count = rows.length > 0 ? rows.length - 1 : 0; 
-             
-             if (count === 0) {
-                 $toast.error('The uploaded file appears to be empty or only contains a header.');
-                 return;
-             }
+    try {
+      const extractedData = await extractDataFromFile(file);
+      
+      console.log('extractedData->', extractedData);
+        
+        const count = extractedData.length;
+        if (count === 0) {
+            $toast.error('The uploaded file appears to be empty or only contains a header.');
+            return;
+        }
 
-             if ((partnerOverviewStats.value?.remainingQuota || 0) < count) {
-                 $toast.error(`Upload aborted. You have ${partnerOverviewStats.value?.remainingQuota || 0} slots remaining but the file contains ${count} subscribers.`);
-                 return;
-             }
-         } catch (e) {
-             console.error('Error parsing CSV', e);
-         }
-    } 
-    
-    await uploadFile(file);
+        if ((partnerOverviewStats.value?.remainingQuota || 0) < count) {
+             $toast.error(`Upload aborted. You have ${partnerOverviewStats.value?.remainingQuota || 0} slots remaining but the file contains ${count} subscribers.`);
+             return;
+        }
+
+        await uploadData(extractedData);
+    } catch (e) {
+        console.error('Error parsing file', e);
+        $toast.error('Failed to parse the uploaded file. Please ensure it follows the template format.');
+    }
 };
 
-const uploadFile = async (file: File) => {
+const uploadData = async (data: any[]) => {
     isUploading.value = true;
     uploadProgress.value = 0;
     
     try {
-        const formData = new FormData();
-        formData.append('file', file);
-        
         const progressInterval = setInterval(() => {
             if (uploadProgress.value < 90) {
                 uploadProgress.value += 10;
             }
         }, 200);
         
-        const success = await bulkUploadSubscriber(formData);
+        const success = await bulkUploadSubscriber(data);
         
         clearInterval(progressInterval);
         uploadProgress.value = 100;

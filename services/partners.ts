@@ -1,9 +1,15 @@
-import type { PartnerStats, PartnerEngagementReport, PartnerSubscriber, CommercialPartnerApiKey, PartnerAnalyticsCharts, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { PartnerStats, Role, CommercialPartner, PartnerEngagementReport, PartnerSubscriber, CommercialPartnerApiKey, PartnerAnalyticsCharts, BaseApiResponse, BasePaginationModel } from "~/models";
 
  
 export async function getPartnerStats() {
  
     const response = await partnerHttpClient<BaseApiResponse<PartnerStats>>('partners/get-stats', "");
+    return response.result;
+}
+
+export async function getPartnerDetails() {
+ 
+    const response = await partnerHttpClient<BaseApiResponse<CommercialPartner>>('partners/get-details', "");
     return response.result;
 }
 
@@ -84,7 +90,7 @@ export async function createCommercialPartnerSubscriber(payload: object) {
 
 export async function bulkUploadSubscriber(payload: object) {
     
-  const response = await partnerHttpClient<BaseApiResponse<object>>('partners/create', "", {
+  const response = await partnerHttpClient<BaseApiResponse<object>>('partners/bulk-upload-subscribers', "", {
     method: "post",
     body: payload,
   });
@@ -104,5 +110,59 @@ export async function updateCommercialPartnerSubscriber(payload: object) {
 export async function deleteCommercialSubscriber(query: object) {
  
     const response = await partnerHttpClient<BaseApiResponse<object>>('partners/delete-subscriber', "", { query, method: "delete", });
+    return response.success;
+}
+
+export async function updatePartnerSettings(file?: File, requireTwoFactorAuth?: boolean) {
+    const formData = new FormData();
+    
+    if (file) {
+        formData.append('file', file);
+    }
+    
+    if (requireTwoFactorAuth !== undefined) {
+        formData.append('requireTwoFactorAuth', requireTwoFactorAuth.toString());
+    }
+
+    const response = await partnerHttpClient<BaseApiResponse<object>>('partners/update-logo', "", {
+        method: "post",
+        body: formData,
+    });
+    
+    return response.success;
+}
+
+
+//roles
+
+export async function getPartnerRoles(query: object) {
+ 
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<Role[]>>>('partners/get-roles', "", { query });
+    return response.result;
+}
+
+export async function createPartnerRole(payload: object) {
+    
+    const response = await httpClient<BaseApiResponse<object>>('partners/create-role', "", {
+        method: "post",
+        body: payload,
+    });
+    
+    return response.success;
+}
+
+export async function updatePartnerRole(payload: object) {
+    
+    const response = await httpClient<BaseApiResponse<object>>('partners/update-role', "", {
+        method: "post",
+        body: payload,
+    });
+    
+    return response.success;
+}
+
+export async function deletePartnerRole(query: object) {
+ 
+    const response = await httpClient<BaseApiResponse<object>>('partners/delete-role', "", { query, method: "delete", });
     return response.success;
 }

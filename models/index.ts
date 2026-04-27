@@ -262,13 +262,15 @@ export interface CommercialPartner extends BaseEntityModel {
     contactEmail: string;
     contactPhone: string;
     billingEmail: string;
+    organizationLogo: string;
     defaultSubscriptionPlanId: string;
     defaultSubscriptionPlanName: string;
     currency: string;
     status: string;
     subscriberQuota: number;
     remainingQuota: number;
-    subaccountEnabled: boolean;
+    subAccountEnabled: boolean;
+    requireTwoFactorAuth: boolean;
     createdAt: string;
 }
 
@@ -349,3 +351,12 @@ export interface CommercialPartnerApiKey extends BaseEntityModel {
     expiresAt?: string;
     lastUsedAt?: string;
 }
+
+export interface Role extends BaseEntityModel {
+    name: string;
+    description: string;
+    partnerId: string;
+    permissions: []
+    
+}
+

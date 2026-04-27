@@ -116,11 +116,11 @@
               <span 
                 class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
                 :class="{
-                  'bg-green-50 text-green-700 ring-green-600/20': partner.subaccountEnabled,
-                  'bg-gray-50 text-gray-700 ring-gray-600/20': !partner.subaccountEnabled
+                  'bg-green-50 text-green-700 ring-green-600/20': partner.subAccountEnabled,
+                  'bg-gray-50 text-gray-700 ring-gray-600/20': !partner.subAccountEnabled
                 }"
               >
-                {{ partner.subaccountEnabled ? 'Enabled' : 'Disabled' }}
+                {{ partner.subAccountEnabled ? 'Enabled' : 'Disabled' }}
               </span>
             </td>
 
@@ -153,29 +153,43 @@
                     :class="index > partnerList.length - 4 ? 'bottom-full mb-2' : 'top-full mt-2'"
                 >
                     <div class="py-1">
+
+                        <a v-if="!partner.defaultSubscriptionPlanId" 
+                            href="#" 
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                            @click.prevent="initAssignSubscription(partner)">
+                            Assign Subscription
+                        </a>
+
+                        <a v-if="partner.defaultSubscriptionPlanId" 
+                            href="#" 
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                            @click.prevent="initModifySubscription(partner)">
+                            Modify Subscription
+                        </a>
+
                         <a 
                             href="#" 
                             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                            @click.prevent="viewAdminUsers(partner)"
-                        >
+                            @click.prevent="viewAdminUsers(partner)">
                             View Admin Users
                         </a>
+
                         <a 
                             href="#" 
                             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                            @click.prevent="viewSubscribers(partner)"
-                        >
+                            @click.prevent="viewSubscribers(partner)">
                             View Subscribers
                         </a>
 
                         <a 
                           href="#" 
                           class="block px-4 py-2 text-sm text-left transition-colors duration-200"
-                          :class="partner.subaccountEnabled ? 'text-red-600 hover:bg-red-50' : 'text-gray-700 hover:bg-gray-100'"
-                          @click.prevent="handleSubaccountToggle(partner)"
-                        >
-                          {{ partner.subaccountEnabled ? 'Disable Subaccount' : 'Enable Subaccount' }}
+                          :class="partner.subAccountEnabled ? 'text-red-600 hover:bg-red-50' : 'text-gray-700 hover:bg-gray-100'"
+                          @click.prevent="handleSubaccountToggle(partner)">
+                          {{ partner.subAccountEnabled ? 'Disable Subaccount' : 'Enable Subaccount' }}
                         </a>
+
                         <a 
                             href="#" 
                             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
@@ -407,7 +421,7 @@ const getPaginatedPartners = async () => {
 
 
  const handleSubaccountToggle = async (partner: CommercialPartner) => {
-  if (partner.subaccountEnabled) {
+  if (partner.subAccountEnabled) {
     // Logic for Disabling
     await disablePartnerSubaccount({ partnerId: partner.id });
     $toast.success('Subaccount disabled successfully');
@@ -418,7 +432,7 @@ const getPaginatedPartners = async () => {
   }
   
   // Refresh the partner data or toggle the local state
-  partner.subaccountEnabled = !partner.subaccountEnabled;
+  partner.subAccountEnabled = !partner.subAccountEnabled;
 };
 
 const statusFilter = ref('all')
@@ -474,6 +488,21 @@ const closeStatusModal = () => {
     selectedPartnerId.value = '';
     newStatus.value = '';
 };
+
+
+const initAssignSubscription = (partner: CommercialPartner) => {
+
+  selectedPartner.value = partner;
+  
+};
+
+const initModifySubscription = (partner: CommercialPartner) => {
+
+  selectedPartner.value = partner;
+  
+};
+
+
 
 const handleUpdateStatus = async () => {
     if (!selectedPartnerId.value || !newStatus.value) return;
