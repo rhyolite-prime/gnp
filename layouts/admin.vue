@@ -209,7 +209,7 @@ const navigation = [
     name: 'Affiliate Marketing',
     icon: CurrencyDollarIcon,
     children: [
-      { name: 'Dashboard', href: '/admin/affiliates/dashboard' },
+      { name: 'Overview', href: '/admin/affiliates/dashboard' },
       { name: 'Affiliates', href: '/admin/affiliates/' },
       { name: 'Applications', href: '/admin/affiliates/applications' },
       { name: 'Commissions', href: '/admin/affiliates/commissions' },

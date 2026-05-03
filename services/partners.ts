@@ -57,13 +57,18 @@ export async function deleteCommercialPartnerApiKey(keyId: string) {
 
 export async function getPartnerEngagementReport(query: object) {
  
-    const response = await partnerHttpClient<BaseApiResponse<PartnerEngagementReport>>('partners/get-all-subscription-plans', "", { query });
+    const response = await partnerHttpClient<BaseApiResponse<PartnerEngagementReport>>('partners/get-engagement-report', "", { query });
     return response.result;
 }
 
 export async function getPartnerAnalyticsCharts(query: object) {
  
-    const response = await partnerHttpClient<BaseApiResponse<PartnerAnalyticsCharts>>('partners/get-all-subscription-plans', "", { query });
+    const response = await partnerHttpClient<BaseApiResponse<PartnerAnalyticsCharts>>('partners/get-analytics-charts', "", { query });
+    return response.result;
+}
+
+export async function getApiUsageStats(query: object) {
+    const response = await partnerHttpClient<BaseApiResponse<ApiUsageStats>>('partners/get-api-usage-stats', "", { query });
     return response.result;
 }
 
