@@ -117,16 +117,35 @@ export interface PartnerStats {
 }
 
 export interface PartnerEngagementReport {
-    partnerEmail: string;
-    fullName: string;
-    
+    totalReads: number;
+    totalReadsChange: number;
+    totalReadsChangeType: string;
+    avgSessionDuration: string;
+    avgSessionDurationChange: string;
+    avgSessionDurationChangeType: string;
+    newMembersOnboarded: number;
+    newMembersOnboardedChange: number;
+    newMembersOnboardedChangeType: string;
+    activeReaders: number;
+    activeReadersChange: number;
+    activeReadersChangeType: string;
 }
 
 
 export interface PartnerAnalyticsCharts {
     partnerEmail: string;
     fullName: string;
-    
+    engagementData: { date: string, reads: number }[];
+    topPublications: { name: string, reads: number, change: number }[];
+}
+
+export interface ApiUsageStats {
+    totalRequests: number;
+    successRate: number;
+    avgLatency: number;
+    errorCount: number;
+    usageByEndpoint: { endpoint: string, count: number, successRate: number }[];
+    usageOverTime: { date: string, count: number }[];
 }
 
 export interface PartnerSubscriber {
@@ -362,3 +381,25 @@ export interface Role extends BaseEntityModel {
     
 }
 
+export interface PartnerInvoice extends BaseEntityModel {
+    partnerId: string;
+    partnerName: string;
+    partnerEmail: string;
+    invoiceNumber: string;
+    description: string;
+    invoiceAmount: string;
+    balance: string;
+    billingCycle: string;
+    currency: string;
+    status: string;
+    dueDate: string;
+    paidAt?: string;
+}
+
+export interface PartnerInvoiceStat {
+    overdueAmount: number;
+    pendingInvoices: number;
+    totalInvoiced: number;
+    totalPaid: number;
+    
+}

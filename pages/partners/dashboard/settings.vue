@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-4xl mx-auto">
     <div class="mb-8">
-      <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Organization Settings</h2>
+      <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Account Settings</h2>
       <p class="text-sm text-slate-500 mt-1">Update your company details and portal preferences.</p>
     </div>
 

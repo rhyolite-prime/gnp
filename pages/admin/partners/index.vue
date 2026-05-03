@@ -78,7 +78,7 @@
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Contact Person</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Subscriber Quota</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Default Plan</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Sub Account Enabled</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Sub Account Status</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
             
             <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
@@ -193,6 +193,13 @@
                         <a 
                             href="#" 
                             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                            @click.prevent="editCommercialPartnerStatus(partner.id)">
+                            Update Partner
+                        </a>
+
+                        <a 
+                            href="#" 
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
                             @click.prevent="editCommercialPartnerStatus(partner.id)"
                         >
                             Update Status
@@ -236,7 +243,7 @@
     
     <!-- Partner Modal -->
     <PartnerModal 
-      v-if="showCreateModal" 
+      v-if="showCreateModal"
       @close="closeCreateModal" 
       @save="handleCreatePartner"
       :loading="isCreating"

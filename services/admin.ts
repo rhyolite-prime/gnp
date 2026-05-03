@@ -1,4 +1,4 @@
-import type { NewsPaper, Payment, CommercialPartner,AdminUser, SubscriptionSummary, Subscriber, CommercialPartnerStat, GnpDocumentResponseModel, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey } from "~/models";
+import type { NewsPaper, Payment, CommercialPartner,AdminUser, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, GnpDocumentResponseModel, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
 
 export async function getNewsPaperPublications(query: object) {
  
@@ -197,6 +197,40 @@ export async function updatePartnerApiKey(payload: object) {
     const response = await httpClient<BaseApiResponse<object>>('admin/update-partner-api-key', "", {
         method: "post",
         body: payload,
+    });
+    return response.success;
+}
+
+export async function getPartnerInvoices(query: object) {
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<PartnerInvoice[]>>>('admin/get-all-partner-invoices', "", { query });
+    return response.result;
+}
+
+export async function getPartnerInvoiceStats() {
+    const response = await httpClient<BaseApiResponse<PartnerInvoiceStat>>('admin/get-partner-invoice-stats', "");
+    return response.result;
+}
+
+
+
+export async function markPartnerInvoiceAsPaid(invoiceId: string) {
+    const response = await httpClient<BaseApiResponse<object>>(`admin/mark-partner-invoice-paid?id=${invoiceId}`, "", {
+        method: "get",
+    });
+    return response.success;
+}
+
+export async function createPartnerInvoice(payload: object) {
+    const response = await httpClient<BaseApiResponse<object>>('admin/create-partner-invoice', "", {
+        method: "post",
+        body: payload,
+    });
+    return response.success;
+}
+
+export async function deletePartnerInvoice(invoiceId: string) {
+    const response = await httpClient<BaseApiResponse<object>>(`admin/delete-partner-invoice?id=${invoiceId}`, "", {
+        method: "delete",
     });
     return response.success;
 }
