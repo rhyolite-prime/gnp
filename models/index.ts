@@ -320,7 +320,9 @@ export interface AdminUser extends BaseEntityModel {
     firstName: string;
     lastName: string;
     email: string;
+    username: string;
     phoneNumber?: string;
+    roles: [];
     createdAt: string;
 }
 
@@ -377,7 +379,7 @@ export interface Role extends BaseEntityModel {
     name: string;
     description: string;
     partnerId: string;
-    permissions: []
+    permissions: string[]
     
 }
 

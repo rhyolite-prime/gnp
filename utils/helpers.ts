@@ -53,12 +53,21 @@ export const buildQueryParams = (params: any) => {
 };
 
 export const filterQueryParams = (query: any) => {
-  const obj = {} as any;
-  for (const param in query) {
-    if (!isUndefined(query[param])) {
-      obj[param] = query[param];
+  const obj: any = {};
+
+  Object.keys(query).forEach((key) => {
+    const value = query[key];
+
+    if (
+      value !== null &&
+      value !== "" &&
+      value !== " " &&
+      value !== undefined
+    ) {
+      obj[key] = value;
     }
-  }
+  });
+
   return obj;
 };
 

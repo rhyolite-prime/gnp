@@ -69,7 +69,7 @@
     </div>
 
     <!-- Transactions List -->
-    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-hidden">
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-visible min-h-[450px]">
       <table class="min-w-full divide-y divide-gray-300">
         <thead class="bg-gray-50">
           <tr>
@@ -150,7 +150,7 @@
                 <div 
                     v-if="activeDropdownId === partner.id" 
                     class="absolute right-0 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-100 ring-1 ring-black ring-opacity-5"
-                    :class="index > partnerList.length - 4 ? 'bottom-full mb-2' : 'top-full mt-2'"
+                    :class="index > 3 && index > partnerList.length - 4 ? 'bottom-full mb-2' : 'top-full mt-2'"
                 >
                     <div class="py-1">
 
@@ -612,7 +612,9 @@ const debouncedSearch = debounce(() => {
   };
 
   const handleCreatePartner = async (partnerData: any) => {
+
     isCreating.value = true;
+
     try {
         console.log('Creating partner:', partnerData);
         
@@ -620,7 +622,8 @@ const debouncedSearch = debounce(() => {
        
        if (isSuccessful) {
 
-          $toast.success('Partner created successfully');
+          $toast.success(`Partner created successfully. An invitation email has been sent to ${partnerData.billingEmail}.`);
+       
           closeCreateModal();
           // Refresh list
           await getPaginatedPartners();

@@ -237,9 +237,10 @@ const navigation = [
     name: 'User Management',
     icon: UsersIcon,
     children: [
+      { name: 'Roles', href: '/admin/users/roles' },
       { name: 'Users', href: '/admin/users/' },
       { name: 'Subscribers', href: '/admin/users/subscribers' },
-      { name: 'Roles', href: '/admin/users/roles' },
+      { name: 'User Invitations', href: '/admin/users/invitations' },
     ],
   },
   { name: 'Reports', href: '/admin/analytics', icon: ChartBarIcon },

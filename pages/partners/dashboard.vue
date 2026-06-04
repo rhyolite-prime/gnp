@@ -55,15 +55,14 @@
             </NuxtLink>
             
             <NuxtLink 
-               to="/partners/dashboard/reports" 
+               to="/partners/dashboard/reports" v-if="false"
                exact-active-class="border-primary-500 text-white" 
-               class="border-b-2 border-transparent pb-4 px-1 text-sm font-bold text-slate-400 hover:text-white hover:border-slate-500 whitespace-nowrap transition-colors flex items-center"
-            >
+               class="border-b-2 border-transparent pb-4 px-1 text-sm font-bold text-slate-400 hover:text-white hover:border-slate-500 whitespace-nowrap transition-colors flex items-center">
               <DocumentChartBarIcon class="w-5 h-5 mr-2" />
               Reports
             </NuxtLink>
             
-            <NuxtLink 
+            <NuxtLink v-if="false"
                to="/partners/dashboard/users" 
                exact-active-class="border-primary-500 text-white" 
                class="border-b-2 border-transparent pb-4 px-1 text-sm font-bold text-slate-400 hover:text-white hover:border-slate-500 whitespace-nowrap transition-colors flex items-center"
