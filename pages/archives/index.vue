@@ -1,13 +1,13 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col font-sans">
     <!-- LANDING PAGE VIEW -->
-    <div v-if="!isSearching" class="relative flex-1 flex flex-col items-center justify-center min-h-screen bg-gray-900">
+    <div v-if="!isSearching" class="relative flex-1 flex flex-col items-center justify-center min-h-screen bg-gray-700">
       <!-- Background Image -->
       <div class="absolute inset-0 overflow-hidden">
         <img 
-          src="https://images.unsplash.com/photo-1585829365295-ab7cd400c167?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" 
+          src="/welcome-2.jpeg" 
           alt="Archives Background" 
-          class="w-full h-full object-cover opacity-30 mix-blend-overlay"
+          class="w-full h-full object-cover opacity-40 mix-blend-overlay"
         />
         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
       </div>
@@ -190,8 +190,8 @@
                  </select>
                </div>
                <div class="flex bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
-                 <button class="p-1.5 rounded-md bg-gray-100 text-gray-800 shadow-sm transition-colors"><Squares2X2Icon class="w-4 h-4"/></button>
-                 <button class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"><Bars4Icon class="w-4 h-4"/></button>
+                  <button @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'bg-gray-100 text-gray-800 shadow-sm' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'" class="p-1.5 rounded-md transition-colors"><Squares2X2Icon class="w-4 h-4"/></button>
+                  <button @click="viewMode = 'list'" :class="viewMode === 'list' ? 'bg-gray-100 text-gray-800 shadow-sm' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'" class="p-1.5 rounded-md transition-colors"><Bars4Icon class="w-4 h-4"/></button>
                </div>
              </div>
           </div>
@@ -209,11 +209,11 @@
              </span>
           </div>
 
-          <!-- Results Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 flex-1 relative">
-             <div v-for="(item, index) in items" :key="index" class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full group transform hover:-translate-y-1">
+          <!-- Results Grid/List -->
+          <div :class="viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'flex flex-col gap-4'" class="flex-1 relative">
+             <NuxtLink :to="`/archives/${index}`" v-for="(item, index) in items" :key="index" :class="viewMode === 'grid' ? 'flex-col h-full' : 'flex-col sm:flex-row h-auto sm:h-56'" class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex group transform hover:-translate-y-1">
                 <!-- Card Image/Header -->
-                <div class="h-48 bg-gray-100 relative overflow-hidden">
+                <div :class="viewMode === 'grid' ? 'h-48 w-full' : 'h-48 sm:h-full w-full sm:w-64 flex-shrink-0 border-r border-gray-100'" class="bg-gray-100 relative overflow-hidden">
                   <div v-if="item.type === 'text'" class="absolute inset-0 p-6 flex flex-col justify-center items-center bg-[#fdfbf7] border-b border-gray-100">
                      <div class="font-serif font-bold text-center text-xl leading-snug text-gray-800 group-hover:text-[#e32932] transition-colors relative z-10">
                        "{{ item.headlineExcerpt }}"
@@ -244,16 +244,16 @@
                       {{ item.date }}
                     </div>
                     <div class="flex items-center gap-1">
-                      <button class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Like">
+                      <button @click.prevent class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Like">
                         <HeartIcon class="w-5 h-5" />
                       </button>
-                      <button class="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-colors" title="Bookmark">
+                      <button @click.prevent class="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-colors" title="Bookmark">
                         <BookmarkIcon class="w-5 h-5" />
                       </button>
                     </div>
                   </div>
                 </div>
-             </div>
+             </NuxtLink>
           </div>
           
           <!-- Infinite Scroll Trigger / Loader -->
@@ -402,10 +402,11 @@ import {
 } from '@heroicons/vue/24/outline'
 
 // State
-const isSearching = ref(false)
-const searchQuery = ref('nkrumah')
-const dateFrom = ref('1970-01-29')
-const dateTo = ref('2026-05-28')
+const viewMode = useState<'grid' | 'list'>('archive-viewMode', () => 'grid')
+const isSearching = useState('archive-isSearching', () => false)
+const searchQuery = useState('archive-searchQuery', () => 'nkrumah')
+const dateFrom = useState('archive-dateFrom', () => '1970-01-29')
+const dateTo = useState('archive-dateTo', () => '2026-05-28')
 
 // Filter Data
 const categories = ['Politics', 'Education', 'Sports', 'Economy', 'International', 'Opinion']
@@ -469,9 +470,9 @@ const generateMockItem = (index: number) => {
   }
 }
 
-const items = ref<any[]>([])
+const items = useState<any[]>('archive-items', () => [])
 const totalResults = 16176
-const isLoadingMore = ref(false)
+const isLoadingMore = useState('archive-isLoadingMore', () => false)
 const loadMoreTrigger = ref(null)
 
 // Initialize with some items

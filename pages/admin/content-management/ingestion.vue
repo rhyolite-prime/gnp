@@ -112,6 +112,107 @@
                </div>
              </div>
           </div>
+
+          <!-- Tags and Categories -->
+          <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
+            <div class="px-4 py-6 sm:p-8">
+              <h3 class="text-base font-semibold leading-7 text-gray-900 mb-4">Tags &amp; Categories</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+                <!-- Tags -->
+                <div>
+                  <label class="block text-sm font-medium leading-6 text-gray-900 mb-2">Tags</label>
+                  <!-- chip list -->
+                  <div
+                    v-if="form.tags.length"
+                    class="flex flex-wrap gap-2 mb-2"
+                  >
+                    <span
+                      v-for="(tag, i) in form.tags"
+                      :key="i"
+                      class="inline-flex items-center gap-1 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 ring-1 ring-inset ring-primary-600/20"
+                    >
+                      {{ tag }}
+                      <button
+                        type="button"
+                        @click="removeTag(i)"
+                        class="flex-shrink-0 rounded-full p-0.5 text-primary-500 hover:text-primary-700 hover:bg-primary-100 transition-colors"
+                        :aria-label="`Remove tag ${tag}`"
+                      >
+                        <XMarkIcon class="h-3 w-3" />
+                      </button>
+                    </span>
+                  </div>
+                  <!-- input -->
+                  <div class="flex gap-2">
+                    <input
+                      type="text"
+                      v-model="tagInput"
+                      @keydown.enter.prevent="addTag"
+                      @keydown.,="addTag"
+                      placeholder="Type and press Enter"
+                      class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
+                    />
+                    <button
+                      type="button"
+                      @click="addTag"
+                      class="flex-shrink-0 inline-flex items-center rounded-md bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors"
+                    >
+                      <PlusIcon class="h-4 w-4" />
+                    </button>
+                  </div>
+                  <p class="mt-1.5 text-xs text-gray-400">Press Enter or comma to add a tag</p>
+                </div>
+
+                <!-- Categories -->
+                <div>
+                  <label class="block text-sm font-medium leading-6 text-gray-900 mb-2">Categories</label>
+                  <!-- chip list -->
+                  <div
+                    v-if="form.categories.length"
+                    class="flex flex-wrap gap-2 mb-2"
+                  >
+                    <span
+                      v-for="(cat, i) in form.categories"
+                      :key="i"
+                      class="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-600/20"
+                    >
+                      {{ cat }}
+                      <button
+                        type="button"
+                        @click="removeCategory(i)"
+                        class="flex-shrink-0 rounded-full p-0.5 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-100 transition-colors"
+                        :aria-label="`Remove category ${cat}`"
+                      >
+                        <XMarkIcon class="h-3 w-3" />
+                      </button>
+                    </span>
+                  </div>
+                  <!-- input -->
+                  <div class="flex gap-2">
+                    <input
+                      type="text"
+                      v-model="categoryInput"
+                      @keydown.enter.prevent="addCategory"
+                      @keydown.,="addCategory"
+                      placeholder="Type and press Enter"
+                      class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
+                    />
+                    <button
+                      type="button"
+                      @click="addCategory"
+                      class="flex-shrink-0 inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors"
+                    >
+                      <PlusIcon class="h-4 w-4" />
+                    </button>
+                  </div>
+                  <p class="mt-1.5 text-xs text-gray-400">Press Enter or comma to add a category</p>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
         </div>
 
         <!-- Sidebar Column (1/3) -->
@@ -140,6 +241,16 @@
                     class="block mt-2 w-full rounded-md border-0 py-1.5 pl-7 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" 
                     placeholder="12354" 
                   />
+              </div>
+
+              <!-- File Type -->
+              <div>
+                <label class="block text-sm font-medium leading-6 text-gray-900">File Type</label>
+                <select  v-model="form.fileType"
+                  class="mt-2 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 bg-white focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
+                  <option value="pdf">PDF</option>
+                  <option value="image">Image</option>
+                </select>
               </div>
 
               <!-- Storage Service -->
@@ -180,6 +291,23 @@
                     </transition>
                   </div>
                 </Listbox>
+              </div>
+
+              <!-- Is Archived -->
+              <div class="relative flex items-start pt-2">
+                <div class="flex h-6 items-center">
+                  <input
+                    id="isArchived"
+                    name="isArchived"
+                    type="checkbox"
+                    v-model="form.isArchived"
+                    class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-600"
+                  />
+                </div>
+                <div class="ml-3 text-sm leading-6">
+                  <label for="isFree" class="font-medium text-gray-900">Is Archived</label>
+                  <p class="text-gray-500">Archived Publications are only accessible on the Graphic Archives Platforms</p>
+                </div>
               </div>
 
               <!-- Is Free -->
@@ -254,7 +382,7 @@
               </svg>
 
               <span>
-                {{ isProcessingIngestion ? 'Processing File…' : 'Save Publication' }}
+                {{ isProcessingIngestion ? 'Processing File…' : 'Ingest Publication' }}
               </span>
             </button>
           </div>
@@ -336,11 +464,14 @@ const form = ref({
   file: null as File | null,
   headlines: [{ text: '' }] as Headline[],
   featuredStories: [] as FeaturedStory[],
+  tags: [] as any[],
+  categories: [] as any[],
   publicationDate: new Date().toISOString().split('T')[0],
   price: 0,
   isFree: false,
   editionNumber: '',
   storageService: 'google-drive',
+  fileType: 'pdf',
   publicationId: '',
   publicationName: '',
   fullDescription: '',
@@ -383,6 +514,36 @@ const addHeadline = () => {
 
 const removeHeadline = (index: number) => {
   form.value.headlines.splice(index, 1)
+}
+
+// ── Tags ──────────────────────────────────────────────────────────────────
+const tagInput = ref('')
+
+const addTag = () => {
+  const val = tagInput.value.replace(/,/g, '').trim()
+  if (val && !form.value.tags.includes(val)) {
+    form.value.tags.push(val)
+  }
+  tagInput.value = ''
+}
+
+const removeTag = (index: number) => {
+  form.value.tags.splice(index, 1)
+}
+
+// ── Categories ────────────────────────────────────────────────────────────
+const categoryInput = ref('')
+
+const addCategory = () => {
+  const val = categoryInput.value.replace(/,/g, '').trim()
+  if (val && !form.value.categories.includes(val)) {
+    form.value.categories.push(val)
+  }
+  categoryInput.value = ''
+}
+
+const removeCategory = (index: number) => {
+  form.value.categories.splice(index, 1)
 }
 
 const savePublication = async () => {

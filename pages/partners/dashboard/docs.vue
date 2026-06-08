@@ -95,8 +95,19 @@
           <p class="text-sm text-slate-500 mb-3">
             <code class="code-inline">startDate</code> and <code class="code-inline">endDate</code> must be formatted as <code class="code-inline">dd-MM-yyyy</code> (e.g. <code class="code-inline">27-04-2025</code>).
           </p>
+          <div class="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-4">
+            <p class="text-sm text-blue-800">
+              <strong>Optional:</strong> <code class="code-inline">smsProvider</code> controls who sends the onboarding SMS notification.
+            </p>
+            <ul class="mt-2 text-sm text-blue-800 list-disc pl-5 space-y-1">
+              <li><code class="code-inline">platform</code> — Graphic NewsPlus sends the onboarding message to the subscriber.</li>
+              <li><code class="code-inline">partner</code> or omitted/empty — the onboarding SMS is not sent by NewsPlus. Instead, the API response will include the onboarding <code class="code-inline">message</code>, <code class="code-inline">username</code>, and <code class="code-inline">password</code> for the integrating partner to deliver to the subscriber.</li>
+            </ul>
+          </div>
+
           <CodeBlock lang="json" label="Request Body" :code="createSubscriberRequest" />
           <CodeBlock lang="json" label="Response" :code="createSubscriberResponse" />
+          <CodeBlock lang="json" label="Response (smsProvider = partner or omitted)" :code="createSubscriberPartnerResponse" />
         </DocBlock>
 
         <DocBlock title="Bulk Upload Subscribers">
@@ -229,15 +240,29 @@ const createSubscriberRequest = `{
   "phoneNumber": "0241234567",
   "startDate": "27-04-2025",  // dd-MM-yyyy
   "endDate": "27-05-2025"     // dd-MM-yyyy
+  "smsProvider": "platform || partner"
 }`
 
 const createSubscriberResponse = `{
   "success": true,
-  "data": {
-    "subscriberId": "sub_abc123",
+  "message": "Subscriber onboarded successfully",
+  "result": {
     "email": "kofi.mensah@example.com",
     "status": "Active",
-    "createdAt": "2025-04-27T10:00:00Z"
+    "createdAt": "08-Jun-2026 11:57:33"
+  }
+}`
+
+const createSubscriberPartnerResponse = `{
+  "success": true,
+  "message": "Subscriber onboarded successfully",
+  "result": {
+    "email": "kofi.mensah@example.com",
+    "status": "Active",
+    "username": "kofi.mensah@example.com",
+    "password": "TempPassword123",
+    "message": "Welcome to Graphic NewsPlus. Use the credentials provided to access your account.",
+    "createdAt": "08-Jun-2026 11:57:33"
   }
 }`
 

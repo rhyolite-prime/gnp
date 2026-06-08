@@ -6,13 +6,21 @@
         <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">Ingestion Jobs</h1>
         <p class="mt-2 text-sm text-gray-700">Monitor the status of background publication ingestion processes.</p>
       </div>
-      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <div class="mt-4 sm:ml-16 sm:mt-0 flex items-center gap-3">
         <button 
           @click="refreshJobs" 
           type="button" 
-          class="block rounded-md bg-white px-3 py-2 text-center text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+          class="rounded-md bg-white px-3 py-2 text-center text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
         > 
           Refresh
+        </button>
+        <button
+          @click="navigateTo('/admin/content-management/ingestion')"
+          type="button"
+          class="inline-flex items-center gap-x-1.5 rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+        >
+          <PlusIcon class="-ml-0.5 h-5 w-5" aria-hidden="true" />
+          New Ingestion
         </button>
       </div>
     </div>

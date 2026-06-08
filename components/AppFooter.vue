@@ -23,9 +23,9 @@
               v-for="social in socialLinks" 
               :key="social.name"
               :href="social.href"
-              :icon="social.icon"
-              :label="social.name"
-            />
+              :label="social.name">
+              
+            </SocialLink>
           </div>
         </div>
 
@@ -69,13 +69,21 @@
 </template>
 
 <script setup>
+
+import {
+  GlobeAltIcon,
+  ChatBubbleLeftRightIcon,
+  PlayIcon,
+  PhotoIcon
+} from '@heroicons/vue/24/outline'
+
 const currentYear = new Date().getFullYear()
 
 const socialLinks = [
-  { name: 'Twitter', href: '#', icon: 'twitter' },
-  { name: 'Facebook', href: '#', icon: 'facebook' },
-  { name: 'Pinterest', href: '#', icon: 'pinterest' },
-  { name: 'YouTube', href: '#', icon: 'youtube' }
+  { name: 'Twitter', href: '#', icon: ChatBubbleLeftRightIcon },
+  { name: 'Facebook', href: '#', icon: GlobeAltIcon },
+  { name: 'Pinterest', href: '#', icon: PhotoIcon },
+  { name: 'YouTube', href: '#', icon: PlayIcon }
 ]
 </script>
 

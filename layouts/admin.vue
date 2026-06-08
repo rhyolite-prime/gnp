@@ -192,7 +192,9 @@ const navigation = [
     icon: DocumentTextIcon,
     children: [
       { name: 'Newspapers', href: '/admin/content-management/newspapers' },
-      { name: 'Ingestion', href: '/admin/content-management/ingestion' },
+      { name: 'Videos', href: '/admin/content-management/videos' },
+      { name: 'Audios', href: '/admin/content-management/audios' },
+      { name: 'OCR Ingestion', href: '/admin/content-management/ingestion' },
       { name: 'Ingestion Jobs', href: '/admin/content-management/ingestion-jobs' },
     ],
   },
