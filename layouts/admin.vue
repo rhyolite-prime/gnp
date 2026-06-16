@@ -168,6 +168,7 @@ import {
   BuildingOfficeIcon,
   Bars3Icon,
   BellIcon,
+  UserGroupIcon,
   TicketIcon,
   CurrencyDollarIcon,
   ArrowRightOnRectangleIcon
@@ -186,7 +187,7 @@ const expandedMenus = ref<Record<string, boolean>>({
 
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon },
-
+  { name: 'Subscribers', href: '/admin/subscribers', icon: UserGroupIcon },
   {
     name: 'Content',
     icon: DocumentTextIcon,
@@ -241,7 +242,6 @@ const navigation = [
     children: [
       { name: 'Roles', href: '/admin/users/roles' },
       { name: 'Users', href: '/admin/users/' },
-      { name: 'Subscribers', href: '/admin/users/subscribers' },
       { name: 'User Invitations', href: '/admin/users/invitations' },
     ],
   },
