@@ -7,6 +7,12 @@ export async function getNewsPaperPublications(query: object) {
 }
 
 
+export async function getArchivedNewsPaperPublications(query: object) {
+ 
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<NewsPaper[]>>>('admin/get-all-archived-newspapers', "", { query });
+    return response.result;
+}
+
 
 export async function uploadGnpDocument(publicationFile: File) {
   

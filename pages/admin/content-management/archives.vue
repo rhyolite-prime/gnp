@@ -270,7 +270,7 @@ const getPaginatedNewsPapers = async () => {
 
     try {
 
-        let result = await getNewsPaperPublications(filters);
+        let result = await getArchivedNewsPaperPublications(filters);
 
         newspaperList.value = result.data;
 
