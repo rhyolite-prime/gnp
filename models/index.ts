@@ -295,12 +295,18 @@ export interface CommercialPartner extends BaseEntityModel {
     createdAt: string;
 }
 
-export interface UserProfileResponse {
-  firstName: string;
-  lastName: string;
+export interface UserAccountMetaData {
+  subscriptions: [];
+  transactions: [];
+  bioData: BioData;
+}
+
+
+export interface BioData {
+  fullname: string;
+  username: string;
   email: string;
   phoneNumber: string;
-  hasPasskey: boolean;
 }
 
 export interface Subscriber extends BaseEntityModel {

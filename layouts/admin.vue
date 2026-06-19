@@ -200,7 +200,17 @@ const navigation = [
       { name: 'Ingestion Jobs', href: '/admin/content-management/ingestion-jobs' },
     ],
   },
-
+  {
+    name: 'Archived Content',
+    icon: DocumentTextIcon,
+    children: [
+      { name: 'Overview', href: '/admin/archives/dashboard' },
+      { name: 'Newspapers', href: '/admin/archives/newspapers' },
+      { name: 'Institutions', href: '/admin/archives/institutions' },
+      { name: 'Access Credits', href: '/admin/archives/access-credits' }
+    ],
+  },
+  
   {
     name: 'Commercial Partners',
     icon: BuildingOfficeIcon,

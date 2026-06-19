@@ -1,4 +1,4 @@
-import type { BaseApiResponse, GnpUser, BasePaginationModel, UserProfileResponse } from "~/models";
+import type { BaseApiResponse, GnpUser, BasePaginationModel, UserAccountMetaData } from "~/models";
 
 export async function getUsers(query: object) {
  
@@ -6,15 +6,15 @@ export async function getUsers(query: object) {
     return response.result;
 }
 
-export async function getUserProfile() {
+export async function getUserAccountMetaData() {
     
-    const response = await httpClient<BaseApiResponse<UserProfileResponse>>('users/profile', "");
+    const response = await gnpUserHttpClient<BaseApiResponse<UserAccountMetaData>>('users/get-meta-data', "");
     return response.result;
 }
 
 export async function changePassword(payload: object) {
     
-    const response = await httpClient<BaseApiResponse<object>>('auth/change-password', "", {
+    const response = await gnpUserHttpClient<BaseApiResponse<object>>('auth/change-password', "", {
         method: "post",
         body: payload,
     });

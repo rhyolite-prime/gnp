@@ -20,35 +20,134 @@
           
           <!-- Profile Card -->
           <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-              <User class="w-5 h-5 mr-2 text-gray-500" />
-              Profile Information
-            </h2>
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                <User class="w-5 h-5 mr-2 text-gray-500" />
+                Profile Information
+              </h2>
+              <button 
+                v-if="!isEditingProfile && !isLoadingProfile" 
+                @click="startEditingProfile" 
+                class="text-sm text-red-600 hover:text-red-700 flex items-center font-medium"
+              >
+                <Pencil class="w-4 h-4 mr-1" /> Edit
+              </button>
+            </div>
+
+            <div v-if="profileError" class="rounded-md bg-red-50 p-4 mb-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <XCircle class="h-5 w-5 text-red-400" />
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-sm font-medium text-red-800">{{ profileError }}</h3>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="profileSuccess" class="rounded-md bg-green-50 p-4 mb-4">
+              <div class="flex">
+                 <div class="flex-shrink-0">
+                  <CheckCircle class="h-5 w-5 text-green-400" />
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-sm font-medium text-green-800">Profile updated successfully!</h3>
+                </div>
+              </div>
+            </div>
 
             <div v-if="isLoadingProfile" class="animate-pulse space-y-4">
               <div class="h-4 bg-gray-200 rounded w-3/4"></div>
               <div class="h-4 bg-gray-200 rounded w-1/2"></div>
             </div>
 
+            <form v-else-if="isEditingProfile" @submit.prevent="handleUpdateProfile" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                <input 
+                  type="text" 
+                  v-model="profileForm.fullname"
+                  required
+                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm" 
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Username</label>
+                <input 
+                  type="text" 
+                  placeholder="Set Username"
+                  v-model="profileForm.username"
+                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                  />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Email Address</label>
+                <input 
+                  type="email" 
+                  v-model="profileForm.email"
+                  required
+                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm" 
+                />
+                
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input 
+                  type="tel" 
+                  v-model="profileForm.phoneNumber"
+                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm bg-gray-100 cursor-not-allowed" 
+                  disabled
+                />
+                <p class="mt-1 text-xs text-gray-500">Phone Number cannot be changed.</p>
+              </div>
+
+              <div class="flex justify-end space-x-3 pt-4">
+                <button 
+                  type="button" 
+                  @click="cancelEditingProfile"
+                  :disabled="isUpdatingProfile"
+                  class="bg-white border border-gray-300 rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  :disabled="isUpdatingProfile"
+                  class="bg-red-600 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 transition-colors"
+                >
+                  <span v-if="isUpdatingProfile" class="flex items-center">
+                    <Loader2 class="animate-spin -ml-1 mr-2 h-4 w-4" />
+                    Saving...
+                  </span>
+                  <span v-else class="flex items-center">
+                    <Save class="w-4 h-4 mr-1" /> Save
+                  </span>
+                </button>
+              </div>
+            </form>
+
             <div v-else class="space-y-4">
               <div>
                 <label class="block text-sm font-medium text-gray-500">Full Name</label>
-                <div class="mt-1 text-gray-900 font-medium">{{ userProfile?.firstName }} {{ userProfile?.lastName }}</div>
+                <div class="mt-1 text-gray-900 font-medium">{{ userMetaData?.bioData?.fullname || 'N/A' }}</div>
               </div>
 
-<div>
+              <div>
                 <label class="block text-sm font-medium text-gray-500">Username</label>
-                <div class="mt-1 text-gray-900">{{ userProfile?.email }}</div>
+                <div class="mt-1 text-gray-900">{{ userMetaData?.bioData?.username || 'N/A' }}</div>
               </div>
 
               <div>
                 <label class="block text-sm font-medium text-gray-500">Email Address</label>
-                <div class="mt-1 text-gray-900">{{ userProfile?.email }}</div>
+                <div class="mt-1 text-gray-900">{{ userMetaData?.bioData?.email || 'N/A' }}</div>
               </div>
 
               <div>
                 <label class="block text-sm font-medium text-gray-500">Phone Number</label>
-                <div class="mt-1 text-gray-900">{{ userProfile?.phoneNumber || 'Not provided' }}</div>
+                <div class="mt-1 text-gray-900">{{ userMetaData?.bioData?.phoneNumber || 'N/A' }}</div>
               </div>
             </div>
           </div>
@@ -100,19 +199,25 @@
           
           <!-- Subscriptions -->
           <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-              <Newspaper class="w-5 h-5 mr-2 text-gray-500" />
-              My Subscriptions
-            </h2>
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                <Newspaper class="w-5 h-5 mr-2 text-gray-500" />
+                Subscription Summary
+              </h2>
+              <!-- <NuxtLink to="/account/transactions" class="text-sm text-red-600 hover:text-red-700 font-medium">
+                View Renewal history &rarr;
+              </NuxtLink> -->
 
-            <div v-if="isLoadingSubs" class="animate-pulse space-y-4">
+            </div>
+              
+            <div v-if="isLoadingProfile" class="animate-pulse space-y-4">
                <div class="h-12 bg-gray-200 rounded w-full"></div>
                <div class="h-12 bg-gray-200 rounded w-full"></div>
             </div>
 
-            <div v-else-if="subscriptions && subscriptions.length > 0" class="overflow-hidden border border-gray-200 rounded-md">
+            <div v-else-if="userMetaData.subscriptions && userMetaData.subscriptions.length > 0" class="overflow-hidden border border-gray-200 rounded-md">
               <ul role="list" class="divide-y divide-gray-200">
-                <li v-for="sub in subscriptions" :key="sub.id" class="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                <li v-for="sub in userMetaData.subscriptions" :key="sub.id" class="px-4 py-4 sm:px-6 hover:bg-gray-50">
                   <div class="flex items-center justify-between">
                     <div class="flex flex-col">
                       <p class="text-sm font-medium text-red-600 truncate mb-1">
@@ -146,17 +251,22 @@
 
           <!-- Transactions -->
           <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-              <CreditCard class="w-5 h-5 mr-2 text-gray-500" />
-              My Transactions
-            </h2>
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                <CreditCard class="w-5 h-5 mr-2 text-gray-500" />
+                Recent Payments
+              </h2>
+                <!-- <NuxtLink to="/account/transactions" class="text-sm text-red-600 hover:text-red-700 font-medium">
+                  View payment history &rarr;
+                </NuxtLink> -->
+            </div>
 
-            <div v-if="isLoadingPayments" class="animate-pulse space-y-4">
+            <div v-if="isLoadingProfile" class="animate-pulse space-y-4">
                <div class="h-12 bg-gray-200 rounded w-full"></div>
                <div class="h-12 bg-gray-200 rounded w-full"></div>
             </div>
 
-            <div v-else-if="payments && payments.length > 0" class="overflow-hidden border border-gray-200 rounded-md overflow-x-auto">
+            <div v-else-if="userMetaData.transactions && userMetaData.transactions.length > 0" class="overflow-hidden border border-gray-200 rounded-md overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
@@ -167,7 +277,7 @@
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="payment in payments" :key="payment.id" class="hover:bg-gray-50 transition-colors">
+                  <tr v-for="payment in userMetaData.transactions" :key="payment.id" class="hover:bg-gray-50 transition-colors">
                     <td class="px-4 py-4 whitespace-nowrap">
                       <div class="text-sm font-medium text-gray-900">{{ payment.packageName }}</div>
                       <div class="text-[10px] text-gray-400">Ref: {{ payment.transactionReference }}</div>
@@ -298,14 +408,12 @@ import {
   ScanFace,
   CheckCircle,
   XCircle,
-  Loader2
+  Loader2,
+  Pencil,
+  Save
 } from 'lucide-vue-next';
 import { useAuthStore } from '~/stores/auth';
-import { getUserProfile, changePassword, type UserProfileResponse } from '~/services/users';
-import { getUserSubscription } from '~/services/userSubscription';
-import { getUserPayments } from '~/services/userPayments';
 import { useBiometrics } from '~/composables/useBiometrics';
-import { registerBiometric } from '~/services/biometric';
 import type { UserSubscription, Payment } from '~/models';
 
 useHead({
@@ -316,9 +424,7 @@ const authStore = useAuthStore();
 const { register, isBiometricsAvailable } = useBiometrics();
 // State
 const isLoadingProfile = ref(true);
-const isLoadingSubs = ref(true);
-const isLoadingPayments = ref(true);
-const userProfile = ref<UserProfileResponse | null>(null);
+const userMetaData = ref<UserAccountMetaData | null>(null);
 const subscriptions = ref<UserSubscription[]>([]);
 const payments = ref<Payment[]>([]);
 
@@ -384,6 +490,18 @@ const payments = ref<Payment[]>([]);
 // Passkey State
 const isRegisteringPasskey = ref(false);
 
+// Profile Edit State
+const isEditingProfile = ref(false);
+const isUpdatingProfile = ref(false);
+const profileSuccess = ref(false);
+const profileError = ref('');
+const profileForm = reactive({
+  fullname: '',
+  username: '',
+  email: '',
+  phoneNumber: ''
+});
+
 // Password State
 const isChangingPassword = ref(false);
 const passwordSuccess = ref(false);
@@ -394,24 +512,15 @@ const passwordForm = reactive({
   confirmPassword: ''
 });
 
-// Fetch Data
-onMounted(async () => {
-  if (!authStore.isAuthenticated) {
-    navigateTo('/');
-    return;
-  }
-  
-  await Promise.all([
-    fetchProfile(),
-    fetchSubscriptions(),
-    fetchPayments()
-  ]);
-});
+ 
 
-async function fetchProfile() {
+
+async function fetchUserMetaData() {
   try {
+
     isLoadingProfile.value = true;
-    userProfile.value = await getUserProfile();
+    userMetaData.value = await getUserAccountMetaData();
+    
   } catch (err) {
     console.error('Failed to load profile', err);
   } finally {
@@ -419,44 +528,62 @@ async function fetchProfile() {
   }
 }
 
-async function fetchSubscriptions() {
-  try {
-    isLoadingSubs.value = true;
-
-    const result = await getUserSubscription({ userId: authStore.user?.idTokenClaims.userId });
-    if(result && result.data && result.data.length > 0){
-        subscriptions.value = result.data;
-    } else {
-        // Fallback to mock data if no subscriptions found (for testing/demo)
-        subscriptions.value = mockSubscriptions;
-    }
-  } catch (err) {
-    console.error('Failed to load subscriptions', err);
-    //subscriptions.value = mockSubscriptions;
-  } finally {
-    isLoadingSubs.value = false;
-    
-  }
-}
-
-async function fetchPayments() {
-  try {
-    isLoadingPayments.value = true;
-    const result = await getUserPayments({ userId: authStore.user?.idTokenClaims.userId });
-    if (result && result.data && result.data.length > 1) {
-      payments.value = result.data;
-    } else {
-      payments.value = mockPayments;
-    }
-  } catch (err) {
-    console.error('Failed to load payments', err);
-    payments.value = mockPayments;
-  } finally {
-    isLoadingPayments.value = false;
-  }
-}
 
 // Actions
+function startEditingProfile() {
+  if (userMetaData.value?.bioData) {
+    profileForm.fullname = userMetaData.value.bioData.fullname || '';
+    profileForm.username = userMetaData.value.bioData.username || '';
+    profileForm.email = userMetaData.value.bioData.email || '';
+    profileForm.phoneNumber = userMetaData.value.bioData.phoneNumber || '';
+  }
+  isEditingProfile.value = true;
+  profileSuccess.value = false;
+  profileError.value = '';
+}
+
+function cancelEditingProfile() {
+  isEditingProfile.value = false;
+  profileError.value = '';
+}
+
+async function handleUpdateProfile() {
+  profileError.value = '';
+  profileSuccess.value = false;
+  
+  if (!profileForm.fullname || !profileForm.email) {
+    profileError.value = "Full Name and Email are required.";
+    return;
+  }
+  
+  try {
+    isUpdatingProfile.value = true;
+    
+    // We send only the editable fields
+    const payload = {
+      fullname: profileForm.fullname,
+      email: profileForm.email,
+      phoneNumber: profileForm.phoneNumber
+    };
+    
+    const success = await updateProfile(payload);
+    
+    if (success) {
+      profileSuccess.value = true;
+      isEditingProfile.value = false;
+      // Refresh user metadata
+      await fetchUserMetaData();
+    } else {
+      profileError.value = "Failed to update profile. Please try again.";
+    }
+  } catch (err) {
+    console.error("Profile update error:", err);
+    profileError.value = "An error occurred. Please try again later.";
+  } finally {
+    isUpdatingProfile.value = false;
+  }
+}
+
 async function handleEnablePasskey() {
   try {
     isRegisteringPasskey.value = true;
@@ -537,4 +664,16 @@ async function handleChangePassword() {
     isChangingPassword.value = false;
   }
 }
+
+
+onMounted(async () => {
+  if (!authStore.isAuthenticated) {
+    navigateTo('/');
+    return;
+  }
+   
+  await fetchUserMetaData();
+});
+
+
 </script>
