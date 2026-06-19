@@ -405,3 +405,25 @@ export interface PartnerInvoiceStat {
     totalPaid: number;
     
 }
+
+export interface PartnerSubscriberSubscriptionSummary {
+    subscriptionSummary: SubscriberSubscriptionSummary;
+    renewalHistory: RenewalHistory[];
+}
+
+
+export interface SubscriberSubscriptionSummary {
+    billingCycle: string;
+    dueDate: string;
+    package: string;
+    subscriptionId: string;
+}
+
+export interface RenewalHistory {
+    amount: string;
+    date: string;
+    package: string;
+    reference: string;
+    status: string;
+}
+

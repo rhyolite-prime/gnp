@@ -1,4 +1,4 @@
-import type { PartnerStats, Role, CommercialPartner, PartnerEngagementReport, PartnerSubscriber, CommercialPartnerApiKey, PartnerAnalyticsCharts, BaseApiResponse, BasePaginationModel, AdminUser } from "~/models";
+import type { PartnerStats, Role, CommercialPartner, PartnerSubscriberSubscriptionSummary, PartnerEngagementReport, PartnerSubscriber, CommercialPartnerApiKey, PartnerAnalyticsCharts, BaseApiResponse, BasePaginationModel, AdminUser } from "~/models";
 
  
 export async function getPartnerStats() {
@@ -75,6 +75,12 @@ export async function getApiUsageStats(query: object) {
 export async function getPartnerSubscribers(query: object) {
  
     const response = await partnerHttpClient<BaseApiResponse<BasePaginationModel<PartnerSubscriber[]>>>('partners/get-subscribers', "", { query });
+    return response.result;
+}
+
+export async function getPartnerSubscriberSubscriptionDetails(userId: string) {
+ 
+    const response = await partnerHttpClient<BaseApiResponse<PartnerSubscriberSubscriptionSummary>>(`partners/subscriber-subscription-details/${userId}`, "");
     return response.result;
 }
 
