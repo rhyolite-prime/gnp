@@ -439,7 +439,9 @@ export interface PartnerSubscriberSubscriptionSummary {
 
 export interface SubscriberSubscriptionSummary {
     billingCycle: string;
-    dueDate: string;
+    daysRemaining: number;
+    activatedOn: string;
+    validUntil: string;
     package: string;
     subscriptionId: string;
 }

@@ -46,12 +46,18 @@
               
               <div class="flex flex-col justify-center space-y-4 md:border-l md:border-white/10 md:pl-6">
                 <div>
-                  <div class="text-xs text-slate-400 font-medium mb-1">Due Date</div>
-                  <div class="font-bold text-lg text-white">{{ currentSubscription.dueDate }}</div>
+                  <div class="text-xs text-slate-400 font-medium mb-1">Activated On</div>
+                  <div class="font-bold text-lg text-white">{{ standardDateFormat(currentSubscription.activatedOn) }}</div>
                 </div>
+
                 <div>
-                  <div class="text-xs text-slate-400 font-medium mb-1">Billing Cycle</div>
-                  <div class="font-bold text-sm text-white">{{ currentSubscription.billingCycle }}</div>
+                  <div class="text-xs text-slate-400 font-medium mb-1">Valid Until</div>
+                  <div class="font-bold text-lg text-white">{{ standardDateFormat(currentSubscription.validUntil) }}</div>
+                </div>
+
+                <div>
+                  <div class="text-xs text-slate-400 font-medium mb-1">Days Remaining</div>
+                  <div class="font-bold text-sm text-white">{{ currentSubscription.daysRemaining }} days</div>
                 </div>
               </div>
             </div>
@@ -119,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+ 
 import { XMarkIcon, ClockIcon } from '@heroicons/vue/24/outline';
 import type { PartnerSubscriber, PartnerSubscriberSubscriptionSummary } from "~/models";
 import { getPartnerSubscriberSubscriptionDetails } from "~/services/partners";
@@ -154,13 +160,17 @@ const currentSubscription = computed(() => {
   if (subscriptionDetails.value?.subscriptionSummary) {
     return {
       package: subscriptionDetails.value.subscriptionSummary.package || 'N/A',
-      dueDate: subscriptionDetails.value.subscriptionSummary.dueDate || 'N/A',
+      activatedOn: subscriptionDetails.value.subscriptionSummary.activatedOn || 'N/A',
+      validUntil: subscriptionDetails.value.subscriptionSummary.validUntil || 'N/A',
+      daysRemaining: subscriptionDetails.value.subscriptionSummary.daysRemaining || 0,
       billingCycle: subscriptionDetails.value.subscriptionSummary.billingCycle || 'N/A'
     };
   }
   return {
     package: 'N/A',
-    dueDate: 'N/A',
+    activatedOn: 'N/A',
+    validUntil: 'N/A',
+    daysRemaining: 0,
     billingCycle: 'N/A'
   };
 });

@@ -93,7 +93,7 @@ export async function fulfillBuyCopy(query: object) {
 
 export async function validateNewsPaperEntitlement(query: object) {
     
-  const response = await httpClient<BaseApiResponse<NewsPaperEntitlementResponseModel>>('subscription/validate-newspaper-entitlement', "", { query });
+  const response = await gnpUserHttpClient<BaseApiResponse<NewsPaperEntitlementResponseModel>>('subscription/validate-newspaper-entitlement', "", { query });
   return response.result;
 }
 

@@ -53,13 +53,13 @@
           @click.prevent="navigateTo('/account')">
            Account
         </a>
-        <a 
+        <!-- <a 
           href="#" 
           class="block px-4 py-2 text-sm text-primary-600 font-bold hover:bg-primary-50"
           @click.prevent="navigateTo('/affiliates/dashboard')">
            Affiliate Dashboard
-        </a>
-         <a 
+        </a> -->
+         <!-- <a 
            href="#" 
            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between"
            @click.prevent="navigateTo('/notifications')">
@@ -67,7 +67,7 @@
             <span v-if="notificationStore.unreadCount > 0" class="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
               {{ notificationStore.unreadCount }}
             </span>
-        </a>
+        </a> -->
          
         <div class="border-t border-gray-100">
           <a 
