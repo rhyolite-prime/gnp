@@ -171,7 +171,8 @@ import {
   UserGroupIcon,
   TicketIcon,
   CurrencyDollarIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '~/stores/auth'
 
@@ -256,7 +257,8 @@ const navigation = [
       { name: 'User Invitations', href: '/admin/users/invitations' },
     ],
   },
-  { name: 'Reports', href: '/admin/analytics', icon: ChartBarIcon },
+  { name: 'Support Tickets', href: '/admin/support-tickets', icon: ChatBubbleLeftRightIcon },
+  { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
   { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
 ]
 

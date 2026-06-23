@@ -137,11 +137,27 @@
 
        </div>
 
+       <!-- Tabs -->
+       <div class="flex border-b border-slate-200 mb-8 space-x-8">
+         <button 
+           @click="activeTab = 'subscribers'"
+           :class="['pb-3 font-bold text-sm border-b-2 transition-colors -mb-px', activeTab === 'subscribers' ? 'border-primary-600 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300']"
+         >
+           Subscriber Directory
+         </button>
+         <button 
+           @click="activeTab = 'subscription'"
+           :class="['pb-3 font-bold text-sm border-b-2 transition-colors -mb-px', activeTab === 'subscription' ? 'border-primary-600 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300']"
+         >
+           Subscription & Activity
+         </button>
+       </div>
+
        <!-- Main Content Area -->
-       <div class="grid lg:grid-cols-3 gap-8">
+       <div class="">
          
-         <!-- Members Table (Spans 2 columns) -->
-         <div class="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+         <!-- Members Table -->
+         <div v-if="activeTab === 'subscribers'" class="w-full bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
             <div class="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white">
                <div>
                  <h2 class="text-xl font-bold text-slate-900 tracking-tight"> Subscriber Directory</h2>
@@ -161,7 +177,8 @@
                    <tr class="bg-slate-50/80 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-bold">
                      <th class="px-6 py-4">Name</th>
                      <th class="px-6 py-4">Phone</th>
-                     <th class="px-6 py-4">Last Active</th>
+                     <th class="px-6 py-4">Activated On</th>
+                     <th class="px-6 py-4">Valid Until</th>                
                      <th class="px-6 py-4 text-right">Actions</th>
                    </tr>
                  </thead>
@@ -184,8 +201,13 @@
                       </td>
                      
                      <td class="px-6 py-4 text-sm text-slate-500 font-medium">
-                       {{ longDateAndTimeFormat(subscriber.lastActive) }}
+                       {{ standardDateFormat(subscriber.activatedOn) }}
                      </td>
+
+                     <td class="px-6 py-4 text-sm text-slate-500 font-medium">
+                       {{ standardDateFormat(subscriber.validUntil) }}
+                     </td>
+
                      <td class="px-6 py-4 text-right">
                        <div class="flex items-center justify-end space-x-2">
                          <button @click.stop="viewSubscriberDetails(subscriber)" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors" title="View Details">
@@ -214,7 +236,7 @@
          </div>
 
          <!-- Side Panel (Quick Info & Insights) -->
-         <div class="space-y-8">
+         <div v-if="activeTab === 'subscription'" class="grid md:grid-cols-2 gap-8">
            <!-- Subscription Details -->
            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
              <h3 class="text-lg font-bold text-slate-900 mb-5 tracking-tight">Subscription Plan</h3>
@@ -378,6 +400,8 @@ useHead({
 
 const router = useRouter();
 const route = useRoute();
+
+const activeTab = ref('subscribers');
 
 const filters = reactive({
   query: '',

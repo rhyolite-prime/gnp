@@ -208,9 +208,15 @@
                         <a 
                             href="#" 
                             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                            @click.prevent="openApiKeysModal(partner)"
-                        >
+                            @click.prevent="openApiKeysModal(partner)">
                             Manage API Keys
+                        </a>
+
+                        <a 
+                            href="#" 
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                            @click.prevent="openApiLogsModal(partner)">
+                            API Logs
                         </a>
 
                         <a 
@@ -542,6 +548,13 @@ const openApiKeysModal = (partner: CommercialPartner) => {
     closeDropdown();
     router.push({
         path: `/admin/partners/${partner.id}/api-keys`
+    });
+};
+
+const openApiLogsModal = (partner: CommercialPartner) => {
+    closeDropdown();
+    router.push({
+        path: `/admin/partners/${partner.id}/api-logs`
     });
 };
 

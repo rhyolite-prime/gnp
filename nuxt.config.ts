@@ -17,7 +17,6 @@ export default defineNuxtConfig({
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap' },
-        { rel: 'icon', href: '/favicon.ico', sizes: 'any' },
         { rel: 'icon', href: '/favicon-mag.png', type: 'image/png' },
         { rel: 'apple-touch-icon', href: '/pwa-icons/apple-touch-icon-180x180.png' }
       ]
@@ -88,8 +87,8 @@ export default defineNuxtConfig({
     public: {
       microsoftClientId: process.env.NUXT_MICROSOFT_CLIENT_ID || '',
       googleClientId: process.env.NUXT_GOOGLE_CLIENT_ID || '',
-      proxyApiBaseURL: "https://dev-api.graphicnewsplus.com/api/v1/",
-      //proxyApiBaseURL: "http://localhost:5034/api/v1/",
+      //proxyApiBaseURL: "https://dev-api.graphicnewsplus.com/api/v1/",
+      proxyApiBaseURL: "http://localhost:5034/api/v1/",
     },
     googleClientSecret: process.env.NUXT_GOOGLE_CLIENT_SECRET || '',
     

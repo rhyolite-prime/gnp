@@ -1,4 +1,4 @@
-import type { NewsPaper, Payment, CommercialPartner,AdminUser, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, GnpDocumentResponseModel, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
+import type { NewsPaper, Payment, CommercialPartner,AdminUser, Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, GnpDocumentResponseModel, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
 
 export async function getNewsPaperPublications(query: object) {
  
@@ -174,6 +174,12 @@ export async function assignSubscriptionToCommercialPartnerSubscribers(payload: 
 export async function getAdminRoles(query: object) {
  
     const response = await httpClient<BaseApiResponse<BasePaginationModel<Role[]>>>('admin/get-all-roles', "", { query });
+    return response.result;
+}
+
+export async function getAdminPermissions() {
+ 
+    const response = await httpClient<BaseApiResponse<Permission[]>>('admin/get-all-permissions', "");
     return response.result;
 }
 

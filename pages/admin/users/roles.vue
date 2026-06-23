@@ -165,7 +165,7 @@
               leave-from="opacity-100 translate-y-0 sm:scale-100"
               leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <DialogPanel class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+              <DialogPanel class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-5xl sm:p-6">
                 <!-- Header -->
                 <div class="mb-6">
                   <DialogTitle as="h3" class="text-lg font-semibold leading-6 text-gray-900">
@@ -210,46 +210,92 @@
                     </div>
                   </div>
 
-                  <!-- Permissions -->
-                  <div>
-                    <label class="block text-sm font-medium leading-6 text-gray-900 mb-2">
-                      Permissions
-                    </label>
-                    <div class="flex gap-2 mb-2">
-                      <input
-                        type="text"
-                        v-model="newPermission"
-                        @keydown.enter.prevent="addPermission"
-                        placeholder="Type a permission and press Enter"
-                        class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
-                      />
-                      <button
-                        type="button"
-                        @click="addPermission"
-                        class="rounded-md bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 shrink-0"
-                      >
-                        Add
-                      </button>
-                    </div>
-                    <!-- Permission tags -->
-                    <div v-if="form.permissions.length" class="flex flex-wrap gap-2 mt-2">
-                      <span
-                        v-for="(perm, index) in form.permissions"
-                        :key="index"
-                        class="inline-flex items-center gap-x-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"
-                      >
-                        {{ perm }}
+                  <!-- Permissions Configuration -->
+                  <div class="mt-8 pt-6 border-t border-gray-200">
+                    <div class="sm:flex sm:items-center sm:justify-between mb-4">
+                      <div>
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">Permissions Configuration</h3>
+                        <p class="mt-1 text-sm text-gray-500">Toggle granular permissions. Checked cards indicate assigned permissions.</p>
+                      </div>
+                      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
                         <button
                           type="button"
-                          @click="removePermission(index)"
-                          class="ml-1 text-blue-500 hover:text-blue-700 focus:outline-none"
-                          :aria-label="`Remove ${perm} permission`"
+                          @click="toggleAllPermissions"
+                          class="inline-flex rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors"
                         >
-                          <XMarkIcon class="h-3 w-3" />
+                          {{ areAllPermissionsSelected ? 'Deselect All' : 'Select All' }}
                         </button>
-                      </span>
+                      </div>
                     </div>
-                    <p v-else class="text-xs text-gray-400 mt-1">No permissions added yet.</p>
+                    
+                    <!-- Search -->
+                    <div class="relative rounded-md shadow-sm mb-6">
+                      <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                      </div>
+                      <input 
+                        type="text"
+                        v-model="permissionSearchQuery" 
+                        class="block w-full rounded-md border-0 py-2.5 pl-10 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" 
+                        placeholder="Search permissions by name or concept (e.g., 'publish')..." 
+                      />
+                    </div>
+
+                    <!-- Groups List -->
+                    <div class="space-y-6 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+                      <div v-for="group in filteredPermissionGroups" :key="group.systemName" class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <!-- Group Header -->
+                        <div class="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-4 py-3 sm:px-6">
+                          <div class="flex items-center gap-3">
+                            <div class="h-2 w-2 rounded-full bg-primary-600"></div>
+                            <h4 class="text-base font-bold text-gray-900">{{ group.friendlyName }}</h4>
+                            <span class="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700 ring-1 ring-inset ring-primary-700/10">
+                              {{ getActiveCount(group) }} / {{ group.subPermissions.length }} active
+                            </span>
+                          </div>
+                          <button 
+                            type="button" 
+                            @click="toggleGroup(group)" 
+                            class="text-sm font-semibold text-primary-600 hover:text-primary-500"
+                          >
+                            {{ isGroupFullySelected(group) ? 'Deselect Group' : 'Select Group' }}
+                          </button>
+                        </div>
+                        
+                        <!-- Sub Permissions Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-6">
+                          <label 
+                            v-for="sub in group.subPermissions" 
+                            :key="sub.id"
+                            class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm hover:bg-gray-50 focus:outline-none transition-all"
+                            :class="[form.permissions.includes(sub.systemName) ? 'border-primary-600 ring-1 ring-primary-600' : 'border-gray-200']"
+                          >
+                            <div class="flex w-full items-start">
+                              <div class="flex h-6 items-center">
+                                <input 
+                                  type="checkbox" 
+                                  :value="sub.systemName"
+                                  v-model="form.permissions"
+                                  class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-600"
+                                />
+                              </div>
+                              <div class="ml-3 flex flex-col">
+                                <span class="block text-sm font-medium" :class="[form.permissions.includes(sub.systemName) ? 'text-primary-900' : 'text-gray-900']">
+                                  {{ sub.friendlyName }}
+                                </span>
+                                <span class="block text-xs mt-1 text-gray-500">
+                                  {{ sub.systemName }}
+                                </span>
+                              </div>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div v-if="filteredPermissionGroups.length === 0" class="text-center py-12">
+                        <p class="text-sm text-gray-500">No permissions found matching your search.</p>
+                      </div>
+                    </div>
                   </div>
 
                   <!-- Footer actions -->
@@ -289,7 +335,7 @@
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { isEmpty, debounce } from "lodash-es";
-import type { Role } from "~/models";
+import type { Role, Permission } from "~/models";
 const { $toast } = useNuxtApp();
 
 
@@ -318,6 +364,7 @@ const paginationParams = reactive({
 });
 
 const roleList = ref<Role[]>([]);
+const permissionList = ref<Permission[]>([]);
 
 const isShimmerLoading = ref(true);
 
@@ -354,6 +401,20 @@ const getPaginatedRoles = async () => {
  }
 
 
+ const getPermissions = async () => {
+
+    try {
+
+        permissionList.value = await getAdminPermissions();
+
+    } catch (error) {
+        $toast.error('Unable to fetch permissions !');
+    }
+
+ }
+
+ 
+
 // Filters
 const showFilters = ref(false)
 
@@ -369,14 +430,70 @@ const isSaving = ref(false)
 const isEditMode = ref(false)
 const editingRoleId = ref<string | null>(null)
 
-// Permission input
-const newPermission = ref('')
-
 const form = ref({
   name: '',
   description: '',
   permissions: [] as string[]
 })
+
+const permissionSearchQuery = ref('');
+
+const filteredPermissionGroups = computed(() => {
+  if (!permissionSearchQuery.value) return permissionList.value;
+  const lowerQuery = permissionSearchQuery.value.toLowerCase();
+  
+  return permissionList.value.map(group => {
+    const matchingSubs = group.subPermissions.filter(sub => 
+      sub.friendlyName.toLowerCase().includes(lowerQuery) || 
+      sub.systemName.toLowerCase().includes(lowerQuery)
+    );
+    
+    if (group.friendlyName.toLowerCase().includes(lowerQuery) || group.systemName.toLowerCase().includes(lowerQuery)) {
+        return group;
+    }
+    
+    if (matchingSubs.length > 0) {
+      return { ...group, subPermissions: matchingSubs };
+    }
+    return null;
+  }).filter(Boolean) as Permission[];
+});
+
+const getActiveCount = (group: Permission) => {
+  return group.subPermissions.filter(sub => form.value.permissions.includes(sub.systemName)).length;
+};
+
+const isGroupFullySelected = (group: Permission) => {
+  return group.subPermissions.length > 0 && getActiveCount(group) === group.subPermissions.length;
+};
+
+const toggleGroup = (group: Permission) => {
+  if (isGroupFullySelected(group)) {
+    // Deselect all
+    const subNames = group.subPermissions.map(sub => sub.systemName);
+    form.value.permissions = form.value.permissions.filter(p => !subNames.includes(p));
+  } else {
+    // Select all missing
+    const subNames = group.subPermissions.map(sub => sub.systemName);
+    const newPerms = new Set([...form.value.permissions, ...subNames]);
+    form.value.permissions = Array.from(newPerms);
+  }
+};
+
+const areAllPermissionsSelected = computed(() => {
+  const allSubs = permissionList.value.flatMap(g => g.subPermissions);
+  if (allSubs.length === 0) return false;
+  return allSubs.every(sub => form.value.permissions.includes(sub.systemName));
+});
+
+const toggleAllPermissions = () => {
+  if (areAllPermissionsSelected.value) {
+    form.value.permissions = [];
+  } else {
+    const allSubs = permissionList.value.flatMap(g => g.subPermissions);
+    form.value.permissions = allSubs.map(sub => sub.systemName);
+  }
+};
 
 const openCreateModal = () => {
   isEditMode.value = false
@@ -386,7 +503,7 @@ const openCreateModal = () => {
     description: '',
     permissions: []
   }
-  newPermission.value = ''
+  permissionSearchQuery.value = ''
   isModalOpen.value = true
 }
 
@@ -398,7 +515,7 @@ const openEditModal = (role: Role) => {
     description: role.description ?? '',
     permissions: [...(role.permissions ?? [])]
   }
-  newPermission.value = ''
+  permissionSearchQuery.value = ''
   isModalOpen.value = true
 }
 
@@ -407,17 +524,7 @@ const closeModal = () => {
   isModalOpen.value = false
 }
 
-const addPermission = () => {
-  const perm = newPermission.value.trim()
-  if (perm && !form.value.permissions.includes(perm)) {
-    form.value.permissions.push(perm)
-  }
-  newPermission.value = ''
-}
 
-const removePermission = (index: number) => {
-  form.value.permissions.splice(index, 1)
-}
 
 /**
  * Handles both create and update.
@@ -474,6 +581,8 @@ const debouncedSearch = debounce(() => {
     }
     
     await getPaginatedRoles();
+    await getPermissions();
+   
 
   });
 </script>
@@ -486,5 +595,16 @@ const debouncedSearch = debounce(() => {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
 }
 </style>

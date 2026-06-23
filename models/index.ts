@@ -157,6 +157,8 @@ export interface PartnerSubscriber {
     profileImageUrl: string;
     isActive: string;
     lastActive: string;
+    activatedOn: string;
+    validUntil: string;
     
 }
 
@@ -386,6 +388,23 @@ export interface Role extends BaseEntityModel {
     description: string;
     partnerId: string;
     permissions: string[]
+    
+}
+
+export interface Permission {
+
+    systemName: string;
+    friendlyName: string;
+    subPermissions: SubPermission[];
+    
+}
+
+export interface SubPermission {
+    
+    id: number;
+    systemName: string;
+    friendlyName: string;
+     
     
 }
 
