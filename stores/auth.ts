@@ -36,6 +36,7 @@ export const useAuthStore = defineStore('auth',  () => {
   const authProvider = ref<'microsoft' | 'google' | 'gnp' | null>(null);
   const accessToken = ref<string | null>(null);
   const userPhotoUrl = ref<string>();
+  const gnpUserIdentityCookie = useCookie('gnp-user-identity');
   
   // Set user info after successful authentication
   function setUser(userInfo: EnhancedUserInfo | null, provider: 'microsoft' | 'google' | 'gnp' | null = null) {
@@ -124,16 +125,16 @@ export const useAuthStore = defineStore('auth',  () => {
       const storedAuth = sessionStorage.getItem('authUser');
       const storedToken = sessionStorage.getItem('accessToken');
       
-      if (storedAuth) {
+      if (storedAuth && storedToken) {
 
         const parsedAuth = JSON.parse(storedAuth);
         user.value = parsedAuth;
         isAuthenticated.value = true;
-        
-      }
-      
-      if (storedToken) {
         accessToken.value = storedToken;
+        
+      } else if (gnpUserIdentityCookie.value) {
+        // Fallback to cookie if sessionStorage is empty (e.g. browser was closed and reopened)
+        setAccessToken(gnpUserIdentityCookie.value as string);
       }
 
       isAuthLoading.value = false;

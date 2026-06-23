@@ -1,4 +1,4 @@
-import type { PartnerStats, Role, CommercialPartner, PartnerEngagementReport, PartnerSubscriber, CommercialPartnerApiKey, PartnerAnalyticsCharts, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { PartnerStats, Role, CommercialPartner, PartnerSubscriberSubscriptionSummary, PartnerEngagementReport, PartnerSubscriber, CommercialPartnerApiKey, PartnerAnalyticsCharts, BaseApiResponse, BasePaginationModel, AdminUser } from "~/models";
 
  
 export async function getPartnerStats() {
@@ -78,6 +78,12 @@ export async function getPartnerSubscribers(query: object) {
     return response.result;
 }
 
+export async function getPartnerSubscriberSubscriptionDetails(userId: string) {
+ 
+    const response = await partnerHttpClient<BaseApiResponse<PartnerSubscriberSubscriptionSummary>>(`partners/subscriber-subscription-details/${userId}`, "");
+    return response.result;
+}
+
 export async function getPartnerDefaultSubscriptionPlan(query: object) {
  
     const response = await partnerHttpClient<BaseApiResponse<PartnerAnalyticsCharts>>('partners/get-default-subscription-plan', "", { query });
@@ -142,13 +148,13 @@ export async function updatePartnerSettings(file?: File, requireTwoFactorAuth?: 
 
 export async function getPartnerRoles(query: object) {
  
-    const response = await httpClient<BaseApiResponse<BasePaginationModel<Role[]>>>('partners/get-roles', "", { query });
+    const response = await partnerHttpClient<BaseApiResponse<BasePaginationModel<Role[]>>>('partners/get-all-roles', "", { query });
     return response.result;
 }
 
 export async function createPartnerRole(payload: object) {
     
-    const response = await httpClient<BaseApiResponse<object>>('partners/create-role', "", {
+    const response = await partnerHttpClient<BaseApiResponse<object>>('partners/create-role', "", {
         method: "post",
         body: payload,
     });
@@ -156,9 +162,9 @@ export async function createPartnerRole(payload: object) {
     return response.success;
 }
 
-export async function updatePartnerRole(payload: object) {
+export async function updatePartnerRole(payload: object, id: string ) {
     
-    const response = await httpClient<BaseApiResponse<object>>('partners/update-role', "", {
+    const response = await partnerHttpClient<BaseApiResponse<object>>(`partners/update-role/${id}`, "", {
         method: "post",
         body: payload,
     });
@@ -166,8 +172,42 @@ export async function updatePartnerRole(payload: object) {
     return response.success;
 }
 
-export async function deletePartnerRole(query: object) {
+export async function deletePartnerRole(id: string) {
  
-    const response = await httpClient<BaseApiResponse<object>>('partners/delete-role', "", { query, method: "delete", });
+    const response = await partnerHttpClient<BaseApiResponse<object>>(`partners/delete-role?id=${id}`, "", { method: "delete", });
+    return response.success;
+}
+
+//users
+
+export async function getPartnerAdminUsers(query: object) {
+ 
+    const response = await partnerHttpClient<BaseApiResponse<BasePaginationModel<AdminUser[]>>>('partners/get-all-users', "", { query });
+    return response.result;
+}
+
+export async function createPartnerAdminUser(payload: object) {
+    
+    const response = await partnerHttpClient<BaseApiResponse<object>>('partners/create-admin-user', "", {
+        method: "post",
+        body: payload,
+    });
+    
+    return response.success;
+}
+
+export async function updatePartnerAdminUser(payload: object,id: string) {
+    
+    const response = await partnerHttpClient<BaseApiResponse<object>>(`partners/update-admin-user/${id}`, "", {
+        method: "post",
+        body: payload,
+    });
+    
+    return response.success;
+}
+
+export async function deletePartnerAdminUser(id: string) {
+ 
+    const response = await partnerHttpClient<BaseApiResponse<object>>(`partners/delete-admin-user?id=${id}`, "", { method: "delete", });
     return response.success;
 }

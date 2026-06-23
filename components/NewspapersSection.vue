@@ -13,6 +13,7 @@
           v-for="newspaper in newspapers" 
           :key="newspaper.id"
           :newspaper="newspaper"
+          @click="viewNewspaper(newspaper)"
           class="animate-slide-up"
         />
       </div>
@@ -34,7 +35,7 @@ import { ref, onMounted } from 'vue';
 import { getLatestNewsPapers } from '~/services/newsPapers';
 import type { NewsPaper } from '~/models';
 
-const newspapers = ref<any[]>([]);
+const newspapers = ref<NewsPaper[]>([]);
 
 const formatNiceDate = (dateString: string) => {
   if (!dateString) return '';
@@ -46,6 +47,12 @@ const formatNiceDate = (dateString: string) => {
     day: 'numeric'
   });
 };
+
+function viewNewspaper(newspaper: NewsPaper) {
+  
+  // Navigate to newspaper detail page
+  navigateTo(`/newspapers/${newspaper.id}`)
+}
 
 onMounted(async () => {
     try {

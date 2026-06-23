@@ -137,11 +137,27 @@
 
        </div>
 
+       <!-- Tabs -->
+       <div class="flex border-b border-slate-200 mb-8 space-x-8">
+         <button 
+           @click="activeTab = 'subscribers'"
+           :class="['pb-3 font-bold text-sm border-b-2 transition-colors -mb-px', activeTab === 'subscribers' ? 'border-primary-600 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300']"
+         >
+           Subscriber Directory
+         </button>
+         <button 
+           @click="activeTab = 'subscription'"
+           :class="['pb-3 font-bold text-sm border-b-2 transition-colors -mb-px', activeTab === 'subscription' ? 'border-primary-600 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300']"
+         >
+           Subscription & Activity
+         </button>
+       </div>
+
        <!-- Main Content Area -->
-       <div class="grid lg:grid-cols-3 gap-8">
+       <div class="">
          
-         <!-- Members Table (Spans 2 columns) -->
-         <div class="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+         <!-- Members Table -->
+         <div v-if="activeTab === 'subscribers'" class="w-full bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
             <div class="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white">
                <div>
                  <h2 class="text-xl font-bold text-slate-900 tracking-tight"> Subscriber Directory</h2>
@@ -161,12 +177,13 @@
                    <tr class="bg-slate-50/80 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-bold">
                      <th class="px-6 py-4">Name</th>
                      <th class="px-6 py-4">Phone</th>
-                     <th class="px-6 py-4">Last Active</th>
+                     <th class="px-6 py-4">Activated On</th>
+                     <th class="px-6 py-4">Valid Until</th>                
                      <th class="px-6 py-4 text-right">Actions</th>
                    </tr>
                  </thead>
                  <tbody class="divide-y divide-slate-100">
-                   <tr v-for="subscriber in subscriberList" :key="subscriber.id" class="hover:bg-slate-50 transition-colors group">
+                   <tr v-for="subscriber in subscriberList" :key="subscriber.id" @click="viewSubscriberDetails(subscriber)" class="hover:bg-slate-50 transition-colors group cursor-pointer">
                      <td class="px-6 py-4">
                        <div class="flex items-center">
                          <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-primary-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-primary-500/20 group-hover:scale-105 transition-transform">
@@ -184,14 +201,22 @@
                       </td>
                      
                      <td class="px-6 py-4 text-sm text-slate-500 font-medium">
-                       {{ longDateAndTimeFormat(subscriber.lastActive) }}
+                       {{ standardDateFormat(subscriber.activatedOn) }}
                      </td>
+
+                     <td class="px-6 py-4 text-sm text-slate-500 font-medium">
+                       {{ standardDateFormat(subscriber.validUntil) }}
+                     </td>
+
                      <td class="px-6 py-4 text-right">
                        <div class="flex items-center justify-end space-x-2">
-                         <button @click="editSubscriber(subscriber)" class="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors" title="Edit">
+                         <button @click.stop="viewSubscriberDetails(subscriber)" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors" title="View Details">
+                           <EyeIcon class="w-5 h-5" />
+                         </button>
+                         <button @click.stop="editSubscriber(subscriber)" class="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors" title="Edit">
                            <PencilSquareIcon class="w-5 h-5" />
                          </button>
-                         <button @click="delPartnerSubscriber(subscriber)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
+                         <button @click.stop="delPartnerSubscriber(subscriber)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
                            <TrashIcon class="w-5 h-5" />
                          </button>
                        </div>
@@ -211,7 +236,7 @@
          </div>
 
          <!-- Side Panel (Quick Info & Insights) -->
-         <div class="space-y-8">
+         <div v-if="activeTab === 'subscription'" class="grid md:grid-cols-2 gap-8">
            <!-- Subscription Details -->
            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
              <h3 class="text-lg font-bold text-slate-900 mb-5 tracking-tight">Subscription Plan</h3>
@@ -329,6 +354,13 @@
          :upload-progress="uploadProgress"
          :remaining-quota="partnerOverviewStats?.remainingQuota || 0"
        />
+
+       <!-- Subscription Details Modal -->
+       <SubscriberSubscriptionModal 
+         :show="isSubscriptionModalOpen"
+         :subscriber="subscriberToView"
+         @close="closeSubscriptionModal"
+       />
   </div>
 </template>
 
@@ -345,7 +377,8 @@ import {
   TrashIcon, 
   MagnifyingGlassIcon, 
   CheckCircleIcon, 
-  ClockIcon 
+  ClockIcon,
+  EyeIcon
 } from '@heroicons/vue/24/outline'
 
 import { usePartnerAuthStore } from '~/stores/partnerAuth';
@@ -368,6 +401,8 @@ useHead({
 const router = useRouter();
 const route = useRoute();
 
+const activeTab = ref('subscribers');
+
 const filters = reactive({
   query: '',
   pageNo: 1,
@@ -389,6 +424,8 @@ const isDeleting = ref(false)
 const isDeleteModalOpen = ref(false)
 const subscriberToDelete = ref<PartnerSubscriber | null>(null)
 const selectedSubscriber = ref<PartnerSubscriber | null>(null)
+const isSubscriptionModalOpen = ref(false)
+const subscriberToView = ref<PartnerSubscriber | null>(null)
 const partnerOverviewStats = ref<PartnerStats | null>(null)
 const showUploadModal = ref(false);
 const isUploading = ref(false);
@@ -461,6 +498,16 @@ const getPaginatedPartnerSubscribers = async () => {
  const closeModal = () => {
   isSubscriberModalOpen.value = false
 }
+
+const viewSubscriberDetails = (subscriber: PartnerSubscriber) => {
+  subscriberToView.value = subscriber;
+  isSubscriptionModalOpen.value = true;
+};
+
+const closeSubscriptionModal = () => {
+  isSubscriptionModalOpen.value = false;
+  subscriberToView.value = null;
+};
 
 const openAddSubscriberModal = () => {
   selectedSubscriber.value = null;
@@ -633,13 +680,6 @@ const partnerInitials = computed(() => {
 const partnerDomain = computed(() => {
   return partnerName.value.toLowerCase().replace(/\s+/g, '') + '.com'
 })
-
-const stats = [
-  { name: 'Active Members', value: '2,845', change: '+12.5%', isPositive: true, icon: UsersIcon },
-  { name: 'Total Quota', value: '3,000', change: '155 available', isPositive: true, icon: TicketIcon },
-  { name: 'Engagement Rate', value: '78%', change: '+5.4%', isPositive: true, icon: ArrowTrendingUpIcon },
-  { name: 'Active Sessions', value: '432', change: '-2.1%', isPositive: false, icon: ChartBarIcon },
-]
 
 
 const getStatusColor = (status: string) => {

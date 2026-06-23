@@ -92,7 +92,7 @@
               </div>
 
               <div class="border-t border-b border-gray-200 py-6 mb-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">Information</h2>
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Headlines</h2>
                 <p class="text-gray-700">
                   {{ newsPaperDetail.fullDescription }}
                 </p>
@@ -1056,6 +1056,13 @@ watch(newsPaperDetail, (newValue) => {
         { name: 'description', content: `Read ${newValue.title} newspaper from ${newValue.publishedDate}.` }
       ]
     });
+  }
+});
+
+// Listen for global login events (auth state change) to dynamically reload entitlement
+watch(() => authStore.isAuthenticated, async (newVal, oldVal) => {
+  if (newVal === true && !oldVal) {
+    await retrieveNewsPaperEntitlement(newspaperId.value);
   }
 });
 

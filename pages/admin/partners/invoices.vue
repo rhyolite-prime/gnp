@@ -101,7 +101,7 @@
     </div>
 
     <!-- Invoices List -->
-    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-hidden">
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-visible min-h-[450px]">
       <div v-if="isShimmerLoading" class="animate-pulse">
         <div class="h-10 bg-gray-50 border-b border-gray-200"></div>
         <div v-for="i in 5" :key="i" class="h-16 bg-white border-b border-gray-100"></div>
@@ -162,8 +162,7 @@
                 <div 
                   v-if="activeDropdownId === invoice.id" 
                   class="absolute right-0 w-48 bg-white rounded-xl shadow-xl z-50 border border-gray-100 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-100"
-                  :class="index > invoiceList.length - 4 ? 'bottom-full mb-2' : 'top-full mt-2'"
-                >
+                  :class="index > 3 && index > invoiceList.length - 4 ? 'bottom-full mb-2' : 'top-full mt-2'">
                   <div class="py-2">
                     <button 
                       v-if="invoice.status === 'Pending'"
@@ -172,6 +171,22 @@
                     >
                       <CheckCircleIcon class="h-4 w-4 mr-2" />
                       Mark as Paid
+                    </button>
+                    <button 
+                      v-if="invoice.status === 'Pending'"
+                      @click="initMarkAsPaid(invoice)"
+                      class="flex items-center w-full px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition-colors"
+                    >
+                      <CurrencyDollarIcon class="h-4 w-4 mr-2" />
+                      Make Part Payment
+                    </button>
+                    <button 
+                      v-if="invoice.status === 'Pending'"
+                      @click="initMarkAsPaid(invoice)"
+                      class="flex items-center w-full px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition-colors"
+                    >
+                      <BanknotesIcon class="h-4 w-4 mr-2" />
+                      Make Full Payment
                     </button>
                     <button 
                       class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"

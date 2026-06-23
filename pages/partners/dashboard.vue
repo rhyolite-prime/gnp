@@ -18,8 +18,7 @@
            <div class="flex items-center gap-3">
               <NuxtLink
                 to="/partners/dashboard/docs"
-                class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-white/10 transition-all transform hover:scale-[1.02] shadow-sm cursor-pointer whitespace-nowrap font-bold text-sm"
-              >
+                class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-white/10 transition-all transform hover:scale-[1.02] shadow-sm cursor-pointer whitespace-nowrap font-bold text-sm">
                 <QuestionMarkCircleIcon class="w-5 h-5 mr-2 text-slate-300" />
                 Help & Docs
               </NuxtLink>
@@ -55,15 +54,14 @@
             </NuxtLink>
             
             <NuxtLink 
-               to="/partners/dashboard/reports" 
+               to="/partners/dashboard/reports" v-if="false"
                exact-active-class="border-primary-500 text-white" 
-               class="border-b-2 border-transparent pb-4 px-1 text-sm font-bold text-slate-400 hover:text-white hover:border-slate-500 whitespace-nowrap transition-colors flex items-center"
-            >
+               class="border-b-2 border-transparent pb-4 px-1 text-sm font-bold text-slate-400 hover:text-white hover:border-slate-500 whitespace-nowrap transition-colors flex items-center">
               <DocumentChartBarIcon class="w-5 h-5 mr-2" />
               Reports
             </NuxtLink>
             
-            <NuxtLink 
+            <NuxtLink v-if="false"
                to="/partners/dashboard/users" 
                exact-active-class="border-primary-500 text-white" 
                class="border-b-2 border-transparent pb-4 px-1 text-sm font-bold text-slate-400 hover:text-white hover:border-slate-500 whitespace-nowrap transition-colors flex items-center"
@@ -111,6 +109,7 @@ import {
   ArrowRightOnRectangleIcon,
   BookOpenIcon
 } from '@heroicons/vue/24/outline'
+
 import { usePartnerAuthStore } from '~/stores/partnerAuth'
 
 definePageMeta({

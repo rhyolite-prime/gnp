@@ -157,6 +157,8 @@ export interface PartnerSubscriber {
     profileImageUrl: string;
     isActive: string;
     lastActive: string;
+    activatedOn: string;
+    validUntil: string;
     
 }
 
@@ -295,12 +297,18 @@ export interface CommercialPartner extends BaseEntityModel {
     createdAt: string;
 }
 
-export interface UserProfileResponse {
-  firstName: string;
-  lastName: string;
+export interface UserAccountMetaData {
+  subscriptions: [];
+  transactions: [];
+  bioData: BioData;
+}
+
+
+export interface BioData {
+  fullname: string;
+  username: string;
   email: string;
   phoneNumber: string;
-  hasPasskey: boolean;
 }
 
 export interface Subscriber extends BaseEntityModel {
@@ -320,7 +328,9 @@ export interface AdminUser extends BaseEntityModel {
     firstName: string;
     lastName: string;
     email: string;
+    username: string;
     phoneNumber?: string;
+    roles: [];
     createdAt: string;
 }
 
@@ -377,7 +387,24 @@ export interface Role extends BaseEntityModel {
     name: string;
     description: string;
     partnerId: string;
-    permissions: []
+    permissions: string[]
+    
+}
+
+export interface Permission {
+
+    systemName: string;
+    friendlyName: string;
+    subPermissions: SubPermission[];
+    
+}
+
+export interface SubPermission {
+    
+    id: number;
+    systemName: string;
+    friendlyName: string;
+     
     
 }
 
@@ -403,3 +430,27 @@ export interface PartnerInvoiceStat {
     totalPaid: number;
     
 }
+
+export interface PartnerSubscriberSubscriptionSummary {
+    subscriptionSummary: SubscriberSubscriptionSummary;
+    renewalHistory: RenewalHistory[];
+}
+
+
+export interface SubscriberSubscriptionSummary {
+    billingCycle: string;
+    daysRemaining: number;
+    activatedOn: string;
+    validUntil: string;
+    package: string;
+    subscriptionId: string;
+}
+
+export interface RenewalHistory {
+    amount: string;
+    date: string;
+    package: string;
+    reference: string;
+    status: string;
+}
+

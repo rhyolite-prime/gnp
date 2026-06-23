@@ -31,10 +31,11 @@
       <!-- Step 1: Enter Email -->
       <form v-if="step === 1" @submit.prevent="checkEmailStatus">
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email Address or Phone Number</label>
           <input 
-            type="email" 
-            v-model="usernameOrEmail" 
+            type="text"
+            placeholder="Email Address or Phone Number"
+            v-model="usernameOrEmail"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500" 
             required
           />
@@ -287,13 +288,22 @@ const getRedirectUrl = () => {
 const checkEmailStatus = async () => {
   emailCheckLoading.value = true;
   try {
-    // Determine identifierType by checking if value is an email
+    // Determine identifierType by checking if value is an email, phone number, or username
+    const value = usernameOrEmail.value.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const identifierType = emailRegex.test(usernameOrEmail.value) ? "email" : "username";
+    const phoneRegex = /^\+?[0-9]{7,15}$/;
 
-    let response = await checkAccountStatus({ 
-      identifier: usernameOrEmail.value, 
-      identifierType 
+    let identifierType = "username";
+
+    if (emailRegex.test(value)) {
+      identifierType = "email";
+    } else if (phoneRegex.test(value.replace(/[\s()-]/g, ''))) {
+      identifierType = "phone";
+    }
+
+    let response = await checkAccountStatus({
+      identifier: value,
+      identifierType
     });
 
     emailHasPassword.value = response.hasPassword;

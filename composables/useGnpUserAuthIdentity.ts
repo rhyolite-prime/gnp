@@ -1,8 +1,12 @@
-import type { GnpUserAuthModel } from "~/models";
+
 
 export const useGnpUserAuthIdentity = () => {
-  
   const gnpUserIdentityCookie = useCookie("gnp-user-identity");
-
-  return useState("gnpAuth", () => gnpUserIdentityCookie.value as string);
+  const state = useState("gnpUserAuth", () => gnpUserIdentityCookie.value as string);
+  
+  if (import.meta.client) {
+    state.value = gnpUserIdentityCookie.value as string;
+  }
+  
+  return state;
 };

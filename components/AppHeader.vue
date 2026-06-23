@@ -24,6 +24,7 @@
           <NuxtLink to="/" class="nav-link">Home</NuxtLink>
           <NuxtLink to="/newspapers" class="nav-link">Newspapers</NuxtLink>
           <a href="#magazines" class="nav-link">Magazines</a>
+          <NuxtLink to="/archives" class="nav-link">Archives</NuxtLink>
           
           <!-- Originals Dropdown -->
           <!-- <div class="relative group flex items-center h-full">
@@ -65,6 +66,7 @@
             </div>
           </div> -->
 
+           
           <NuxtLink to="/pricing" class="nav-link">Pricing</NuxtLink>
           <NuxtLink :to="authStore.isAuthenticated ? '/affiliates/dashboard' : '/affiliates'" class="nav-link">Affiliates</NuxtLink>
           <NuxtLink :to="authStore.isAuthenticated ? '/partners/dashboard' : '/partners'" class="nav-link">Partners</NuxtLink>
@@ -162,6 +164,7 @@
           <NuxtLink to="/" class="mobile-nav-link" @click="closeMobileMenu">Home</NuxtLink>
           <NuxtLink to="/newspapers" class="mobile-nav-link" @click="closeMobileMenu">Newspapers</NuxtLink>
           <a href="#magazines" class="mobile-nav-link" @click="closeMobileMenu">Magazines</a>
+          <NuxtLink to="/archives" class="mobile-nav-link" @click="closeMobileMenu">Archives</NuxtLink>
           
           <!-- Mobile Originals Accordion -->
           <!-- <div>
@@ -196,6 +199,7 @@
           </div> -->
 
           <NuxtLink to="/pricing" class="mobile-nav-link" @click="closeMobileMenu">Pricing</NuxtLink>
+          
           <NuxtLink :to="authStore.isAuthenticated ? '/affiliates/dashboard' : '/affiliates'" class="mobile-nav-link" @click="closeMobileMenu">Affiliates</NuxtLink>
           <NuxtLink :to="authStore.isAuthenticated ? '/partners/dashboard' : '/partners'" class="mobile-nav-link" @click="closeMobileMenu">Partners</NuxtLink>
           <NuxtLink to="/about" class="mobile-nav-link" @click="closeMobileMenu">About</NuxtLink>

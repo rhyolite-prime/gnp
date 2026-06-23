@@ -234,11 +234,6 @@ function handlePublicationSelect(publication: Category) {
   
    
 }
-
- 
-
- 
-
  
 
 function viewNewspaper(newspaper: NewsPaper) {

@@ -1,4 +1,4 @@
-import type { NewsPaper, Payment, CommercialPartner,AdminUser, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, GnpDocumentResponseModel, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
+import type { NewsPaper, Payment, CommercialPartner,AdminUser, Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, GnpDocumentResponseModel, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
 
 export async function getNewsPaperPublications(query: object) {
  
@@ -6,6 +6,12 @@ export async function getNewsPaperPublications(query: object) {
     return response.result;
 }
 
+
+export async function getArchivedNewsPaperPublications(query: object) {
+ 
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<NewsPaper[]>>>('admin/get-all-archived-newspapers', "", { query });
+    return response.result;
+}
 
 
 export async function uploadGnpDocument(publicationFile: File) {
@@ -160,6 +166,44 @@ export async function assignSubscriptionToCommercialPartnerSubscribers(payload: 
         method: "post",
         body: payload,
     });
+    return response.success;
+}
+
+//admin roles
+
+export async function getAdminRoles(query: object) {
+ 
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<Role[]>>>('admin/get-all-roles', "", { query });
+    return response.result;
+}
+
+export async function getAdminPermissions() {
+ 
+    const response = await httpClient<BaseApiResponse<Permission[]>>('admin/get-all-permissions', "");
+    return response.result;
+}
+
+export async function createAdminRole(payload: object) {
+    
+  const response = await httpClient<BaseApiResponse<object>>('admin/create-role', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function updateAdminRole(payload: object, roleId: string) {
+    
+  const response = await httpClient<BaseApiResponse<object>>(`admin/update-role/${roleId}`, "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function deleteAdminRole(roleId: string) {
+ 
+    const response = await httpClient<BaseApiResponse<object>>(`admin/delete-role/${roleId}`, "", { method: "delete", });
     return response.success;
 }
 

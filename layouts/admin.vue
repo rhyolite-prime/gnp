@@ -168,9 +168,11 @@ import {
   BuildingOfficeIcon,
   Bars3Icon,
   BellIcon,
+  UserGroupIcon,
   TicketIcon,
   CurrencyDollarIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '~/stores/auth'
 
@@ -186,17 +188,30 @@ const expandedMenus = ref<Record<string, boolean>>({
 
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon },
-
+  { name: 'Subscribers', href: '/admin/subscribers', icon: UserGroupIcon },
   {
     name: 'Content',
     icon: DocumentTextIcon,
     children: [
       { name: 'Newspapers', href: '/admin/content-management/newspapers' },
-      { name: 'Ingestion', href: '/admin/content-management/ingestion' },
+      { name: 'Archives', href: '/admin/content-management/archives' },
+      { name: 'Videos', href: '/admin/content-management/videos' },
+      { name: 'Audios', href: '/admin/content-management/audios' },
+      { name: 'OCR Ingestion', href: '/admin/content-management/ingestion' },
       { name: 'Ingestion Jobs', href: '/admin/content-management/ingestion-jobs' },
     ],
   },
-
+  {
+    name: 'Archived Content',
+    icon: DocumentTextIcon,
+    children: [
+      { name: 'Overview', href: '/admin/archives/dashboard' },
+      { name: 'Newspapers', href: '/admin/archives/newspapers' },
+      { name: 'Institutions', href: '/admin/archives/institutions' },
+      { name: 'Access Credits', href: '/admin/archives/access-credits' }
+    ],
+  },
+  
   {
     name: 'Commercial Partners',
     icon: BuildingOfficeIcon,
@@ -237,12 +252,13 @@ const navigation = [
     name: 'User Management',
     icon: UsersIcon,
     children: [
-      { name: 'Users', href: '/admin/users/' },
-      { name: 'Subscribers', href: '/admin/users/subscribers' },
       { name: 'Roles', href: '/admin/users/roles' },
+      { name: 'Users', href: '/admin/users/' },
+      { name: 'User Invitations', href: '/admin/users/invitations' },
     ],
   },
-  { name: 'Reports', href: '/admin/analytics', icon: ChartBarIcon },
+  { name: 'Support Tickets', href: '/admin/support-tickets', icon: ChatBubbleLeftRightIcon },
+  { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
   { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
 ]
 
