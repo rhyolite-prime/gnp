@@ -239,7 +239,7 @@ import { useAuthStore } from '~/stores/auth'
 const router = useRouter()
 const authStore = useAuthStore()
 const searchQuery = ref('')
-const showSignInModal = ref(false);
+const showSignInModal = useState('showSignInModal', () => false);
 const isSearchOpen = ref(false)
 const isMobileMenuOpen = ref(false)
 const isOriginalsOpen = ref(false)

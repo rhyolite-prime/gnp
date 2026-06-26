@@ -197,7 +197,6 @@ const navigation = [
       { name: 'Archives', href: '/admin/content-management/archives' },
       { name: 'Videos', href: '/admin/content-management/videos' },
       { name: 'Audios', href: '/admin/content-management/audios' },
-      { name: 'OCR Ingestion', href: '/admin/content-management/ingestion' },
       { name: 'Ingestion Jobs', href: '/admin/content-management/ingestion-jobs' },
     ],
   },

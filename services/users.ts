@@ -24,7 +24,7 @@ export async function changePassword(payload: object) {
 
 export async function updateProfile(payload: object) {
     
-    const response = await httpClient<BaseApiResponse<object>>('users/update-profile', "", {
+    const response = await gnpUserHttpClient<BaseApiResponse<object>>('users/update-profile', "", {
         method: "post",
         body: payload,
     });

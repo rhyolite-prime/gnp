@@ -599,15 +599,15 @@ const savePublication = async () => {
 
   try {
     // Upload file to storage service
-    const uploadResult = await uploadGnpDocument(form.value.file);
+    //const uploadResult = await uploadFileAsset(form.value.file);
 
     // Create newspaper/publication
     await createNewsPaper({
       ...form.value,
       title,
       slug,
-      documentId: uploadResult.documentId,
-      thumbnailId: uploadResult.thumbnailId,
+      documentId: "--",
+      thumbnailId: "--",
     });
 
     $toast.success('Publication ingested successfully.');

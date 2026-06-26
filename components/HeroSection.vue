@@ -15,8 +15,8 @@
             Graphic Business, Graphic Sports, and more.
           </p>
           <div class="flex flex-col sm:flex-row gap-4">
-            <button class="btn-primary">Get Started</button>
-            <button class="btn-secondary">Learn More</button>
+            <button class="btn-primary" @click="showSignInModal = true">Get Started</button>
+            <NuxtLink to="/learn-more" class="btn-secondary text-center">Learn More</NuxtLink>
           </div>
         </div>
         <!-- <div class="hidden lg:block relative animate-scale-in">
@@ -34,3 +34,7 @@
     </div>
   </section>
 </template>
+
+<script setup>
+const showSignInModal = useState('showSignInModal', () => false);
+</script>

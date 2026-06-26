@@ -2,35 +2,37 @@ import type { NewsPaper, Payment, CommercialPartner,AdminUser, Permission, Role,
 
 export async function getNewsPaperPublications(query: object) {
  
-    const response = await httpClient<BaseApiResponse<BasePaginationModel<NewsPaper[]>>>('admin/get-all-newspapers', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<NewsPaper[]>>>('admin/get-all-newspapers', "", { query });
     return response.result;
 }
 
 
 export async function getArchivedNewsPaperPublications(query: object) {
  
-    const response = await httpClient<BaseApiResponse<BasePaginationModel<NewsPaper[]>>>('admin/get-all-archived-newspapers', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<NewsPaper[]>>>('admin/get-all-archived-newspapers', "", { query });
     return response.result;
 }
 
 
-export async function uploadGnpDocument(publicationFile: File) {
+export async function uploadFileAsset(publicationFile: File) {
   
-    const formData = new FormData();
-    formData.append("publicationFile", publicationFile);
+  const formData = new FormData();
+  
+  //formData.append("bucketName", "gnp-production-original");
+  
+  formData.append("file", publicationFile);
 
-  const response = await httpClient<BaseApiResponse<GnpDocumentResponseModel>>("api/services/app/auxillary/uploadgnpdocument", "https://archive.graphic.com.gh/",
-    {
-      method: "post",
-      body: formData,
-    });
+  const response = await httpClient<{ status: string, fileName: string }>("g3/upload-file", "", {
+    method: "post",
+    body: formData,
+  });
     
-  return response.result;
+  return response;
 }
 
 export async function createNewsPaper(payload: object) {
     
-  const response = await httpClient<BaseApiResponse<object>>('admin/ingest-newspaper', "", {
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/ingest-newspaper', "", {
     method: "post",
     body: payload,
   });
@@ -39,14 +41,14 @@ export async function createNewsPaper(payload: object) {
 
 export async function publishNewspaperPublication(query: object) {
  
-    const response = await httpClient<BaseApiResponse<object>>('admin/publish-newspaper', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/publish-newspaper', "", { query });
     return response.success;
 }
 
 
 export async function unPublishNewspaperPublication(query: object) {
  
-    const response = await httpClient<BaseApiResponse<object>>('admin/unpublish-newspaper', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/unpublish-newspaper', "", { query });
     return response.success;
 }
 
@@ -54,7 +56,7 @@ export async function unPublishNewspaperPublication(query: object) {
  
 export async function getPayments(query: object) {
  
-    const response = await httpClient<BaseApiResponse<BasePaginationModel<Payment[]>>>('admin/get-all-payments', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Payment[]>>>('admin/get-all-payments', "", { query });
     return response.result;
 }
 
@@ -62,25 +64,25 @@ export async function getPayments(query: object) {
 
 export async function getCommercialPartners(query: object) {
  
-    const response = await httpClient<BaseApiResponse<BasePaginationModel<CommercialPartner[]>>>('admin/get-all-partners', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<CommercialPartner[]>>>('admin/get-all-partners', "", { query });
     return response.result;
 }
 
 export async function getCommercialPartnerDetails(partnerId: string) {
  
-    const response = await httpClient<BaseApiResponse<CommercialPartner>>(`admin/get-partner-details?partnerId=${partnerId}`, "");
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<CommercialPartner>>(`admin/get-partner-details?partnerId=${partnerId}`, "");
     return response.result;
 }
 
 export async function getCommercialPartnerStats() {
  
-    const response = await httpClient<BaseApiResponse<CommercialPartnerStat[]>>('admin/get-partner-stats', "");
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<CommercialPartnerStat[]>>('admin/get-partner-stats', "");
     return response.result;
 }
 
 export async function createCommercialPartner(payload: object) {
     
-  const response = await httpClient<BaseApiResponse<object>>('admin/create-partner', "", {
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/create-partner', "", {
     method: "post",
     body: payload,
   });
@@ -90,7 +92,7 @@ export async function createCommercialPartner(payload: object) {
 
 export async function updateCommercialPartner(payload: object) {
     
-  const response = await httpClient<BaseApiResponse<object>>('admin/update-partner', "", {
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/update-partner', "", {
     method: "post",
     body: payload,
   });
@@ -99,7 +101,7 @@ export async function updateCommercialPartner(payload: object) {
 
  
 export async function deleteCommercialPartner(id: string) {
-  const response = await httpClient<BaseApiResponse<object>>(`admin/delete-partner?partnerId=${id}`, "", {
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-partner?partnerId=${id}`, "", {
     method: "delete",
   });
   return response.success;
@@ -107,34 +109,34 @@ export async function deleteCommercialPartner(id: string) {
 
 export async function enablePartnerSubaccount(query: object) {
  
-    const response = await httpClient<BaseApiResponse<object>>('admin/enable-partner-subaccount', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/enable-partner-subaccount', "", { query });
     return response.success;
 }
 
 export async function updateCommercialPartnerStatus(query: object) {
  
-    const response = await httpClient<BaseApiResponse<object>>('admin/update-partner-status', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/update-partner-status', "", { query });
     return response.success;
 }
 
 export async function disablePartnerSubaccount(query: object) {
  
-    const response = await httpClient<BaseApiResponse<object>>('admin/disable-partner-subaccount', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/disable-partner-subaccount', "", { query });
     return response.success;
 }
 
 export async function getCommercialPartnerSubscribers(partnerId: string) {
-    const response = await httpClient<BaseApiResponse<BasePaginationModel<Subscriber[]>>>(`admin/get-partner-subscribers?partnerId=${partnerId}`, "");
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Subscriber[]>>>(`admin/get-partner-subscribers?partnerId=${partnerId}`, "");
     return response.result;
 }
 
 export async function getCommercialPartnerSubscriptionSummary(partnerId: string) {
-    const response = await httpClient<BaseApiResponse<SubscriptionSummary[]>>(`admin/get-partner-subscription-summary?partnerId=${partnerId}`, "");
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<SubscriptionSummary[]>>(`admin/get-partner-subscription-summary?partnerId=${partnerId}`, "");
     return response.result;
 }
 
 export async function uploadCommercialPartnerSubscribers(formData: FormData) {
-    const response = await httpClient<BaseApiResponse<object>>('admin/upload-partner-subscribers', "", {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/upload-partner-subscribers', "", {
         method: "post",
         body: formData,
     });
@@ -142,19 +144,19 @@ export async function uploadCommercialPartnerSubscribers(formData: FormData) {
 }
 
 export async function removeCommercialPartnerSubscriber(partnerId: string,subscriberId: string) {
-    const response = await httpClient<BaseApiResponse<object>>(`admin/delete-partner-subscriber?partnerId=${partnerId}&subscriberId=${subscriberId}`, "", {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-partner-subscriber?partnerId=${partnerId}&subscriberId=${subscriberId}`, "", {
         method: "delete",
     });
     return response.success;
 }
 
 export async function updateCommercialPartnerSubscriberStatus(query: { partnerId: string, subscriberId: string, status: string }) {
-    const response = await httpClient<BaseApiResponse<object>>('admin/update-partner-subscriber-status', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/update-partner-subscriber-status', "", { query });
     return response.success;
 }
 
 export async function createPartnerSubscriber(payload: object) {
-    const response = await httpClient<BaseApiResponse<object>>('admin/create-partner-subscriber', "", {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/create-partner-subscriber', "", {
         method: "post",
         body: payload,
     });
@@ -162,7 +164,7 @@ export async function createPartnerSubscriber(payload: object) {
 }
 
 export async function assignSubscriptionToCommercialPartnerSubscribers(payload: object) {
-    const response = await httpClient<BaseApiResponse<object>>('admin/assign-partner-subscribers-plan', "", {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/assign-partner-subscribers-plan', "", {
         method: "post",
         body: payload,
     });
@@ -173,19 +175,19 @@ export async function assignSubscriptionToCommercialPartnerSubscribers(payload: 
 
 export async function getAdminRoles(query: object) {
  
-    const response = await httpClient<BaseApiResponse<BasePaginationModel<Role[]>>>('admin/get-all-roles', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Role[]>>>('admin/get-all-roles', "", { query });
     return response.result;
 }
 
 export async function getAdminPermissions() {
  
-    const response = await httpClient<BaseApiResponse<Permission[]>>('admin/get-all-permissions', "");
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<Permission[]>>('admin/get-all-permissions', "");
     return response.result;
 }
 
 export async function createAdminRole(payload: object) {
     
-  const response = await httpClient<BaseApiResponse<object>>('admin/create-role', "", {
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/create-role', "", {
     method: "post",
     body: payload,
   });
@@ -194,7 +196,7 @@ export async function createAdminRole(payload: object) {
 
 export async function updateAdminRole(payload: object, roleId: string) {
     
-  const response = await httpClient<BaseApiResponse<object>>(`admin/update-role/${roleId}`, "", {
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/update-role/${roleId}`, "", {
     method: "post",
     body: payload,
   });
@@ -203,7 +205,7 @@ export async function updateAdminRole(payload: object, roleId: string) {
 
 export async function deleteAdminRole(roleId: string) {
  
-    const response = await httpClient<BaseApiResponse<object>>(`admin/delete-role/${roleId}`, "", { method: "delete", });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-role/${roleId}`, "", { method: "delete", });
     return response.success;
 }
 
@@ -213,12 +215,12 @@ export async function deleteAdminRole(roleId: string) {
 
 export async function getAdminUsers(query: object) {
  
-    const response = await httpClient<BaseApiResponse<BasePaginationModel<AdminUser[]>>>('admin/get-all-users', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<AdminUser[]>>>('admin/get-all-users', "", { query });
     return response.result;
 }
 
 export async function getPartnerApiKeys(partnerId: string) {
-    const response = await httpClient<BaseApiResponse<CommercialPartnerApiKey[]>>(`admin/get-partner-api-keys?partnerId=${partnerId}`, "");
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<CommercialPartnerApiKey[]>>(`admin/get-partner-api-keys?partnerId=${partnerId}`, "");
     return response.result;
 }
 
@@ -238,7 +240,7 @@ export async function revokePartnerApiKey(keyId: string) {
 }
 
 export async function updatePartnerApiKey(payload: object) {
-    const response = await httpClient<BaseApiResponse<object>>('admin/update-partner-api-key', "", {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/update-partner-api-key', "", {
         method: "post",
         body: payload,
     });
@@ -246,26 +248,26 @@ export async function updatePartnerApiKey(payload: object) {
 }
 
 export async function getPartnerInvoices(query: object) {
-    const response = await httpClient<BaseApiResponse<BasePaginationModel<PartnerInvoice[]>>>('admin/get-all-partner-invoices', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<PartnerInvoice[]>>>('admin/get-all-partner-invoices', "", { query });
     return response.result;
 }
 
 export async function getPartnerInvoiceStats() {
-    const response = await httpClient<BaseApiResponse<PartnerInvoiceStat>>('admin/get-partner-invoice-stats', "");
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<PartnerInvoiceStat>>('admin/get-partner-invoice-stats', "");
     return response.result;
 }
 
 
 
 export async function markPartnerInvoiceAsPaid(invoiceId: string) {
-    const response = await httpClient<BaseApiResponse<object>>(`admin/mark-partner-invoice-paid?id=${invoiceId}`, "", {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/mark-partner-invoice-paid?id=${invoiceId}`, "", {
         method: "get",
     });
     return response.success;
 }
 
 export async function createPartnerInvoice(payload: object) {
-    const response = await httpClient<BaseApiResponse<object>>('admin/create-partner-invoice', "", {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/create-partner-invoice', "", {
         method: "post",
         body: payload,
     });
@@ -273,7 +275,7 @@ export async function createPartnerInvoice(payload: object) {
 }
 
 export async function deletePartnerInvoice(invoiceId: string) {
-    const response = await httpClient<BaseApiResponse<object>>(`admin/delete-partner-invoice?id=${invoiceId}`, "", {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-partner-invoice?id=${invoiceId}`, "", {
         method: "delete",
     });
     return response.success;
