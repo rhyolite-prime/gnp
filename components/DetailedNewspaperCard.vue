@@ -75,7 +75,7 @@ const loadImageAsBlob = async (fileId: string) => {
 
 
 onMounted(() => {
-  loadImageAsBlob(props.newspaper?.thumbnailId as string)
+  loadImageAsBlob(props.newspaper?.id as string)
 })
 
 </script>

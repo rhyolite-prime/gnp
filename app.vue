@@ -4,7 +4,7 @@
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-    <PwaInstall v-if="shouldShowPwaInstall" />
+    <PwaInstall v-if="showPwaInstall" />
     <NotificationToast />
   </div>
 </template>
@@ -13,12 +13,16 @@
 import { useWebSocket } from '@vueuse/core'
 import { useNotificationStore } from '~/stores/notification'
 
+const showPwaInstall = ref(true);
 const notificationStore = useNotificationStore()
 const { data } = useWebSocket('ws://localhost:5034/notifications', {
   autoReconnect: true,
   onMessage: (_, event) => {
     try {
       const payload = JSON.parse(event.data)
+
+      console.log('payload=>', payload)
+
       // Check if it's a notification payload
       if (payload.subject && payload.messageBody && payload.notificationId) {
         notificationStore.addNotification(payload)

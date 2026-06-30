@@ -19,6 +19,15 @@ export default defineNuxtConfig({
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap' },
         { rel: 'icon', href: '/favicon-mag.png', type: 'image/png' },
         { rel: 'apple-touch-icon', href: '/pwa-icons/apple-touch-icon-180x180.png' }
+      ],
+      script: [
+         
+        {
+        async: true,
+        innerHTML: `(function(c,l,a,r,i,t,y){         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);     })(window, document, "clarity", "script", "xdvq8zsvi1");`,
+        type: 'text/javascript',
+        },
+         
       ]
     }
   },

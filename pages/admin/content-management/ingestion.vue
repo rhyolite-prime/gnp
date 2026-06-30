@@ -352,7 +352,7 @@
 
           <!-- Actions -->
           <div class="flex items-center justify-end gap-x-6">
-            <button type="button" class="text-sm font-semibold leading-6 text-gray-900">Cancel</button>
+            <button type="button" @click="cancel" class="text-sm font-semibold leading-6 text-gray-900">Cancel</button>
             <button
               type="button"
               @click="savePublication"
@@ -415,6 +415,7 @@ import { isEmpty, debounce } from "lodash-es";
 import type { Publication } from "~/models";
 import { Option } from 'lucide-vue-next';
 const { $toast } = useNuxtApp();
+const router = useRouter()
 
 definePageMeta({
   layout: 'admin'
@@ -546,6 +547,12 @@ const removeCategory = (index: number) => {
   form.value.categories.splice(index, 1)
 }
 
+
+const cancel = () => {
+  router.back();
+}
+
+
 const savePublication = async () => {
   isProcessingIngestion.value = true;
 
@@ -599,7 +606,7 @@ const savePublication = async () => {
 
   try {
     // Upload file to storage service
-    //const uploadResult = await uploadFileAsset(form.value.file);
+    const uploadResult = await uploadFileAsset(form.value.file);
 
     // Create newspaper/publication
     await createNewsPaper({
