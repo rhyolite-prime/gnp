@@ -23,49 +23,78 @@
         <div class="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl p-2 max-w-3xl mx-auto border border-white/20">
           <div class="bg-white rounded-xl p-4 md:p-6 text-left">
             <div class="flex items-center space-x-8 border-b border-gray-100 mb-6 px-2">
-              <button class="pb-3 text-[#e32932] border-b-2 border-[#e32932] font-semibold text-sm">
+              <button 
+                @click="activeTab = 'search'"
+                :class="activeTab === 'search' ? 'text-[#e32932] border-[#e32932]' : 'text-gray-400 border-transparent hover:text-gray-700'"
+                class="pb-3 border-b-2 font-semibold text-sm transition-colors">
                 Advanced Search
               </button>
-              <button class="pb-3 text-gray-400 font-medium text-sm hover:text-gray-700 transition-colors">
+              <button 
+                @click="activeTab = 'collections'"
+                :class="activeTab === 'collections' ? 'text-[#e32932] border-[#e32932]' : 'text-gray-400 border-transparent hover:text-gray-700'"
+                class="pb-3 border-b-2 font-semibold text-sm transition-colors">
                 Browse Collections
               </button>
             </div>
             
-            <form @submit.prevent="handleSearch" class="flex flex-col md:flex-row gap-4 px-2">
-              <div class="flex-1 relative group">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon class="h-5 w-5 text-gray-400 group-focus-within:text-[#e32932] transition-colors" />
+            <div v-if="activeTab === 'search'">
+              <form @submit.prevent="handleSearch" class="flex flex-col md:flex-row gap-4 px-2">
+                <div class="flex-1 relative group">
+                  <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <MagnifyingGlassIcon class="h-5 w-5 text-gray-400 group-focus-within:text-[#e32932] transition-colors" />
+                  </div>
+                  <input 
+                    type="text" 
+                    v-model="searchQuery" 
+                    placeholder="What are you looking for?" 
+                    class="w-full pl-11 pr-4 py-3.5 rounded-lg border-gray-200 bg-gray-50 focus:bg-white shadow-inner focus:border-[#e32932] focus:ring-1 focus:ring-[#e32932] transition-all" 
+                  />
                 </div>
-                <input 
-                  type="text" 
-                  v-model="searchQuery" 
-                  placeholder="What are you looking for?" 
-                  class="w-full pl-11 pr-4 py-3.5 rounded-lg border-gray-200 bg-gray-50 focus:bg-white shadow-inner focus:border-[#e32932] focus:ring-1 focus:ring-[#e32932] transition-all" 
-                />
+                <div class="w-full md:w-40 relative">
+                  <label class="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">From</label>
+                  <input 
+                    type="date" 
+                    v-model="dateFrom" 
+                    class="w-full py-3.5 px-4 rounded-lg border-gray-200 bg-gray-50 focus:bg-white focus:border-[#e32932] focus:ring-1 focus:ring-[#e32932] text-sm text-gray-700 transition-all" 
+                  />
+                </div>
+                <div class="w-full md:w-40 relative">
+                  <label class="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">To</label>
+                  <input 
+                    type="date" 
+                    v-model="dateTo" 
+                    class="w-full py-3.5 px-4 rounded-lg border-gray-200 bg-gray-50 focus:bg-white focus:border-[#e32932] focus:ring-1 focus:ring-[#e32932] text-sm text-gray-700 transition-all" 
+                  />
+                </div>
+                <button 
+                  type="submit" 
+                  class="bg-[#e32932] hover:bg-red-700 text-white px-8 py-3.5 rounded-lg font-bold shadow-lg shadow-red-500/30 transition-all hover:shadow-red-500/50 flex items-center justify-center whitespace-nowrap"
+                >
+                  Search Now
+                </button>
+              </form>
+            </div>
+            
+            <div v-else-if="activeTab === 'collections'" class="px-2 max-h-[50vh] overflow-y-auto pr-2 pb-2">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div v-for="decade in collectionsData" :key="decade.label" class="bg-gray-50 rounded-xl p-5 border border-gray-100 hover:border-red-200 transition-colors group">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 group-hover:text-[#e32932] transition-colors flex items-center gap-2">
+                       <FolderIcon class="w-5 h-5 text-gray-400 group-hover:text-[#e32932] transition-colors" />
+                       {{ decade.label }}
+                    </h3>
+                    <div class="grid grid-cols-4 gap-2">
+                       <button 
+                         v-for="year in decade.years" 
+                         :key="year" 
+                         @click="browseYear(year)"
+                         class="py-2 text-sm font-medium text-gray-600 bg-white rounded-lg border border-gray-200 hover:bg-[#e32932] hover:text-white hover:border-[#e32932] transition-all shadow-sm"
+                       >
+                         {{ year }}
+                       </button>
+                    </div>
+                 </div>
               </div>
-              <div class="w-full md:w-40 relative">
-                <label class="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">From</label>
-                <input 
-                  type="date" 
-                  v-model="dateFrom" 
-                  class="w-full py-3.5 px-4 rounded-lg border-gray-200 bg-gray-50 focus:bg-white focus:border-[#e32932] focus:ring-1 focus:ring-[#e32932] text-sm text-gray-700 transition-all" 
-                />
-              </div>
-              <div class="w-full md:w-40 relative">
-                <label class="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">To</label>
-                <input 
-                  type="date" 
-                  v-model="dateTo" 
-                  class="w-full py-3.5 px-4 rounded-lg border-gray-200 bg-gray-50 focus:bg-white focus:border-[#e32932] focus:ring-1 focus:ring-[#e32932] text-sm text-gray-700 transition-all" 
-                />
-              </div>
-              <button 
-                type="submit" 
-                class="bg-[#e32932] hover:bg-red-700 text-white px-8 py-3.5 rounded-lg font-bold shadow-lg shadow-red-500/30 transition-all hover:shadow-red-500/50 flex items-center justify-center whitespace-nowrap"
-              >
-                Search Now
-              </button>
-            </form>
+            </div>
           </div>
         </div>
       </div>
@@ -398,11 +427,31 @@ import {
   ArrowPathIcon,
   HeartIcon,
   BookmarkIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  FolderIcon
 } from '@heroicons/vue/24/outline'
 
 // State
+const activeTab = useState<'search' | 'collections'>('archive-activeTab', () => 'search')
 const viewMode = useState<'grid' | 'list'>('archive-viewMode', () => 'grid')
+
+const collectionsData = computed(() => {
+  const decades = []
+  decades.push({ label: '1950s', years: Array.from({length: 7}, (_, i) => 1953 + i) })
+  decades.push({ label: '1960s', years: Array.from({length: 10}, (_, i) => 1960 + i) })
+  decades.push({ label: '1970s', years: Array.from({length: 10}, (_, i) => 1970 + i) })
+  decades.push({ label: '1980s', years: Array.from({length: 10}, (_, i) => 1980 + i) })
+  decades.push({ label: '1990s', years: Array.from({length: 10}, (_, i) => 1990 + i) })
+  decades.push({ label: '2000s', years: Array.from({length: 4}, (_, i) => 2000 + i) })
+  return decades
+})
+
+const browseYear = (year: number) => {
+  searchQuery.value = ''
+  dateFrom.value = `${year}-01-01`
+  dateTo.value = `${year}-12-31`
+  handleSearch()
+}
 const isSearching = useState('archive-isSearching', () => false)
 const searchQuery = useState('archive-searchQuery', () => 'nkrumah')
 const dateFrom = useState('archive-dateFrom', () => '1970-01-29')

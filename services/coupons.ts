@@ -3,13 +3,13 @@ import type { Coupon, BaseApiResponse, BasePaginationModel } from "~/models";
  
 export async function getCoupons(query: object) {
  
-    const response = await httpClient<BaseApiResponse<BasePaginationModel<Coupon[]>>>('admin/get-all-coupons', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Coupon[]>>>('admin/get-all-coupons', "", { query });
     return response.result;
 }
 
 export async function createCoupon(payload: object) {
     
-  const response = await httpClient<BaseApiResponse<object>>('admin/create-coupon', "", {
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/create-coupon', "", {
     method: "post",
     body: payload,
   });
@@ -18,7 +18,7 @@ export async function createCoupon(payload: object) {
 
 export async function updateCoupon(payload: object) {
     
-  const response = await httpClient<BaseApiResponse<object>>('admin/update-coupon', "", {
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/update-coupon', "", {
     method: "post",
     body: payload,
   });
@@ -27,6 +27,6 @@ export async function updateCoupon(payload: object) {
 
 export async function deleteCoupon(query: object) {
  
-    const response = await httpClient<BaseApiResponse<object>>('admin/delete-coupon', "", { query, method: "delete", });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/delete-coupon', "", { query, method: "delete", });
     return response.success;
 }

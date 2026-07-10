@@ -163,7 +163,9 @@ export interface PartnerSubscriber {
 }
 
 
-
+export interface NewsPaperIngestionResponse {
+    id: string;
+}
 
 export interface NewsPaper {
     documentId: string;

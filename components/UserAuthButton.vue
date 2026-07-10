@@ -166,7 +166,7 @@ const handleSignOut = async () => {
   authStore.clearUser();
 
   const gnpUserIdentityCookie = useCookie('gnp-user-identity');
-  gnpUserIdentityCookie.value = null;
+ 
   
   router.push('/newspapers');
 

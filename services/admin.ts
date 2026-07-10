@@ -1,4 +1,4 @@
-import type { NewsPaper, Payment, CommercialPartner,AdminUser, Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, GnpDocumentResponseModel, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
+import type { NewsPaper, Payment, CommercialPartner,AdminUser, Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
 
 export async function getNewsPaperPublications(query: object) {
  
@@ -14,7 +14,7 @@ export async function getArchivedNewsPaperPublications(query: object) {
 }
 
 
-export async function uploadFileAsset(publicationFile: File) {
+export async function uploadFileAsset(publicationFile: File, id: string) {
   
   const formData = new FormData();
   
@@ -22,7 +22,7 @@ export async function uploadFileAsset(publicationFile: File) {
   
   formData.append("file", publicationFile);
 
-  const response = await httpClient<{ status: string, fileName: string }>("g3/upload-file", "", {
+  const response = await gnpAdminUserHttpClient<{ status: string, fileName: string }>(`g3/upload-file/${id}`, "", {
     method: "post",
     body: formData,
   });
@@ -114,7 +114,7 @@ export async function getNewsPaperThumbnail(fileId: string) {
 
 export async function createNewsPaper(payload: object) {
     
-  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/ingest-newspaper', "", {
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<NewsPaperIngestionResponse>>('admin/ingest-newspaper', "", {
     method: "post",
     body: payload,
   });

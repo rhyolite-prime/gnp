@@ -605,11 +605,10 @@ const savePublication = async () => {
     .replace(/(^-|-$)/g, '');
 
   try {
-    // Upload file to storage service
-    const uploadResult = await uploadFileAsset(form.value.file);
+    
 
     // Create newspaper/publication
-    await createNewsPaper({
+    let newspaperIngestionResult = await createNewsPaper({
       ...form.value,
       title,
       slug,
@@ -617,8 +616,16 @@ const savePublication = async () => {
       thumbnailId: "--",
     });
 
-    $toast.success('Publication ingested successfully.');
-    await navigateTo('/admin/content-management/newspapers/');
+    
+
+    // Upload file to storage service
+    const uploadResult = await uploadFileAsset(form.value.file, newspaperIngestionResult.id);
+    
+    if (uploadResult && uploadResult.status == "success") {
+      $toast.success('Publication ingested successfully.');
+      await navigateTo('/admin/content-management/newspapers/');
+    }
+    
   } catch (error) {
     $toast.error('Ingestion failed');
   } finally {
