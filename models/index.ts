@@ -177,9 +177,13 @@ export interface NewsPaper {
     id: string;
     price: string;
     publicationDate: string;
+    publishedDate: string;
     slug: string;
+    storageService: string;
     thumbnailId: string;
     featuredStories: FeaturedStory[]
+    tags: []
+    categories: []
     title: string;
     isPublished: boolean;
     createdAt: string;
@@ -187,6 +191,8 @@ export interface NewsPaper {
     sales: number;
     uniqueId: string;
     isFree: boolean;
+    isPopular: boolean;
+    isArchived: boolean;
     
 }
 

@@ -56,6 +56,17 @@ const getDB = (): Promise<IDBDatabase | null> => {
     });
 };
 
+const deleteBlobFromDB = async (id: string) => {
+    const db = await getDB();
+    if (!db) return;
+    try {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).delete(id);
+    } catch (e) {
+        console.error("IDB Delete Error", e);
+    }
+};
+
 const saveBlobToDB = async (id: string, blob: Blob) => {
     const db = await getDB();
     if (!db) return;
@@ -82,7 +93,15 @@ const getBlobFromDB = async (id: string): Promise<Blob | null> => {
     });
 };
 
-export async function getNewsPaperThumbnail(fileId: string) {
+export async function getNewsPaperThumbnail(fileId: string, forceReload: boolean = false) {
+    if (forceReload) {
+        if (blobCache[fileId]) {
+            URL.revokeObjectURL(blobCache[fileId]);
+            delete blobCache[fileId];
+        }
+        await deleteBlobFromDB(fileId);
+    }
+
     // 1. Check in-memory fast cache
     if (blobCache[fileId]) {
         return blobCache[fileId];
@@ -134,6 +153,18 @@ export async function unPublishNewspaperPublication(query: object) {
     return response.success;
 }
 
+export async function getAdminNewsPaperDetails(id: string) {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<NewsPaper>>(`admin/get-newspaper-details/${id}`, "");
+    return response.result;
+}
+
+export async function updateNewsPaper(payload: object, id: string) {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/update-newspaper/${id}`, "", {
+        method: "put",
+        body: payload,
+    });
+    return response.success;
+}
 
  
 export async function getPayments(query: object) {
@@ -361,4 +392,11 @@ export async function deletePartnerInvoice(invoiceId: string) {
         method: "delete",
     });
     return response.success;
+}
+
+export async function deleteFileAsset(id: string, bucketName: string) {
+    const response = await gnpAdminUserHttpClient<{ status: string }>(`g3/delete-file/${id}?bucketName=${bucketName}`, "", {
+        method: "delete",
+    });
+    return response;
 }

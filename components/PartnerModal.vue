@@ -185,7 +185,7 @@
               <div>
                 <label class="block text-sm font-medium text-gray-700">Calculated End Date</label>
                 <div class="mt-1 block w-full py-2 px-3 bg-gray-100 rounded-md border border-gray-200 text-sm text-gray-600">
-                  {{ formattedEndDate }}
+                  {{ standardDateFormat(formattedEndDate) }}
                 </div>
               </div>
             </div>
