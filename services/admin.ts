@@ -1,4 +1,4 @@
-import type { NewsPaper, Payment, CommercialPartner,AdminUser, Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
+import type { NewsPaper, Payment, CommercialPartner,AdminUser, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
 
 export async function getNewsPaperPublications(query: object) {
  
@@ -146,6 +146,11 @@ export async function publishNewspaperPublication(query: object) {
     return response.success;
 }
 
+export async function getPartnerSubscriberInfo(partnerId: string, userId: string) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<PartnerSubscriberSubscriptionSummary>>(`admin/get-partner-subscriber-info/${partnerId}/${userId}`, "");
+    return response.result;
+}
 
 export async function unPublishNewspaperPublication(query: object) {
  

@@ -616,8 +616,6 @@ const savePublication = async () => {
       thumbnailId: "--",
     });
 
-    
-
     // Upload file to storage service
     const uploadResult = await uploadFileAsset(form.value.file, newspaperIngestionResult.id);
     

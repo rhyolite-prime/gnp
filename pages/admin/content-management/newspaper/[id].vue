@@ -698,6 +698,9 @@ const saveChanges = async () => {
     } else {
       $toast.error('Failed to update newspaper.');
     }
+
+    await navigateTo('/admin/content-management/newspapers/');
+    
   } catch (error) {
     $toast.error('An error occurred while saving.');
   } finally {

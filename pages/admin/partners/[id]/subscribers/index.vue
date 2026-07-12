@@ -182,6 +182,12 @@
                                     <div class="py-1">
                                         <button 
                                             class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                                            @click.prevent="openDetailModal(sub)"
+                                        >
+                                            View Details
+                                        </button>
+                                        <button 
+                                            class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
                                             @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Active')"
                                         >
                                             Activate
@@ -259,6 +265,14 @@
       @cancel="showConfirmModal = false"
     />
 
+    <!-- Subscriber Detail Modal -->
+    <AdminSubscriberSubscriptionModal
+      :show="showDetailModal"
+      :subscriber="selectedSubscriber"
+      :partner-id="partnerId"
+      @close="closeDetailModal"
+    />
+
   </div>
 </template>
 
@@ -313,6 +327,9 @@ const subscriberIdToRemove = ref<string | null>(null);
 const showConfirmModal = ref(false);
 const activeDropdownId = ref<string | null>(null);
 
+const showDetailModal = ref(false);
+const selectedSubscriber = ref<Subscriber | null>(null);
+
 const allSelected = computed(() => {
     return subscriberList.value.length > 0 && selectedSubscriberIds.value.size === subscriberList.value.length;
 });
@@ -348,6 +365,19 @@ const toggleDropdown = (id: string) => {
 
 const closeDropdown = () => {
     activeDropdownId.value = null;
+};
+
+const openDetailModal = (subscriber: Subscriber) => {
+    selectedSubscriber.value = subscriber;
+    showDetailModal.value = true;
+    closeDropdown();
+};
+
+const closeDetailModal = () => {
+    showDetailModal.value = false;
+    setTimeout(() => {
+        selectedSubscriber.value = null;
+    }, 300);
 };
 
 const formatDate = (date: string) => {
