@@ -253,10 +253,10 @@ export async function getCommercialPartnerSubscriptionSummary(partnerId: string)
     return response.result;
 }
 
-export async function uploadCommercialPartnerSubscribers(formData: FormData) {
-    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/upload-partner-subscribers', "", {
+export async function uploadCommercialPartnerSubscribers(payload: object, partnerId: string ) {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/upload-partner-subscribers/${partnerId}`, "", {
         method: "post",
-        body: formData,
+        body: payload,
     });
     return response.success;
 }

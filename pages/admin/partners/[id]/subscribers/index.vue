@@ -279,6 +279,7 @@
 <script setup lang="ts">
 import { ArrowLeftIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, CheckCircleIcon, EllipsisVerticalIcon } from '@heroicons/vue/24/outline';
 import dayjs from 'dayjs';
+import * as XLSX from 'xlsx';
 import type { CommercialPartner, Subscriber, SubscriptionSummary } from "~/models";
 
 definePageMeta({
@@ -495,63 +496,105 @@ const handleBulkAssign = async (data: { planId: string; billingCycle: string; pl
 
 const handleFileUpload = async (file: File) => {
     const fileName = file.name.toLowerCase();
-    
+    let extractedSubscriberData = [];
     // Check extension
     if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
         $toast.error('Invalid file type. Please upload CSV or Excel.');
         return;
     }
 
-    // CSV Pre-validation for Quota
+    isUploading.value = true;
+    
     if (fileName.endsWith('.csv')) {
          try {
              const text = await file.text();
-             // Simple basic CSV parsing: split lines, filter empty. 
-             // IMPORTANT: This assumes 1 email per line or standard structure. 
-             // We assume the file has a header.
              const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
              const count = rows.length > 0 ? rows.length - 1 : 0; // Exclude header
              
+             if (count > 0) {
+                 const headers = rows[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+                 const jsonData = rows.slice(1).map(row => {
+                     const values = row.split(',');
+                     const obj: any = {};
+                     headers.forEach((header, index) => {
+                         let val = values[index] ? values[index].trim() : '';
+                         if (val.startsWith('"') && val.endsWith('"')) {
+                             val = val.slice(1, -1);
+                         }
+                         obj[header] = val;
+                     });
+                     return obj;
+                 });
+                  
+                 extractedSubscriberData = jsonData;
+             }
+             
              if (count === 0) {
                  $toast.error('The uploaded file appears to be empty or only contains a header.');
+                 isUploading.value = false;
                  return;
              }
 
              if ((parterDetails.value?.remainingQuota || 0) < count) {
                  $toast.error(`Upload aborted. You have ${parterDetails.value?.remainingQuota || 0} slots remaining but the file contains ${count} subscribers.`);
+                 isUploading.value = false;
                  return;
              }
          } catch (e) {
              console.error('Error parsing CSV', e);
+             return;
          }
-    } 
-    // Excel validation is skipped client-side due to missing libraries, strictly handled server-side or we rely on user trust/server rejection.
-    
-    await uploadFile(file);
-};
+    }
 
-const uploadFile = async (file: File) => {
-    isUploading.value = true;
-    uploadProgress.value = 0;
+    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls'))
+    {
+
+         try {
+             const buffer = await file.arrayBuffer();
+             const workbook = XLSX.read(buffer, { type: 'array' });
+             const firstSheetName = workbook.SheetNames[0];
+             const worksheet = workbook.Sheets[firstSheetName];
+             const jsonData = XLSX.utils.sheet_to_json(worksheet);
+             extractedSubscriberData = jsonData;
+             const count = jsonData.length;
+             
+             if (count === 0) {
+                 $toast.error('The uploaded file appears to be empty or only contains a header.');
+                 isUploading.value = false;
+                 return;
+             }
+
+             if ((parterDetails.value?.remainingQuota || 0) < count) {
+                 $toast.error(`Upload aborted. You have ${parterDetails.value?.remainingQuota || 0} slots remaining but the file contains ${count} subscribers.`);
+                 isUploading.value = false;
+                 return;
+             }
+         } catch (e) {
+             console.error('Error parsing Excel file', e);
+             isUploading.value = false;
+             return;
+         }
+    }
     
+    uploadProgress.value = 0;
+    const totalCount = extractedSubscriberData.length;
+    // Simulate progress based on count (approx 50ms per subscriber)
+    const estimatedTimeMs = Math.max(1000, totalCount * 50); 
+    const updateIntervalMs = 200;
+    const progressStep = (updateIntervalMs / estimatedTimeMs) * 90;
+
+    const progressInterval = setInterval(() => {
+        if (uploadProgress.value < 90) {
+            uploadProgress.value = Math.min(90, uploadProgress.value + progressStep);
+        }
+    }, updateIntervalMs);
+
     try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('partnerId', partnerId);
-        
-        // Simulate progress for better UX
-        const progressInterval = setInterval(() => {
-            if (uploadProgress.value < 90) {
-                uploadProgress.value += 10;
-            }
-        }, 200);
-        
-        // Call service
-        const success = await uploadCommercialPartnerSubscribers(formData);
+        const success = await uploadCommercialPartnerSubscribers(extractedSubscriberData, partnerId);
         
         clearInterval(progressInterval);
         uploadProgress.value = 100;
-        
+
         if (success) {
             $toast.success('Subscribers uploaded successfully');
             await fetchSubscribers();
@@ -560,20 +603,22 @@ const uploadFile = async (file: File) => {
         } else {
              $toast.error('Failed to upload subscribers. Please check the file format and try again.');
         }
-
     } catch (error: any) {
-        // If server returns quota error
+        clearInterval(progressInterval);
         if (error.response?.data?.message?.includes('Quota')) {
              $toast.error(error.response.data.message);
         } else {
              $toast.error('An error occurred during upload.');
         }
-        console.error(error);
+        console.error('Upload Error:', error);
     } finally {
         isUploading.value = false;
-        uploadProgress.value = 0;
+        setTimeout(() => {
+            uploadProgress.value = 0;
+        }, 1000);
     }
 };
+
 
 const fetchSubscribers = async () => {
     isLoading.value = true;
