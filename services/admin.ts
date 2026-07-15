@@ -261,6 +261,14 @@ export async function uploadCommercialPartnerSubscribers(payload: object, partne
     return response.success;
 }
 
+export async function updateCommercialPartnerQuota(payload: object, partnerId: string ) {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/update-partner-quota/${partnerId}`, "", {
+        method: "post",
+        body: payload,
+    });
+    return response.success;
+}
+
 export async function removeCommercialPartnerSubscriber(partnerId: string,subscriberId: string) {
     const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-partner-subscriber?partnerId=${partnerId}&subscriberId=${subscriberId}`, "", {
         method: "delete",
