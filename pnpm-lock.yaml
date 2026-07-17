@@ -53,6 +53,9 @@ importers:
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
+      v-money3:
+        specifier: ^3.26.1
+        version: 3.26.1(vue@3.5.20(typescript@5.9.2))
       vue-countup-v3:
         specifier: ^1.4.2
         version: 1.4.2(vue@3.5.20(typescript@5.9.2))
@@ -5158,6 +5161,11 @@ packages:
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
+
+  v-money3@3.26.1:
+    resolution: {integrity: sha512-559GLqSBiurZwwzn32rPjcPm9rsOuheMF/XpAzPsNK/gucYRvFJpU2ow/RZdyR1Jn3U+rwE/6RdntaIyOuJHcw==}
+    peerDependencies:
+      vue: '>= 3.2.0'
 
   validate-npm-package-license@3.0.4:
     resolution: {integrity: sha512-DpKm2Ui/xN7/HQKCtpZxoRWBhZ9Z0kqtygG8XCgNQ8ZlDnxuQmWhj566j8fN4Cu3/JmbhsDo7fcAJq4s9h27Ew==}
@@ -11236,6 +11244,10 @@ snapshots:
   uuid@11.1.0: {}
 
   uuid@9.0.1: {}
+
+  v-money3@3.26.1(vue@3.5.20(typescript@5.9.2)):
+    dependencies:
+      vue: 3.5.20(typescript@5.9.2)
 
   validate-npm-package-license@3.0.4:
     dependencies:

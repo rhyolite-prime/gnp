@@ -26,6 +26,7 @@
     "nuxt": "^3.13.0",
     "pinia": "^3.0.3",
     "uuid": "^9.0.1",
+    "v-money3": "^3.26.1",
     "vue-countup-v3": "^1.4.2",
     "vue-ganttastic": "^0.9.34",
     "vue-multiselect": "3.0.0-beta.3",

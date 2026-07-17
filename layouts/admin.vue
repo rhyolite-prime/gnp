@@ -232,7 +232,7 @@ const navigation = [
     ],
   },
 
-
+  { name: 'Publications', href: '/admin/publications', icon: TicketIcon },
   { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon },
   { name: 'Payments', href: '/admin/payments', icon: BanknotesIcon },
   { name: 'Campaigns', href: '/admin/campaigns', icon: MegaphoneIcon },

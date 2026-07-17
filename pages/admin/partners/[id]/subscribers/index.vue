@@ -188,8 +188,7 @@
                                         </button>
                                         <button 
                                             class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                                            @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Active')"
-                                        >
+                                            @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Active')">
                                             Activate
                                         </button>
                                         <button 
@@ -198,12 +197,12 @@
                                         >
                                             Deactivate
                                         </button>
-                                        <button 
+                                        <!-- <button 
                                             class="block w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left"
                                             @click.prevent="confirmRemoveSubscriber(sub.id)"
                                         >
                                             Delete
-                                        </button>
+                                        </button> -->
                                     </div>
                                 </div>
                             </div>
@@ -279,6 +278,7 @@
 <script setup lang="ts">
 import { ArrowLeftIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, CheckCircleIcon, EllipsisVerticalIcon } from '@heroicons/vue/24/outline';
 import dayjs from 'dayjs';
+import { isEmpty, debounce } from "lodash-es";
 import * as XLSX from 'xlsx';
 import type { CommercialPartner, Subscriber, SubscriptionSummary } from "~/models";
 
@@ -294,7 +294,7 @@ const filters = reactive({
   partnerId: route.params.id as string,
   query: '',
   pageNo: 1,
-  pageSize: 600,
+  pageSize: 50,
 
 });
 
@@ -624,7 +624,7 @@ const fetchSubscribers = async () => {
     isLoading.value = true;
     try {
 
-        const result = await getCommercialPartnerSubscribers(partnerId);
+        const result = await getCommercialPartnerSubscribers(filters);
 
         selectedSubscriberIds.value.clear();
          
@@ -728,6 +728,15 @@ const handleUpdateSubscriberStatus = async (subscriberId: string, status: string
         closeDropdown();
     }
 };
+
+
+const debouncedSearch = debounce(() => {
+  filters.pageNo = 1;
+  fetchSubscribers();
+}, 500);
+
+watch(() => filters.query, debouncedSearch);
+
 
 onMounted( async () => {
     if (partnerId) {

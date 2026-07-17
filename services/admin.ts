@@ -243,8 +243,8 @@ export async function disablePartnerSubaccount(query: object) {
     return response.success;
 }
 
-export async function getCommercialPartnerSubscribers(partnerId: string) {
-    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Subscriber[]>>>(`admin/get-partner-subscribers?partnerId=${partnerId}`, "");
+export async function getCommercialPartnerSubscribers(query: object) {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Subscriber[]>>>('admin/get-partner-subscribers', "", { query });
     return response.result;
 }
 

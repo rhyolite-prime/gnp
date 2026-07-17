@@ -216,9 +216,9 @@
                          <button @click.stop="editSubscriber(subscriber)" class="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors" title="Edit">
                            <PencilSquareIcon class="w-5 h-5" />
                          </button>
-                         <button @click.stop="delPartnerSubscriber(subscriber)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
+                         <!-- <button @click.stop="delPartnerSubscriber(subscriber)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
                            <TrashIcon class="w-5 h-5" />
-                         </button>
+                         </button> -->
                        </div>
                      </td>
                    </tr>
