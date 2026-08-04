@@ -193,6 +193,12 @@
                                         </button>
                                         <button 
                                             class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                                            @click.prevent="resetSubscriberPassword(sub)"
+                                        >
+                                            Reset Password
+                                        </button>
+                                        <button 
+                                            class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
                                             @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Inactive')"
                                         >
                                             Deactivate
@@ -279,7 +285,6 @@
 import { ArrowLeftIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, CheckCircleIcon, EllipsisVerticalIcon } from '@heroicons/vue/24/outline';
 import dayjs from 'dayjs';
 import { isEmpty, debounce } from "lodash-es";
-import * as XLSX from 'xlsx';
 import type { CommercialPartner, Subscriber, SubscriptionSummary } from "~/models";
 
 definePageMeta({
@@ -550,11 +555,7 @@ const handleFileUpload = async (file: File) => {
     {
 
          try {
-             const buffer = await file.arrayBuffer();
-             const workbook = XLSX.read(buffer, { type: 'array' });
-             const firstSheetName = workbook.SheetNames[0];
-             const worksheet = workbook.Sheets[firstSheetName];
-             const jsonData = XLSX.utils.sheet_to_json(worksheet);
+             const jsonData = await readExcelFile(file);
              extractedSubscriberData = jsonData;
              const count = jsonData.length;
              
@@ -706,6 +707,27 @@ const handleRemoveSubscriber = async () => {
         subscriberIdToRemove.value = null;
     }
 }
+
+const resetSubscriberPassword = async (subscriberId: string, status: string) => {
+    try {
+        const success = await resetCommercialPartnerSubscriberPassword({
+            partnerId,
+            subscriberId
+        });
+        
+        if (success) {
+            $toast.success('Subscriber Password Reset Successfully.');
+            await fetchSubscribers();
+        } else {
+            $toast.error('Failed to reset subscriber password');
+        }
+    } catch (error) {
+         
+        $toast.error('An error occurred while reseting subsriber password');
+    } finally {
+        closeDropdown();
+    }
+};
 
 const handleUpdateSubscriberStatus = async (subscriberId: string, status: string) => {
     try {

@@ -157,7 +157,6 @@ import {
   CloudArrowUpIcon,
   DocumentTextIcon
 } from '@heroicons/vue/24/outline'
-import * as XLSX from 'xlsx'
 
 const props = defineProps({
   uploading: {
@@ -179,7 +178,7 @@ const emit = defineEmits(['close', 'upload'])
 const selectedFile = ref<File | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 
-const downloadTemplate = (type: 'csv' | 'excel') => {
+const downloadTemplate = async (type: 'csv' | 'excel') => {
   if (type === 'csv') {
     // Create CSV template
     const csvContent = 'FirstName,LastName,Email,PhoneNumber\nKwabena,Imhotep,kwabena.imhotep@graphic.com.gh,+233244256444\nFrancis,Odame,francis.odame@raphic.com.gh,+233242573763'
@@ -199,10 +198,7 @@ const downloadTemplate = (type: 'csv' | 'excel') => {
       ['Kwabena', 'Imhotep', 'kwabena.imhotep@graphic.com.gh', '+233244256444'],
       ['Francis', 'Odame', 'francis.odame@raphic.com.gh', '+233242573763']
     ]
-    const worksheet = XLSX.utils.aoa_to_sheet(data)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Template')
-    XLSX.writeFile(workbook, 'subscriber_template.xlsx')
+    downloadExcelTemplate(data, 'subscriber_template.xlsx')
   }
 }
 
