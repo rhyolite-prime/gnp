@@ -159,8 +159,7 @@
                                 :class="{
                                   'bg-green-50 text-green-700 ring-green-600/20': sub.status === 'Active' || sub.status === 'active',
                                   'bg-red-50 text-red-700 ring-red-600/20': sub.status === 'Inactive' || sub.status === 'inactive'
-                                }"
-                             >
+                                }">
                                 {{ sub.status || 'Active' }}
                              </span>
                          </td>
@@ -193,7 +192,7 @@
                                         </button>
                                         <button 
                                             class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                                            @click.prevent="resetSubscriberPassword(sub)"
+                                            @click.prevent="resetSubscriberPassword(sub.partnerId, sub.id)"
                                         >
                                             Reset Password
                                         </button>
@@ -299,7 +298,7 @@ const filters = reactive({
   partnerId: route.params.id as string,
   query: '',
   pageNo: 1,
-  pageSize: 50,
+  pageSize: 30,
 
 });
 
@@ -708,12 +707,13 @@ const handleRemoveSubscriber = async () => {
     }
 }
 
-const resetSubscriberPassword = async (subscriberId: string, status: string) => {
+const resetSubscriberPassword = async (partnerId: string,subscriberId: string ) => {
+
+    console.log('partnerId=>', partnerId)
+    console.log('subscriberId=>', subscriberId)
+
     try {
-        const success = await resetCommercialPartnerSubscriberPassword({
-            partnerId,
-            subscriberId
-        });
+        const success = await resetCommercialPartnerSubscriberPassword(partnerId,subscriberId);
         
         if (success) {
             $toast.success('Subscriber Password Reset Successfully.');

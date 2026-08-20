@@ -117,9 +117,17 @@ const publicationList = ref<Publication[]>([]);
 
 const getAllPublications = async () => {
 
+  try {
+
     let result = await getPublications({pageNo: 1, pageSize: 100});
 
     publicationList.value = result.data;
+    
+  } catch {
+    console.log('error fetching publications')
+  }
+
+    
  
 }
 
@@ -160,7 +168,7 @@ const getNewspaperByDate = async () => {
 
 onMounted( async() => {
 
-  await getAllPublications();
+  //await getAllPublications();
 
   var response = await getRedactedNewsPaperDetailsViaUniqueId(newspaperId);
   if (!response.success)

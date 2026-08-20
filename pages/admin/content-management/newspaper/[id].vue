@@ -412,7 +412,6 @@ import { Switch, Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@
 import VueMultiselect from 'vue-multiselect';
 import 'vue-multiselect/dist/vue-multiselect.css';
 import { getAdminNewsPaperDetails, updateNewsPaper, getNewsPaperThumbnail, uploadFileAsset, deleteFileAsset } from '~/services/admin';
-import { getPublications } from '~/services/publications';
 import type { NewsPaper, Publication } from '~/models';
 
 interface FeaturedStory {

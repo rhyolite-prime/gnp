@@ -1,4 +1,38 @@
-import type { NewsPaper, Payment, CommercialPartner,AdminUser, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
+import type { NewsPaper, Publication, Payment, CommercialPartner,AdminUser, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
+
+//publication setups
+
+export async function getPublications(query: object) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Publication[]>>>('admin/get-all-publications', "", { query });
+    return response.result;
+}
+
+
+export async function createPublication(payload: object) {
+    
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/create-publication', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function updatePublication(payload: object) {
+    
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/update-publication', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function deletePublication(query: object) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/delete-publication', "", { query, method: "delete", });
+    return response.success;
+}
+
 
 export async function getNewsPaperPublications(query: object) {
  
@@ -277,7 +311,7 @@ export async function removeCommercialPartnerSubscriber(partnerId: string,subscr
 }
 
 export async function resetCommercialPartnerSubscriberPassword(partnerId: string,subscriberId: string) {
-    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-partner-subscriber?partnerId=${partnerId}&subscriberId=${subscriberId}`, "", {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/reset-partner-subscriber-password/${partnerId}/${subscriberId}`, "", {
         method: "delete",
     });
     return response.success;
@@ -419,4 +453,16 @@ export async function deleteFileAsset(id: string, bucketName: string) {
         method: "delete",
     });
     return response;
+}
+
+// subscribers
+
+export async function getSubscribers(query: object) {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Subscriber[]>>>('admin/get-subscribers', "", { query });
+    return response.result;
+}
+
+export async function getsubscriberSubscriptionSummary(subscriberId: string) {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<SubscriptionSummary[]>>(`admin/get-subscriber-subscription-summary/${subscriberId}`, "");
+    return response.result;
 }

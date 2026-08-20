@@ -345,11 +345,11 @@ export interface AdminUser extends BaseEntityModel {
 
 export interface Publication extends BaseEntityModel {
 
-    createdAt: string;
     description: string;
     isActive: boolean;
     name: string;
     price: number;
+    publishingDays: []
 }
 
 
