@@ -257,7 +257,16 @@ const navigation = [
     ],
   },
   { name: 'Support Tickets', href: '/admin/support-tickets', icon: ChatBubbleLeftRightIcon },
-  { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
+  {
+    name: 'Reports',
+    icon: ChartBarIcon,
+    children: [
+      { name: 'Revenue Analytics', href: '/admin/reports/revenue' },
+      { name: 'Partner Invoicing', href: '/admin/reports/partner-invoices' },
+      { name: 'Subscriber Engagement', href: '/admin/reports/engagement' },
+      { name: 'Content Performance', href: '/admin/reports/content' },
+    ],
+  },
   { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
 ]
 
