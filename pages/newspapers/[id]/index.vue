@@ -946,7 +946,7 @@ const retrieveNewsPaperDetails = async (id: string) => {
 
       newsPaperDetail.value = result
 
-      loadImageAsBlob(result.thumbnailId)
+      loadImageAsBlob(id)
 
     } catch (error) {
         //$toast.error('Unable to fetch finishing options !');

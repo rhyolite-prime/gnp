@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-app",
+  "name": "news-plus",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -26,11 +26,12 @@
     "nuxt": "^3.13.0",
     "pinia": "^3.0.3",
     "uuid": "^9.0.1",
+    "v-money3": "^3.26.1",
     "vue-countup-v3": "^1.4.2",
     "vue-ganttastic": "^0.9.34",
     "vue-multiselect": "3.0.0-beta.3",
     "vue3-toastify": "^0.2.8",
-    "xlsx": "^0.18.5"
+    "xlsx": "file:vendor/xlsx-0.20.1.tgz"
   },
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^6.14.0",

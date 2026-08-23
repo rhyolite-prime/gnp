@@ -163,7 +163,9 @@ export interface PartnerSubscriber {
 }
 
 
-
+export interface NewsPaperIngestionResponse {
+    id: string;
+}
 
 export interface NewsPaper {
     documentId: string;
@@ -175,9 +177,13 @@ export interface NewsPaper {
     id: string;
     price: string;
     publicationDate: string;
+    publishedDate: string;
     slug: string;
+    storageService: string;
     thumbnailId: string;
     featuredStories: FeaturedStory[]
+    tags: []
+    categories: []
     title: string;
     isPublished: boolean;
     createdAt: string;
@@ -185,6 +191,8 @@ export interface NewsPaper {
     sales: number;
     uniqueId: string;
     isFree: boolean;
+    isPopular: boolean;
+    isArchived: boolean;
     
 }
 
@@ -337,11 +345,11 @@ export interface AdminUser extends BaseEntityModel {
 
 export interface Publication extends BaseEntityModel {
 
-    createdAt: string;
     description: string;
     isActive: boolean;
     name: string;
     price: number;
+    publishingDays: []
 }
 
 

@@ -162,8 +162,7 @@
 
 <script setup lang="ts">
 import { XMarkIcon, CurrencyDollarIcon } from '@heroicons/vue/24/outline'
-import { ref, onMounted } from 'vue'
-import { getSubscriptionPlans } from '~/services/subscriptionPlans'
+
 import type { SubscriptionPlan } from '~/models'
 
 const props = defineProps({

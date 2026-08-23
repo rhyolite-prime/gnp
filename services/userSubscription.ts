@@ -3,14 +3,14 @@ import type { UserSubscription, SubscriptionResponseModel, NewsPaperEntitlementR
 
 export async function getUserSubscription(query: object) {
 
-    const response = await httpClient<BaseApiResponse<BasePaginationModel<UserSubscription[]>>>('subscription/get-all', "", { query });
+    const response = await gnpUserHttpClient<BaseApiResponse<BasePaginationModel<UserSubscription[]>>>('subscription/get-all', "", { query });
     return response.result;
 }
 
 
 export async function guestSubscription(payload: object) {
     
-  const response = await httpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/guest', "", {
+  const response = await gnpUserHttpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/guest', "", {
     method: "post",
     body: payload,
   });
@@ -19,7 +19,7 @@ export async function guestSubscription(payload: object) {
 
 
 export async function initializeUserOneTimeBuy(newsPaperId: string) {
-  const response = await httpClient<BaseApiResponse<SubscriptionResponseModel>>(`subscription/user-onetime-buy?newsPaperId=${newsPaperId}`, "",);
+  const response = await gnpUserHttpClient<BaseApiResponse<SubscriptionResponseModel>>(`subscription/user-onetime-buy?newsPaperId=${newsPaperId}`, "",);
   if (!response.result) {
     return {
       success: false,
@@ -35,7 +35,7 @@ export async function initializeUserOneTimeBuy(newsPaperId: string) {
 
 export async function buyCopy(payload: object) {
   
-  const response = await httpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/buy-copy', "", {
+  const response = await gnpUserHttpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/buy-copy', "", {
     method: "post",
     body: payload,
   });
@@ -55,7 +55,7 @@ export async function buyCopy(payload: object) {
 
 export async function guestOneTimePurchase(payload: object) {
     
-  const response = await httpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/guest-onetime-buy', "", {
+  const response = await gnpUserHttpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/guest-onetime-buy', "", {
     method: "post",
     body: payload,
   });
@@ -75,19 +75,19 @@ export async function guestOneTimePurchase(payload: object) {
 
 export async function fulfillGuestOneTimePurchase(query: object) {
     
-  const response = await httpClient<BaseApiResponse<string>>('subscription/fulfill-guest-onetime', "", { query });
+  const response = await gnpUserHttpClient<BaseApiResponse<string>>('subscription/fulfill-guest-onetime', "", { query });
   return response.result;
 }
 
 export async function fulfillUserOneTimePurchase(query: object) {
     
-  const response = await httpClient<BaseApiResponse<string>>('subscription/fulfill-user-onetime', "", { query });
+  const response = await gnpUserHttpClient<BaseApiResponse<string>>('subscription/fulfill-user-onetime', "", { query });
   return response.result;
 }
 
 export async function fulfillBuyCopy(query: object) {
     
-  const response = await httpClient<BaseApiResponse<string>>('subscription/fulfill-buy-copy', "", { query });
+  const response = await gnpUserHttpClient<BaseApiResponse<string>>('subscription/fulfill-buy-copy', "", { query });
   return response.success;
 }
 
@@ -106,11 +106,9 @@ export async function userSubscription(payload: object) {
   return response.success;
 }
 
- 
-
 
 export async function getRedactedNewsPaperDetailsViaUniqueId(id: string) {
-  const response = await httpClient<BaseApiResponse<NewsPaper>>(`subscription/get-newspaper-redacted-details-via-unique-id?id=${id}`, "",);
+  const response = await gnpUserHttpClient<BaseApiResponse<NewsPaper>>(`subscription/get-newspaper-redacted-details-via-unique-id?id=${id}`, "",);
   return {
     success: response.success,
     data: response.result,
@@ -118,7 +116,7 @@ export async function getRedactedNewsPaperDetailsViaUniqueId(id: string) {
 }
 
 export async function findNewspaperByDate(publicationId: string,publicationDate: string) {
-  const response = await httpClient<BaseApiResponse<NewsPaper>>(`subscription/find-newspaper-by-date?publicationId=${publicationId}&publicationDate=${publicationDate}`, "",);
+  const response = await gnpUserHttpClient<BaseApiResponse<NewsPaper>>(`subscription/find-newspaper-by-date?publicationId=${publicationId}&publicationDate=${publicationDate}`, "",);
   return {
     success: response.success,
     data: response.result,

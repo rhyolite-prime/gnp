@@ -643,7 +643,7 @@ async function handleChangePassword() {
   try {
     isChangingPassword.value = true;
     
-    const success = await changePassword({
+    const success = await changeUserPassword({
       oldPassword: passwordForm.oldPassword,
       newPassword: passwordForm.newPassword
     });

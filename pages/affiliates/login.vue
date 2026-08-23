@@ -108,7 +108,7 @@ const handleLogin = async () => {
       password: form.password 
     })
     
-    if (response && response.token) {
+    if (response && response.success && response.result?.token) {
       const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
         maxAge: 60 * 60 * 24,
         secure: true,
@@ -117,16 +117,20 @@ const handleLogin = async () => {
         sameSite: "strict"
       });
       
-      gnpUserIdentityCookie.value = response.token;
-      authStore.setAccessToken(response.token);
+      gnpUserIdentityCookie.value = response.result.token;
+      authStore.setAccessToken(response.result.token);
       
       router.push('/affiliates/dashboard')
     } else {
-      alert('Invalid credentials')
+      alert(response?.message || 'Invalid credentials')
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error)
-    alert('An error occurred during login.')
+    if (error.data && error.data.message) {
+      alert(error.data.message)
+    } else {
+      alert('An error occurred during login.')
+    }
   } finally {
     loading.value = false
   }

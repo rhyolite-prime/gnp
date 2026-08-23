@@ -85,19 +85,14 @@ export async function getSecureThumbnail(fileId: string) {
         const cachedBlob = await getBlobFromDB(fileId);
         if (cachedBlob) {
             const url = URL.createObjectURL(cachedBlob);
-            blobCache[fileId] = url; // Save to fast cache
+            blobCache[fileId] = url;
             return url;
         }
 
         // 3. Fallback to network request
-        const response = await httpClient<Blob>('assetproxy/getfileasset', "https://archive.graphic.com.gh/", {
-            query: { fileId },
-            config: {
-                responseType: 'blob',
-                headers: {
-                    "RequestVerificationToken": "",
-                },
-            },
+        const response = await gnpUserHttpClient<Blob>(`g3/get-file/gnp-thumbnails/${fileId}.png`, "", { 
+            responseType: 'blob',
+            query: { cb: new Date().getTime() }
         });
 
         // 4. Save to both caches

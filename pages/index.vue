@@ -21,7 +21,14 @@
 </template>
 
 <script setup lang="ts">
+const route = useRoute()
+const showSignInModal = useState('showSignInModal', () => false)
 
+onMounted(() => {
+  if (route.query.al === 't') {
+    showSignInModal.value = true
+  }
+})
 
 // Page metadata
 useHead({

@@ -159,7 +159,8 @@
       
       <!-- Social Login Buttons -->
       <div class="grid grid-cols-2 gap-4">
-        <button 
+
+        <!-- <button 
           @click="handleGoogleSignIn" 
           :disabled="googleLoading"
           class="flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white hover:bg-gray-50 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
@@ -192,7 +193,7 @@
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
           {{ msLoading ? 'Signing in...' : 'Microsoft' }}
-        </button>
+        </button> -->
 
         <button 
           @click="handlePasskeySignIn" 
@@ -244,6 +245,7 @@ const isGuestUser = ref(false);
 const route = useRoute();
 const authStore = useAuthStore();
 const config = useRuntimeConfig();
+const { $toast } = useNuxtApp();
 
 const step = ref(1);
 const emailCheckLoading = ref(false);
@@ -384,7 +386,7 @@ const handleEmailSignIn = async () => {
   try {
 
     let response = await signIn({ usernameOrEmail: usernameOrEmail.value, password: password.value })
-    if (response && response.token) {
+    if (response && response.success && response.result?.token) {
 
       const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
         maxAge: 60 * 60 * 24,
@@ -394,16 +396,24 @@ const handleEmailSignIn = async () => {
         sameSite: "strict"
       });
       
-      gnpUserIdentityCookie.value = response.token;
-      authStore.setAccessToken(response.token);
+      gnpUserIdentityCookie.value = response.result.token;
+      authStore.setAccessToken(response.result.token);
       emit('close');
+    } else {
+      if (response && response.message) {
+        $toast.error(response.message);
+      } else {
+        $toast.error('Invalid credentials');
+      }
     }
     
-    //use toast to display error message.
-    
-  } catch (err) {
+  } catch (err: any) {
     console.error('Email signin error:', err);
-    isSigningIn.value = false;
+    if (err.data && err.data.message) {
+      $toast.error(err.data.message);
+    } else {
+      $toast.error('An error occurred during sign in. Please try again.');
+    }
   } finally {
     isSigningIn.value = false;
   }

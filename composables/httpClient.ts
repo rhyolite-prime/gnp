@@ -4,15 +4,12 @@ export const httpClient = async <T>(urlPath: string, baseURL?: string, options?:
 
   const config = useRuntimeConfig().public;
   
-  const gnpUserAuthIdentity = useGnpUserAuthIdentity();
-  const authToken = gnpUserAuthIdentity.value;
     
   const defaultOptions = {
     lazy: false,
     immediate: true,
     server: false,
     baseURL: baseURL || config.proxyApiBaseURL,
-    headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
     mode: "cors",
   };
 

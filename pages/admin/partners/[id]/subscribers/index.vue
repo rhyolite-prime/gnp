@@ -159,8 +159,7 @@
                                 :class="{
                                   'bg-green-50 text-green-700 ring-green-600/20': sub.status === 'Active' || sub.status === 'active',
                                   'bg-red-50 text-red-700 ring-red-600/20': sub.status === 'Inactive' || sub.status === 'inactive'
-                                }"
-                             >
+                                }">
                                 {{ sub.status || 'Active' }}
                              </span>
                          </td>
@@ -182,9 +181,20 @@
                                     <div class="py-1">
                                         <button 
                                             class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                                            @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Active')"
+                                            @click.prevent="openDetailModal(sub)"
                                         >
+                                            View Details
+                                        </button>
+                                        <button 
+                                            class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                                            @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Active')">
                                             Activate
+                                        </button>
+                                        <button 
+                                            class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                                            @click.prevent="resetSubscriberPassword(sub.partnerId, sub.id)"
+                                        >
+                                            Reset Password
                                         </button>
                                         <button 
                                             class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
@@ -192,12 +202,12 @@
                                         >
                                             Deactivate
                                         </button>
-                                        <button 
+                                        <!-- <button 
                                             class="block w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left"
                                             @click.prevent="confirmRemoveSubscriber(sub.id)"
                                         >
                                             Delete
-                                        </button>
+                                        </button> -->
                                     </div>
                                 </div>
                             </div>
@@ -259,12 +269,21 @@
       @cancel="showConfirmModal = false"
     />
 
+    <!-- Subscriber Detail Modal -->
+    <AdminSubscriberSubscriptionModal
+      :show="showDetailModal"
+      :subscriber="selectedSubscriber"
+      :partner-id="partnerId"
+      @close="closeDetailModal"
+    />
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { ArrowLeftIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, CheckCircleIcon, EllipsisVerticalIcon } from '@heroicons/vue/24/outline';
 import dayjs from 'dayjs';
+import { isEmpty, debounce } from "lodash-es";
 import type { CommercialPartner, Subscriber, SubscriptionSummary } from "~/models";
 
 definePageMeta({
@@ -279,7 +298,7 @@ const filters = reactive({
   partnerId: route.params.id as string,
   query: '',
   pageNo: 1,
-  pageSize: 600,
+  pageSize: 30,
 
 });
 
@@ -312,6 +331,9 @@ const selectedSubscriberIds = ref<Set<string>>(new Set());
 const subscriberIdToRemove = ref<string | null>(null);
 const showConfirmModal = ref(false);
 const activeDropdownId = ref<string | null>(null);
+
+const showDetailModal = ref(false);
+const selectedSubscriber = ref<Subscriber | null>(null);
 
 const allSelected = computed(() => {
     return subscriberList.value.length > 0 && selectedSubscriberIds.value.size === subscriberList.value.length;
@@ -348,6 +370,19 @@ const toggleDropdown = (id: string) => {
 
 const closeDropdown = () => {
     activeDropdownId.value = null;
+};
+
+const openDetailModal = (subscriber: Subscriber) => {
+    selectedSubscriber.value = subscriber;
+    showDetailModal.value = true;
+    closeDropdown();
+};
+
+const closeDetailModal = () => {
+    showDetailModal.value = false;
+    setTimeout(() => {
+        selectedSubscriber.value = null;
+    }, 300);
 };
 
 const formatDate = (date: string) => {
@@ -465,63 +500,101 @@ const handleBulkAssign = async (data: { planId: string; billingCycle: string; pl
 
 const handleFileUpload = async (file: File) => {
     const fileName = file.name.toLowerCase();
-    
+    let extractedSubscriberData = [];
     // Check extension
     if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
         $toast.error('Invalid file type. Please upload CSV or Excel.');
         return;
     }
 
-    // CSV Pre-validation for Quota
+    isUploading.value = true;
+    
     if (fileName.endsWith('.csv')) {
          try {
              const text = await file.text();
-             // Simple basic CSV parsing: split lines, filter empty. 
-             // IMPORTANT: This assumes 1 email per line or standard structure. 
-             // We assume the file has a header.
              const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
              const count = rows.length > 0 ? rows.length - 1 : 0; // Exclude header
              
+             if (count > 0) {
+                 const headers = rows[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+                 const jsonData = rows.slice(1).map(row => {
+                     const values = row.split(',');
+                     const obj: any = {};
+                     headers.forEach((header, index) => {
+                         let val = values[index] ? values[index].trim() : '';
+                         if (val.startsWith('"') && val.endsWith('"')) {
+                             val = val.slice(1, -1);
+                         }
+                         obj[header] = val;
+                     });
+                     return obj;
+                 });
+                  
+                 extractedSubscriberData = jsonData;
+             }
+             
              if (count === 0) {
                  $toast.error('The uploaded file appears to be empty or only contains a header.');
+                 isUploading.value = false;
                  return;
              }
 
              if ((parterDetails.value?.remainingQuota || 0) < count) {
                  $toast.error(`Upload aborted. You have ${parterDetails.value?.remainingQuota || 0} slots remaining but the file contains ${count} subscribers.`);
+                 isUploading.value = false;
                  return;
              }
          } catch (e) {
              console.error('Error parsing CSV', e);
+             return;
          }
-    } 
-    // Excel validation is skipped client-side due to missing libraries, strictly handled server-side or we rely on user trust/server rejection.
-    
-    await uploadFile(file);
-};
+    }
 
-const uploadFile = async (file: File) => {
-    isUploading.value = true;
-    uploadProgress.value = 0;
+    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls'))
+    {
+
+         try {
+             const jsonData = await readExcelFile(file);
+             extractedSubscriberData = jsonData;
+             const count = jsonData.length;
+             
+             if (count === 0) {
+                 $toast.error('The uploaded file appears to be empty or only contains a header.');
+                 isUploading.value = false;
+                 return;
+             }
+
+             if ((parterDetails.value?.remainingQuota || 0) < count) {
+                 $toast.error(`Upload aborted. You have ${parterDetails.value?.remainingQuota || 0} slots remaining but the file contains ${count} subscribers.`);
+                 isUploading.value = false;
+                 return;
+             }
+         } catch (e) {
+             console.error('Error parsing Excel file', e);
+             isUploading.value = false;
+             return;
+         }
+    }
     
+    uploadProgress.value = 0;
+    const totalCount = extractedSubscriberData.length;
+    // Simulate progress based on count (approx 50ms per subscriber)
+    const estimatedTimeMs = Math.max(1000, totalCount * 50); 
+    const updateIntervalMs = 200;
+    const progressStep = (updateIntervalMs / estimatedTimeMs) * 90;
+
+    const progressInterval = setInterval(() => {
+        if (uploadProgress.value < 90) {
+            uploadProgress.value = Math.min(90, uploadProgress.value + progressStep);
+        }
+    }, updateIntervalMs);
+
     try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('partnerId', partnerId);
-        
-        // Simulate progress for better UX
-        const progressInterval = setInterval(() => {
-            if (uploadProgress.value < 90) {
-                uploadProgress.value += 10;
-            }
-        }, 200);
-        
-        // Call service
-        const success = await uploadCommercialPartnerSubscribers(formData);
+        const success = await uploadCommercialPartnerSubscribers(extractedSubscriberData, partnerId);
         
         clearInterval(progressInterval);
         uploadProgress.value = 100;
-        
+
         if (success) {
             $toast.success('Subscribers uploaded successfully');
             await fetchSubscribers();
@@ -530,26 +603,28 @@ const uploadFile = async (file: File) => {
         } else {
              $toast.error('Failed to upload subscribers. Please check the file format and try again.');
         }
-
     } catch (error: any) {
-        // If server returns quota error
+        clearInterval(progressInterval);
         if (error.response?.data?.message?.includes('Quota')) {
              $toast.error(error.response.data.message);
         } else {
              $toast.error('An error occurred during upload.');
         }
-        console.error(error);
+        console.error('Upload Error:', error);
     } finally {
         isUploading.value = false;
-        uploadProgress.value = 0;
+        setTimeout(() => {
+            uploadProgress.value = 0;
+        }, 1000);
     }
 };
+
 
 const fetchSubscribers = async () => {
     isLoading.value = true;
     try {
 
-        const result = await getCommercialPartnerSubscribers(partnerId);
+        const result = await getCommercialPartnerSubscribers(filters);
 
         selectedSubscriberIds.value.clear();
          
@@ -632,6 +707,28 @@ const handleRemoveSubscriber = async () => {
     }
 }
 
+const resetSubscriberPassword = async (partnerId: string,subscriberId: string ) => {
+
+    console.log('partnerId=>', partnerId)
+    console.log('subscriberId=>', subscriberId)
+
+    try {
+        const success = await resetCommercialPartnerSubscriberPassword(partnerId,subscriberId);
+        
+        if (success) {
+            $toast.success('Subscriber Password Reset Successfully.');
+            await fetchSubscribers();
+        } else {
+            $toast.error('Failed to reset subscriber password');
+        }
+    } catch (error) {
+         
+        $toast.error('An error occurred while reseting subsriber password');
+    } finally {
+        closeDropdown();
+    }
+};
+
 const handleUpdateSubscriberStatus = async (subscriberId: string, status: string) => {
     try {
         const success = await updateCommercialPartnerSubscriberStatus({
@@ -653,6 +750,15 @@ const handleUpdateSubscriberStatus = async (subscriberId: string, status: string
         closeDropdown();
     }
 };
+
+
+const debouncedSearch = debounce(() => {
+  filters.pageNo = 1;
+  fetchSubscribers();
+}, 500);
+
+watch(() => filters.query, debouncedSearch);
+
 
 onMounted( async () => {
     if (partnerId) {

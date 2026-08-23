@@ -156,7 +156,7 @@ const handleLogin = async () => {
 
     if (response && response.token) {
       // Set cookie for persistence
-      const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
+      const gnpUserIdentityCookie = useCookie("gnp-admin-user-identity", {
         maxAge: 60 * 60 * 24, // 1 day
         secure: true,
         httpOnly: false,

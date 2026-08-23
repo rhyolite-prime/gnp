@@ -19,13 +19,13 @@
             Graphic Showbiz, The Mirror, Graphic Sports and Junior Graphic.
           </p>
           <div class="flex space-x-4">
-            <SocialLink 
+            <!-- <SocialLink 
               v-for="social in socialLinks" 
               :key="social.name"
               :href="social.href"
               :label="social.name">
               
-            </SocialLink>
+            </SocialLink> -->
           </div>
         </div>
 

@@ -15,6 +15,25 @@ export async function sendOtp(query: object) {
   return response.result;
 }
 
+
+export async function changePartnerAdminPassword(payload: object) {
+    
+  const response = await partnerHttpClient<BaseApiResponse<object>>('auth/change-partner-admin-user-password', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function changeUserPassword(payload: object) {
+    
+  const response = await gnpUserHttpClient<BaseApiResponse<object>>('auth/change-public-user-password', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
 export async function validateOtp(payload: object) {
     
   const response = await httpClient<BaseApiResponse<VerifyOtpResponseModel>>('auth/verify-otp', "", {
@@ -30,7 +49,7 @@ export async function signIn(payload: object) {
     method: "post",
     body: payload,
   });
-  return response.result;
+  return response;
 }
 
 export async function adminSignIn(payload: object) {

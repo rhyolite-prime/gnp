@@ -197,7 +197,6 @@ const navigation = [
       { name: 'Archives', href: '/admin/content-management/archives' },
       { name: 'Videos', href: '/admin/content-management/videos' },
       { name: 'Audios', href: '/admin/content-management/audios' },
-      { name: 'OCR Ingestion', href: '/admin/content-management/ingestion' },
       { name: 'Ingestion Jobs', href: '/admin/content-management/ingestion-jobs' },
     ],
   },
@@ -233,7 +232,7 @@ const navigation = [
     ],
   },
 
-
+  { name: 'Publications', href: '/admin/publications', icon: TicketIcon },
   { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon },
   { name: 'Payments', href: '/admin/payments', icon: BanknotesIcon },
   { name: 'Campaigns', href: '/admin/campaigns', icon: MegaphoneIcon },
@@ -258,7 +257,16 @@ const navigation = [
     ],
   },
   { name: 'Support Tickets', href: '/admin/support-tickets', icon: ChatBubbleLeftRightIcon },
-  { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
+  {
+    name: 'Reports',
+    icon: ChartBarIcon,
+    children: [
+      { name: 'Revenue Analytics', href: '/admin/reports/revenue' },
+      { name: 'Partner Invoicing', href: '/admin/reports/partner-invoices' },
+      { name: 'Subscriber Engagement', href: '/admin/reports/engagement' },
+      { name: 'Content Performance', href: '/admin/reports/content' },
+    ],
+  },
   { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
 ]
 

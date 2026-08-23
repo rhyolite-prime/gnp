@@ -200,6 +200,13 @@
                         <a 
                             href="#" 
                             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                            @click.prevent="updateQuota(partner.id)">
+                            Update Quota
+                        </a>
+
+                        <a 
+                            href="#" 
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
                             @click.prevent="editCommercialPartnerStatus(partner.id)"
                         >
                             Update Status
@@ -291,6 +298,47 @@
                             class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0" 
                             @click="closeStatusModal"
                             :disabled="isUpdatingStatus"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quota Update Modal -->
+    <div v-if="showQuotaModal" class="relative z-50 animate-fade-in" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6">
+                    <div>
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                            <BanknotesIcon class="h-6 w-6 text-blue-600" aria-hidden="true" />
+                        </div>
+                        <div class="mt-3 text-center sm:mt-5">
+                            <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">Update Subscriber Quota</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">Enter the new subscriber quota for this commercial partner.</p>
+                                <input type="number" v-model="newQuota" class="mt-4 block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6" placeholder="Quota amount" min="0" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                        <button 
+                            type="button" 
+                            class="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:col-start-2 disabled:opacity-50"
+                            @click="handleUpdateQuota"
+                            :disabled="isUpdatingQuota"
+                        >
+                            {{ isUpdatingQuota ? 'Updating...' : 'Update Quota' }}
+                        </button>
+                        <button 
+                            type="button" 
+                            class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0" 
+                            @click="closeQuotaModal"
+                            :disabled="isUpdatingQuota"
                         >
                             Cancel
                         </button>
@@ -541,6 +589,51 @@ const handleUpdateStatus = async () => {
         $toast.error('An error occurred while updating status');
     } finally {
         isUpdatingStatus.value = false;
+    }
+};
+
+// Quota Update Logic
+const showQuotaModal = ref(false);
+const isUpdatingQuota = ref(false);
+const newQuota = ref<number>(0);
+
+const updateQuota = (id: string) => {
+    selectedPartnerId.value = id;
+    const partner = partnerList.value.find(p => p.id === id);
+    newQuota.value = partner?.subscriberQuota || 0;
+    showQuotaModal.value = true;
+    closeDropdown();
+};
+
+const closeQuotaModal = () => {
+    showQuotaModal.value = false;
+    selectedPartnerId.value = '';
+    newQuota.value = 0;
+};
+
+const handleUpdateQuota = async () => {
+    if (!selectedPartnerId.value || newQuota.value < 0) return;
+
+    isUpdatingQuota.value = true;
+    try {
+        const payload = {
+            quota: newQuota.value
+        };
+        
+        const success = await updateCommercialPartnerQuota(payload, selectedPartnerId.value);
+        
+        if (success) {
+            $toast.success('Partner quota updated successfully');
+            closeQuotaModal();
+            await getPaginatedPartners();
+        } else {
+             $toast.error('Failed to update quota');
+        }
+    } catch (error) {
+        console.error('Update quota error:', error);
+        $toast.error('An error occurred while updating quota');
+    } finally {
+        isUpdatingQuota.value = false;
     }
 };
 

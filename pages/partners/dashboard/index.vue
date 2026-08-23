@@ -216,9 +216,9 @@
                          <button @click.stop="editSubscriber(subscriber)" class="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors" title="Edit">
                            <PencilSquareIcon class="w-5 h-5" />
                          </button>
-                         <button @click.stop="delPartnerSubscriber(subscriber)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
+                         <!-- <button @click.stop="delPartnerSubscriber(subscriber)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
                            <TrashIcon class="w-5 h-5" />
-                         </button>
+                         </button> -->
                        </div>
                      </td>
                    </tr>
@@ -558,33 +558,21 @@ const closeUploadModal = () => {
 };
 
 const extractDataFromFile = async (file: File): Promise<any[]> => {
-    const XLSX = await import('xlsx');
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = e.target?.result;
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+    try {
+        const jsonData = await readExcelFile(file, { defval: '' });
 
-                // Map to required format
-                const formattedData = jsonData.map((row: any) => ({
-                    FirstName: String(row.FirstName || '').trim(),
-                    LastName: String(row.LastName || '').trim(),
-                    Email: String(row.Email || '').trim(),
-                    PhoneNumber: String(row.PhoneNumber || '').trim()
-                })).filter((row: any) => row.FirstName || row.LastName || row.Email || row.PhoneNumber);
+        // Map to required format
+        const formattedData = jsonData.map((row: any) => ({
+            FirstName: String(row.FirstName || '').trim(),
+            LastName: String(row.LastName || '').trim(),
+            Email: String(row.Email || '').trim(),
+            PhoneNumber: String(row.PhoneNumber || '').trim()
+        })).filter((row: any) => row.FirstName || row.LastName || row.Email || row.PhoneNumber);
 
-                resolve(formattedData);
-            } catch (error) {
-                reject(error);
-            }
-        };
-        reader.onerror = (error) => reject(error);
-        reader.readAsArrayBuffer(file);
-    });
+        return formattedData;
+    } catch (error) {
+        throw error;
+    }
 };
 
 const handleFileUpload = async (file: File) => {

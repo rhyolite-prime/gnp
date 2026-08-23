@@ -112,8 +112,8 @@
                     <div class="flex items-center">
                       <div class="h-15 w-10 flex-shrink-0 bg-gray-100 rounded overflow-hidden mr-3 border border-gray-200">
                         <img
-                          v-if="thumbnailUrls[paper.thumbnailId]"
-                          :src="thumbnailUrls[paper.thumbnailId]"
+                          v-if="thumbnailUrls[paper.id]"
+                          :src="thumbnailUrls[paper.id]"
                           alt="Thumbnail"
                           class="h-full w-full object-cover"
                         />
@@ -165,14 +165,18 @@
                       <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
                         <MenuItems class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                           <div class="py-1">
+
                             <MenuItem v-slot="{ active }">
-                              <button :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block w-full px-4 py-2 text-left text-sm']">Edit</button>
+                              <NuxtLink :to="`/admin/content-management/newspaper/${paper.id}`" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block w-full px-4 py-2 text-left text-sm']">View Details</NuxtLink>
                             </MenuItem>
                             <MenuItem v-if="!paper.isPublished" v-slot="{ active }">
                               <button @click="publishPaper(paper.id)" :class="[active ? 'bg-gray-100 text-green-700' : 'text-green-700', 'block w-full px-4 py-2 text-left text-sm']">Publish</button>
                             </MenuItem>
                              <MenuItem v-if="!paper.isFree" v-slot="{ active }">
                               <button :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block w-full px-4 py-2 text-left text-sm']">Make Free</button>
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                              <button :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block w-full px-4 py-2 text-left text-sm']">Archive</button>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
                               <button :class="[active ? 'bg-gray-100 text-red-900' : 'text-red-700', 'block w-full px-4 py-2 text-left text-sm']">Delete</button>
@@ -291,8 +295,8 @@ const getPaginatedNewsPapers = async () => {
     newspaperList,
     (papers) => {
       papers.forEach(paper => {
-        if (paper.thumbnailId) {
-          loadImageAsBlob(paper.thumbnailId);
+        if (paper.id) {
+          loadImageAsBlob(paper.id);
         }
       });
     },
@@ -303,10 +307,8 @@ const getPaginatedNewsPapers = async () => {
     if (!fileId || thumbnailUrls[fileId]) return;
 
     try {
-      const response = await getSecureThumbnail(fileId);
-      const blob = await fetch(response).then(r => r.blob());
-      const objectUrl = URL.createObjectURL(blob);
-      thumbnailUrls[fileId] = objectUrl;
+      const response = await getNewsPaperThumbnail(fileId);
+      thumbnailUrls[fileId] = response;
     } catch (error) {
       console.error('Failed to load thumbnail', error);
     }
@@ -366,11 +368,6 @@ const debouncedSearch = debounce(() => {
       filters.status = (route.query.status as string) || '';
       filters.startDate = (route.query.startDate as string) || '';
       filters.endDate = (route.query.endDate as string) || '';
-      
-      tempSearchQuery.value = filters.query;
-      tempSelectedStatus.value = filters.status;
-      tempStartDate.value = filters.startDate;
-      tempEndDate.value = filters.endDate;
     }
     
     await getPaginatedNewsPapers();

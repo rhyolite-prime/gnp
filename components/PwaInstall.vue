@@ -1,10 +1,10 @@
 <template>
-  <div v-if="$pwa?.needRefresh" class="fixed bottom-4 right-4 bg-blue-600 text-white p-4 rounded-lg shadow-lg z-50 flex items-center gap-4">
-    <span>New content available!</span>
-    <button @click="$pwa.updateServiceWorker()" class="bg-white text-blue-600 px-3 py-1 rounded font-bold">
-      Reload
-    </button>
-  </div>
+    <!-- <div v-if="$pwa?.needRefresh" class="fixed bottom-4 right-4 bg-blue-600 text-white p-4 rounded-lg shadow-lg z-50 flex items-center gap-4">
+      <span>New content available!</span>
+      <button @click="$pwa.updateServiceWorker()" class="bg-white text-blue-600 px-3 py-1 rounded font-bold">
+        Reload
+      </button>
+    </div> -->
 
   <div v-if="showInstallButton" class="fixed bottom-4 left-4 z-50">
     <button @click="installPwa" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg font-bold flex items-center gap-2">

@@ -292,7 +292,7 @@ const getPaginatedNewsPapers = async () => {
     (papers) => {
       papers.forEach(paper => {
         if (paper.thumbnailId) {
-          loadImageAsBlob(paper.thumbnailId);
+          loadImageAsBlob(paper.id);
         }
       });
     },

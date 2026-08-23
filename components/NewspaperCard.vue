@@ -23,7 +23,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { getSecureThumbnail } from '~/services/newsPapers';
 
 const props = defineProps({
   newspaper: {
@@ -35,10 +34,10 @@ const props = defineProps({
 const imageLoading = ref(true)
 const blobUrl = ref<string>()
 
-const loadImage = async (thumbnailId: string) => {
+const loadImage = async (newspaperId: string) => {
   imageLoading.value = true
   try {
-    const url = await getSecureThumbnail(thumbnailId)
+    const url = await getSecureThumbnail(newspaperId)
     blobUrl.value = url
   } catch (error) {
     console.error("Failed to load thumbnail:", error)
@@ -48,8 +47,8 @@ const loadImage = async (thumbnailId: string) => {
 }
 
 onMounted(() => {
-  if (props.newspaper?.thumbnailId) {
-    loadImage(props.newspaper.thumbnailId)
+  if (props.newspaper?.id) {
+    loadImage(props.newspaper.id)
   } else if (props.newspaper?.image) {
     blobUrl.value = props.newspaper.image
     imageLoading.value = false
