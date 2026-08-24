@@ -349,8 +349,7 @@ export interface Publication extends BaseEntityModel {
     description: string;
     isActive: boolean;
     name: string;
-    price: number;
-    publishingDays: []
+    price: string;
 }
 
 

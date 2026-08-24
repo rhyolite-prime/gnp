@@ -98,6 +98,13 @@ export default defineNuxtConfig({
       googleClientId: process.env.NUXT_GOOGLE_CLIENT_ID || '',
       proxyApiBaseURL: "https://dev-api.graphicnewsplus.com/api/v1/",
       //proxyApiBaseURL: "http://localhost:5034/api/v1/",
+
+      // ── Telemetry ─────────────────────────────────────────────────────────
+      otelEndpoint:       process.env.NUXT_PUBLIC_OTEL_ENDPOINT       || 'http://localhost:4318',
+      otelServiceName:    process.env.NUXT_PUBLIC_OTEL_SERVICE_NAME    || 'graphic-newsplus',
+      otelServiceVersion: process.env.NUXT_PUBLIC_OTEL_SERVICE_VERSION || '1.0.0',
+      otelSampleRate:     process.env.NUXT_PUBLIC_OTEL_SAMPLE_RATE     || '1.0',
+      lokiEndpoint:       process.env.NUXT_PUBLIC_LOKI_ENDPOINT        || 'http://localhost:3100',
     },
     googleClientSecret: process.env.NUXT_GOOGLE_CLIENT_SECRET || '',
     

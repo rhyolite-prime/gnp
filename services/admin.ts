@@ -1,4 +1,4 @@
-import type { NewsPaper, Publication, Payment, CommercialPartner,AdminUser, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
+import type { NewsPaper, Publication, Payment, CommercialPartner, AdminUser, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
 
 //publication setups
 
@@ -18,9 +18,9 @@ export async function createPublication(payload: object) {
   return response.success;
 }
 
-export async function updatePublication(payload: object) {
+export async function updatePublication(payload: object, id: string) {
     
-  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/update-publication', "", {
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/update-publication/${id}`, "", {
     method: "post",
     body: payload,
   });

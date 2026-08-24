@@ -43,9 +43,7 @@
         <thead class="bg-gray-50">
           <tr>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Name</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Type</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Price</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Publishing Days </th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Price (GHS)</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
             <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
               <span class="sr-only">Actions</span>
@@ -54,33 +52,30 @@
         </thead>
         <tbody class="divide-y divide-gray-200 bg-white">
 
-          <tr v-for="coupon in couponList" :key="coupon.id">
+          <tr v-for="publication in publicationList" :key="publication.id">
              
-            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"> {{ dateAndTimeFormat(coupon.createdAt) }} </td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"> {{ coupon.code }}</td>
+          
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"> {{ publication.name }}</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"> {{ publication.price }}</td>
            
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
               <span
                 class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
-                :class="coupon.status?.toLowerCase() === 'active'
-                  ? 'bg-green-50 text-green-700 ring-green-600/20'
-                  : coupon.status?.toLowerCase() === 'expired'
-                  ? 'bg-red-50 text-red-700 ring-red-600/20'
-                  : 'bg-yellow-50 text-yellow-800 ring-yellow-600/20'">
-                {{ coupon.status }}
+                :class="publication.isActive ? 'bg-green-50 text-green-700 ring-green-600/20' : 'bg-red-50 text-red-700 ring-red-600/20'">
+                {{ publication.isActive ? 'Active' : 'Inactive' }}
               </span>
             </td>
              
             <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
               <button
                 class="text-indigo-600 hover:text-indigo-800 mr-3"
-                @click="editCoupon(coupon)"
+                @click="viewPublicationDetails(publication)"
               >
                 Edit
               </button>
               <button
                 class="text-red-600 hover:text-red-800"
-                @click="delCoupon(coupon)"
+                @click="delPublication(publication)"
               >
                 Delete
               </button>
@@ -89,15 +84,7 @@
         </tbody>
       </table>
 
-      <client-only>
-        <SimplePagination :lower-bound="paginationParams.lowerBound" 
-        :upper-bound="paginationParams.upperBound"
-        @on-page-changed="onPageChange"
-        :page-no="filters.pageNo " 
-        :total-pages="paginationParams.totalPages"
-        :total-count="paginationParams.totalCount" 
-        :disabled="isShimmerLoading" />
-      </client-only>
+       
  
     </div>
 
@@ -117,79 +104,77 @@
                 <div>
                   <div class="mt-3 text-center sm:mt-5 sm:text-left">
                     <DialogTitle as="h3" class="text-base font-semibold leading-6 text-gray-900">
-                      {{ isEditing ? 'Edit Coupon' : 'Create Coupon' }}
+                      {{ isEditing ? 'Edit Publication' : 'Create Publication' }}
                     </DialogTitle>
                     
-                    <form @submit.prevent="saveCoupon" class="mt-6 space-y-6">
-                      
+                    <form @submit.prevent="savePublication" class="mt-6 space-y-6">
                       <!-- Basic Info -->
                       <div class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                          <label class="block text-sm font-medium leading-6 text-gray-900">Coupon Code</label>
-                          <input type="text" v-model="form.code" required class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" />
-                        </div>
-
-                        <div class="sm:col-span-3">
-                          <label class="block text-sm font-medium leading-6 text-gray-900">Discount Value</label>
-                          <div class="flex gap-2">
-                             <input type="text" v-model="form.discount" required class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" />
-                             <div class="flex items-center">
-                                <input type="checkbox" v-model="form.discountAsPercentage" class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-600" />
-                                <label class="ml-2 block text-sm text-gray-900">%</label>
-                             </div>
-                          </div>
-                        </div>
-
-                        <div class="sm:col-span-3">
-                          <label class="block text-sm font-medium leading-6 text-gray-900">Valid Till</label>
-                           <input type="datetime-local" v-model="form.validTill" required class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" />
-                        </div>
-
-                        <div class="sm:col-span-3">
-                          <label class="block text-sm font-medium leading-6 text-gray-900">Usage Quota</label>
-                           <input type="number" v-model="form.usageQuota" required class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" />
-                        </div>
-
                         <div class="sm:col-span-6">
-                            <label class="block text-sm font-medium leading-6 text-gray-900">Target User (Select a user or leave empty for all)</label>
-                            <VueMultiselect
-                              v-model="selectedUser"
-                              :options="userList"
-                              :multiple="false"
-                              :searchable="true"
-                              :internal-search="false"
-                              :loading="isSearchingUsers"
-                              @search-change="onUserSearch"
-                              placeholder="Search for a user..."
-                              label="email"
-                              track-by="id"
-                              class="multiselect-custom mt-2"
-                            >
-                              <template #noResult>
-                                <span class="text-gray-500 text-sm">No users found for this query.</span>
-                              </template>
-                              <template #option="{ option }">
-                                <div class="flex flex-col">
-                                  <span class="font-medium text-gray-900">{{ option.firstName }} {{ option.lastName }}</span>
-                                  <span class="text-xs text-gray-500">{{ option.email }}</span>
-                                </div>
-                              </template>
-                            </VueMultiselect>
+                          <label class="block text-sm font-medium leading-6 text-gray-900">Name <span class="text-red-500">*</span></label>
+                          <input
+                            type="text"
+                            v-model="form.name"
+                            required
+                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
+                            placeholder="Enter publication name"
+                          />
                         </div>
 
                         <div class="sm:col-span-6">
                           <label class="block text-sm font-medium leading-6 text-gray-900">Description</label>
-                          <textarea v-model="form.description" rows="3" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" />
+                          <textarea
+                            v-model="form.description"
+                            rows="3"
+                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
+                            placeholder="Enter publication description"
+                          />
+                        </div>
+
+                        <div class="sm:col-span-3">
+                          <label class="block text-sm font-medium leading-6 text-gray-900">Price (GHS) <span class="text-red-500">*</span></label>
+                          <input
+                            type="number"
+                            v-model="form.price"
+                            required
+                            step="0.01"
+                            min="0"
+                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
+                            placeholder="0.00"
+                          />
+                        </div>
+
+                        <div class="sm:col-span-3">
+                          <label class="block text-sm font-medium leading-6 text-gray-900">Status</label>
+                            <select
+                              v-model="form.isActive"
+                              class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
+                            >
+                              <option :value="true">Active</option>
+                              <option :value="false">Inactive</option>
+                            </select>
                         </div>
                       </div>
 
                       <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                        <button type="submit" :disabled="isSaving" class="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 sm:col-start-2 disabled:opacity-50">
-                          {{ isSaving ? 'Saving...' : (isEditing ? 'Update Coupon' : 'Create Coupon') }}
+                        <button
+                          type="submit"
+                          :disabled="isSaving"
+                          class="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 sm:col-start-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {{ isSaving ? 'Saving...' : (isEditing ? 'Update Publication' : 'Create Publication') }}
                         </button>
-                        <button type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0" @click="closeModal">Cancel</button>
+                        <button
+                          type="button"
+                          class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                          @click="closeModal"
+                        >
+                          Cancel
+                        </button>
                       </div>
-                    </form>
+                    </form> 
+
+
                   </div>
                 </div>
               </DialogPanel>
@@ -315,30 +300,26 @@ const showFilters = ref(false)
 const isModalOpen = ref(false)
 const isSaving = ref(false)
 const isDeleteModalOpen = ref(false)
-const couponToDelete = ref<Publications | null>(null)
+const publicationToDelete = ref<Publications | null>(null)
 
 
 const form = ref({
   id: '',
-  code: '',
-  username: '',
-  discount: "",
+  name: '',
+  isActive: false,
   description: "",
-  validTill: "",
+  price: 0,
 })
 
 const openCreateModal = () => {
   isEditing.value = false
-  selectedUser.value = null
+   
   form.value = {
-    id: '',
-    code: '',
-    username: '',
-    discount: "",
+    name: '',
+    isActive: false,
     description: "",
-    validTill: "",
-    usageQuota: 0,
-    discountAsPercentage: false,
+    price: 0,
+    id: ''
   }
   isModalOpen.value = true
 }
@@ -350,12 +331,22 @@ const closeModal = () => {
 }
 
 const savePublication = async () => {
-   
+
+  // Validation
+  if (!form.name.trim()) {
+    $toast.error('Publication name is required');
+    return;
+  }
+  if (!form.price || parseFloat(form.price) < 0) {
+    $toast.error('Please enter a valid price');
+    return;
+  }
+
   isSaving.value = true;
 
   try {
     if (isEditing.value) {
-      await updatePublication(form.value);
+      await updatePublication(form.value,form.value );
       $toast.success('Publication updated successfully');
     } else {
       await createPublication(form.value);
@@ -373,26 +364,40 @@ const savePublication = async () => {
   }
 }
 
-const delPublication = (coupon: Coupon) => {
-  couponToDelete.value = coupon
+
+const viewPublicationDetails = (publication: Publication) => {
+
+  console.log('publication->', publication);
+  isEditing.value = true;
+  form.value.id = publication.id;
+  form.value.name = publication.name;
+  form.value.description = publication.description || '';
+  form.value.price = publication.price;
+  form.value.isActive = publication.isActive;
+  isModalOpen.value = true;
+};
+
+
+const delPublication = (publication: Publication) => {
+  publicationToDelete.value = publication
   isDeleteModalOpen.value = true
 }
 
 const closeDeleteModal = () => {
   isDeleteModalOpen.value = false
-  couponToDelete.value = null
+  publicationToDelete.value = null
 }
 
 const confirmDelete = async () => {
-  if (!couponToDelete.value) return;
+  if (!publicationToDelete.value) return;
 
   try {
-    await deleteCoupon({ id: couponToDelete.value.id });
-    $toast.success('Coupon deleted successfully');
-    await getPaginatedCoupons();
+    await deletePublication({ id: publicationToDelete.value.id });
+    $toast.success('Publication deleted successfully');
+    await getPaginatedPublications();
   } catch (error) {
-    console.error('Failed to delete coupon', error);
-    $toast.error('Failed to delete coupon');
+    console.error('Failed to delete publication', error);
+    $toast.error('Failed to delete publication');
   } finally {
     closeDeleteModal();
   }
@@ -400,18 +405,18 @@ const confirmDelete = async () => {
 
 const debouncedSearch = debounce(() => {
     filters.pageNo = 1; // Reset to first page for new search
-    getPaginatedCoupons();
+    getPaginatedPublications();
   }, 300); // 300ms delay
 
 
-  watch(() => filters.couponCode, debouncedSearch);
+  watch(() => filters.query, debouncedSearch);
 
   onMounted(async () => {
     if (!isEmpty(route.query)) {
       filters.pageNo = parseInt(route.query.pageNo as string);
     }
     
-    await getPaginatedCoupons();
+    await getPaginatedPublications();
 
   });
 </script>

@@ -38,6 +38,9 @@ export const useAuthStore = defineStore('auth',  () => {
   const userPhotoUrl = ref<string>();
   const gnpUserIdentityCookie = useCookie('gnp-user-identity');
   
+  // Track session start time for session-duration-on-logout metric
+  const sessionStartedAt = ref<number | null>(null);
+
   // Set user info after successful authentication
   function setUser(userInfo: EnhancedUserInfo | null, provider: 'microsoft' | 'google' | 'gnp' | null = null) {
     console.log('Setting user info:', userInfo);
@@ -63,6 +66,8 @@ export const useAuthStore = defineStore('auth',  () => {
         isAuthenticated: true,
         photoUrl: userPhotoUrl.value
       }));
+
+      
     }
   }
   
@@ -105,9 +110,12 @@ export const useAuthStore = defineStore('auth',  () => {
         authProvider.value = 'gnp';
         userPhotoUrl.value = userInfo.photoUrl;
         
+         
 
       } catch (err) {
         console.error('Failed to decode JWT:', err);
+
+         
       }
 
     } else {
@@ -131,10 +139,14 @@ export const useAuthStore = defineStore('auth',  () => {
         user.value = parsedAuth;
         isAuthenticated.value = true;
         accessToken.value = storedToken;
+        sessionStartedAt.value = Date.now();
+       
         
       } else if (gnpUserIdentityCookie.value) {
         // Fallback to cookie if sessionStorage is empty (e.g. browser was closed and reopened)
         setAccessToken(gnpUserIdentityCookie.value as string);
+
+         
       }
 
       isAuthLoading.value = false;
@@ -176,11 +188,14 @@ export const useAuthStore = defineStore('auth',  () => {
 
   // Clear user session on logout
   function clearUser() {
+    
+
     user.value = null;
     isAuthenticated.value = false;
     authProvider.value = null;
     accessToken.value = null;
     userPhotoUrl.value = undefined;
+    sessionStartedAt.value = null;
     sessionStorage.removeItem('authUser');
     sessionStorage.removeItem('accessToken');
   }

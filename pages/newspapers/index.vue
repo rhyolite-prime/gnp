@@ -90,6 +90,8 @@ import { isEmpty, debounce } from "lodash-es";
 import { Search } from 'lucide-vue-next'
 
 
+
+
 const router = useRouter();
 const route = useRoute();
 
@@ -177,7 +179,11 @@ const onPageChange = async (pageNumber: number) => {
 
     try {
 
-      let result = await getNewsPapers(filters);
+      let result = await recordDuration(
+        'newspaper.list.load_time_ms',
+        () => getNewsPapers(filters),
+        { page: String(filters.pageNo), page_size: String(filters.pageSize) },
+      );
 
       newsPaperList.value = result.data;
 
@@ -185,6 +191,16 @@ const onPageChange = async (pageNumber: number) => {
       paginationParams.totalCount = result.totalCount;
       paginationParams.lowerBound = result.lowerBound;
       paginationParams.upperBound = result.upperBound;
+
+      try {
+        trackEvent('newspaper.list.loaded', {
+          page: filters.pageNo,
+          total_count: result.totalCount,
+          result_count: result.data?.length ?? 0,
+          category: activeFilters.category || 'all',
+          publication: activeFilters.publication || 'all',
+        })
+      } catch { /* ignore */ }
 
     } catch (error) {
         //$toast.error('Unable to fetch finishing options !');
@@ -213,9 +229,13 @@ function handleCategorySelect(category: Category) {
   // Update filters
   activeFilters.category = category.id
   currentPage.value = 1
-  
-  // Simulate loading
- 
+
+  try {
+    trackEvent('newspaper.list.filter_applied', {
+      filter_type: 'category',
+      value: category.id,
+    })
+  } catch { /* ignore */ }
 }
 
 function handlePublicationSelect(publication: Category) {
@@ -231,14 +251,28 @@ function handlePublicationSelect(publication: Category) {
   // Update filters
   activeFilters.publication = publication.id
   currentPage.value = 1
-  
-   
+
+  try {
+    trackEvent('newspaper.list.filter_applied', {
+      filter_type: 'publication',
+      value: publication.id,
+    })
+  } catch { /* ignore */ }
 }
  
 
 function viewNewspaper(newspaper: NewsPaper) {
   // Store the selected newspaper
   currentSelectedNewspaper.value = newspaper
+
+  try {
+    trackEvent('newspaper.card.click', {
+      newspaper_id: String(newspaper.id),
+      title: newspaper.title || '',
+      publication: (newspaper as any).publicationName || '',
+      page: currentPage.value,
+    })
+  } catch { /* ignore */ }
   
   // Navigate to newspaper detail page
   navigateTo(`/newspapers/${newspaper.id}`)
@@ -246,8 +280,15 @@ function viewNewspaper(newspaper: NewsPaper) {
 
  
 
- const debouncedSearch = debounce(() => {
+  const debouncedSearch = debounce(() => {
     filters.pageNo = 1; // Reset to first page for new search
+
+    try {
+      trackEvent('newspaper.list.search', {
+        query_length: filters.query?.length ?? 0,
+      })
+    } catch { /* ignore */ }
+
     getPaginatedNewsPapers();
   }, 300);
 
@@ -260,5 +301,8 @@ function viewNewspaper(newspaper: NewsPaper) {
     
     await getPaginatedNewsPapers();
 
+    try {
+      trackPageView('newspapers.list', { total_count: paginationParams.totalCount })
+    } catch { /* ignore */ }
   });
 </script>
