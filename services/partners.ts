@@ -124,6 +124,21 @@ export async function deleteCommercialSubscriber(query: object) {
     return response.success;
 }
 
+export async function deactivatePartnerSubscriber(id: string) {
+ 
+    const response = await partnerHttpClient<BaseApiResponse<object>>(`partners/deactivate-subscriber/${id}`, "");
+    return response.success;
+}
+
+
+export async function resetPartnerSubscriberPassword(id: string) {
+ 
+    const response = await partnerHttpClient<BaseApiResponse<object>>(`partners/reset-subscriber-password/${id}`, "");
+    return response.success;
+}
+
+
+
 export async function updatePartnerSettings(file?: File, requireTwoFactorAuth?: boolean) {
     const formData = new FormData();
     
@@ -211,3 +226,5 @@ export async function deletePartnerAdminUser(id: string) {
     const response = await partnerHttpClient<BaseApiResponse<object>>(`partners/delete-admin-user?id=${id}`, "", { method: "delete", });
     return response.success;
 }
+
+//

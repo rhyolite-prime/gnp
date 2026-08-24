@@ -291,6 +291,7 @@ export interface CommercialPartner extends BaseEntityModel {
     partnerIdentifier: string;
     contactName: string;
     contactEmail: string;
+    accountType: string;
     contactPhone: string;
     billingEmail: string;
     organizationLogo: string;

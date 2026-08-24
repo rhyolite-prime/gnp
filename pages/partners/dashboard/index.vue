@@ -208,19 +208,84 @@
                        {{ standardDateFormat(subscriber.validUntil) }}
                      </td>
 
-                     <td class="px-6 py-4 text-right">
-                       <div class="flex items-center justify-end space-x-2">
-                         <button @click.stop="viewSubscriberDetails(subscriber)" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors" title="View Details">
-                           <EyeIcon class="w-5 h-5" />
-                         </button>
-                         <button @click.stop="editSubscriber(subscriber)" class="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors" title="Edit">
-                           <PencilSquareIcon class="w-5 h-5" />
-                         </button>
-                         <!-- <button @click.stop="delPartnerSubscriber(subscriber)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
-                           <TrashIcon class="w-5 h-5" />
-                         </button> -->
-                       </div>
-                     </td>
+                      <td class="px-6 py-4 text-right" @click.stop>
+                        <div class="relative inline-block text-left">
+                          <!-- Ellipsis trigger -->
+                          <button
+                            @click.stop="toggleActionMenu(subscriber.id)"
+                            class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                            title="Actions"
+                          >
+                            <EllipsisVerticalIcon class="w-5 h-5" />
+                          </button>
+
+                          <!-- Dropdown menu -->
+                          <transition
+                            enter-active-class="transition ease-out duration-100"
+                            enter-from-class="transform opacity-0 scale-95"
+                            enter-to-class="transform opacity-100 scale-100"
+                            leave-active-class="transition ease-in duration-75"
+                            leave-from-class="transform opacity-100 scale-100"
+                            leave-to-class="transform opacity-0 scale-95"
+                          >
+                            <div
+                              v-if="openMenuId === subscriber.id"
+                              class="absolute right-0 z-50 mt-1 w-52 origin-top-right rounded-2xl bg-white shadow-xl ring-1 ring-slate-200 focus:outline-none"
+                            >
+                              <div class="py-1">
+                                <!-- View Details -->
+                                <button
+                                  @click.stop="viewSubscriberDetails(subscriber); closeActionMenu()"
+                                  class="group flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                                >
+                                  <EyeIcon class="w-4 h-4 text-slate-400 group-hover:text-indigo-600" />
+                                  View Details
+                                </button>
+
+                                <!-- Edit -->
+                                <button
+                                  @click.stop="editSubscriber(subscriber); closeActionMenu()"
+                                  class="group flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+                                >
+                                  <PencilSquareIcon class="w-4 h-4 text-slate-400 group-hover:text-primary-600" />
+                                  Edit
+                                </button>
+
+                                <div class="my-1 border-t border-slate-100" />
+
+                                <!-- Activate -->
+                                <button v-if="!subscriber.isActive"
+                                  @click.stop="activateSubscriber(subscriber); closeActionMenu()"
+                                  class="group flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-green-50 hover:text-green-700 transition-colors"
+                                >
+                                  <CheckCircleIcon class="w-4 h-4 text-slate-400 group-hover:text-green-600" />
+                                  Activate
+                                </button>
+
+                                <!-- Deactivate -->
+                                <button v-if="subscriber.isActive"
+                                  @click.stop="deactivateSubscriber(subscriber); closeActionMenu()"
+                                  class="group flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+                                >
+                                  <NoSymbolIcon class="w-4 h-4 text-slate-400 group-hover:text-amber-600" />
+                                  Deactivate
+                                </button>
+
+                                <div class="my-1 border-t border-slate-100" />
+
+                                <!-- Reset Password -->
+                                <button
+                                  @click.stop="resetSubscriberPassword(subscriber); closeActionMenu()"
+                                  class="group flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-rose-50 hover:text-rose-700 transition-colors"
+                                >
+                                  <KeyIcon class="w-4 h-4 text-slate-400 group-hover:text-rose-600" />
+                                  Reset Password
+                                </button>
+                              </div>
+                            </div>
+                          </transition>
+                        </div>
+                      </td>
                    </tr>
                  </tbody>
                </table>
@@ -345,6 +410,30 @@
          @cancel="closeDeleteModal"
        />
 
+       <!-- Deactivate Confirmation Modal -->
+       <ConfirmModal
+         :show="isDeactivateModalOpen"
+         title="Deactivate Subscriber"
+         :message="`Are you sure you want to deactivate ${subscriberToDeactivate?.firstName} ${subscriberToDeactivate?.lastName}? They will lose access until reactivated.`"
+         confirmText="Deactivate"
+         type="warning"
+         :loading="isDeactivating"
+         @confirm="confirmDeactivate"
+         @cancel="closeDeactivateModal"
+       />
+
+       <!-- Reset Password Confirmation Modal -->
+       <ConfirmModal
+         :show="isResetPasswordModalOpen"
+         title="Reset Password"
+         :message="`Send a password reset email to ${subscriberToResetPassword?.firstName} ${subscriberToResetPassword?.lastName} (${subscriberToResetPassword?.email})?`"
+         confirmText="Send Reset Email"
+         type="info"
+         :loading="isResettingPassword"
+         @confirm="confirmResetPassword"
+         @cancel="closeResetPasswordModal"
+       />
+
        <!-- Subscriber Upload Modal -->
        <SubscriberUploadModal 
          v-if="showUploadModal" 
@@ -378,7 +467,10 @@ import {
   MagnifyingGlassIcon, 
   CheckCircleIcon, 
   ClockIcon,
-  EyeIcon
+  EyeIcon,
+  EllipsisVerticalIcon,
+  NoSymbolIcon,
+  KeyIcon
 } from '@heroicons/vue/24/outline'
 
 import { usePartnerAuthStore } from '~/stores/partnerAuth';
@@ -431,6 +523,85 @@ const showUploadModal = ref(false);
 const isUploading = ref(false);
 const uploadProgress = ref(0);
 const recentActivities = ref([]);
+
+// Action dropdown state
+const openMenuId = ref<string | null>(null);
+
+const toggleActionMenu = (id: string) => {
+  openMenuId.value = openMenuId.value === id ? null : id;
+};
+
+const closeActionMenu = () => {
+  openMenuId.value = null;
+};
+
+// Close menu on outside click
+const handleOutsideClick = (e: MouseEvent) => {
+  openMenuId.value = null;
+};
+
+// Deactivate modal state
+const isDeactivateModalOpen = ref(false);
+const isDeactivating = ref(false);
+const subscriberToDeactivate = ref<PartnerSubscriber | null>(null);
+
+const deactivateSubscriber = (subscriber: PartnerSubscriber) => {
+  subscriberToDeactivate.value = subscriber;
+  isDeactivateModalOpen.value = true;
+};
+
+const closeDeactivateModal = () => {
+  isDeactivateModalOpen.value = false;
+  subscriberToDeactivate.value = null;
+};
+
+const confirmDeactivate = async () => {
+  if (!subscriberToDeactivate.value) return;
+  isDeactivating.value = true;
+  try {
+    await deactivatePartnerSubscriber(subscriberToDeactivate.value.id);
+    $toast.success(`${subscriberToDeactivate.value.firstName} has been deactivated.`);
+    await getPaginatedPartnerSubscribers();
+  } catch (error) {
+    console.error('Failed to deactivate subscriber', error);
+    $toast.error('Failed to deactivate subscriber. Please try again.');
+  } finally {
+    isDeactivating.value = false;
+    closeDeactivateModal();
+  }
+};
+
+// Reset password modal state
+const isResetPasswordModalOpen = ref(false);
+const isResettingPassword = ref(false);
+const subscriberToResetPassword = ref<PartnerSubscriber | null>(null);
+
+const resetSubscriberPassword = (subscriber: PartnerSubscriber) => {
+  subscriberToResetPassword.value = subscriber;
+  isResetPasswordModalOpen.value = true;
+};
+
+const closeResetPasswordModal = () => {
+  isResetPasswordModalOpen.value = false;
+  subscriberToResetPassword.value = null;
+};
+
+const confirmResetPassword = async () => {
+  if (!subscriberToResetPassword.value) return;
+  isResettingPassword.value = true;
+  try {
+    await resetPartnerSubscriberPassword(subscriberToResetPassword.value.id);
+    $toast.success(`Password reset email sent to ${subscriberToResetPassword.value.email}.`);
+  } catch (error) {
+    console.error('Failed to reset password', error);
+    $toast.error('Failed to send password reset. Please try again.');
+  } finally {
+    isResettingPassword.value = false;
+    closeResetPasswordModal();
+  }
+};
+
+
 
 const onPageChange = async (pageNumber: number) => {
 
@@ -644,16 +815,6 @@ const uploadData = async (data: any[]) => {
     }
 };
 
-const delPartnerSubscriber = (coupon: PartnerSubscriber) => {
-  subscriberToDelete.value = coupon
-  isDeleteModalOpen.value = true
-}
-
-const closeDeleteModal = () => {
-  isDeleteModalOpen.value = false
-  subscriberToDelete.value = null
-}
-
 const partnerAuthStore = usePartnerAuthStore();
 
 const partnerName = computed(() => {
@@ -679,6 +840,16 @@ const getStatusColor = (status: string) => {
   }
 }
 
+
+const delPartnerSubscriber = (subscriber: PartnerSubscriber) => {
+  subscriberToDelete.value = subscriber;
+  isDeleteModalOpen.value = true;
+};
+
+const closeDeleteModal = () => {
+  isDeleteModalOpen.value = false;
+  subscriberToDelete.value = null;
+};
 
 const confirmDelete = async () => {
   if (!subscriberToDelete.value) return;
@@ -706,6 +877,20 @@ const debouncedSearch = debounce(() => {
 
   watch(() => filters.query, debouncedSearch);
 
+// --- New action handlers ---
+
+const activateSubscriber = async (subscriber: PartnerSubscriber) => {
+  try {
+    await activatePartnerSubscriber(subscriber.id);
+    $toast.success(`${subscriber.firstName} has been activated.`);
+    await getPaginatedPartnerSubscribers();
+  } catch (error) {
+    console.error('Failed to activate subscriber', error);
+    $toast.error('Failed to activate subscriber. Please try again.');
+  }
+};
+
+
   onMounted(async () => {
     if (!isEmpty(route.query)) {
       filters.pageNo = parseInt(route.query.pageNo as string);
@@ -714,6 +899,11 @@ const debouncedSearch = debounce(() => {
     await getPaginatedPartnerSubscribers();
     await getParterOverviewStats();
 
+    document.addEventListener('click', handleOutsideClick);
+  });
+
+  onBeforeUnmount(() => {
+    document.removeEventListener('click', handleOutsideClick);
   });
 </script>
 

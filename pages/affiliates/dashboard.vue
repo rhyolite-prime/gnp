@@ -5,7 +5,12 @@
         <h1 class="text-3xl font-bold text-gray-900">Affiliate Dashboard</h1>
         <p class="text-gray-600 mt-1">Welcome back! Here's how your performance is looking.</p>
       </div>
-      <div class="mt-4 md:mt-0 flex gap-3">
+      <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
+        <select v-model="dateFilter" class="text-sm border-gray-200 rounded-lg focus:ring-primary-500 focus:border-primary-500 py-2">
+          <option value="7days">Last 7 Days</option>
+          <option value="30days">Last 30 Days</option>
+          <option value="month">This Month</option>
+        </select>
         <NuxtLink 
           to="/affiliates/links" 
           class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition shadow-sm font-medium"
@@ -37,23 +42,12 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-      <!-- Performance Chart (Placeholder) -->
+      <!-- Performance Chart -->
       <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-gray-900">Earnings Overview</h2>
-          <select class="text-sm border-gray-200 rounded-lg focus:ring-primary-500 focus:border-primary-500">
-            <option>Last 7 Days</option>
-            <option>Last 30 Days</option>
-            <option>This Month</option>
-          </select>
         </div>
-        <div class="h-72 flex items-end justify-between gap-2 px-2 pb-2">
-          <div v-for="(val, i) in [40, 60, 45, 90, 75, 80, 55]" :key="i" class="w-full relative group">
-            <div class="bg-primary-500 rounded-t-lg transition-all hover:bg-primary-600 cursor-pointer" :style="{ height: `${val}%` }"></div>
-            <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10">₵{{ val * 10 }}</div>
-            <div class="text-[10px] text-gray-400 mt-2 text-center">{{ ['M','T','W','T','F','S','S'][i] }}</div>
-          </div>
-        </div>
+        <div ref="chartContainer" class="h-72 w-full"></div>
       </div>
 
       <!-- Recent Payouts -->
@@ -127,6 +121,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import * as echarts from 'echarts'
 import { 
   CurrencyDollarIcon, 
   UsersIcon, 
@@ -140,25 +136,162 @@ definePageMeta({
   layout: 'default'
 })
 
-const quickStats = [
-  { label: 'Total Revenue', value: '4,520', growth: 12.5, prefix: '₵', icon: CurrencyDollarIcon, bgColor: 'bg-green-50', iconColor: 'text-green-600' },
-  { label: 'Commissions', value: '1,240', growth: 8.2, prefix: '₵', icon: BanknotesIcon, bgColor: 'bg-primary-50', iconColor: 'text-primary-600' },
-  { label: 'Total Clicks', value: '12,450', growth: -2.4, prefix: '', icon: CursorArrowRaysIcon, bgColor: 'bg-blue-50', iconColor: 'text-blue-600' },
-  { label: 'Referrals', value: '156', growth: 15.1, prefix: '', icon: UsersIcon, bgColor: 'bg-purple-50', iconColor: 'text-purple-600' },
-]
+const chartContainer = ref<HTMLElement | null>(null)
+let chart: echarts.ECharts | null = null
+const dateFilter = ref('7days')
 
-const recentPayouts = [
-  { id: 1, amount: 450, date: 'Feb 12, 2026', status: 'Paid' },
-  { id: 2, amount: 120, date: 'Feb 05, 2026', status: 'Paid' },
-  { id: 3, amount: 840, date: 'Jan 28, 2026', status: 'Paid' },
-  { id: 4, amount: 300, date: 'Jan 10, 2026', status: 'Paid' },
-]
+const updateChartData = () => {
+  if (!chart) return
+  let data = []
+  let xAxisData = []
+  if (dateFilter.value === '7days') {
+    data = [40, 60, 45, 90, 75, 80, 55]
+    xAxisData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  } else if (dateFilter.value === '30days') {
+    data = Array.from({ length: 30 }, () => Math.floor(Math.random() * 80) + 20)
+    xAxisData = Array.from({ length: 30 }, (_, i) => `${i + 1}`)
+  } else {
+    data = [300, 400, 250, 450]
+    xAxisData = ['Week 1', 'Week 2', 'Week 3', 'Week 4']
+  }
+  chart.setOption({
+    xAxis: { data: xAxisData },
+    series: [{ data }]
+  })
+}
 
-const recentCommissions = [
-  { id: 1, customer: 'John Doe', email: 'john@example.com', plan: 'Premium Yearly', amount: 120, status: 'Completed', date: 'Just now' },
-  { id: 2, customer: 'Sarah Amponsah', email: 'sarah.am@example.com', plan: 'Basic Monthly', amount: 15, status: 'Completed', date: '2 hours ago' },
-  { id: 3, customer: 'Akwasi Mensah', email: 'akwasi@network.com', plan: 'Standard Quarterly', amount: 45, status: 'Pending', date: 'Yesterday' },
-  { id: 4, customer: 'Evelyn White', email: 'ev.white@gmail.com', plan: 'Premium Monthly', amount: 30, status: 'Completed', date: 'Feb 15, 2026' },
-  { id: 5, customer: 'Michael Kojo', email: 'mkojo@yahoo.com', plan: 'Premium Yearly', amount: 120, status: 'Completed', date: 'Feb 14, 2026' },
-]
+watch(dateFilter, updateChartData)
+
+onMounted(() => {
+  if (chartContainer.value) {
+    chart = echarts.init(chartContainer.value)
+    const option = {
+      tooltip: {
+        trigger: 'axis',
+        formatter: (params: any) => {
+          const p = params[0]
+          return `<div class="font-sans">
+            <div class="font-bold mb-1">${p.name}</div>
+            <div>Earnings: ₵${p.value * 10}</div>
+          </div>`
+        }
+      },
+      grid: {
+        left: '0%',
+        right: '0%',
+        bottom: '0%',
+        top: '10%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        axisTick: { show: false },
+        axisLine: { lineStyle: { color: '#f3f4f6' } },
+        axisLabel: { color: '#9ca3af', margin: 16 }
+      },
+      yAxis: {
+        type: 'value',
+        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } },
+        axisLabel: { color: '#9ca3af', formatter: '₵{value}' }
+      },
+      series: [
+        {
+          name: 'Earnings',
+          type: 'line',
+          smooth: true,
+          symbolSize: 8,
+          itemStyle: {
+            color: '#f97316', // Primary 500
+          },
+          lineStyle: {
+            width: 3,
+            color: '#f97316'
+          },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(249, 115, 22, 0.4)' },
+              { offset: 1, color: 'rgba(249, 115, 22, 0)' }
+            ])
+          },
+          data: [40, 60, 45, 90, 75, 80, 55]
+        }
+      ]
+    }
+    chart.setOption(option)
+    
+    updateChartData()
+    
+    const handleResize = () => {
+      chart?.resize()
+    }
+    window.addEventListener('resize', handleResize)
+    
+    onUnmounted(() => {
+      window.removeEventListener('resize', handleResize)
+      chart?.dispose()
+    })
+  }
+})
+
+const quickStats = computed(() => {
+  if (dateFilter.value === '7days') {
+    return [
+      { label: 'Total Revenue', value: '4,520', growth: 12.5, prefix: '₵', icon: CurrencyDollarIcon, bgColor: 'bg-green-50', iconColor: 'text-green-600' },
+      { label: 'Commissions', value: '1,240', growth: 8.2, prefix: '₵', icon: BanknotesIcon, bgColor: 'bg-primary-50', iconColor: 'text-primary-600' },
+      { label: 'Total Clicks', value: '12,450', growth: -2.4, prefix: '', icon: CursorArrowRaysIcon, bgColor: 'bg-blue-50', iconColor: 'text-blue-600' },
+      { label: 'Referrals', value: '156', growth: 15.1, prefix: '', icon: UsersIcon, bgColor: 'bg-purple-50', iconColor: 'text-purple-600' },
+    ]
+  } else if (dateFilter.value === '30days') {
+    return [
+      { label: 'Total Revenue', value: '18,500', growth: 5.5, prefix: '₵', icon: CurrencyDollarIcon, bgColor: 'bg-green-50', iconColor: 'text-green-600' },
+      { label: 'Commissions', value: '5,100', growth: 4.2, prefix: '₵', icon: BanknotesIcon, bgColor: 'bg-primary-50', iconColor: 'text-primary-600' },
+      { label: 'Total Clicks', value: '52,100', growth: 1.4, prefix: '', icon: CursorArrowRaysIcon, bgColor: 'bg-blue-50', iconColor: 'text-blue-600' },
+      { label: 'Referrals', value: '620', growth: 8.1, prefix: '', icon: UsersIcon, bgColor: 'bg-purple-50', iconColor: 'text-purple-600' },
+    ]
+  } else {
+    return [
+      { label: 'Total Revenue', value: '14,200', growth: -1.5, prefix: '₵', icon: CurrencyDollarIcon, bgColor: 'bg-green-50', iconColor: 'text-green-600' },
+      { label: 'Commissions', value: '4,000', growth: -2.2, prefix: '₵', icon: BanknotesIcon, bgColor: 'bg-primary-50', iconColor: 'text-primary-600' },
+      { label: 'Total Clicks', value: '38,000', growth: -5.4, prefix: '', icon: CursorArrowRaysIcon, bgColor: 'bg-blue-50', iconColor: 'text-blue-600' },
+      { label: 'Referrals', value: '450', growth: -3.1, prefix: '', icon: UsersIcon, bgColor: 'bg-purple-50', iconColor: 'text-purple-600' },
+    ]
+  }
+})
+
+const recentPayouts = computed(() => {
+  if (dateFilter.value === '7days') {
+    return [
+      { id: 1, amount: 450, date: 'Feb 12, 2026', status: 'Paid' },
+      { id: 2, amount: 120, date: 'Feb 05, 2026', status: 'Paid' },
+      { id: 3, amount: 840, date: 'Jan 28, 2026', status: 'Paid' },
+      { id: 4, amount: 300, date: 'Jan 10, 2026', status: 'Paid' },
+    ]
+  } else {
+    return [
+      { id: 1, amount: 1200, date: 'Jan 31, 2026', status: 'Paid' },
+      { id: 2, amount: 850, date: 'Dec 31, 2025', status: 'Paid' },
+      { id: 3, amount: 940, date: 'Nov 30, 2025', status: 'Paid' },
+      { id: 4, amount: 730, date: 'Oct 31, 2025', status: 'Paid' },
+    ]
+  }
+})
+
+const recentCommissions = computed(() => {
+  if (dateFilter.value === '7days') {
+    return [
+      { id: 1, customer: 'John Doe', email: 'john@example.com', plan: 'Premium Yearly', amount: 120, status: 'Completed', date: 'Just now' },
+      { id: 2, customer: 'Sarah Amponsah', email: 'sarah.am@example.com', plan: 'Basic Monthly', amount: 15, status: 'Completed', date: '2 hours ago' },
+      { id: 3, customer: 'Akwasi Mensah', email: 'akwasi@network.com', plan: 'Standard Quarterly', amount: 45, status: 'Pending', date: 'Yesterday' },
+      { id: 4, customer: 'Evelyn White', email: 'ev.white@gmail.com', plan: 'Premium Monthly', amount: 30, status: 'Completed', date: 'Feb 15, 2026' },
+      { id: 5, customer: 'Michael Kojo', email: 'mkojo@yahoo.com', plan: 'Premium Yearly', amount: 120, status: 'Completed', date: 'Feb 14, 2026' },
+    ]
+  } else {
+    return [
+      { id: 1, customer: 'Kofi Annan', email: 'kofi@example.com', plan: 'Premium Yearly', amount: 120, status: 'Completed', date: 'Jan 10, 2026' },
+      { id: 2, customer: 'Ama Serwaa', email: 'ama.s@example.com', plan: 'Basic Monthly', amount: 15, status: 'Completed', date: 'Jan 12, 2026' },
+      { id: 3, customer: 'Yaw Osei', email: 'yaw@network.com', plan: 'Standard Quarterly', amount: 45, status: 'Pending', date: 'Jan 15, 2026' },
+    ]
+  }
+})
 </script>

@@ -466,3 +466,9 @@ export async function getsubscriberSubscriptionSummary(subscriberId: string) {
     const response = await gnpAdminUserHttpClient<BaseApiResponse<SubscriptionSummary[]>>(`admin/get-subscriber-subscription-summary/${subscriberId}`, "");
     return response.result;
 }
+
+
+export async function resetStandardSubscriberPassword(subscriberId: string) {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/reset-subscriber-password/${subscriberId}`, "");
+    return response.success;
+}

@@ -12,7 +12,9 @@
           <h2 class="text-xl font-bold text-gray-900 mb-6">Generate New Link</h2>
           <div class="space-y-6">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Target Publication / Page</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Target Publication / Page
+              </label>
               <select class="block w-full px-4 py-3 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500">
                 <option>General Home Page</option>
                 <option>Daily Graphic</option>
@@ -23,11 +25,13 @@
                 <option>Graphic Sports</option>
               </select>
             </div>
-            
+
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Campaign Name (Optional)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Campaign Name (Optional)
+              </label>
               <input 
-                type="text" 
+                type="text"
                 class="block w-full px-4 py-3 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500"
                 placeholder="e.g. Facebook Summer Campaign"
               />
@@ -40,17 +44,52 @@
             </div>
           </div>
 
+
           <!-- Generated Link result (example) -->
           <div class="mt-10 p-6 bg-primary-50 rounded-2xl border border-primary-100">
             <label class="block text-xs font-bold text-primary-700 uppercase tracking-wider mb-2">Your Affiliate Link</label>
             <div class="flex gap-3">
               <input 
                 readonly 
-                value="https://graphicnewsplus.com/?ref=aff_2938"
+                value="http://localhost:3009/affiliates/test_id?type=grid"
                 class="flex-1 bg-white px-4 py-3 rounded-lg border-primary-200 text-gray-700 font-medium"
               />
               <button @click="copyLink" class="px-6 py-3 bg-white text-primary-600 border border-primary-200 rounded-lg hover:bg-primary-100 transition font-bold">
                 Copy
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Widget Generator -->
+        <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+          <h2 class="text-xl font-bold text-gray-900 mb-6">Generate Embed Widget</h2>
+          <div class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Widget Type</label>
+              <select v-model="widgetType" class="block w-full px-4 py-3 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500">
+                <option value="carousel">Small Card (Carousel)</option>
+                <option value="grid">Banner (Grid)</option>
+              </select>
+              <p class="text-xs text-gray-500 mt-2">
+                <span v-if="widgetType === 'carousel'">Displays a compact, horizontal scrolling carousel with arrows.</span>
+                <span v-else>Displays a full-width grid of the latest newspapers.</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Generated Widget Code -->
+          <div class="mt-10 p-6 bg-primary-50 rounded-2xl border border-primary-100">
+            <label class="block text-xs font-bold text-primary-700 uppercase tracking-wider mb-2">Your Embed Code</label>
+            <div class="flex flex-col gap-3">
+              <textarea
+                readonly
+                :value="generatedWidgetCode"
+                rows="3"
+                class="w-full bg-white px-4 py-3 rounded-lg border-primary-200 text-gray-700 font-mono text-sm resize-none"
+              ></textarea>
+              <button @click="copyWidgetCode" class="self-end px-6 py-3 bg-white text-primary-600 border border-primary-200 rounded-lg hover:bg-primary-100 transition font-bold">
+                Copy Code
               </button>
             </div>
           </div>
@@ -136,13 +175,30 @@
         </div>
       </div>
     </div>
-  </div>
+    </div>
+ 
+  
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
+
 definePageMeta({
   layout: 'default'
 })
+
+const widgetType = ref('carousel')
+const affiliateId = ref('8ueyrt') // Using the mock ID from the request
+
+const widgetHeight = computed(() => widgetType.value === 'carousel' ? '500px' : '800px')
+const generatedWidgetCode = computed(() => {
+  return `<iframe src="https://new.graphicnewsplus.com/affiliates/${affiliateId.value}?type=${widgetType.value}" width="100%" height="${widgetHeight.value}" frameborder="0" allowfullscreen></iframe>`
+})
+
+const copyWidgetCode = () => {
+  navigator.clipboard.writeText(generatedWidgetCode.value)
+  alert('Widget code copied to clipboard!')
+}
 
 const copyLink = () => {
   // Mock copy

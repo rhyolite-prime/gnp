@@ -966,6 +966,7 @@ const retrieveNewsPaperEntitlement = async (id: string, maxRetries = 3) => {
 
   try {
     while (attempt < maxRetries) {
+      
       try {
         let result = await validateNewsPaperEntitlement({newsPaperId: id});
         
