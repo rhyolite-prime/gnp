@@ -187,6 +187,29 @@
           </div>
         </div>
 
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+          <div class="space-y-3">
+            <button class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
+              <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">Add New Article</span>
+              <PlusIcon class="h-5 w-5 text-gray-400 group-hover:text-primary-500" />
+            </button>
+            <button class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
+              <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">Create User</span>
+              <UserPlusIcon class="h-5 w-5 text-gray-400 group-hover:text-primary-500" />
+            </button>
+            <button class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
+              <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">Create Campaign</span>
+              <MegaphoneIcon class="h-5 w-5 text-gray-400 group-hover:text-primary-500" />
+            </button>
+            <button class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
+              <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">System Settings</span>
+              <CogIcon class="h-5 w-5 text-gray-400 group-hover:text-primary-500" />
+            </button>
+          </div>
+        </div>
+
         <!-- User Engagement -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">User Engagement</h2>
@@ -229,62 +252,9 @@
           </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-          <div class="space-y-3">
-            <button class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
-              <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">Add New Article</span>
-              <PlusIcon class="h-5 w-5 text-gray-400 group-hover:text-primary-500" />
-            </button>
-            <button class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
-              <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">Create User</span>
-              <UserPlusIcon class="h-5 w-5 text-gray-400 group-hover:text-primary-500" />
-            </button>
-            <button class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
-              <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">Create Campaign</span>
-              <MegaphoneIcon class="h-5 w-5 text-gray-400 group-hover:text-primary-500" />
-            </button>
-            <button class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
-              <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">System Settings</span>
-              <CogIcon class="h-5 w-5 text-gray-400 group-hover:text-primary-500" />
-            </button>
-          </div>
-        </div>
+        
 
-        <!-- System Status -->
-        <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-lg p-6 text-white">
-          <h2 class="text-lg font-semibold mb-4">System Status</h2>
-          <div class="space-y-4">
-            <div>
-              <div class="flex justify-between text-sm mb-1">
-                <span class="text-gray-300">Server Load</span>
-                <span class="font-medium">24%</span>
-              </div>
-              <div class="w-full bg-gray-700 rounded-full h-2">
-                <div class="bg-green-500 h-2 rounded-full" style="width: 24%"></div>
-              </div>
-            </div>
-            <div>
-              <div class="flex justify-between text-sm mb-1">
-                <span class="text-gray-300">Database Usage</span>
-                <span class="font-medium">58%</span>
-              </div>
-              <div class="w-full bg-gray-700 rounded-full h-2">
-                <div class="bg-yellow-500 h-2 rounded-full" style="width: 58%"></div>
-              </div>
-            </div>
-            <div>
-              <div class="flex justify-between text-sm mb-1">
-                <span class="text-gray-300">Storage</span>
-                <span class="font-medium">85%</span>
-              </div>
-              <div class="w-full bg-gray-700 rounded-full h-2">
-                <div class="bg-orange-500 h-2 rounded-full" style="width: 85%"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </div>
   </div>

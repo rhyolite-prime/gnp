@@ -80,7 +80,7 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200 bg-white">
-        <tr v-for="person in filteredAffiliates" :key="person.email">
+        <tr v-for="person in filteredAffiliates" :key="person.id">
           <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
             <div class="flex items-center">
               <div class="h-10 w-10 flex-shrink-0">
@@ -122,7 +122,19 @@
                       <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Edit Details</a>
                     </MenuItem>
                      <MenuItem v-slot="{ active }">
-                      <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Suspend Account</a>
+                      <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Update Account Status</a>
+                    </MenuItem>
+
+                    <MenuItem v-slot="{ active }">
+                      <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Reset Password</a>
+                    </MenuItem>
+
+                    <MenuItem v-slot="{ active }">
+                      <NuxtLink :to="`/admin/affiliates/${person.id}`" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">View Earnings</NuxtLink>
+                    </MenuItem>
+
+                    <MenuItem v-slot="{ active }">
+                      <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Delete</a>
                     </MenuItem>
                   </div>
                 </MenuItems>
@@ -201,6 +213,7 @@ const loading = ref(false)
 
 const affiliates = ref([
   {
+    id: 'aff-1',
     name: 'Lindsay Walton',
     email: 'lindsay.walton@example.com',
     status: 'Active',
@@ -210,6 +223,7 @@ const affiliates = ref([
       'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
   },
   {
+    id: 'aff-2',
     name: 'Courtney Henry',
     email: 'courtney.henry@example.com',
     status: 'Active',
@@ -219,6 +233,7 @@ const affiliates = ref([
       'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
   },
   {
+    id: 'aff-3',
     name: 'Tom Cook',
     email: 'tom.cook@example.com',
     status: 'Pending',
@@ -228,6 +243,7 @@ const affiliates = ref([
       'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
   },
   {
+    id: 'aff-4',
     name: 'Whitney Francis',
     email: 'whitney.francis@example.com',
     status: 'Active',
@@ -237,6 +253,7 @@ const affiliates = ref([
       'https://images.unsplash.com/photo-1517365830460-955ce3ccd263?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
   },
   {
+    id: 'aff-5',
     name: 'Leonard Krasner',
     email: 'leonard.krasner@example.com',
     status: 'Suspended',
@@ -246,6 +263,7 @@ const affiliates = ref([
       'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
   },
   {
+    id: 'aff-6',
     name: 'Floyd Miles',
     email: 'floyd.miles@example.com',
     status: 'Active',

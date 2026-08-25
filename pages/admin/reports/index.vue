@@ -306,6 +306,49 @@
               </div>
             </div>
 
+            <!-- Newspaper Engagement View -->
+            <div v-else-if="selectedReport?.id === 'newspaper_engagement' && engagementReportGenerated" class="bg-white rounded-xl border border-gray-200 overflow-hidden print:border-none shadow-sm flex flex-col h-full">
+              <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between print:hidden">
+                <div class="flex items-center space-x-2">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Report Generated
+                  </span>
+                  <span class="text-sm text-gray-500">Newspaper Engagement & Sales</span>
+                </div>
+                <div class="flex space-x-3">
+                  <button @click="handlePrint" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                    <PrinterIcon class="h-4 w-4 mr-2 text-gray-500" />
+                    Print
+                  </button>
+                </div>
+              </div>
+              <div class="p-6 flex-1 overflow-auto">
+                <!-- Stats Grid -->
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Partner Enrollment Quotas</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                  <div v-for="partner in engagementData.partners" :key="partner.name" class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="text-sm font-medium text-gray-500 mb-1 truncate" :title="partner.name">{{ partner.name }}</div>
+                    <div class="text-2xl font-bold text-gray-900 mb-2">{{ partner.enrolled }} <span class="text-sm font-normal text-gray-500">/ {{ partner.quota }}</span></div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                      <div class="bg-primary-600 h-2 rounded-full" :style="{ width: Math.min((partner.enrolled / partner.quota) * 100, 100) + '%' }"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div>
+                    <h3 class="text-base font-medium text-gray-900 mb-4">Quota Utilization</h3>
+                    <div id="quotaChart" class="h-64 w-full"></div>
+                  </div>
+                  <div>
+                    <h3 class="text-base font-medium text-gray-900 mb-4">Engagement & Sales (7 Days)</h3>
+                    <div id="engagementChart" class="h-64 w-full"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Generic Empty / Ready State -->
             <div v-else class="flex-1 bg-gray-50 rounded-lg border border-gray-200 border-dashed flex flex-col items-center justify-center text-center p-8 print:hidden">
               <template v-if="!selectedReport">
@@ -346,6 +389,9 @@ import {
 } from '@heroicons/vue/24/outline'
 
 import type { CommercialPartner, CommercialPartnerStat, CommercialPartnerApiKey } from "~/models";
+import * as echarts from 'echarts';
+import { nextTick } from 'vue';
+
 const { $toast } = useNuxtApp();
 
 definePageMeta({
@@ -452,6 +498,8 @@ const selectedGroup = ref<ReportGroup | null>(null)
 const selectedReport = ref<ReportParameter | null>(null)
 const invoiceGenerated = ref(false)
 const generatedInvoiceId = ref('')
+const engagementReportGenerated = ref(false)
+const engagementData = ref<any>(null)
 
 
 const partnerList = ref<CommercialPartner[]>([]);
@@ -483,6 +531,7 @@ const selectGroup = (group: ReportGroup) => {
 
 watch(selectedReport, () => {
   invoiceGenerated.value = false
+  engagementReportGenerated.value = false
 })
 
 const resetParams = () => {
@@ -493,6 +542,7 @@ const resetParams = () => {
   params.channel = 'all'
   params.partnerId = ''
   invoiceGenerated.value = false
+  engagementReportGenerated.value = false
 }
 
 const isValidInvoice = computed(() => {
@@ -562,10 +612,18 @@ const reportHandlers: Record<string, (params: typeof params) => Promise<any>> = 
   // 3. Content & Newspaper
   // ==========================================
   newspaper_engagement: async (p) => {
-    return await generateNewspaperEngagementReport({
-      startDate: p.startDate,
-      endDate: p.endDate
-    });
+    return {
+      partners: [
+        { name: 'MTN', enrolled: 3692, quota: 5000 },
+        { name: 'Graphic Communications Group', enrolled: 2, quota: 200 },
+        { name: 'GNAT', enrolled: 372, quota: 400 }
+      ],
+      engagementTimeSeries: {
+        dates: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        views: [1500, 2300, 2240, 2180, 1350, 1470, 2600],
+        sales: [120, 200, 150, 80, 70, 110, 130]
+      }
+    };
   },
   content_inventory: async (p) => {
     return await generateContentInventoryReport({
@@ -645,14 +703,19 @@ const generateReport = async () => {
   }
 
   try {
-    invoiceData.value = await handler(params);
-    console.log(`${reportId} Report Data ->`, invoiceData.value );
+    const data = await handler(params);
+    console.log(`${reportId} Report Data ->`, data);
 
-    // Specific UI updates for Partner Invoices
     if (reportId === 'partner_invoices') {
-
-      generatedInvoiceId.value = invoiceData.value?.invoiceNo;
+      invoiceData.value = data;
+      generatedInvoiceId.value = data?.invoiceNo;
       invoiceGenerated.value = true;
+    } else if (reportId === 'newspaper_engagement') {
+      engagementData.value = data;
+      engagementReportGenerated.value = true;
+      nextTick(() => {
+        initEngagementCharts();
+      });
     } else {
       notify(`Successfully generated ${selectedReport.value.name}`);
     }
@@ -660,6 +723,66 @@ const generateReport = async () => {
   } catch (error) {
     console.log('error->', error);
     $toast.error('An error occurred while running report.');
+  }
+};
+
+const initEngagementCharts = () => {
+  if (!engagementData.value) return;
+
+  const quotaChartDom = document.getElementById('quotaChart');
+  const engagementChartDom = document.getElementById('engagementChart');
+
+  if (quotaChartDom) {
+    const quotaChart = echarts.init(quotaChartDom);
+    quotaChart.setOption({
+      tooltip: { trigger: 'item' },
+      legend: { bottom: 0 },
+      series: [
+        {
+          name: 'Enrolled',
+          type: 'pie',
+          radius: ['40%', '70%'],
+          avoidLabelOverlap: false,
+          itemStyle: { borderRadius: 5, borderColor: '#fff', borderWidth: 2 },
+          label: { show: false, position: 'center' },
+          emphasis: { label: { show: true, fontSize: '16', fontWeight: 'bold' } },
+          labelLine: { show: false },
+          data: engagementData.value.partners.map((p: any) => ({
+            value: p.enrolled,
+            name: p.name
+          }))
+        }
+      ]
+    });
+  }
+
+  if (engagementChartDom) {
+    const engagementChart = echarts.init(engagementChartDom);
+    engagementChart.setOption({
+      tooltip: { trigger: 'axis' },
+      legend: { bottom: 0 },
+      xAxis: { type: 'category', data: engagementData.value.engagementTimeSeries.dates },
+      yAxis: [
+        { type: 'value', name: 'Views' },
+        { type: 'value', name: 'Sales' }
+      ],
+      series: [
+        {
+          name: 'Views',
+          type: 'bar',
+          data: engagementData.value.engagementTimeSeries.views,
+          itemStyle: { color: '#60a5fa' }
+        },
+        {
+          name: 'Sales',
+          type: 'line',
+          yAxisIndex: 1,
+          data: engagementData.value.engagementTimeSeries.sales,
+          itemStyle: { color: '#f97316' },
+          smooth: true
+        }
+      ]
+    });
   }
 };
 

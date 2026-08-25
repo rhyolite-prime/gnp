@@ -4,7 +4,7 @@
       <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="p-8">
           <div class="text-center mb-10">
-            <h2 class="text-3xl font-extrabold text-gray-900">Affiliate Login</h2>
+            <h2 class="text-3xl font-extrabold text-gray-900">GNP Affiliate Login</h2>
             <p class="mt-2 text-gray-600">Enter your credentials to access your dashboard</p>
           </div>
 
