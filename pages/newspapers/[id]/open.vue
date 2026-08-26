@@ -114,6 +114,11 @@ const selectedDate = ref('');
 const newsPaperDetail = ref<NewsPaper | null>(null);
 const publicationList = ref<Publication[]>([]);
 
+ 
+
+definePageMeta({
+  middleware: ['basic-user-auth']
+})
 
 const getAllPublications = async () => {
 

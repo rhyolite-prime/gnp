@@ -174,11 +174,11 @@ import {
   ArrowRightOnRectangleIcon,
   ChatBubbleLeftRightIcon
 } from '@heroicons/vue/24/outline'
-import { useAuthStore } from '~/stores/auth'
+import { useAdminAuthStore } from '~/stores/admin-auth'
 
 const route = useRoute()
 const router = useRouter()
-const authStore = useAuthStore()
+const authStore = useAdminAuthStore()
 
 const isSidebarOpen = ref(false)
 

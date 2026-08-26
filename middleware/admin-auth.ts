@@ -1,11 +1,11 @@
-import { usePartnerAuthStore } from '~/stores/partnerAuth'
+import { useAdminAuthStore } from '~/stores/admin-auth'
 
 export default defineNuxtRouteMiddleware((to, from) => {
-  const partnerAuthStore = usePartnerAuthStore()
+  const adminAuthStore = useAdminAuthStore()
   const cookie = useCookie('gnp-admin-user-identity')
 
   // If we have a token in the store, we're good
-  if (partnerAuthStore.accessToken) {
+  if (adminAuthStore.accessToken) {
     return
   }
 
@@ -13,7 +13,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
   if (cookie.value) {
     // Note: The store's initializeFromStorage handles this on the client-side,
     // but in middleware (which runs on both server and client), we ensure the token is set.
-    partnerAuthStore.accessToken = cookie.value
+    adminAuthStore.accessToken = cookie.value
     // If you have a method to fetch partner info from token, call it here.
     // For now, we'll assume the token presence is enough to allow navigation.
     return
@@ -21,7 +21,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
 
   // If no token and no cookie, redirect to partner login
   // Avoid infinite redirect loop if we're already on the login page
-  if (to.path !== '/partners/account/login') {
-    return navigateTo('/partners/account/login')
+  if (to.path !== '/admin/account/login') {
+    return navigateTo('/admin/account/login')
   }
 })

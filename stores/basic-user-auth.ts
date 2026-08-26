@@ -1,34 +1,9 @@
 import { defineStore } from 'pinia';
 import type { AccountInfo } from '@azure/msal-browser';
 
-// Enhanced user interface with additional profile info
-export interface EnhancedUserInfo extends AccountInfo {
 
-  displayName?: string;
-  email?: string;
-  photoUrl?: string;
-  givenName?: string;
-  surname?: string;
-  jobTitle?: string;
-  graphProfile?: any;
-  provider: string;
-  isAuthenticated: boolean;
-  idTokenClaims: {
-    email: string;
-    name: string;
-    picture: string;
-    sub: string;
-    userId: string;
-    username: string;
-  }
-   
-}
 
- 
-
- 
-
-export const useAuthStore = defineStore('auth',  () => {
+export const useBasicAuthStore = defineStore('auth',  () => {
   
   const user = ref<EnhancedUserInfo | null>(null);
   const isAuthenticated = ref(false);
@@ -198,6 +173,7 @@ export const useAuthStore = defineStore('auth',  () => {
     sessionStartedAt.value = null;
     sessionStorage.removeItem('authUser');
     sessionStorage.removeItem('accessToken');
+    gnpUserIdentityCookie.value = null;
   }
   
   // Initialize from storage when store is created

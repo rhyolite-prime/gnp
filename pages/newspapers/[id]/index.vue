@@ -509,7 +509,7 @@
 <script setup lang="ts">
 // Get the route params
 import type { NewsPaper, SubscriptionResponseModel } from "~/models";
-import { useAuthStore } from '~/stores/auth';
+import { useBasicAuthStore } from '~/stores/basic-user-auth';
 import { 
   Facebook,
   Twitter,
@@ -523,8 +523,7 @@ import { useBiometrics } from '~/composables/useBiometrics';
 
 const route = useRoute();
 const router = useRouter();
-const authStore = useAuthStore();
-
+const authStore = useBasicAuthStore();
 
 
 const newspaperId = computed(() => {
@@ -538,6 +537,10 @@ useHead({
     { name: 'description', content: 'View and read Ghana\'s leading newspapers including Daily Graphic, Graphic Business, and more.' }
   ]
 });
+
+definePageMeta({
+  //middleware: ['basic-user-auth']
+})
 
  
 
@@ -880,7 +883,7 @@ const completeOneTimePurchase = async () => {
       if (result) {
         //set result.token in cookies using nuxt cookies
         const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
-          maxAge: 60 * 60 * 24,
+          maxAge: 60 * 60 * 24 * 30,
           secure: true,
           httpOnly: false,
           priority: "medium",

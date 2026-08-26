@@ -84,14 +84,14 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { signIn } from '~/services/auth'
-import { useAuthStore } from '~/stores/auth'
+import { useAffiliateAuthStore } from '~/stores/affiliate-auth'
 
 definePageMeta({
   layout: 'default'
 })
 
 const loading = ref(false)
-const authStore = useAuthStore()
+const authStore = useAffiliateAuthStore()
 const router = useRouter()
 
 const form = reactive({
@@ -109,15 +109,15 @@ const handleLogin = async () => {
     })
     
     if (response && response.success && response.result?.token) {
-      const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
-        maxAge: 60 * 60 * 24,
+      const gnpAffiliateUserIdentityCookie = useCookie("gnp-affiliate-user-identity", {
+        maxAge: 60 * 60 * 24 * 30,
         secure: true,
         httpOnly: false,
         priority: "medium",
         sameSite: "strict"
       });
       
-      gnpUserIdentityCookie.value = response.result.token;
+      gnpAffiliateUserIdentityCookie.value = response.result.token;
       authStore.setAccessToken(response.result.token);
       
       router.push('/affiliates/dashboard')

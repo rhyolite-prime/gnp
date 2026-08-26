@@ -1,4 +1,4 @@
-import { useAffiliateAuthStore } from '~/stores/affiliateAuth'
+import { useAffiliateAuthStore } from '~/stores/affiliate-auth'
 
 export default defineNuxtRouteMiddleware((to, from) => {
   const affiliateAuthStore = useAffiliateAuthStore()

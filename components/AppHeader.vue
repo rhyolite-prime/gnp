@@ -224,10 +224,11 @@ import {
   FilmIcon,
   BookOpenIcon
 } from '@heroicons/vue/24/outline'
-import { useAuthStore } from '~/stores/auth'
+import { useBasicAuthStore } from '~/stores/basic-user-auth'
 
+const route = useRoute()
 const router = useRouter()
-const authStore = useAuthStore()
+const authStore = useBasicAuthStore()
 const searchQuery = ref('')
 const showSignInModal = useState('showSignInModal', () => false);
 const isSearchOpen = ref(false)
@@ -262,6 +263,13 @@ watch(isSearchOpen, (isOpen) => {
     })
   }
 })
+
+// Watch for login query param globally
+watch(() => route.query.al, (newVal) => {
+  if (newVal === 't') {
+    showSignInModal.value = true
+  }
+}, { immediate: true })
 </script>
 
 <style scoped>

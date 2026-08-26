@@ -59,13 +59,13 @@
 
 <script setup lang="ts">
 import { UsersIcon, CurrencyDollarIcon, LinkIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
-import { useAuthStore } from '~/stores/auth'
+import { useAffiliateAuthStore } from '~/stores/affiliate-auth'
 
 definePageMeta({
   layout: 'default'
 })
 
-const authStore = useAuthStore()
+const authStore = useAffiliateAuthStore()
 const router = useRouter()
 
 onMounted(() => {

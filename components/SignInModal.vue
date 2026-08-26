@@ -231,7 +231,7 @@
 import { useMsalAuth } from '~/composables/useMsalAuth';
 import { useGoogleAuth } from '~/composables/useGoogleAuth';
 import { useBiometrics } from '~/composables/useBiometrics';
-import { useAuthStore } from '~/stores/auth';
+import { useBasicAuthStore } from '~/stores/basic-user-auth';
 import * as msal from '@azure/msal-browser';
 import { useRuntimeConfig } from '#imports';
 import { verifyPasskeyLogin } from '~/services/auth';
@@ -243,7 +243,7 @@ const password = ref('');
 const remember = ref(false);
 const isGuestUser = ref(false);
 const route = useRoute();
-const authStore = useAuthStore();
+const authStore = useBasicAuthStore();
 const config = useRuntimeConfig();
 const { $toast } = useNuxtApp();
 
@@ -389,7 +389,7 @@ const handleEmailSignIn = async () => {
     if (response && response.success && response.result?.token) {
 
       const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
-        maxAge: 60 * 60 * 24,
+        maxAge: 60 * 60 * 24 * 30,
         secure: true,
         httpOnly: false,
         priority: "medium",
@@ -531,7 +531,7 @@ const handlePasskeySignIn = async () => {
             
             if (loginResponse && loginResponse.token) {
                  const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
-                    maxAge: 60 * 60 * 24,
+                    maxAge: 60 * 60 * 24 * 30,
                     secure: true,
                     httpOnly: false,
                     priority: "medium",

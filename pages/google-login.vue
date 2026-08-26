@@ -47,13 +47,13 @@
 <script setup>
  
 import { useGoogleAuth } from '~/composables/useGoogleAuth';
-import { useAuthStore } from '~/stores/auth';
+import { useBasicAuthStore } from '~/stores/basic-user-auth';
 import { useRouter } from 'vue-router';
 
 const loading = ref(true);
 const error = ref(null);
 const router = useRouter();
-const authStore = useAuthStore();
+const authStore = useBasicAuthStore();
 const { processGoogleAuthResponse } = useGoogleAuth();
 const redirectPath = ref('/');
 

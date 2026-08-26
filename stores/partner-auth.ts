@@ -1,28 +1,28 @@
 import { defineStore } from 'pinia';
-import type { AffiliateSigninResponseModel } from '../models';
+import type { PartnerSigninResponseModel } from '../models';
 
-export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
-    const affiliateUser = ref<AffiliateSigninResponseModel | null>(null);
+export const usePartnerAuthStore = defineStore('partnerAuth', () => {
+    const partner = ref<PartnerSigninResponseModel | null>(null);
     const isAuthenticated = ref(false);
     const accessToken = ref<string | null>(null);
-
+    const gnpPartnerUserIdentityCookie = useCookie('gnp-partner-user-identity');
     /**
      * Sets the partner authentication data and persists it to storage
-     * @param affiliateInfo The sign-in response data for the partner
+     * @param partnerInfo The sign-in response data for the partner
      */
-    function setAffiliate(affiliateInfo: AffiliateSigninResponseModel | null) {
-        affiliateUser.value = affiliateInfo;
-        isAuthenticated.value = !!affiliateInfo;
-        accessToken.value = affiliateInfo?.token || null;
+    function setPartner(partnerInfo: PartnerSigninResponseModel | null) {
+        partner.value = partnerInfo;
+        isAuthenticated.value = !!partnerInfo;
+        accessToken.value = partnerInfo?.token || null;
 
-        if (affiliateInfo) {
-            sessionStorage.setItem('affiliateAuth', JSON.stringify({
-                affiliate: affiliateInfo,
-                accessToken: affiliateInfo.token,
+        if (partnerInfo) {
+            sessionStorage.setItem('partnerAuth', JSON.stringify({
+                partner: partnerInfo,
+                accessToken: partnerInfo.token,
                 isAuthenticated: true,
             }));
         } else {
-            sessionStorage.removeItem('affiliateAuth');
+            sessionStorage.removeItem('partnerAuth');
         }
     }
 
@@ -30,14 +30,12 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
      * Clears the partner authentication session
      */
     function clearPartner() {
-        affiliateUser.value = null;
+        partner.value = null;
         isAuthenticated.value = false;
         accessToken.value = null;
-        sessionStorage.removeItem('affiliateAuth');
-        
-        // Clear the persistence cookie
-        const cookie = useCookie('gnp-affiliate-user-identity');
-        cookie.value = null;
+        sessionStorage.removeItem('partnerAuth');
+         
+        gnpPartnerUserIdentityCookie.value = null;
     }
 
     /**
@@ -48,7 +46,7 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
             const storedAuth = sessionStorage.getItem('partnerAuth');
             if (storedAuth) {
                 const parsedAuth = JSON.parse(storedAuth);
-                affiliateUser.value = parsedAuth.affiliate;
+                partner.value = parsedAuth.partner;
                 isAuthenticated.value = parsedAuth.isAuthenticated;
                 accessToken.value = parsedAuth.accessToken;
             }
@@ -65,10 +63,10 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
     }
 
     return {
-        affiliateUser,
+        partner,
         isAuthenticated,
         accessToken,
-        setAffiliate,
+        setPartner,
         clearPartner,
         initializeFromStorage
     };

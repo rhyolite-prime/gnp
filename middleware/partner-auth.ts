@@ -1,4 +1,4 @@
-import { usePartnerAuthStore } from '~/stores/partnerAuth'
+import { usePartnerAuthStore } from '~/stores/partner-auth'
 
 export default defineNuxtRouteMiddleware((to, from) => {
   const partnerAuthStore = usePartnerAuthStore()

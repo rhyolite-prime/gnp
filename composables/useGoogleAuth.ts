@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { useRuntimeConfig } from '#imports';
-import { useAuthStore } from '~/stores/auth';
+import { useBasicAuthStore } from '~/stores/basic-user-auth';
 
 export function useGoogleAuth() {
   const config = useRuntimeConfig();
@@ -10,10 +10,10 @@ export function useGoogleAuth() {
   const loading = ref(false);
 
   // Get auth store if we're on the client side
-  let authStore: ReturnType<typeof useAuthStore> | null = null;
+  let authStore: ReturnType<typeof useBasicAuthStore> | null = null;
   if (typeof window !== 'undefined') {
     try {
-      authStore = useAuthStore();
+      authStore = useBasicAuthStore();
     } catch (e) {
       console.warn('Auth store not available:', e);
     }
