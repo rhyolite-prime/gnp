@@ -2,7 +2,7 @@ import { usePartnerAuthStore } from '~/stores/partnerAuth'
 
 export default defineNuxtRouteMiddleware((to, from) => {
   const partnerAuthStore = usePartnerAuthStore()
-  const cookie = useCookie('gnp-partner-user-identity')
+  const cookie = useCookie('gnp-admin-user-identity')
 
   // If we have a token in the store, we're good
   if (partnerAuthStore.accessToken) {

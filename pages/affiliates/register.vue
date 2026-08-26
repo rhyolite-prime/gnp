@@ -25,7 +25,7 @@
                 </div>
               </div>
 
-              <!-- First Name -->
+              <!-- Last Name -->
               <div class="sm:col-span-1">
                 <label for="email" class="block text-sm font-medium text-gray-700">First Name</label>
                 <div class="mt-1">
@@ -49,7 +49,7 @@
                     type="email" 
                     required 
                     class="block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors"
-                    placeholder="name@example.com"
+                    placeholder="name@graphicnewsplus.com"
                   />
                 </div>
               </div>

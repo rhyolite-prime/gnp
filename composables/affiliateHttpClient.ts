@@ -1,11 +1,11 @@
 import { defu } from "defu";
 
-export const partnerHttpClient = async <T>(urlPath: string, baseURL?: string, options?: any) => {
+export const affiliateHttpClient = async <T>(urlPath: string, baseURL?: string, options?: any) => {
 
   const config = useRuntimeConfig().public;
   
-  const partnerAuthIdentity = useGnpPartnerUserAuthIdentity();
-  const authToken = partnerAuthIdentity.value;
+  const affiliateAuthIdentity = useGnpAffiliateUserAuthIdentity();
+  const authToken = affiliateAuthIdentity.value;
     
   const defaultOptions = {
     lazy: false,

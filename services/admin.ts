@@ -472,3 +472,41 @@ export async function resetStandardSubscriberPassword(subscriberId: string) {
     const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/reset-subscriber-password/${subscriberId}`, "");
     return response.success;
 }
+
+
+// affiliate
+export async function getAffiliates(query: object) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<object[]>>>('admin/get-all-subscription-plans', "", { query });
+    return response.result;
+}
+
+export async function createAffiliate(payload: object) {
+    
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/create-subscription-plan', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function updateAffiliate(payload: object) {
+    
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/update-affiliate', "", {
+    method: "put",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function deleteAffiliate(query: object) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/delete-affiliate', "", { query, method: "delete", });
+    return response.success;
+}
+
+export async function updateAffiliateAccountStatus(id: string, status:number) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-affiliate/${id}/${status}`, "");
+    return response.success;
+}

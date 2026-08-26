@@ -100,6 +100,15 @@ export interface PartnerSigninResponseModel {
     requestId: string;
 }
 
+export interface AffiliateSigninResponseModel {
+    affiliateEmail: string;
+    token: string;
+    affiliateName: string;
+    affiliateId: string;
+    requiresTwoFactorAuth: boolean;
+    requestId: string;
+}
+
 //partner sub account
 export interface PartnerStats {
     activeMembers: number;
