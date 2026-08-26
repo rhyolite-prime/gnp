@@ -418,7 +418,8 @@ const { $toast } = useNuxtApp();
 const router = useRouter()
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['admin-auth']
 })
 
 useHead({

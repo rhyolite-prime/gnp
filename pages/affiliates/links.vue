@@ -184,7 +184,8 @@
 import { ref, computed } from 'vue'
 
 definePageMeta({
-  layout: 'default'
+  layout: 'default',
+  middleware: ['affiliate-auth']
 })
 
 const widgetType = ref('carousel')

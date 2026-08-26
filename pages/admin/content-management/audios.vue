@@ -171,8 +171,10 @@ import MediaIngestionModal from '~/components/MediaIngestionModal.vue'
 const { $toast } = useNuxtApp()
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['admin-auth']
 })
+
 
 useHead({
   title: 'Audios Management | Graphic News Plus'

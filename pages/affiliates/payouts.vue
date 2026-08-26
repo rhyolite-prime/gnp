@@ -84,7 +84,8 @@
 import { BanknotesIcon, CreditCardIcon, DevicePhoneMobileIcon } from '@heroicons/vue/24/outline'
 
 definePageMeta({
-  layout: 'default'
+  layout: 'default',
+  middleware: ['affiliate-auth']
 })
 
 const getIcon = (method: string) => {

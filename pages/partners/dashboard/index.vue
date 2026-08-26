@@ -479,9 +479,10 @@ import { isEmpty, debounce } from "lodash-es";
 const { $toast } = useNuxtApp();
 
 definePageMeta({
-  layout: 'default'
+  layout: 'default',
+  middleware: ['partner-auth']
 })
-
+ 
 useHead({
   title: 'Partner Dashboard - Graphic NewsPlus',
   meta: [

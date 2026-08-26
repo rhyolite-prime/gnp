@@ -287,7 +287,8 @@ import { isEmpty, debounce } from "lodash-es";
 import type { CommercialPartner, Subscriber, SubscriptionSummary } from "~/models";
 
 definePageMeta({
-  layout: 'admin'
+    layout: 'admin',
+  middleware: ['admin-auth']
 });
 
 const route = useRoute();

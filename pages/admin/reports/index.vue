@@ -395,7 +395,8 @@ import { nextTick } from 'vue';
 const { $toast } = useNuxtApp();
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['admin-auth']
 })
 
 // Mock notification function

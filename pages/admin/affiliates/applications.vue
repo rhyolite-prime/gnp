@@ -59,7 +59,8 @@ import { ref } from 'vue'
 import { InboxIcon } from '@heroicons/vue/24/outline'
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['admin-auth']
 })
 
 const applications = ref([

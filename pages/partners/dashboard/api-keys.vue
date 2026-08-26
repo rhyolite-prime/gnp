@@ -341,6 +341,10 @@ const newScope = reactive<Record<string, string>>({});
 const newIp = reactive<Record<string, string>>({});
 const isUpdatingKey = ref<string | null>(null);
 
+definePageMeta({
+  middleware: ['partner-auth']
+})
+
 const availableScopes = [
   { name: 'Read Content', value: 'content:read' },
   { name: 'Read Subscribers', value: 'subscribers:read' },

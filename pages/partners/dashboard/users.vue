@@ -390,6 +390,10 @@ import { isEmpty, debounce } from "lodash-es";
 const partnerAuthStore = usePartnerAuthStore();
 const { $toast } = useNuxtApp();
 
+definePageMeta({
+  middleware: ['partner-auth']
+})
+
 const partnerDomain = computed(() => {
   const name = partnerAuthStore.partner?.partnerName || 'Organization'
   return name.toLowerCase().replace(/\s+/g, '') + '.com'

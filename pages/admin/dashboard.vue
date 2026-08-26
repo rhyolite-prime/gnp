@@ -289,7 +289,7 @@ watch([dateFrom, dateTo], () => {
 
 definePageMeta({
   layout: 'admin',
-  //middleware: 'auth' // Assuming auth middleware exists or will be added
+  middleware: ['admin-auth']
 })
 
 const stats = [

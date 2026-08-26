@@ -133,7 +133,9 @@ import {
 } from '@heroicons/vue/24/outline'
 
 definePageMeta({
-  layout: 'default'
+  layout: 'default',
+  middleware: ['affiliate-auth']
+
 })
 
 const chartContainer = ref<HTMLElement | null>(null)

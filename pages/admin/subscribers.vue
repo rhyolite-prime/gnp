@@ -190,7 +190,8 @@ const { $toast } = useNuxtApp();
 
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['admin-auth']
 })
 
 useHead({

@@ -113,7 +113,8 @@
 import { ref } from 'vue'
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['admin-auth']
 })
 
 const settings = ref({
