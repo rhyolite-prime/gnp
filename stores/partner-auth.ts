@@ -5,7 +5,7 @@ export const usePartnerAuthStore = defineStore('partnerAuth', () => {
     const partner = ref<PartnerSigninResponseModel | null>(null);
     const isAuthenticated = ref(false);
     const accessToken = ref<string | null>(null);
-
+    const gnpPartnerUserIdentityCookie = useCookie('gnp-partner-user-identity');
     /**
      * Sets the partner authentication data and persists it to storage
      * @param partnerInfo The sign-in response data for the partner
@@ -34,10 +34,8 @@ export const usePartnerAuthStore = defineStore('partnerAuth', () => {
         isAuthenticated.value = false;
         accessToken.value = null;
         sessionStorage.removeItem('partnerAuth');
-        
-        // Clear the persistence cookie
-        const cookie = useCookie('gnp-partner-identity');
-        cookie.value = null;
+         
+        gnpPartnerUserIdentityCookie.value = null;
     }
 
     /**

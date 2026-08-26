@@ -177,8 +177,8 @@ const otpForm = reactive({
 })
 
 const completeLogin = (response: any) => {
-  const gnpPartnerIdentityCookie = useCookie("gnp-partner-identity", {
-    maxAge: 60 * 60 * 24,
+  const gnpPartnerIdentityCookie = useCookie("gnp-partner-user-identity", {
+    maxAge: 60 * 60 * 24 * 30,
     secure: true,
     httpOnly: false,
     priority: "medium",

@@ -90,6 +90,8 @@ import { isEmpty, debounce } from "lodash-es";
 import { Search } from 'lucide-vue-next'
 
 
+
+
 const router = useRouter();
 const route = useRoute();
 
@@ -213,9 +215,8 @@ function handleCategorySelect(category: Category) {
   // Update filters
   activeFilters.category = category.id
   currentPage.value = 1
-  
-  // Simulate loading
- 
+
+   
 }
 
 function handlePublicationSelect(publication: Category) {
@@ -231,14 +232,20 @@ function handlePublicationSelect(publication: Category) {
   // Update filters
   activeFilters.publication = publication.id
   currentPage.value = 1
-  
-   
+
+  try {
+    trackEvent('newspaper.list.filter_applied', {
+      filter_type: 'publication',
+      value: publication.id,
+    })
+  } catch { /* ignore */ }
 }
  
 
 function viewNewspaper(newspaper: NewsPaper) {
   // Store the selected newspaper
   currentSelectedNewspaper.value = newspaper
+
   
   // Navigate to newspaper detail page
   navigateTo(`/newspapers/${newspaper.id}`)
@@ -246,8 +253,11 @@ function viewNewspaper(newspaper: NewsPaper) {
 
  
 
- const debouncedSearch = debounce(() => {
+  const debouncedSearch = debounce(() => {
     filters.pageNo = 1; // Reset to first page for new search
+
+  
+
     getPaginatedNewsPapers();
   }, 300);
 
@@ -260,5 +270,6 @@ function viewNewspaper(newspaper: NewsPaper) {
     
     await getPaginatedNewsPapers();
 
+     
   });
 </script>

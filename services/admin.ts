@@ -1,4 +1,4 @@
-import type { NewsPaper, Publication, Payment, CommercialPartner,AdminUser, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
+import type { NewsPaper, Publication, Payment, CommercialPartner, AdminUser, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
 
 //publication setups
 
@@ -18,9 +18,9 @@ export async function createPublication(payload: object) {
   return response.success;
 }
 
-export async function updatePublication(payload: object) {
+export async function updatePublication(payload: object, id: string) {
     
-  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/update-publication', "", {
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/update-publication/${id}`, "", {
     method: "post",
     body: payload,
   });
@@ -465,4 +465,48 @@ export async function getSubscribers(query: object) {
 export async function getsubscriberSubscriptionSummary(subscriberId: string) {
     const response = await gnpAdminUserHttpClient<BaseApiResponse<SubscriptionSummary[]>>(`admin/get-subscriber-subscription-summary/${subscriberId}`, "");
     return response.result;
+}
+
+
+export async function resetStandardSubscriberPassword(subscriberId: string) {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/reset-subscriber-password/${subscriberId}`, "");
+    return response.success;
+}
+
+
+// affiliate
+export async function getAffiliates(query: object) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<object[]>>>('admin/get-all-subscription-plans', "", { query });
+    return response.result;
+}
+
+export async function createAffiliate(payload: object) {
+    
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/create-subscription-plan', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function updateAffiliate(payload: object) {
+    
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/update-affiliate', "", {
+    method: "put",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function deleteAffiliate(query: object) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/delete-affiliate', "", { query, method: "delete", });
+    return response.success;
+}
+
+export async function updateAffiliateAccountStatus(id: string, status:number) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-affiliate/${id}/${status}`, "");
+    return response.success;
 }

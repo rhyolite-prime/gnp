@@ -1,11 +1,11 @@
-import { usePartnerAuthStore } from '~/stores/partner-auth'
+import { useAffiliateAuthStore } from '~/stores/affiliate-auth'
 
 export default defineNuxtRouteMiddleware((to, from) => {
-  const partnerAuthStore = usePartnerAuthStore()
-  const cookie = useCookie('gnp-partner-user-identity')
+  const affiliateAuthStore = useAffiliateAuthStore()
+  const cookie = useCookie('gnp-affiliate-user-identity')
 
   // If we have a token in the store, we're good
-  if (partnerAuthStore.accessToken) {
+  if (affiliateAuthStore.accessToken) {
     return
   }
 
@@ -13,7 +13,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
   if (cookie.value) {
     // Note: The store's initializeFromStorage handles this on the client-side,
     // but in middleware (which runs on both server and client), we ensure the token is set.
-    partnerAuthStore.accessToken = cookie.value
+    affiliateAuthStore.accessToken = cookie.value
     // If you have a method to fetch partner info from token, call it here.
     // For now, we'll assume the token presence is enough to allow navigation.
     return

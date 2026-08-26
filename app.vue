@@ -41,4 +41,32 @@ const shouldShowPwaInstall = computed(() => {
     return false
   }
 })
+
+ 
+
+onMounted(() => {
+  // Global JS error capture → OTel + Loki
+  window.onerror = (message, source, lineno, colno, error) => {
+    try {
+      trackError('app.global', error || new Error(String(message)), {
+        source: String(source || ''),
+        lineno: lineno ?? 0,
+        colno: colno ?? 0,
+      })
+    } catch { /* ignore */ }
+    return false // Don't suppress the error
+  }
+
+  // Unhandled promise rejections
+  window.addEventListener('unhandledrejection', (event) => {
+    try {
+      const err = event.reason instanceof Error
+        ? event.reason
+        : new Error(String(event.reason))
+      trackError('app.unhandled_rejection', err, {})
+    } catch { /* ignore */ }
+  })
+
+  
+})
 </script>

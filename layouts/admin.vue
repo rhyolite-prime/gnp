@@ -174,11 +174,11 @@ import {
   ArrowRightOnRectangleIcon,
   ChatBubbleLeftRightIcon
 } from '@heroicons/vue/24/outline'
-import { useAuthStore } from '~/stores/auth'
+import { useAdminAuthStore } from '~/stores/admin-auth'
 
 const route = useRoute()
 const router = useRouter()
-const authStore = useAuthStore()
+const authStore = useAdminAuthStore()
 
 const isSidebarOpen = ref(false)
 
@@ -194,7 +194,6 @@ const navigation = [
     icon: DocumentTextIcon,
     children: [
       { name: 'Newspapers', href: '/admin/content-management/newspapers' },
-      { name: 'Archives', href: '/admin/content-management/archives' },
       { name: 'Videos', href: '/admin/content-management/videos' },
       { name: 'Audios', href: '/admin/content-management/audios' },
       { name: 'Ingestion Jobs', href: '/admin/content-management/ingestion-jobs' },
@@ -257,16 +256,7 @@ const navigation = [
     ],
   },
   { name: 'Support Tickets', href: '/admin/support-tickets', icon: ChatBubbleLeftRightIcon },
-  {
-    name: 'Reports',
-    icon: ChartBarIcon,
-    children: [
-      { name: 'Revenue Analytics', href: '/admin/reports/revenue' },
-      { name: 'Partner Invoicing', href: '/admin/reports/partner-invoices' },
-      { name: 'Subscriber Engagement', href: '/admin/reports/engagement' },
-      { name: 'Content Performance', href: '/admin/reports/content' },
-    ],
-  },
+  { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
   { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
 ]
 

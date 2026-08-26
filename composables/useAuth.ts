@@ -7,7 +7,7 @@ export const useAuth = () => {
     const { $generateAlertError } = useNuxtApp();
 
     const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
-        maxAge: 60 * 60 * 24,
+        maxAge: 60 * 60 * 24 * 30,
     });
 
     const gnpUserAuthIdentity = useGnpUserAuthIdentity();
@@ -15,26 +15,34 @@ export const useAuth = () => {
     const config = useRuntimeConfig();
 
     const getBusinessAuth = async (payload: Object) => {
-        const response = await $fetch<BaseApiResponse<GnpUserAuthModel>>(
-            "users/generate-jwt-token",
-            {
-                method: "POST",
-                body: payload,
-                baseURL: config.public.proxyApiAuthBaseURL,
+         
+
+        try {
+            const response = await $fetch<BaseApiResponse<GnpUserAuthModel>>(
+                "users/generate-jwt-token",
+                {
+                    method: "POST",
+                    body: payload,
+                    baseURL: config.public.proxyApiBaseURL,
+                }
+            );
+
+            if (response.success) {
+                //save to cookie
+                gnpUserIdentityCookie.value = JSON.stringify(response.result);
+ 
+
+                await router.push("/");
             }
-        );
-
-        if (response.success) {
-            //save to cookie
-            
-            gnpUserIdentityCookie.value = JSON.stringify(response.result);
-
-            await router.push("/");
+            return response;
+        } catch (err: any) {
+             
         }
-        return response;
     };
 
     const signOut = () => {
+        
+
         gnpUserIdentityCookie.value = null;
 
         window.location.href = "/";

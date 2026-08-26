@@ -412,7 +412,7 @@ import {
   Pencil,
   Save
 } from 'lucide-vue-next';
-import { useAuthStore } from '~/stores/auth';
+import { useBasicAuthStore } from '~/stores/basic-user-auth';
 import { useBiometrics } from '~/composables/useBiometrics';
 import type { UserSubscription, Payment } from '~/models';
 
@@ -420,7 +420,7 @@ useHead({
   title: 'My Account - Graphic NewsPlus',
 });
 
-const authStore = useAuthStore();
+const authStore = useBasicAuthStore();
 const { register, isBiometricsAvailable } = useBiometrics();
 // State
 const isLoadingProfile = ref(true);

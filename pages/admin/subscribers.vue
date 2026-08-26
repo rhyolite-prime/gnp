@@ -106,28 +106,26 @@
                         <div class="py-1">
                             <button 
                                 class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                                @click.prevent="openDetailModal(sub)"
-                            >
+                                @click.prevent="openDetailModal(sub)">
                                 View Details
                             </button>
                             <button 
                                 class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                                @click.prevent="openDetailModal(sub)"
-                            >
+                                @click.prevent="openDetailModal(sub)">
                                 Update
                             </button>
-                            <button 
+                            <button v-if="!sub.isActive"
                                 class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
                                 @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Active')">
                                 Activate
                             </button>
                             <button 
                                 class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                                @click.prevent="resetSubscriberPassword(sub.partnerId, sub.id)"
+                                @click.prevent="resetSubscriberPassword(sub.id)"
                             >
                                 Reset Password
                             </button>
-                            <button 
+                            <button v-if="sub.isActive"
                                 class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
                                 @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Inactive')"
                             >
@@ -168,6 +166,16 @@
       @save="handleCreateSubscriber"
       :loading="isCreatingSubscriber"
     />
+
+    <!-- Subscriber Detail Modal -->
+    <AdminSubscriberSubscriptionModal
+      :show="showDetailModal"
+      :subscriber="selectedSubscriber"
+      :partner-id="partnerId"
+      @close="closeDetailModal"
+    />
+
+     
      
 
   </div>
@@ -207,6 +215,8 @@ const paginationParams = reactive({
 });
 
 const subscriberList = ref<Subscriber[]>([]);
+const showDetailModal = ref(false);
+const selectedSubscriber = ref<Subscriber | null>(null);
 
 const isShimmerLoading = ref(true);
 const showCreateModal = ref(false);
@@ -227,6 +237,23 @@ const closeCreateModal = () => {
     showCreateModal.value = false;
 };
 
+const closeDropdown = () => {
+    activeDropdownId.value = null;
+};
+
+const openDetailModal = (subscriber: Subscriber) => {
+    selectedSubscriber.value = subscriber;
+    showDetailModal.value = true;
+    closeDropdown();
+};
+
+const closeDetailModal = () => {
+    showDetailModal.value = false;
+    setTimeout(() => {
+        selectedSubscriber.value = null;
+    }, 300);
+};
+
 const getPaginatedSubscribers = async () => {
 
     isShimmerLoading.value = true;
@@ -236,8 +263,6 @@ const getPaginatedSubscribers = async () => {
         let result = await getSubscribers(filters);
 
         subscriberList.value = result.data;
-
-        console.log('subscriberList->', subscriberList.value)
 
         paginationParams.totalPages = result.totalPages;
         paginationParams.totalCount = result.totalCount;
@@ -311,6 +336,26 @@ const handleCreateSubscriber = async (subscriberData: any) => {
         isCreatingSubscriber.value = false;
       closeCreateModal();
         await getPaginatedSubscribers();
+    }
+};
+
+
+const resetSubscriberPassword = async (subscriberId: string) => {
+
+    try {
+        const success = await resetStandardSubscriberPassword(subscriberId);
+        
+        if (success) {
+            $toast.success('Subscriber Password Reset Successfully.');
+            await fetchSubscribers();
+        } else {
+            $toast.error('Failed to reset subscriber password');
+        }
+    } catch (error) {
+         
+        $toast.error('An error occurred while reseting subsriber password');
+    } finally {
+        closeDropdown();
     }
 };
 

@@ -100,6 +100,15 @@ export interface PartnerSigninResponseModel {
     requestId: string;
 }
 
+export interface AffiliateSigninResponseModel {
+    affiliateEmail: string;
+    token: string;
+    affiliateName: string;
+    affiliateId: string;
+    requiresTwoFactorAuth: boolean;
+    requestId: string;
+}
+
 //partner sub account
 export interface PartnerStats {
     activeMembers: number;
@@ -291,6 +300,7 @@ export interface CommercialPartner extends BaseEntityModel {
     partnerIdentifier: string;
     contactName: string;
     contactEmail: string;
+    accountType: string;
     contactPhone: string;
     billingEmail: string;
     organizationLogo: string;
@@ -348,8 +358,7 @@ export interface Publication extends BaseEntityModel {
     description: string;
     isActive: boolean;
     name: string;
-    price: number;
-    publishingDays: []
+    price: string;
 }
 
 

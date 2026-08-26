@@ -509,7 +509,7 @@
 <script setup lang="ts">
 // Get the route params
 import type { NewsPaper, SubscriptionResponseModel } from "~/models";
-import { useAuthStore } from '~/stores/auth';
+import { useBasicAuthStore } from '~/stores/basic-user-auth';
 import { 
   Facebook,
   Twitter,
@@ -523,7 +523,8 @@ import { useBiometrics } from '~/composables/useBiometrics';
 
 const route = useRoute();
 const router = useRouter();
-const authStore = useAuthStore();
+const authStore = useBasicAuthStore();
+
 
 const newspaperId = computed(() => {
   return route.params.id as string;
@@ -536,6 +537,10 @@ useHead({
     { name: 'description', content: 'View and read Ghana\'s leading newspapers including Daily Graphic, Graphic Business, and more.' }
   ]
 });
+
+definePageMeta({
+  //middleware: ['basic-user-auth']
+})
 
  
 
@@ -630,8 +635,22 @@ function closeSubscriptionModal() {
 
 function openOneTimePurchaseModal() {
   if (!!authStore.accessToken) {
+    try {
+      trackEvent('newspaper.purchase.start', {
+        newspaper_id: newspaperId.value,
+        purchase_type: 'ONE_TIME',
+        auth_provider: authStore.authProvider || 'authenticated',
+      })
+    } catch { /* ignore */ }
     handleAuthenticatedOneTimePurchase();
   } else {
+    try {
+      trackEvent('newspaper.purchase.start', {
+        newspaper_id: newspaperId.value,
+        purchase_type: 'ONE_TIME',
+        auth_provider: 'guest',
+      })
+    } catch { /* ignore */ }
     showPurchaseModal.value = true;
   }
 }
@@ -662,6 +681,12 @@ const handleAuthenticatedOneTimePurchase = async () => {
 };
 
 function openShareModal() {
+  try {
+    trackEvent('newspaper.share.initiate', {
+      newspaper_id: newspaperId.value,
+      title: newsPaperDetail.value?.title || '',
+    })
+  } catch { /* ignore */ }
   showShareModal.value = true;
   recipientPhone.value = "";
 }
@@ -708,16 +733,26 @@ const handleShare = async () => {
 const loadImageAsBlob = async (fileId: string) => {
 
     imageLoading.value = true;
+    const imgLoadStart = performance.now();
     
     try {
 
         const url = await getSecureThumbnail(fileId);
         blobUrl.value = url;
         imageLoading.value = false;
+
+        try {
+          const loadMs = performance.now() - imgLoadStart;
+          trackEvent('newspaper.image.loaded', {
+            newspaper_id: fileId,
+            load_time_ms: Math.round(loadMs),
+          })
+        } catch { /* ignore */ }
         
       } catch (error) {
 
         imageLoading.value = false;
+        try { trackError('newspaper.image', error, { newspaper_id: fileId }) } catch { /* ignore */ }
       }    
 }
 
@@ -848,7 +883,7 @@ const completeOneTimePurchase = async () => {
       if (result) {
         //set result.token in cookies using nuxt cookies
         const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
-          maxAge: 60 * 60 * 24,
+          maxAge: 60 * 60 * 24 * 30,
           secure: true,
           httpOnly: false,
           priority: "medium",
@@ -863,6 +898,14 @@ const completeOneTimePurchase = async () => {
         if (available) {
           isBiometricAvailable.value = true;
           showFingerprintModal.value = true;
+
+          try {
+            trackEvent('pwa.biometric.prompt', {
+              newspaper_id: newspaperId.value,
+              available: true,
+            })
+          } catch { /* ignore */ }
+
           // Don't auto-redirect/show success yet, wait for user choice
         } else {
           // Fallback for devices without biometrics
@@ -870,9 +913,18 @@ const completeOneTimePurchase = async () => {
         }
       }
     }
+
+    try {
+      trackEvent('newspaper.purchase.complete', {
+        newspaper_id: newspaperId.value,
+        purchase_type: purchaseType.value,
+        payment_provider: 'paystack',
+        auth_provider: authStore.authProvider || 'guest',
+      })
+    } catch { /* ignore */ }
     
   } catch (error) {
-    
+    try { trackError('newspaper.purchase', error, { newspaper_id: newspaperId.value }) } catch { /* ignore */ }
   }
   finally {
     isCompletingPurchase.value = false;
@@ -948,8 +1000,16 @@ const retrieveNewsPaperDetails = async (id: string) => {
 
       loadImageAsBlob(id)
 
+      try {
+        trackEvent('newspaper.detail.view', {
+          newspaper_id: id,
+          title: result?.title || '',
+          publication: result?.publicationName || '',
+        })
+      } catch { /* ignore */ }
+
     } catch (error) {
-        //$toast.error('Unable to fetch finishing options !');
+        try { trackError('newspaper.detail', error, { newspaper_id: id }) } catch { /* ignore */ }
     } finally {
         isLoading.value = false;
     }
@@ -966,6 +1026,7 @@ const retrieveNewsPaperEntitlement = async (id: string, maxRetries = 3) => {
 
   try {
     while (attempt < maxRetries) {
+      
       try {
         let result = await validateNewsPaperEntitlement({newsPaperId: id});
         
@@ -973,6 +1034,15 @@ const retrieveNewsPaperEntitlement = async (id: string, maxRetries = 3) => {
           hasAccess.value = true;
           uniqueId.value = result.uniqueId;
           isProcessing.value = false;
+
+          try {
+            trackEvent('newspaper.entitlement.granted', {
+              newspaper_id: id,
+              unique_id: result.uniqueId || '',
+              attempt_count: attempt + 1,
+            })
+          } catch { /* ignore */ }
+
           return; // Success, exit
         }
         
@@ -984,6 +1054,15 @@ const retrieveNewsPaperEntitlement = async (id: string, maxRetries = 3) => {
         // If it's the last attempt, don't wait, just fail (or keep hasAccess as false)
         if (attempt === maxRetries - 1) {
           console.warn("Max retries reached for entitlement check.");
+
+          try {
+            trackEvent('newspaper.entitlement.denied', {
+              newspaper_id: id,
+              max_retries_hit: true,
+              attempt_count: maxRetries,
+            })
+          } catch { /* ignore */ }
+
           break; 
         }
         
@@ -1036,6 +1115,14 @@ onMounted(async () => {
    
   await verifyNewsPaperEntitlement(newspaperId.value);
 
+  try {
+    trackPageView('newspaper.detail', {
+      newspaper_id: newspaperId.value,
+      has_access: hasAccess.value,
+      auth_provider: authStore.authProvider || 'guest',
+    })
+  } catch { /* ignore */ }
+
   if (!import.meta.server) {
     window.addEventListener('message', payStackCheckoutEventCallback)
   }
@@ -1045,6 +1132,13 @@ onMounted(async () => {
 function handlePreviewClick() {
   // In a real application, this would open a preview modal or redirect to a preview page
   console.log('Preview newspaper:', newsPaperDetail.value?.title);
+
+  try {
+    trackEvent('newspaper.preview.click', {
+      newspaper_id: newspaperId.value,
+      title: newsPaperDetail.value?.title || '',
+    })
+  } catch { /* ignore */ }
 }
 
 // Update page title when newspaper data is loaded

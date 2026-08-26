@@ -58,26 +58,13 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-lg font-semibold text-gray-900">Commission Trends</h2>
-             <select class="text-sm border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500">
-              <option>Last 30 Days</option>
-              <option>Last 6 Months</option>
-              <option>This Year</option>
+             <select v-model="dateFilter" class="text-sm border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500">
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+              <option value="month">This Month</option>
             </select>
           </div>
-          <div class="h-64 flex items-end justify-between gap-2 px-2">
-            <!-- Dummy Bar Chart -->
-            <div v-for="(height, index) in [40, 65, 45, 80, 55, 90, 70, 85, 60, 75, 50, 95]" :key="index" class="w-full bg-primary-100 rounded-t-sm relative group">
-               <div class="absolute bottom-0 left-0 right-0 bg-primary-500 rounded-t-sm transition-all duration-500 group-hover:bg-primary-600" :style="{ height: `${height}%` }"></div>
-               <!-- Tooltip -->
-               <div class="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                 ₵{{ height * 150 }}
-               </div>
-            </div>
-          </div>
-          <div class="flex justify-between mt-4 text-xs text-gray-500 px-2">
-            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
-            <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
-          </div>
+          <div ref="chartContainer" class="h-72 w-full mt-4"></div>
         </div>
 
         <!-- Recent Affiliate Activity -->
@@ -222,6 +209,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import * as echarts from 'echarts'
 import { 
   UsersIcon, 
   CurrencyDollarIcon, 
@@ -233,6 +222,104 @@ import CountUp from 'vue-countup-v3'
 
 definePageMeta({
   layout: 'admin'
+})
+
+const chartContainer = ref<HTMLElement | null>(null)
+let chart: echarts.ECharts | null = null
+const dateFilter = ref('7days')
+
+const updateChartData = () => {
+  if (!chart) return
+  let data = []
+  let xAxisData = []
+  if (dateFilter.value === '7days') {
+    data = [40, 60, 45, 90, 75, 80, 55]
+    xAxisData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  } else if (dateFilter.value === '30days') {
+    data = Array.from({ length: 30 }, () => Math.floor(Math.random() * 80) + 20)
+    xAxisData = Array.from({ length: 30 }, (_, i) => `${i + 1}`)
+  } else {
+    data = [300, 400, 250, 450]
+    xAxisData = ['Week 1', 'Week 2', 'Week 3', 'Week 4']
+  }
+  chart.setOption({
+    xAxis: { data: xAxisData },
+    series: [{ data }]
+  })
+}
+
+watch(dateFilter, updateChartData)
+
+onMounted(() => {
+  if (chartContainer.value) {
+    chart = echarts.init(chartContainer.value)
+    const option = {
+      tooltip: {
+        trigger: 'axis',
+        formatter: (params: any) => {
+          const p = params[0]
+          return `<div class="font-sans">
+            <div class="font-bold mb-1">${p.name}</div>
+            <div>Commissions: ₵${p.value * 10}</div>
+          </div>`
+        }
+      },
+      grid: {
+        left: '0%',
+        right: '0%',
+        bottom: '0%',
+        top: '10%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        axisTick: { show: false },
+        axisLine: { lineStyle: { color: '#f3f4f6' } },
+        axisLabel: { color: '#9ca3af', margin: 16 }
+      },
+      yAxis: {
+        type: 'value',
+        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } },
+        axisLabel: { color: '#9ca3af', formatter: '₵{value}' }
+      },
+      series: [
+        {
+          name: 'Commissions',
+          type: 'line',
+          smooth: true,
+          symbolSize: 8,
+          itemStyle: {
+            color: '#f97316', // Primary 500
+          },
+          lineStyle: {
+            width: 3,
+            color: '#f97316'
+          },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(249, 115, 22, 0.4)' },
+              { offset: 1, color: 'rgba(249, 115, 22, 0)' }
+            ])
+          },
+          data: [40, 60, 45, 90, 75, 80, 55]
+        }
+      ]
+    }
+    chart.setOption(option)
+    
+    updateChartData()
+    
+    const handleResize = () => {
+      chart?.resize()
+    }
+    window.addEventListener('resize', handleResize)
+    
+    onUnmounted(() => {
+      window.removeEventListener('resize', handleResize)
+      chart?.dispose()
+    })
+  }
 })
 
 const today = new Date()

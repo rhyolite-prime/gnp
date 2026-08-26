@@ -129,14 +129,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '~/stores/auth'
+import { useAdminAuthStore } from '~/stores/admin-auth'
 
 
 
 const router = useRouter()
-const authStore = useAuthStore()
+const authStore = useAdminAuthStore()
 
 const email = ref('')
 const password = ref('')
@@ -156,21 +156,20 @@ const handleLogin = async () => {
 
     if (response && response.token) {
       // Set cookie for persistence
-      const gnpUserIdentityCookie = useCookie("gnp-admin-user-identity", {
-        maxAge: 60 * 60 * 24, // 1 day
+      const gnpAdminUserIdentityCookie = useCookie("gnp-admin-user-identity", {
+        maxAge: 60 * 60 * 24 * 2,
         secure: true,
         httpOnly: false,
         priority: "medium",
         sameSite: "strict"
       })
       
-      gnpUserIdentityCookie.value = response.token
+      gnpAdminUserIdentityCookie.value = response.token
       
       // Update store
       authStore.setAccessToken(response.token)
       
       // Redirect to admin dashboard
-      // Assuming /admin or /admin/dashboard is the target
       router.push('/admin/dashboard')
     } else {
       error.value = 'Invalid credentials. Please try again.'

@@ -9,7 +9,7 @@
           v-else
           :src="blobUrl" 
           :alt="newspaper.title" 
-          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          :class="['w-full h-full group-hover:scale-105 transition-transform duration-300', containMode ? 'object-contain' : 'object-cover']"
           loading="lazy"
         >
       </div>
@@ -28,6 +28,10 @@ const props = defineProps({
   newspaper: {
     type: Object,
     required: true
+  },
+  containMode: {
+    type: Boolean,
+    default: false
   }
 })
 

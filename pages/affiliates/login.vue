@@ -4,7 +4,7 @@
       <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="p-8">
           <div class="text-center mb-10">
-            <h2 class="text-3xl font-extrabold text-gray-900">Affiliate Login</h2>
+            <h2 class="text-3xl font-extrabold text-gray-900">GNP Affiliate Login</h2>
             <p class="mt-2 text-gray-600">Enter your credentials to access your dashboard</p>
           </div>
 
@@ -84,14 +84,14 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { signIn } from '~/services/auth'
-import { useAuthStore } from '~/stores/auth'
+import { useAffiliateAuthStore } from '~/stores/affiliate-auth'
 
 definePageMeta({
   layout: 'default'
 })
 
 const loading = ref(false)
-const authStore = useAuthStore()
+const authStore = useAffiliateAuthStore()
 const router = useRouter()
 
 const form = reactive({
@@ -109,15 +109,15 @@ const handleLogin = async () => {
     })
     
     if (response && response.success && response.result?.token) {
-      const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
-        maxAge: 60 * 60 * 24,
+      const gnpAffiliateUserIdentityCookie = useCookie("gnp-affiliate-user-identity", {
+        maxAge: 60 * 60 * 24 * 30,
         secure: true,
         httpOnly: false,
         priority: "medium",
         sameSite: "strict"
       });
       
-      gnpUserIdentityCookie.value = response.result.token;
+      gnpAffiliateUserIdentityCookie.value = response.result.token;
       authStore.setAccessToken(response.result.token);
       
       router.push('/affiliates/dashboard')

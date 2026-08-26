@@ -4,23 +4,37 @@
       <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="p-8">
           <div class="text-center mb-8">
-            <h2 class="text-3xl font-extrabold text-gray-900">Create Affiliate Account</h2>
+            <h2 class="text-3xl font-extrabold text-gray-900">Create Affiliate Account on GNP</h2>
             <p class="mt-2 text-gray-600">Join our network and start earning commissions</p>
           </div>
 
           <form @submit.prevent="handleRegister" class="space-y-6">
             <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
-              <!-- Full Name -->
-              <div class="sm:col-span-2">
-                <label for="fullName" class="block text-sm font-medium text-gray-700">Full Name</label>
+               
+              <!-- First Name -->
+              <div class="sm:col-span-1">
+                <label for="email" class="block text-sm font-medium text-gray-700">First Name</label>
                 <div class="mt-1">
                   <input 
-                    id="fullName" 
-                    v-model="form.fullName" 
+                    v-model="form.firstName" 
                     type="text" 
                     required 
                     class="block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors"
-                    placeholder="Enter your full name"
+                    placeholder="First Name"
+                  />
+                </div>
+              </div>
+
+              <!-- Last Name -->
+              <div class="sm:col-span-1">
+                <label for="email" class="block text-sm font-medium text-gray-700">First Name</label>
+                <div class="mt-1">
+                  <input 
+                    v-model="form.lastName" 
+                    type="text" 
+                    required 
+                    class="block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors"
+                    placeholder="Last Name"
                   />
                 </div>
               </div>
@@ -35,7 +49,7 @@
                     type="email" 
                     required 
                     class="block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors"
-                    placeholder="name@example.com"
+                    placeholder="name@graphicnewsplus.com"
                   />
                 </div>
               </div>
@@ -50,7 +64,7 @@
                     type="tel" 
                     required 
                     class="block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors"
-                    placeholder="+233..."
+                    placeholder="0201234567"
                   />
                 </div>
               </div>

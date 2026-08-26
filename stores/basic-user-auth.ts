@@ -1,34 +1,9 @@
 import { defineStore } from 'pinia';
 import type { AccountInfo } from '@azure/msal-browser';
 
-// Enhanced user interface with additional profile info
-export interface EnhancedUserInfo extends AccountInfo {
 
-  displayName?: string;
-  email?: string;
-  photoUrl?: string;
-  givenName?: string;
-  surname?: string;
-  jobTitle?: string;
-  graphProfile?: any;
-  provider: string;
-  isAuthenticated: boolean;
-  idTokenClaims: {
-    email: string;
-    name: string;
-    picture: string;
-    sub: string;
-    userId: string;
-    username: string;
-  }
-   
-}
 
- 
-
- 
-
-export const useAuthStore = defineStore('auth',  () => {
+export const useBasicAuthStore = defineStore('auth',  () => {
   
   const user = ref<EnhancedUserInfo | null>(null);
   const isAuthenticated = ref(false);
@@ -38,6 +13,9 @@ export const useAuthStore = defineStore('auth',  () => {
   const userPhotoUrl = ref<string>();
   const gnpUserIdentityCookie = useCookie('gnp-user-identity');
   
+  // Track session start time for session-duration-on-logout metric
+  const sessionStartedAt = ref<number | null>(null);
+
   // Set user info after successful authentication
   function setUser(userInfo: EnhancedUserInfo | null, provider: 'microsoft' | 'google' | 'gnp' | null = null) {
     console.log('Setting user info:', userInfo);
@@ -63,6 +41,8 @@ export const useAuthStore = defineStore('auth',  () => {
         isAuthenticated: true,
         photoUrl: userPhotoUrl.value
       }));
+
+      
     }
   }
   
@@ -105,9 +85,12 @@ export const useAuthStore = defineStore('auth',  () => {
         authProvider.value = 'gnp';
         userPhotoUrl.value = userInfo.photoUrl;
         
+         
 
       } catch (err) {
         console.error('Failed to decode JWT:', err);
+
+         
       }
 
     } else {
@@ -131,10 +114,14 @@ export const useAuthStore = defineStore('auth',  () => {
         user.value = parsedAuth;
         isAuthenticated.value = true;
         accessToken.value = storedToken;
+        sessionStartedAt.value = Date.now();
+       
         
       } else if (gnpUserIdentityCookie.value) {
         // Fallback to cookie if sessionStorage is empty (e.g. browser was closed and reopened)
         setAccessToken(gnpUserIdentityCookie.value as string);
+
+         
       }
 
       isAuthLoading.value = false;
@@ -176,13 +163,17 @@ export const useAuthStore = defineStore('auth',  () => {
 
   // Clear user session on logout
   function clearUser() {
+    
+
     user.value = null;
     isAuthenticated.value = false;
     authProvider.value = null;
     accessToken.value = null;
     userPhotoUrl.value = undefined;
+    sessionStartedAt.value = null;
     sessionStorage.removeItem('authUser');
     sessionStorage.removeItem('accessToken');
+    gnpUserIdentityCookie.value = null;
   }
   
   // Initialize from storage when store is created

@@ -79,6 +79,8 @@
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Subscriber Quota</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Default Plan</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Sub Account Status</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Account Type</th>
+            
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
             
             <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
@@ -122,6 +124,10 @@
               >
                 {{ partner.subAccountEnabled ? 'Enabled' : 'Disabled' }}
               </span>
+            </td>
+
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 capitalize">
+              {{ partner.accountType === "rcp" ? "Corporate" : "Enterprise" }}
             </td>
 
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
@@ -450,7 +456,8 @@ const getPaginatedPartners = async () => {
         paginationParams.upperBound = result.upperBound;
 
     } catch (error) {
-        $toast.error('Unable to fetch commercial partners !');
+      $toast.error('Unable to fetch commercial partners !');
+        console.log(error)
     } finally {
         isShimmerLoading.value = false;
     }

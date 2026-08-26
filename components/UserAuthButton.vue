@@ -88,7 +88,7 @@
 
 <script lang="ts" setup>
 
-import { useAuthStore } from '~/stores/auth';
+import { useBasicAuthStore } from '~/stores/basic-user-auth';
 import { useNotificationStore } from '~/stores/notification';
 import { useMsalAuth } from '~/composables/useMsalAuth';
 import { useGoogleAuth } from '~/composables/useGoogleAuth';
@@ -100,7 +100,7 @@ const props = defineProps({
   }
 });
 
-const authStore = useAuthStore();
+const authStore = useBasicAuthStore();
 const notificationStore = useNotificationStore();
 const msalAuth = useMsalAuth();
 const googleAuth = useGoogleAuth();
@@ -165,8 +165,7 @@ const handleSignOut = async () => {
   // Always clear the auth store
   authStore.clearUser();
 
-  const gnpUserIdentityCookie = useCookie('gnp-user-identity');
- 
+
   
   router.push('/newspapers');
 
