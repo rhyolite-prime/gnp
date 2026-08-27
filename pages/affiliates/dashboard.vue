@@ -121,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+
 import * as echarts from 'echarts'
 import { 
   CurrencyDollarIcon, 

@@ -473,7 +473,7 @@ import {
   KeyIcon
 } from '@heroicons/vue/24/outline'
 
-import { usePartnerAuthStore } from '~/stores/partnerAuth';
+import { usePartnerAuthStore } from '~/stores/partner-auth';
 import type { PartnerSubscriber, PartnerStats } from "~/models";
 import { isEmpty, debounce } from "lodash-es";
 const { $toast } = useNuxtApp();

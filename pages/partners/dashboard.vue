@@ -110,7 +110,7 @@ import {
   BookOpenIcon
 } from '@heroicons/vue/24/outline'
 
-import { usePartnerAuthStore } from '~/stores/partnerAuth'
+import { usePartnerAuthStore } from '~/stores/partner-auth'
 
 definePageMeta({
   layout: 'default',

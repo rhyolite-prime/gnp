@@ -39,6 +39,10 @@
             <button @click="approveApplication(application.id)" class="text-green-600 hover:text-green-900 font-medium">Approve</button>
             <span class="text-gray-300">|</span>
             <button @click="rejectApplication(application.id)" class="text-red-600 hover:text-red-900 font-medium">Reject</button>
+            <span class="text-gray-300">|</span>
+            <button @click="archiveApplication(application.id)" class="text-gray-600 hover:text-gray-900 font-medium">Archive</button>
+            <span class="text-gray-300">|</span>
+            <button @click="deleteApplication(application.id)" class="text-gray-600 hover:text-gray-900 font-medium">Delete</button>
           </td>
         </tr>
       </tbody>
@@ -55,13 +59,73 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+
 import { InboxIcon } from '@heroicons/vue/24/outline'
 
 definePageMeta({
   layout: 'admin',
   middleware: ['admin-auth']
 })
+
+useHead({
+  title: 'Applications | Graphic News Plus'
+})
+
+const router = useRouter();
+const route = useRoute();
+
+const filters = reactive({
+  sortBy: '',
+  query: '',
+  pageNo: 1,
+  pageSize: 10,
+
+});
+
+const paginationParams = reactive({
+  totalPages: 0,
+  totalCount: 0,
+  lowerBound: 0,
+  upperBound: 0
+});
+
+const affiliateList = ref<Coupon[]>([]);
+
+const isShimmerLoading = ref(true);
+const isEditing = ref(false)
+
+const onPageChange = async (pageNumber: number) => {
+
+	filters.pageNo = pageNumber;
+	const filteredQuery = filterQueryParams({ ...route.query, ...filters });
+
+	router.replace({ name: route.name ?? '', query: filteredQuery });
+    await getPaginatedCoupons()
+}
+
+const getPaginatedCoupons = async () => {
+
+    isShimmerLoading.value = true;
+
+    try {
+
+        let result = await getAffiliates(filters);
+
+        affiliateList.value = result.data;
+
+        paginationParams.totalPages = result.totalPages;
+        paginationParams.totalCount = result.totalCount;
+        paginationParams.lowerBound = result.lowerBound;
+        paginationParams.upperBound = result.upperBound;
+
+    } catch (error) {
+        $toast.error('Unable to fetch affiliate !');
+    } finally {
+        isShimmerLoading.value = false;
+    }
+
+}
+ 
 
 const applications = ref([
   {
