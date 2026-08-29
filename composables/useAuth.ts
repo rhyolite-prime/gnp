@@ -7,7 +7,7 @@ export const useAuth = () => {
     const { $generateAlertError } = useNuxtApp();
 
     const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
-        maxAge: 60 * 60 * 24 * 30,
+        maxAge: 60 * 60 * 24 * 366,
     });
 
     const gnpUserAuthIdentity = useGnpUserAuthIdentity();

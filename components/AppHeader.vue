@@ -25,10 +25,17 @@
           <NuxtLink to="/newspapers" class="nav-link">Newspapers</NuxtLink>
           <!-- <a href="#magazines" class="nav-link">Magazines</a> -->
           <NuxtLink to="/archives" class="nav-link">Archives</NuxtLink>
+          <NuxtLink to="/research-ai" class="nav-link flex items-center gap-1.5 !text-primary-600 font-semibold group">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-primary-600"></span>
+            </span>
+            <span>AI Research</span>
+          </NuxtLink>
           
           <!-- Originals Dropdown -->
            <!-- <div class="relative group flex items-center h-full">
-            <NuxtLink to="/originals" class="nav-link !text-red-600 hover:!text-red-700 flex items-center gap-1">
+            <NuxtLink to="/originals" class="nav-link !text-primary-600 hover:!text-primary-700 flex items-center gap-1">
               <PlayIcon class="w-5 h-5" />
               <span>Media Hub</span>
               <ChevronDownIcon class="w-4 h-4 ml-0.5 transition-transform group-hover:rotate-180" />
@@ -38,19 +45,19 @@
             <div class="absolute left-1/2 -translate-x-1/2 top-[80%] pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 w-56">
               <div class="bg-white rounded-xl shadow-xl border border-gray-100 p-2 space-y-1 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                
-                 <NuxtLink to="/originals/movies" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-gray-700 hover:text-red-600 transition-colors group/item">
-                  <FilmIcon class="w-5 h-5 text-gray-400 group-hover/item:text-red-500" />
+                 <NuxtLink to="/originals/movies" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-gray-700 hover:text-primary-600 transition-colors group/item">
+                  <FilmIcon class="w-5 h-5 text-gray-400 group-hover/item:text-primary-500" />
                   <span class="font-semibold text-sm">Weekly Digest</span>
                 </NuxtLink>
 
-                <NuxtLink to="/originals/interviews" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-gray-700 hover:text-red-600 transition-colors group/item">
-                  <MicrophoneIcon class="w-5 h-5 text-gray-400 group-hover/item:text-red-500" />
+                <NuxtLink to="/originals/interviews" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-gray-700 hover:text-primary-600 transition-colors group/item">
+                  <MicrophoneIcon class="w-5 h-5 text-gray-400 group-hover/item:text-primary-500" />
                   <span class="font-semibold text-sm">Interviews</span>
                 </NuxtLink>
  
                 <div class="border-t border-gray-100 my-1"></div>
-                <NuxtLink to="/originals/books" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 text-gray-700 hover:text-red-600 transition-colors group/item">
-                  <BookOpenIcon class="w-5 h-5 text-red-400 group-hover/item:text-red-600" />
+                <NuxtLink to="/originals/books" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary-50 text-gray-700 hover:text-primary-600 transition-colors group/item">
+                  <BookOpenIcon class="w-5 h-5 text-primary-400 group-hover/item:text-primary-600" />
                   <span class="font-semibold text-sm">GN+ Books</span>
                 </NuxtLink>
               </div>
@@ -70,7 +77,7 @@
         <div class="flex items-center space-x-4">
           <button 
             @click="isSearchOpen = true"
-            class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg border border-red-400 transition-colors"
+            class="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg border border-primary-400 transition-colors"
           >
             <MagnifyingGlassIcon class="h-6 w-6" />
           </button>
@@ -158,10 +165,17 @@
           <NuxtLink to="/newspapers" class="mobile-nav-link" @click="closeMobileMenu">Newspapers</NuxtLink>
           <!-- <a href="#magazines" class="mobile-nav-link" @click="closeMobileMenu">Magazines</a> -->
           <NuxtLink to="/archives" class="mobile-nav-link" @click="closeMobileMenu">Archives</NuxtLink>
+          <NuxtLink to="/research-ai" class="mobile-nav-link !text-primary-600 font-bold flex items-center justify-between" @click="closeMobileMenu">
+            <div class="flex items-center gap-2">
+              <SparklesIcon class="w-5 h-5 text-primary-600" />
+              <span>AI Research Studio</span>
+            </div>
+            <span class="bg-primary-100 text-primary-700 text-xs px-2 py-0.5 rounded-full font-bold">RAG</span>
+          </NuxtLink>
           
           <!-- Mobile Originals Accordion -->
            <!-- <div>
-            <button @click="isOriginalsOpen = !isOriginalsOpen" class="w-full flex items-center justify-between mobile-nav-link !text-red-600">
+            <button @click="isOriginalsOpen = !isOriginalsOpen" class="w-full flex items-center justify-between mobile-nav-link !text-primary-600">
               <div class="flex items-center gap-2">
                 <PlayIcon class="w-6 h-6" />
                 <span>Media Hub</span>
@@ -169,22 +183,22 @@
               <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-200', isOriginalsOpen ? 'rotate-180' : '']" />
             </button>
             
-            <div v-show="isOriginalsOpen" class="pl-6 flex flex-col space-y-1 mt-2 mb-2 border-l-2 border-red-100 ml-3">
+            <div v-show="isOriginalsOpen" class="pl-6 flex flex-col space-y-1 mt-2 mb-2 border-l-2 border-primary-100 ml-3">
                
-               <NuxtLink to="/originals/movies" class="py-2.5 px-3 text-gray-600 hover:bg-gray-50 hover:text-red-600 rounded-lg text-sm font-medium flex items-center gap-3" @click="closeMobileMenu">
+               <NuxtLink to="/originals/movies" class="py-2.5 px-3 text-gray-600 hover:bg-gray-50 hover:text-primary-600 rounded-lg text-sm font-medium flex items-center gap-3" @click="closeMobileMenu">
                 <FilmIcon class="w-5 h-5 text-gray-400" /> Weekly Digest
               </NuxtLink> 
 
-              <NuxtLink to="/originals/interviews" class="py-2.5 px-3 text-gray-600 hover:bg-gray-50 hover:text-red-600 rounded-lg text-sm font-medium flex items-center gap-3" @click="closeMobileMenu">
+              <NuxtLink to="/originals/interviews" class="py-2.5 px-3 text-gray-600 hover:bg-gray-50 hover:text-primary-600 rounded-lg text-sm font-medium flex items-center gap-3" @click="closeMobileMenu">
                 <MicrophoneIcon class="w-5 h-5 text-gray-400" /> Interviews
               </NuxtLink>
 
-              <NuxtLink to="/originals/podcasts" class="py-2.5 px-3 text-gray-600 hover:bg-gray-50 hover:text-red-600 rounded-lg text-sm font-medium flex items-center gap-3" @click="closeMobileMenu">
+              <NuxtLink to="/originals/podcasts" class="py-2.5 px-3 text-gray-600 hover:bg-gray-50 hover:text-primary-600 rounded-lg text-sm font-medium flex items-center gap-3" @click="closeMobileMenu">
                 <RadioIcon class="w-5 h-5 text-gray-400" /> Podcasts
               </NuxtLink>
               
-              <NuxtLink to="/originals/books" class="py-2.5 px-3 text-red-600 hover:bg-red-50 rounded-lg font-semibold text-sm flex items-center gap-3" @click="closeMobileMenu">
-                <BookOpenIcon class="w-5 h-5 text-red-500" /> GN Books
+              <NuxtLink to="/originals/books" class="py-2.5 px-3 text-primary-600 hover:bg-primary-50 rounded-lg font-semibold text-sm flex items-center gap-3" @click="closeMobileMenu">
+                <BookOpenIcon class="w-5 h-5 text-primary-500" /> GN Books
               </NuxtLink>
             </div>
           </div> -->
@@ -224,7 +238,8 @@ import {
   MicrophoneIcon,
   RadioIcon,
   FilmIcon,
-  BookOpenIcon
+  BookOpenIcon,
+  SparklesIcon
 } from '@heroicons/vue/24/outline'
 import { useBasicAuthStore } from '~/stores/basic-user-auth'
 

@@ -389,7 +389,7 @@ const handleEmailSignIn = async () => {
     if (response && response.success && response.result?.token) {
 
       const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
-        maxAge: 60 * 60 * 24 * 30,
+        maxAge: 60 * 60 * 24 * 366,
         secure: true,
         httpOnly: false,
         priority: "medium",
@@ -531,7 +531,7 @@ const handlePasskeySignIn = async () => {
             
             if (loginResponse && loginResponse.token) {
                  const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
-                    maxAge: 60 * 60 * 24 * 30,
+                    maxAge: 60 * 60 * 24 * 366,
                     secure: true,
                     httpOnly: false,
                     priority: "medium",
