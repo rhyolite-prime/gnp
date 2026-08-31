@@ -451,9 +451,6 @@ interface Headline {
   text: string;
 }
 
- 
- 
- 
 
 const relatedOptions = [
   { id: 101, name: 'Daily Graphic - Dec 14' },

@@ -25,7 +25,7 @@
           <NuxtLink to="/newspapers" class="nav-link">Newspapers</NuxtLink>
           <!-- <a href="#magazines" class="nav-link">Magazines</a> -->
           <NuxtLink to="/archives" class="nav-link">Archives</NuxtLink>
-          <NuxtLink to="/research-ai" class="nav-link flex items-center gap-1.5 !text-primary-600 font-semibold group">
+          <NuxtLink v-if="false" to="/research-ai" class="nav-link flex items-center gap-1.5 !text-primary-600 font-semibold group">
             <span class="relative flex h-2 w-2">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
               <span class="relative inline-flex rounded-full h-2 w-2 bg-primary-600"></span>

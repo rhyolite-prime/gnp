@@ -26,6 +26,7 @@
     "lucide-vue-next": "^0.294.0",
     "numeral": "^2.0.6",
     "nuxt": "^3.13.0",
+    "pdfjs-dist": "^4.10.38",
     "pinia": "^3.0.3",
     "uuid": "^9.0.1",
     "v-money3": "^3.26.1",

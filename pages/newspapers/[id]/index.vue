@@ -60,9 +60,9 @@
                   <Share class="w-5 h-5 mr-2" />
                   Share with a friend
                 </button>
-                <button @click="handlePreviewClick" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 px-6 rounded-md font-medium">
+                <!-- <button  @click="handlePreviewClick" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 px-6 rounded-md font-medium">
                     Preview
-                </button>
+                </button> -->
               </div>
             </div>
           </div>

@@ -50,7 +50,7 @@
         <h1 class="text-2xl font-bold text-gray-900">{{ newspaperTitle }}</h1>
       </div>
       
-      <div class="flex justify-center items-center h-[85vh] bg-gray-100 rounded-lg overflow-hidden relative border border-gray-200">
+      <div class="flex justify-center items-center min-h-[600px] bg-gray-100 rounded-lg overflow-hidden relative border border-gray-200">
           <!-- Loading state -->
           <div v-if="isLoading" class="absolute inset-0 flex flex-col items-center justify-center bg-white z-20 transition-all duration-300">
               <div class="relative w-20 h-20 mb-6">
@@ -82,11 +82,11 @@
 
           <!-- Reader state -->
           <ClientOnly v-else>
-            <NewspaperReader
-              :pdf-url="`/api/pdf?url=${encodeURIComponent(assetUrl)}`"
-              :title="newspaperTitle"
-              class="w-full h-full border-0 shadow-2xl rounded-b-lg overflow-hidden"
-            />
+            <iframe
+              title="NewsPaper"
+              :src="assetUrl"
+              class="w-full h-screen border-0 shadow-2xl"
+            ></iframe>
           </ClientOnly>
       </div>
     </div>
@@ -102,7 +102,7 @@ const router = useRouter();
 const { $toast } = useNuxtApp();
 const newspaperId = route.params.id as string;
 const newspaperTitle = ref('');
-const assetBaseUrl = ref('https://docviewer.graphicnewsplus.com/ResourceShell/GetDocument');
+const assetBaseUrl = ref('https://docviewer.graphicnewsplus.com/ResourceShell');
 const assetUrl = ref('');
 const isLoading = ref(true);
 const accessGranted = ref(false);
@@ -195,7 +195,7 @@ onMounted( async() => {
 
   const gnpUserAuthIdentity = useGnpUserAuthIdentity();
 
-  assetUrl.value = `${assetBaseUrl.value}/${newspaperId}?tkn=${gnpUserAuthIdentity.value}`;
+  assetUrl.value = `${assetBaseUrl.value}?id=${newspaperId}&tkn=${gnpUserAuthIdentity.value}`;
 
 });
 
