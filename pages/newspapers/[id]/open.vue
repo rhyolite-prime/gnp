@@ -50,7 +50,7 @@
         <h1 class="text-2xl font-bold text-gray-900">{{ newspaperTitle }}</h1>
       </div>
       
-      <div class="flex justify-center items-center h-[85vh] bg-gray-100 rounded-lg overflow-hidden relative border border-gray-200">
+      <div class="flex justify-center items-center bg-gray-100 rounded-lg overflow-hidden relative border border-gray-200" style="height: calc(100dvh - 130px); min-height: 400px;">
           <!-- Loading state -->
           <div v-if="isLoading" class="absolute inset-0 flex flex-col items-center justify-center bg-white z-20 transition-all duration-300">
               <div class="relative w-20 h-20 mb-6">
