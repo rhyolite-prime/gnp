@@ -58,7 +58,7 @@
                 </NuxtLink>
                 <button v-if="hasAccess" @click="openShareModal" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-md mb-3 font-medium flex items-center justify-center">
                   <Share class="w-5 h-5 mr-2" />
-                  Share with a friend
+                  Share with a friend 
                 </button>
                 <!-- <button  @click="handlePreviewClick" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 px-6 rounded-md font-medium">
                     Preview
@@ -740,19 +740,11 @@ const loadImageAsBlob = async (fileId: string) => {
         const url = await getSecureThumbnail(fileId);
         blobUrl.value = url;
         imageLoading.value = false;
-
-        try {
-          const loadMs = performance.now() - imgLoadStart;
-          trackEvent('newspaper.image.loaded', {
-            newspaper_id: fileId,
-            load_time_ms: Math.round(loadMs),
-          })
-        } catch { /* ignore */ }
         
       } catch (error) {
 
         imageLoading.value = false;
-        try { trackError('newspaper.image', error, { newspaper_id: fileId }) } catch { /* ignore */ }
+         
       }    
 }
 
@@ -1000,82 +992,29 @@ const retrieveNewsPaperDetails = async (id: string) => {
 
       loadImageAsBlob(id)
 
-      try {
-        trackEvent('newspaper.detail.view', {
-          newspaper_id: id,
-          title: result?.title || '',
-          publication: result?.publicationName || '',
-        })
-      } catch { /* ignore */ }
-
     } catch (error) {
-        try { trackError('newspaper.detail', error, { newspaper_id: id }) } catch { /* ignore */ }
+         
     } finally {
         isLoading.value = false;
     }
 
 }
 
-const retrieveNewsPaperEntitlement = async (id: string, maxRetries = 3) => {
- 
+const retrieveNewsPaperEntitlement = async (id: string) => {
   isAccessLoading.value = true;
   isProcessing.value = true;
 
-  let attempt = 0;
-  let delay = 1500; // Start with 1 second
-
   try {
-    while (attempt < maxRetries) {
-      
-      try {
-        let result = await validateNewsPaperEntitlement({newsPaperId: id});
-        
-        if (result.hasAccess) {
-          hasAccess.value = true;
-          uniqueId.value = result.uniqueId;
-          isProcessing.value = false;
-
-          try {
-            trackEvent('newspaper.entitlement.granted', {
-              newspaper_id: id,
-              unique_id: result.uniqueId || '',
-              attempt_count: attempt + 1,
-            })
-          } catch { /* ignore */ }
-
-          return; // Success, exit
-        }
-        
-        // If no access yet, throw to trigger retry logic
-        console.log(`Attempt ${attempt + 1}: No access yet, retrying...`);
-        throw new Error("No access returned");
-        
-      } catch (e) {
-        // If it's the last attempt, don't wait, just fail (or keep hasAccess as false)
-        if (attempt === maxRetries - 1) {
-          console.warn("Max retries reached for entitlement check.");
-
-          try {
-            trackEvent('newspaper.entitlement.denied', {
-              newspaper_id: id,
-              max_retries_hit: true,
-              attempt_count: maxRetries,
-            })
-          } catch { /* ignore */ }
-
-          break; 
-        }
-        
-        // Wait with backoff
-        await new Promise(resolve => setTimeout(resolve, delay));
-        delay *= 2; // Exponential backoff
-        attempt++;
-      }
+    let result = await validateNewsPaperEntitlement({newsPaperId: id});
+    
+    if (result && result.hasAccess) {
+      hasAccess.value = true;
+      uniqueId.value = result.uniqueId;
+    } else {
+      hasAccess.value = false;
     }
   } catch (error) {
     console.error('Unable to fetch entitlement', error);
-    isAccessLoading.value = false
-    isProcessing.value = false;
     hasAccess.value = false;
   } finally {
     isAccessLoading.value = false;
@@ -1105,8 +1044,8 @@ const verifyNewsPaperEntitlement = async (id: string) => {
 
 }
 
- onBeforeUnmount(() => {
-  window.removeEventListener('message', payStackCheckoutEventCallback)
+ onBeforeUnmount(async() => {
+   window.removeEventListener('message', payStackCheckoutEventCallback);
  })
 
 onMounted(async () => {
@@ -1115,13 +1054,6 @@ onMounted(async () => {
    
   await verifyNewsPaperEntitlement(newspaperId.value);
 
-  try {
-    trackPageView('newspaper.detail', {
-      newspaper_id: newspaperId.value,
-      has_access: hasAccess.value,
-      auth_provider: authStore.authProvider || 'guest',
-    })
-  } catch { /* ignore */ }
 
   if (!import.meta.server) {
     window.addEventListener('message', payStackCheckoutEventCallback)
@@ -1133,12 +1065,7 @@ function handlePreviewClick() {
   // In a real application, this would open a preview modal or redirect to a preview page
   console.log('Preview newspaper:', newsPaperDetail.value?.title);
 
-  try {
-    trackEvent('newspaper.preview.click', {
-      newspaper_id: newspaperId.value,
-      title: newsPaperDetail.value?.title || '',
-    })
-  } catch { /* ignore */ }
+  
 }
 
 // Update page title when newspaper data is loaded

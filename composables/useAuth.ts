@@ -41,13 +41,12 @@ export const useAuth = () => {
     };
 
     const signOut = () => {
-        
+        // Delegate to the store so ALL auth state (cookie, useState, sessionStorage)
+        // is cleared atomically from one place.
+        const authStore = useBasicAuthStore();
+        authStore.clearUser();
 
-        gnpUserIdentityCookie.value = null;
-
-        window.location.href = "/";
-
-        //router.push("/");
+        window.location.href = '/';
     };
 
     return {

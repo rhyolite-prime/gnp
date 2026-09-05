@@ -92,9 +92,20 @@ export async function fulfillBuyCopy(query: object) {
 }
 
 export async function validateNewsPaperEntitlement(query: object) {
-    
-  const response = await gnpUserHttpClient<BaseApiResponse<NewsPaperEntitlementResponseModel>>('subscription/validate-newspaper-entitlement', "", { query });
-  return response.result;
+  // check if user is logged in
+  const gnpUserAuthIdentity = useGnpUserAuthIdentity();
+
+  //if user is logged, use the gnpUserHttpClient
+  if (gnpUserAuthIdentity.value) {
+    const response = await gnpUserHttpClient<BaseApiResponse<NewsPaperEntitlementResponseModel>>('subscription/validate-newspaper-entitlement', "", { query });
+    return response.result;
+  }
+
+  // user isnt logged in return a well formatted response
+  return {
+    hasAccess: false,
+    uniqueId: ""
+  } as NewsPaperEntitlementResponseModel;
 }
 
 export async function userSubscription(payload: object) {

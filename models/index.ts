@@ -338,7 +338,7 @@ export interface Subscriber extends BaseEntityModel {
     createdAt: string;
     partnerId: string;
     subscriptionPlanDescription: string;
-    status: string;
+    isActve: boolean;
 }
 
 export interface AdminUser extends BaseEntityModel {

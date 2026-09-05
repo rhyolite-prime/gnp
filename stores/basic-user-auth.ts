@@ -11,7 +11,12 @@ export const useBasicAuthStore = defineStore('auth',  () => {
   const authProvider = ref<'microsoft' | 'google' | 'gnp' | null>(null);
   const accessToken = ref<string | null>(null);
   const userPhotoUrl = ref<string>();
-  const gnpUserIdentityCookie = useCookie('gnp-user-identity');
+  const gnpUserIdentityCookie = useCookie('gnp-user-identity', {
+    maxAge: 60 * 60 * 24 * 366,
+    secure: true,
+    httpOnly: false,
+    sameSite: 'strict',
+  });
   
   // Track session start time for session-duration-on-logout metric
   const sessionStartedAt = ref<number | null>(null);
@@ -169,7 +174,6 @@ export const useBasicAuthStore = defineStore('auth',  () => {
 
   // Clear user session on logout
   function clearUser() {
-    
 
     user.value = null;
     isAuthenticated.value = false;
@@ -177,11 +181,20 @@ export const useBasicAuthStore = defineStore('auth',  () => {
     accessToken.value = null;
     userPhotoUrl.value = undefined;
     sessionStartedAt.value = null;
+
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('authUser');
       sessionStorage.removeItem('accessToken');
     }
+
+    // Expire the cookie so the browser removes it
     gnpUserIdentityCookie.value = null;
+
+    // CRITICAL: also clear the shared useState that gnpUserHttpClient reads from.
+    // Without this, the stale JWT persists in memory even though the cookie is gone,
+    // causing authenticated API calls to fire on pages visited after logout.
+    const gnpUserAuthState = useState<string | null>('gnpUserAuth');
+    gnpUserAuthState.value = null;
   }
   
   // Initialize from storage when store is created

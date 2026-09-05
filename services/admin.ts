@@ -312,13 +312,14 @@ export async function removeCommercialPartnerSubscriber(partnerId: string,subscr
 
 export async function resetCommercialPartnerSubscriberPassword(partnerId: string,subscriberId: string) {
     const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/reset-partner-subscriber-password/${partnerId}/${subscriberId}`, "", {
-        method: "delete",
+        method: "get",
     });
     return response.success;
 }
 
-export async function updateCommercialPartnerSubscriberStatus(query: { partnerId: string, subscriberId: string, status: string }) {
-    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/update-partner-subscriber-status', "", { query });
+export async function updateCommercialPartnerSubscriberStatus(payload: object) {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/update-partner-subscriber-status', "", { method: "post",
+        body: payload, });
     return response.success;
 }
 

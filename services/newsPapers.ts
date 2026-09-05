@@ -22,6 +22,20 @@ export async function getNewsPaperDetails(query: object) {
    return response.result;
 }
 
+
+export async function updateUserEngagementMetrics(payload: object) {
+ 
+    const response = await gnpUserHttpClient<BaseApiResponse<object>>('news-papers/update-user-engagement', "",
+        {
+            method: "post",
+            body: payload,
+        });
+    
+   return response.success;
+}
+
+
+
 const blobCache: Record<string, string> = {};
 
 const DB_NAME = 'GNP_Thumbnails';
@@ -91,8 +105,8 @@ export async function getSecureThumbnail(fileId: string) {
 
         // 3. Fallback to network request
         const response = await gnpUserHttpClient<Blob>(`g3/get-file/gnp-thumbnails/${fileId}.png`, "", { 
-            responseType: 'blob',
-            query: { cb: new Date().getTime() }
+            responseType: 'blob'
+             
         });
 
         // 4. Save to both caches

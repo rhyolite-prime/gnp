@@ -154,14 +154,11 @@
                          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ formatDate(sub.createdAt) }}</td>
                          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ sub.subscriptionPlanDescription }}</td>
                          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                             <span 
-                                class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
-                                :class="{
-                                  'bg-green-50 text-green-700 ring-green-600/20': sub.status === 'Active' || sub.status === 'active',
-                                  'bg-red-50 text-red-700 ring-red-600/20': sub.status === 'Inactive' || sub.status === 'inactive'
-                                }">
-                                {{ sub.status || 'Active' }}
-                             </span>
+                             <span
+                            class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
+                            :class="sub.isActive  ? 'bg-green-50 text-green-700 ring-green-600/20' : 'bg-red-50 text-red-700 ring-red-600/20'">
+                            {{ sub.isActive ? 'Active' : 'Inactive' }}
+                            </span>
                          </td>
                           
                          <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
@@ -185,9 +182,9 @@
                                         >
                                             View Details
                                         </button>
-                                        <button 
+                                        <button v-if="!sub.isActive"
                                             class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                                            @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Active')">
+                                            @click.prevent="handleUpdateSubscriberStatus(sub.id, 'active')">
                                             Activate
                                         </button>
                                         <button 
@@ -196,9 +193,9 @@
                                         >
                                             Reset Password
                                         </button>
-                                        <button 
+                                        <button v-if="sub.isActive"
                                             class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                                            @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Inactive')"
+                                            @click.prevent="handleUpdateSubscriberStatus(sub.id, 'inactive')"
                                         >
                                             Deactivate
                                         </button>
@@ -288,7 +285,7 @@ import type { CommercialPartner, Subscriber, SubscriptionSummary } from "~/model
 
 definePageMeta({
     layout: 'admin',
-  middleware: ['admin-auth']
+    middleware: ['admin-auth']
 });
 
 const route = useRoute();
@@ -739,7 +736,7 @@ const handleUpdateSubscriberStatus = async (subscriberId: string, status: string
         });
         
         if (success) {
-            $toast.success(`Subscriber ${status === 'Active' ? 'activated' : 'deactivated'} successfully`);
+            $toast.success(`Subscriber ${status === 'active' ? 'activated' : 'deactivated'} successfully`);
             await fetchSubscribers();
         } else {
             $toast.error('Failed to update status');
