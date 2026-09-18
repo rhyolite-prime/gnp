@@ -285,6 +285,10 @@
                       <span>VAT (15%)</span>
                       <span class="font-medium text-gray-900">GHS {{ _currency(invoiceData.vat) }}</span>
                     </div>
+                     <div class="flex justify-between text-sm text-gray-600 px-4">
+                      <span>NHIL + GETFL (5%)</span>
+                      <span class="font-medium text-gray-900">GHS {{ _currency(invoiceData.getflNhil) }}</span>
+                    </div>
                     <div class="flex justify-between text-sm text-gray-600 px-4">
                       <span>Discount</span>
                       <span class="font-medium text-red-600"> GHS {{ _currency(invoiceData.discount) }}</span>

@@ -1,9 +1,16 @@
-import type { NewsPaper, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { NewsPaper, Article, BaseApiResponse, BasePaginationModel } from "~/models";
 
  
 export async function getNewsPapers(query: object) {
  
     const response = await httpClient<BaseApiResponse<BasePaginationModel<NewsPaper[]>>>('news-papers/get-all', "", { query });
+    
+   return response.result;
+}
+
+export async function getTopStories() {
+ 
+    const response = await httpClient<BaseApiResponse<Article[]>>('news-papers/get-top-stories', "");
     
    return response.result;
 }

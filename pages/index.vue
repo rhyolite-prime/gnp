@@ -15,7 +15,7 @@
       <VideosSection />
       <MagazinesSection />
       <TopicsSection />
-      <AppDownloadSection />
+       
     </div>
   </div>
 </template>

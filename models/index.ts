@@ -252,6 +252,76 @@ export interface Campaign extends BaseEntityModel {
 
 }
 
+export interface ArticleImages {
+  float_fulltext: string;
+  float_intro: string;
+  image_fulltext: string;
+  image_fulltext_alt: string;
+  image_fulltext_caption: string;
+  image_intro: string;
+  image_intro_alt: string;
+  image_intro_caption: string;
+}
+
+export interface ArticleMetadata {
+  author: string;
+  rights: string;
+  robots: string;
+}
+
+export interface ArticleAttributes {
+  access: number;
+  alias: string;
+  asset_id: number;
+  created: string;
+  created_by: number;
+  created_by_alias: string;
+  featured: number;
+  featured_down: string | null;
+  featured_up: string | null;
+  hits: number;
+  id: number;
+  images: ArticleImages;
+  language: string;
+  metadata: ArticleMetadata;
+  metadesc: string;
+  metakey: string;
+  modified: string;
+  note: string;
+  publish_down: string | null;
+  publish_up: string;
+  state: number;
+  tags: any[];
+  text: string;
+  title: string;
+  typeAlias: string;
+  version: number;
+}
+
+export interface RelationshipData {
+  id: string;
+  type: string;
+}
+
+export interface ArticleRelationships {
+  category: {
+    data: RelationshipData;
+  };
+  created_by: {
+    data: RelationshipData;
+  };
+  tags: {
+    data: RelationshipData[];
+  };
+}
+
+export interface Article {
+  id: string;
+  type: string;
+  attributes: ArticleAttributes;
+  relationships: ArticleRelationships;
+}
+
 export interface Payment extends BaseEntityModel {
 
     userName: string;

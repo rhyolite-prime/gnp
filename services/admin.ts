@@ -151,7 +151,7 @@ export async function getNewsPaperThumbnail(fileId: string, forceReload: boolean
         }
 
         // 3. Fallback to network request
-        const response = await gnpAdminUserHttpClient<Blob>(`g3/get-file/gnp-thumbnails/${fileId}.png`, "", { responseType: 'blob', query: { cb: new Date().getTime() } });
+        const response = await gnpAdminUserHttpClient<Blob>(`g3/get-file/gnp-thumbnails/${fileId}.png`, "", { responseType: 'blob' });
 
         // 4. Save to both caches
         saveBlobToDB(fileId, response); // Fire-and-forget IDB save
