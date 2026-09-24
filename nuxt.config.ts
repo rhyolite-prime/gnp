@@ -96,7 +96,7 @@ export default defineNuxtConfig({
     public: {
       microsoftClientId: process.env.NUXT_MICROSOFT_CLIENT_ID || '',
       googleClientId: process.env.NUXT_GOOGLE_CLIENT_ID || '',
-      proxyApiBaseURL: "https://api.graphicnewsplus.com/api/v1/",
+      proxyApiBaseURL: process.env.NUXT_PUBLIC_PROXY_API_BASE_URL || "/api/v1/",
       //proxyApiBaseURL: "http://localhost:5034/api/v1/",
 
       // ── Telemetry ─────────────────────────────────────────────────────────
