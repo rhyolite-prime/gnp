@@ -499,6 +499,18 @@
 </template>
 
 <script setup lang="ts">
+import GameHud from '~/components/games/GameHud.vue';
+import SudokuGame from '~/components/games/SudokuGame.vue';
+import WordSearchGame from '~/components/games/WordSearchGame.vue';
+import CrosswordGame from '~/components/games/CrosswordGame.vue';
+import RiddleGame from '~/components/games/RiddleGame.vue';
+import DailyChallengeCard from '~/components/games/DailyChallengeCard.vue';
+import LeaderboardTable from '~/components/games/LeaderboardTable.vue';
+import AchievementsGrid from '~/components/games/AchievementsGrid.vue';
+import UserStatsCard from '~/components/games/UserStatsCard.vue';
+import MultiplayerModal from '~/components/games/MultiplayerModal.vue';
+import GameResultModal from '~/components/games/GameResultModal.vue';
+
 import type {
   GameCategory,
   GameSession,
