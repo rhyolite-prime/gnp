@@ -100,16 +100,16 @@ const onPageChange = async (pageNumber: number) => {
 	const filteredQuery = filterQueryParams({ ...route.query, ...filters });
 
 	router.replace({ name: route.name ?? '', query: filteredQuery });
-    await getPaginatedCoupons()
+    await getPaginatedAffiliateApplicants()
 }
 
-const getPaginatedCoupons = async () => {
+const getPaginatedAffiliateApplicants = async () => {
 
     isShimmerLoading.value = true;
 
     try {
 
-        let result = await getAffiliates(filters);
+        let result = await getAffiliateApplicants(filters);
 
         affiliateList.value = result.data;
 
@@ -119,7 +119,7 @@ const getPaginatedCoupons = async () => {
         paginationParams.upperBound = result.upperBound;
 
     } catch (error) {
-        $toast.error('Unable to fetch affiliate !');
+        $toast.error('Unable to fetch affiliate applications!');
     } finally {
         isShimmerLoading.value = false;
     }

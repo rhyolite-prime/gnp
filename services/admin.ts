@@ -482,6 +482,12 @@ export async function getAffiliates(query: object) {
     return response.result;
 }
 
+export async function getAffiliateApplicants(query: object) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<object[]>>>('admin/get-affiliate-applicants', "", { query });
+    return response.result;
+}
+
 export async function createAffiliate(payload: object) {
     
   const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/create-subscription-plan', "", {
