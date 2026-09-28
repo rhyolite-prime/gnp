@@ -16,150 +16,234 @@
       </div>
     </div>
 
-     
-   <!-- Filters & Search -->
-    <div class="flex flex-col sm:flex-row gap-4 mb-6 items-center justify-between">
-      <div class="w-full sm:max-w-xs">
-        <label for="search" class="sr-only">Search</label>
-        <div class="relative">
+    <!-- Filters Toggle -->
+    <div class="flex justify-end mb-4">
+      <button 
+        @click="showFilters = !showFilters" 
+        type="button" 
+        class="inline-flex items-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+      >
+        <FunnelIcon class="-ml-0.5 h-5 w-5 text-gray-400" aria-hidden="true" />
+        {{ showFilters ? 'Hide filters' : 'Show filters' }}
+      </button>
+    </div>
+
+    <!-- Filters -->
+    <div v-show="showFilters" class="mb-8 grid grid-cols-1 gap-y-4 sm:grid-cols-2 md:grid-cols-4 gap-x-4 bg-gray-50 p-4 rounded-lg animate-fadeIn">
+      <!-- Search -->
+      <div class="flex flex-col">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+        <div class="relative rounded-md shadow-sm">
           <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
           </div>
-          <input
-            type="text"
+          <input 
+            type="text" 
             v-model="filters.query"
-            class="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
-            placeholder="Search Subscribers..."
+            class="block w-full rounded-md border-0 py-1.5 pl-10 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" 
+            placeholder="Search subscribers..." 
           />
         </div>
       </div>
-       
+
+      <!-- Date Joined Date Range Filter -->
+      <div class="flex flex-col">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Date Joined</label>
+        <div class="flex items-center space-x-2 bg-white rounded-md ring-1 ring-inset ring-gray-300 px-2 py-1 shadow-sm">
+          <input 
+            type="date" 
+            v-model="filters.dateJoinedStartDate" 
+            class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+            placeholder="Start Date"
+          />
+          <span class="text-gray-400 text-sm">to</span>
+          <input 
+            type="date" 
+            v-model="filters.dateJoinedEndDate" 
+            class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+            placeholder="End Date"
+          />
+        </div>
+      </div>
+
+      <!-- Last Active Date Range Filter -->
+      <div class="flex flex-col">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Last Active</label>
+        <div class="flex items-center space-x-2 bg-white rounded-md ring-1 ring-inset ring-gray-300 px-2 py-1 shadow-sm">
+          <input 
+            type="date" 
+            v-model="filters.lastActiveStartDate" 
+            class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+            placeholder="Start Date"
+          />
+          <span class="text-gray-400 text-sm">to</span>
+          <input 
+            type="date" 
+            v-model="filters.lastActiveEndDate" 
+            class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+            placeholder="End Date"
+          />
+        </div>
+      </div>
+
+      <!-- Account Type Filter -->
+      <div class="flex flex-col">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
+        <select v-model="filters.accountType" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6">
+          <option value="">All Accounts</option>
+          <option value="partner">Partner Account</option>
+          <option value="affiliate">Affiliate Account</option>
+          <option value="regular">Regular Account</option>
+        </select>
+      </div>
+
+      <!-- Filter Actions -->
+      <div class="flex items-end gap-2">
+        <button 
+          @click="applyFilters" 
+          type="button" 
+          class="rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 flex-1"
+        >
+          Search
+        </button>
+        <button 
+          @click="resetFilters" 
+          type="button" 
+          class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 flex-1"
+        >
+          Reset
+        </button>
+      </div>
     </div>
 
-    <!-- Campaigns List -->
+    <!-- Subscriber List -->
     <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-hidden">
       <table class="min-w-full divide-y divide-gray-300">
         <thead class="bg-gray-50">
           <tr>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Name</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email</th>
-              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Phone</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"> Date Joined</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Subscription Plan</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Phone</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date Joined</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Last Active</th>
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Account Type</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
-              <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                <span class="sr-only">Actions</span>
+            <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+              <span class="sr-only">Actions</span>
             </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 bg-white">
-
           <tr v-if="isShimmerLoading" class="animate-pulse">
-            <td colspan="6" class="px-3 py-10 text-center text-sm text-gray-500">
-                <div class="flex justify-center items-center space-x-2">
-                    <div class="w-4 h-4 bg-gray-300 rounded-full animate-bounce"></div>
-                    <div class="w-4 h-4 bg-gray-300 rounded-full animate-bounce delay-75"></div>
-                    <div class="w-4 h-4 bg-gray-300 rounded-full animate-bounce delay-150"></div>
-                </div>
+            <td colspan="8" class="px-3 py-10 text-center text-sm text-gray-500">
+              <div class="flex justify-center items-center space-x-2">
+                <div class="w-4 h-4 bg-gray-300 rounded-full animate-bounce"></div>
+                <div class="w-4 h-4 bg-gray-300 rounded-full animate-bounce delay-75"></div>
+                <div class="w-4 h-4 bg-gray-300 rounded-full animate-bounce delay-150"></div>
+              </div>
             </td>
           </tr>
 
           <tr v-else-if="subscriberList.length === 0">
-            <td colspan="6" class="px-3 py-10 text-center text-gray-500">
-                <p class="text-sm">No subscribers found.</p>
-                <button @click="openUploadModal" class="mt-2 text-primary-600 hover:text-primary-500 text-sm font-medium">Upload a list to get started</button>
+            <td colspan="8" class="px-3 py-10 text-center text-gray-500">
+              <p class="text-sm">No subscribers found.</p>
+              <button @click="openUploadModal" class="mt-2 text-primary-600 hover:text-primary-500 text-sm font-medium">Upload a list to get started</button>
             </td>
           </tr>
 
           <tr v-else v-for="sub in subscriberList" :key="sub.id" class="hover:bg-gray-50 transition-colors">
-             
-              <td class="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900">{{ sub.firstName }} {{ sub.lastName }}</td>
-              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ sub.email }}</td>
-              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ sub.phoneNumber || 'N/A' }}</td>
-              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ longDateAndTimeFormat(sub.createdAt) }}</td>
-              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ sub.subscriptionPlanDescription }}</td>
-              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                  <span 
-                    class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
-                    :class="{
-                      'bg-green-50 text-green-700 ring-green-600/20': sub.status === 'Active' || sub.status === 'active',
-                      'bg-red-50 text-red-700 ring-red-600/20': sub.status === 'Inactive' || sub.status === 'inactive'
-                    }">
-                    {{ sub.status || 'Active' }}
-                  </span>
-              </td>
-              
-              <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                <div class="relative dropdown-container flex justify-end">
+            <td class="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900">{{ sub.firstName }} {{ sub.lastName }}</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ sub.email }}</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ sub.phoneNumber || 'N/A' }}</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ longDateAndTimeFormat(sub.createdAt) }}</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ longDateAndTimeFormat(sub.lastActive) }}</td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+              <span 
+                class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
+                :class="badgeClass(sub)"
+              >
+                {{ badgeLabel(sub) }}
+              </span>
+            </td>
+            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+              <span 
+                class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
+                :class="{
+                  'bg-green-50 text-green-700 ring-green-600/20': sub.status === 'Active' || sub.status === 'active',
+                  'bg-red-50 text-red-700 ring-red-600/20': sub.status === 'Inactive' || sub.status === 'inactive'
+                }">
+                {{ sub.status || 'Active' }}
+              </span>
+            </td>
+            
+            <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+              <div class="relative dropdown-container flex justify-end">
+                <button 
+                  @click.stop="toggleDropdown(sub.id)" 
+                  class="text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  <EllipsisVerticalIcon class="h-5 w-5" />
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div 
+                  v-if="activeDropdownId === sub.id" 
+                  class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-100 ring-1 ring-black ring-opacity-5"
+                >
+                  <div class="py-1">
                     <button 
-                        @click.stop="toggleDropdown(sub.id)" 
-                        class="text-gray-400 hover:text-gray-600 focus:outline-none"
-                    >
-                        <EllipsisVerticalIcon class="h-5 w-5" />
+                      class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                      @click.prevent="openDetailModal(sub)">
+                      View Details
                     </button>
-
-                    <!-- Dropdown Menu -->
-                    <div 
-                        v-if="activeDropdownId === sub.id" 
-                        class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-100 ring-1 ring-black ring-opacity-5"
+                    <button 
+                      class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                      @click.prevent="openDetailModal(sub)">
+                      Update
+                    </button>
+                    <button v-if="!sub.isActive"
+                      class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                      @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Active')">
+                      Activate
+                    </button>
+                    <button 
+                      class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                      @click.prevent="resetSubscriberPassword(sub.id)"
                     >
-                        <div class="py-1">
-                            <button 
-                                class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                                @click.prevent="openDetailModal(sub)">
-                                View Details
-                            </button>
-                            <button 
-                                class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                                @click.prevent="openDetailModal(sub)">
-                                Update
-                            </button>
-                            <button v-if="!sub.isActive"
-                                class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                                @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Active')">
-                                Activate
-                            </button>
-                            <button 
-                                class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                                @click.prevent="resetSubscriberPassword(sub.id)"
-                            >
-                                Reset Password
-                            </button>
-                            <button v-if="sub.isActive"
-                                class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                                @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Inactive')"
-                            >
-                                Deactivate
-                            </button>
-                              <button 
-                                class="block w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left"
-                                @click.prevent="confirmRemoveSubscriber(sub.id)"
-                            >
-                                Delete
-                            </button> 
-                        </div>
-                    </div>
+                      Reset Password
+                    </button>
+                    <button v-if="sub.isActive"
+                      class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                      @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Inactive')"
+                    >
+                      Deactivate
+                    </button>
+                    <button 
+                      class="block w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left"
+                      @click.prevent="confirmRemoveSubscriber(sub.id)"
+                    >
+                      Delete
+                    </button> 
+                  </div>
                 </div>
-              </td>
+              </div>
+            </td>
           </tr>
-
         </tbody>
       </table>
 
       <client-only>
         <SimplePagination :lower-bound="paginationParams.lowerBound" 
-        :upper-bound="paginationParams.upperBound"
-        @on-page-changed="onPageChange"
-        :page-no="filters.pageNo " 
-        :total-pages="paginationParams.totalPages"
-        :total-count="paginationParams.totalCount" 
-        :disabled="isShimmerLoading" />
+          :upper-bound="paginationParams.upperBound"
+          @on-page-changed="onPageChange"
+          :page-no="filters.pageNo" 
+          :total-pages="paginationParams.totalPages"
+          :total-count="paginationParams.totalCount" 
+          :disabled="isShimmerLoading" />
       </client-only>
-
- 
     </div>
 
-    <!-- Partner subscriber Modal -->
+    <!-- Partner Subscriber Modal -->
     <PartnerSubscriberModal 
       v-if="showCreateModal" 
       @close="closeCreateModal" 
@@ -174,20 +258,15 @@
       :partner-id="partnerId"
       @close="closeDetailModal"
     />
-
-     
-     
-
   </div>
 </template>
 
 <script setup lang="ts">
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
-import { ArrowLeftIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, CheckCircleIcon, EllipsisVerticalIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, CheckCircleIcon, EllipsisVerticalIcon, FunnelIcon } from '@heroicons/vue/24/outline'
 import { isEmpty, debounce } from "lodash-es";
 import type { Subscriber } from "~/models";
 const { $toast } = useNuxtApp();
-
 
 definePageMeta({
   layout: 'admin',
@@ -203,9 +282,13 @@ const route = useRoute();
 
 const filters = reactive({
   query: '',
+  accountType: '',
+  dateJoinedStartDate: '',
+  dateJoinedEndDate: '',
+  lastActiveStartDate: '',
+  lastActiveEndDate: '',
   pageNo: 1,
   pageSize: 30,
-
 });
 
 const paginationParams = reactive({
@@ -225,67 +308,72 @@ const isCreatingSubscriber = ref(false);
 const activeDropdownId = ref<string | null>(null);
 
 const onPageChange = async (pageNumber: number) => {
-
-	filters.pageNo = pageNumber;
-	const filteredQuery = filterQueryParams({ ...route.query, ...filters });
-
-	router.replace({ name: route.name ?? '', query: filteredQuery });
-    await getPaginatedSubscribers()
+  filters.pageNo = pageNumber;
+  const filteredQuery = filterQueryParams({ ...route.query, ...filters });
+  router.replace({ name: route.name ?? '', query: filteredQuery });
+  await getPaginatedSubscribers()
 }
 
-  
 const closeCreateModal = () => {
-    showCreateModal.value = false;
+  showCreateModal.value = false;
 };
 
 const closeDropdown = () => {
-    activeDropdownId.value = null;
+  activeDropdownId.value = null;
 };
 
 const openDetailModal = (subscriber: Subscriber) => {
-    selectedSubscriber.value = subscriber;
-    showDetailModal.value = true;
-    closeDropdown();
+  selectedSubscriber.value = subscriber;
+  showDetailModal.value = true;
+  closeDropdown();
 };
 
 const closeDetailModal = () => {
-    showDetailModal.value = false;
-    setTimeout(() => {
-        selectedSubscriber.value = null;
-    }, 300);
+  showDetailModal.value = false;
+  setTimeout(() => {
+    selectedSubscriber.value = null;
+  }, 300);
 };
 
 const getPaginatedSubscribers = async () => {
+  isShimmerLoading.value = true;
 
-    isShimmerLoading.value = true;
-
-    try {
-
-        let result = await getSubscribers(filters);
-
-        subscriberList.value = result.data;
-
-        paginationParams.totalPages = result.totalPages;
-        paginationParams.totalCount = result.totalCount;
-        paginationParams.lowerBound = result.lowerBound;
-        paginationParams.upperBound = result.upperBound;
-
-    } catch (error) {
-        $toast.error('Unable to fetch subscribers !');
-    } finally {
-        isShimmerLoading.value = false;
-    }
-
+  try {
+    let result = await getSubscribers(filters);
+    subscriberList.value = result.data;
+    paginationParams.totalPages = result.totalPages;
+    paginationParams.totalCount = result.totalCount;
+    paginationParams.lowerBound = result.lowerBound;
+    paginationParams.upperBound = result.upperBound;
+  } catch (error) {
+    $toast.error('Unable to fetch subscribers !');
+  } finally {
+    isShimmerLoading.value = false;
+  }
 }
 
+const badgeClass = (sub) => {
+  if (sub.affiliateId) {
+    return 'bg-green-50 text-green-700 ring-green-600/20'
+  }
+  if (sub.partnerId) {
+    return 'bg-blue-50 text-blue-700 ring-blue-600/20'
+  }
+  return 'bg-gray-50 text-gray-700 ring-gray-600/20' // regular
+};
 
+const badgeLabel = (sub) => {
+  if (sub.affiliateId) return 'Affiliate Account'
+  if (sub.partnerId) return 'Partner Account'
+  return 'Regular Account'
+};
 
 const toggleDropdown = (id: string) => {
-    if (activeDropdownId.value === id) {
-        activeDropdownId.value = null;
-    } else {
-        activeDropdownId.value = id;
-    }
+  if (activeDropdownId.value === id) {
+    activeDropdownId.value = null;
+  } else {
+    activeDropdownId.value = id;
+  }
 };
 
 // Filters
@@ -299,70 +387,59 @@ const selectedChannel = ref('all')
 const isModalOpen = ref(false)
 const isSaving = ref(false)
 
-
 const openCreateModal = () => {
-
-   showCreateModal.value = true;
+  showCreateModal.value = true;
 }
 
 const closeModal = () => {
   isModalOpen.value = false
 }
 
-
 const handleCreateSubscriber = async (subscriberData: any) => {
-    isCreatingSubscriber.value = true;
-    try {
-        const payload = {
-            ...subscriberData,
-            
-        };
-        
-        const success = await createSubscriber(payload);
-        
-        if (success) {
-            $toast.success('Subscriber added successfully');
-            closeCreateModal();
-            await getPaginatedSubscribers();
-            
-        } else {
-            closeCreateModal();
-             $toast.error('Failed to add subscriber');
-        }
-    } catch (error: any) {
-        console.error('Error adding subscriber:', error);
+  isCreatingSubscriber.value = true;
+  try {
+    const payload = {
+      ...subscriberData,
+    };
+    
+    const success = await createSubscriber(payload);
+    
+    if (success) {
+      $toast.success('Subscriber added successfully');
       closeCreateModal();
-         
-    } finally {
-        isCreatingSubscriber.value = false;
+      await getPaginatedSubscribers();
+    } else {
       closeCreateModal();
-        await getPaginatedSubscribers();
+      $toast.error('Failed to add subscriber');
     }
+  } catch (error: any) {
+    console.error('Error adding subscriber:', error);
+    closeCreateModal();
+  } finally {
+    isCreatingSubscriber.value = false;
+    closeCreateModal();
+    await getPaginatedSubscribers();
+  }
 };
-
 
 const resetSubscriberPassword = async (subscriberId: string) => {
-
-    try {
-        const success = await resetStandardSubscriberPassword(subscriberId);
-        
-        if (success) {
-            $toast.success('Subscriber Password Reset Successfully.');
-            await fetchSubscribers();
-        } else {
-            $toast.error('Failed to reset subscriber password');
-        }
-    } catch (error) {
-         
-        $toast.error('An error occurred while reseting subsriber password');
-    } finally {
-        closeDropdown();
+  try {
+    const success = await resetStandardSubscriberPassword(subscriberId);
+    
+    if (success) {
+      $toast.success('Subscriber Password Reset Successfully.');
+      await fetchSubscribers();
+    } else {
+      $toast.error('Failed to reset subscriber password');
     }
+  } catch (error) {
+    $toast.error('An error occurred while reseting subsriber password');
+  } finally {
+    closeDropdown();
+  }
 };
 
-
 const delSubscriber = async (subscriber: Subscriber) => {
-
   try {
     await deleteSubscriber(subscriber.id);
     $toast.success('Subscriber deleted successfully');
@@ -374,21 +451,19 @@ const delSubscriber = async (subscriber: Subscriber) => {
 };
 
 const debouncedSearch = debounce(() => {
-    filters.pageNo = 1; // Reset to first page for new search
-    getPaginatedSubscribers();
-  }, 300); // 300ms delay
+  filters.pageNo = 1; // Reset to first page for new search
+  getPaginatedSubscribers();
+}, 300); // 300ms delay
 
+watch(() => filters.query, debouncedSearch);
 
-  watch(() => filters.query, debouncedSearch);
-
-  onMounted(async () => {
-    if (!isEmpty(route.query)) {
-      filters.pageNo = parseInt(route.query.pageNo as string);
-    }
-    
-    await getPaginatedSubscribers();
-
-  });
+onMounted(async () => {
+  if (!isEmpty(route.query)) {
+    filters.pageNo = parseInt(route.query.pageNo as string);
+  }
+  
+  await getPaginatedSubscribers();
+});
 </script>
 
 <style scoped>

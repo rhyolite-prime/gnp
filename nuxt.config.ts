@@ -86,6 +86,13 @@ export default defineNuxtConfig({
   
   css: ['~/assets/css/main.css'],
 
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false,
+    },
+  ],
+
   imports: {
     dirs: ["services"],
   },
@@ -96,8 +103,8 @@ export default defineNuxtConfig({
     public: {
       microsoftClientId: process.env.NUXT_MICROSOFT_CLIENT_ID || '',
       googleClientId: process.env.NUXT_GOOGLE_CLIENT_ID || '',
-      proxyApiBaseURL: "https://api.graphicnewsplus.com/api/v1/",
       //proxyApiBaseURL: "http://localhost:5034/api/v1/",
+      proxyApiBaseURL: "https://api.graphicnewsplus.com/api/v1/",
 
       // ── Telemetry ─────────────────────────────────────────────────────────
       otelEndpoint:       process.env.NUXT_PUBLIC_OTEL_ENDPOINT       || 'http://localhost:4318',
