@@ -376,6 +376,27 @@ const toggleDropdown = (id: string) => {
   }
 };
 
+const applyFilters = async () => {
+  filters.pageNo = 1;
+  const filteredQuery = filterQueryParams({ ...route.query, ...filters });
+  router.replace({ name: route.name ?? '', query: filteredQuery });
+  await getPaginatedSubscribers();
+};
+
+const resetFilters = async () => {
+  filters.query = '';
+  filters.accountType = '';
+  filters.dateJoinedStartDate = '';
+  filters.dateJoinedEndDate = '';
+  filters.lastActiveStartDate = '';
+  filters.lastActiveEndDate = '';
+  filters.pageNo = 1;
+  
+  const filteredQuery = filterQueryParams({ ...route.query, ...filters });
+  router.replace({ name: route.name ?? '', query: filteredQuery });
+  await getPaginatedSubscribers();
+};
+
 // Filters
 const showFilters = ref(false)
 

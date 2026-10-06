@@ -12,7 +12,7 @@
         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
       </div>
       
-      <div class="relative z-10 w-full max-w-4xl px-4 text-center mt-[-10vh]">
+      <div class="relative z-10 w-full max-w-5xl px-4 text-center mt-[-10vh]">
         <h1 class="text-5xl md:text-6xl font-extrabold text-white mb-6 tracking-tight drop-shadow-lg">
           Explore Graphic <span class="text-[#e32932]">Archives</span>
         </h1>
@@ -20,7 +20,7 @@
           Uncover decades of history, news, and powerful stories through our comprehensive digital collection.
         </p>
         
-        <div class="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl p-2 max-w-3xl mx-auto border border-white/20">
+        <div class="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl p-2 max-w-5xl mx-auto border border-white/20">
           <div class="bg-white rounded-xl p-4 md:p-6 text-left">
             <div class="flex items-center space-x-8 border-b border-gray-100 mb-6 px-2">
               <button 
