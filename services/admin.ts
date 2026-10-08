@@ -1,4 +1,4 @@
-import type { NewsPaper, Publication, Payment, CommercialPartner, AdminUser, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
+import type { NewsPaper, Publication, Payment, CommercialPartner, AdminUser,UserGroup, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
 
 //publication setups
 
@@ -378,14 +378,73 @@ export async function deleteAdminRole(roleId: string) {
 }
 
 
+//user groups
+
+export async function getUserGroups(query: object) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<UserGroup[]>>>('admin/get-all-user-groups', "", { query });
+    return response.result;
+}
+
+export async function createUserGroup(payload: object) {
+    
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/create-user-group', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function updateUserGroup(payload: object, userGroupId: string) {
+    
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/update-user-group/${userGroupId}`, "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function deleteUserGroup(userGroupId: string) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-user-group/${userGroupId}`, "", { method: "delete", });
+    return response.success;
+}
+
 
 // admin users
 
 export async function getAdminUsers(query: object) {
  
-    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<AdminUser[]>>>('admin/get-all-users', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<AdminUser[]>>>('admin/get-all-admin-users', "", { query });
     return response.result;
 }
+
+
+export async function createAdminUser(payload: object) {
+    
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/create-admin-user', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function updateAdminUser(payload: object, userId: string) {
+    
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/update-admin-user/${userId}`, "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function deleteAdminUser(userId: string) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-admin-user/${userId}`, "", { method: "delete", });
+    return response.success;
+}
+
+
 
 export async function getPartnerApiKeys(partnerId: string) {
     const response = await gnpAdminUserHttpClient<BaseApiResponse<CommercialPartnerApiKey[]>>(`admin/get-partner-api-keys?partnerId=${partnerId}`, "");

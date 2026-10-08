@@ -187,58 +187,62 @@ const expandedMenus = ref<Record<string, boolean>>({
 })
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon },
-  { name: 'Subscribers', href: '/admin/subscribers', icon: UserGroupIcon },
+  { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon, permission: 'dashboard' },
+  { name: 'Subscribers', href: '/admin/subscribers', icon: UserGroupIcon, permission: 'subscribers.manage' },
   {
     name: 'Content',
     icon: DocumentTextIcon,
+    permission: 'content.manage',
     children: [
-      { name: 'Newspapers', href: '/admin/content-management/newspapers' },
-      { name: 'Videos', href: '/admin/content-management/videos' },
-      { name: 'Audios', href: '/admin/content-management/audios' },
+      { name: 'Newspapers', href: '/admin/content-management/newspapers', permission: 'content.newspapers.view' },
+      { name: 'Videos', href: '/admin/content-management/videos', permission: 'content.videos.view' },
+      { name: 'Audios', href: '/admin/content-management/audios', permission: 'content.audios.view' },
       { name: 'Ingestion Jobs', href: '/admin/content-management/ingestion-jobs' },
     ],
   },
   {
     name: 'Archived Content',
     icon: DocumentTextIcon,
+    permission: 'content.archives.manage',
     children: [
-      { name: 'Overview', href: '/admin/archives/dashboard' },
-      { name: 'Newspapers', href: '/admin/archives/newspapers' },
-      { name: 'Institutions', href: '/admin/archives/institutions' },
-      { name: 'Access Credits', href: '/admin/archives/access-credits' }
+      { name: 'Overview', href: '/admin/archives/dashboard', permission: 'content.archives.dashboard.view' },
+      { name: 'Newspapers', href: '/admin/archives/newspapers', permission: 'content.archives.newspapers.view' },
+      { name: 'Enterprise Subscribers', href: '/admin/archives/institutions', permission: 'content.archives.enterprise_subscrbers.view' },
+      { name: 'Access Credits', href: '/admin/archives/access-credits', permission: 'content.archives.access_credits.configure' }
     ],
   },
-  
   {
     name: 'Commercial Partners',
     icon: BuildingOfficeIcon,
+    permission: 'commercial_partners.manage',
     children: [
-      { name: 'Partners', href: '/admin/partners/' },
-      { name: 'Invoices & Payments', href: '/admin/partners/invoices' },
+      { name: 'Partners', href: '/admin/partners/', permission: 'commercial_partners.view' },
+      { name: 'Invoices & Payments', href: '/admin/partners/invoices', permission: 'partners.invoices.view' },
     ],
   },
   {
     name: 'Affiliate Marketing',
     icon: CurrencyDollarIcon,
+    permission: 'affiliates.manage',
     children: [
-      { name: 'Overview', href: '/admin/affiliates/dashboard' },
-      { name: 'Affiliates', href: '/admin/affiliates/' },
-      { name: 'Applications', href: '/admin/affiliates/applications' },
-      { name: 'Commissions', href: '/admin/affiliates/commissions' },
-      { name: 'Payouts', href: '/admin/affiliates/payouts' },
-      { name: 'Settings', href: '/admin/affiliates/settings' },
+      { name: 'Overview', href: '/admin/affiliates/dashboard', permission: 'affiliates.dashboard.view' },
+      { name: 'Affiliates', href: '/admin/affiliates/', permission: 'affiliates.view' },
+      { name: 'Applications', href: '/admin/affiliates/applications', permission: 'affiliates.applications.view' },
+      { name: 'Commissions', href: '/admin/affiliates/commissions', permission: 'affiliates.commssions.view' },
+      { name: 'Payouts', href: '/admin/affiliates/payouts', permission: 'affiliates.payouts.view' },
+      { name: 'Settings', href: '/admin/affiliates/settings', permission: 'affiliates.settings.view' },
     ],
   },
 
-  { name: 'Publications', href: '/admin/publications', icon: TicketIcon },
-  { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon },
-  { name: 'Payments', href: '/admin/payments', icon: BanknotesIcon },
-  { name: 'Campaigns', href: '/admin/campaigns', icon: MegaphoneIcon },
-  { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon },
+  { name: 'Publications', href: '/admin/publications', icon: TicketIcon,  },
+  { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon, permission: 'subscription_plans.manage' },
+  { name: 'Payments', href: '/admin/payments', icon: BanknotesIcon, permission: 'payments.manage' },
+  { name: 'Campaigns', href: '/admin/campaigns', icon: MegaphoneIcon, permission: 'campaigns.manage' },
+  { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon, permission: 'coupons.manage' },
   {
     name: 'Advert Management',
     icon: RectangleGroupIcon,
+    permission: 'adverts.manage',
     children: [
       { name: 'Advert Categories', href: '/admin/categories/' },
       { name: 'Advert Sizes', href: '/admin/users/sizes' },
@@ -249,15 +253,16 @@ const navigation = [
   {
     name: 'User Management',
     icon: UsersIcon,
+    permission: 'user_management.manage',
     children: [
       { name: 'Roles', href: '/admin/users/roles' },
+      { name: 'User Groups', href: '/admin/users/user-groups' },
       { name: 'Users', href: '/admin/users/' },
-      { name: 'User Invitations', href: '/admin/users/invitations' },
     ],
   },
-  { name: 'Support Tickets', href: '/admin/support-tickets', icon: ChatBubbleLeftRightIcon },
-  { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
-  { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
+  { name: 'Support Tickets', href: '/admin/support-tickets', icon: ChatBubbleLeftRightIcon, permission: 'support_ticket.manage' },
+  { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon, permission: 'reports.manage' },
+  { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon, permission: 'settings.manage' },
 ]
 
 const pageTitle = computed(() => {

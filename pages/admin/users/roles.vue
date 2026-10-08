@@ -62,10 +62,11 @@
       <table class="min-w-full divide-y divide-gray-300">
         <thead class="bg-gray-50">
           <tr>
+
+            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Created At</th>
             <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Name</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Description</th>
             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Permissions</th>
-            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Created</th>
             <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
               <span class="sr-only">Actions</span>
             </th>
@@ -79,6 +80,11 @@
             <td colspan="5" class="py-10 text-center text-sm text-gray-500">No roles found.</td>
           </tr>
           <tr v-for="role in roleList" :key="role.id">
+
+           <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+              {{ standardDateFormat(role.createdAt) }}
+            </td>
+
             <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
               <div class="font-medium text-gray-900">{{ role.name }}</div>
             </td>
@@ -92,7 +98,7 @@
                   :key="perm"
                   class="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10"
                 >
-                  {{ perm }}
+                  {{ getPermissionFriendlyName(perm) }}
                 </span>
                 <span
                   v-if="role.permissions.length > 3"
@@ -103,9 +109,7 @@
               </div>
               <span v-else class="text-gray-400">No permissions</span>
             </td>
-            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-              {{ standardDateFormat(role.createdAt) }}
-            </td>
+           
             <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-3">
               <button
                 class="text-primary-600 hover:text-primary-800"
@@ -275,7 +279,8 @@
                                 <input 
                                   type="checkbox" 
                                   :value="sub.systemName"
-                                  v-model="form.permissions"
+                                  :checked="form.permissions.includes(sub.systemName)"
+                                  @change="toggleSubPermission(group.systemName, sub.systemName)"
                                   class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-600"
                                 />
                               </div>
@@ -366,6 +371,23 @@ const paginationParams = reactive({
 
 const roleList = ref<Role[]>([]);
 const permissionList = ref<Permission[]>([]);
+
+const permissionMap = computed(() => {
+  const map = new Map<string, string>();
+  permissionList.value.forEach(group => {
+    map.set(group.systemName, group.friendlyName);
+    if (group.subPermissions) {
+      group.subPermissions.forEach(sub => {
+        map.set(sub.systemName, sub.friendlyName);
+      });
+    }
+  });
+  return map;
+});
+
+const getPermissionFriendlyName = (systemName: string) => {
+  return permissionMap.value.get(systemName) || systemName;
+};
 
 const isShimmerLoading = ref(true);
 
@@ -472,11 +494,16 @@ const toggleGroup = (group: Permission) => {
   if (isGroupFullySelected(group)) {
     // Deselect all
     const subNames = group.subPermissions.map(sub => sub.systemName);
-    form.value.permissions = form.value.permissions.filter(p => !subNames.includes(p));
+    form.value.permissions = form.value.permissions.filter(p => !subNames.includes(p) && p !== group.systemName);
   } else {
     // Select all missing
     const subNames = group.subPermissions.map(sub => sub.systemName);
-    const newPerms = new Set([...form.value.permissions, ...subNames]);
+    const newPerms = new Set(form.value.permissions);
+    
+    // Add parent first
+    newPerms.add(group.systemName);
+    subNames.forEach(name => newPerms.add(name));
+    
     form.value.permissions = Array.from(newPerms);
   }
 };
@@ -491,8 +518,37 @@ const toggleAllPermissions = () => {
   if (areAllPermissionsSelected.value) {
     form.value.permissions = [];
   } else {
-    const allSubs = permissionList.value.flatMap(g => g.subPermissions);
-    form.value.permissions = allSubs.map(sub => sub.systemName);
+    const newPerms = new Set<string>();
+    permissionList.value.forEach(g => {
+      newPerms.add(g.systemName);
+      g.subPermissions.forEach(sub => newPerms.add(sub.systemName));
+    });
+    form.value.permissions = Array.from(newPerms);
+  }
+};
+
+const toggleSubPermission = (groupSystemName: string, subSystemName: string) => {
+  const isSelected = form.value.permissions.includes(subSystemName);
+  if (isSelected) {
+    // Deselect
+    form.value.permissions = form.value.permissions.filter(p => p !== subSystemName);
+    
+    // Check if we should also remove the parent
+    const group = permissionList.value.find(g => g.systemName === groupSystemName);
+    if (group) {
+      const remainingChildren = group.subPermissions.filter(sub => form.value.permissions.includes(sub.systemName));
+      if (remainingChildren.length === 0) {
+        form.value.permissions = form.value.permissions.filter(p => p !== groupSystemName);
+      }
+    }
+  } else {
+    // Select
+    const updatedPerms = [...form.value.permissions];
+    if (!updatedPerms.includes(groupSystemName)) {
+      updatedPerms.push(groupSystemName); // Push parent first
+    }
+    updatedPerms.push(subSystemName); // Then push child
+    form.value.permissions = updatedPerms;
   }
 };
 
@@ -581,8 +637,8 @@ const debouncedSearch = debounce(() => {
       filters.pageNo = parseInt(route.query.pageNo as string) || 1;
     }
     
-    await getPaginatedRoles();
     await getPermissions();
+    await getPaginatedRoles();
    
 
   });
