@@ -255,7 +255,6 @@
     <AdminSubscriberSubscriptionModal
       :show="showDetailModal"
       :subscriber="selectedSubscriber"
-      :partner-id="partnerId"
       @close="closeDetailModal"
     />
   </div>

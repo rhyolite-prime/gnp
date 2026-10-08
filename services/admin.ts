@@ -186,6 +186,12 @@ export async function getPartnerSubscriberInfo(partnerId: string, userId: string
     return response.result;
 }
 
+export async function getSubscriberInfo(userId: string) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<PartnerSubscriberSubscriptionSummary>>(`admin/get-subscriber-info/${userId}`, "");
+    return response.result;
+}
+
 export async function unPublishNewspaperPublication(query: object) {
  
     const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/unpublish-newspaper', "", { query });
