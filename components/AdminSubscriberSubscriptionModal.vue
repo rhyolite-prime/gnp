@@ -130,7 +130,6 @@ import type { Subscriber, PartnerSubscriberSubscriptionSummary } from "~/models"
 const props = defineProps<{
   show: boolean;
   subscriber: Subscriber | null;
-  partnerId: string;
 }>();
 
 defineEmits(['close']);
@@ -139,10 +138,10 @@ const isLoading = ref(false);
 const subscriptionDetails = ref<PartnerSubscriberSubscriptionSummary | null>(null);
 
 watch(() => props.show, async (newVal) => {
-  if (newVal && props.subscriber && props.partnerId) {
+  if (newVal && props.subscriber) {
     isLoading.value = true;
     try {
-      subscriptionDetails.value = await getPartnerSubscriberInfo(props.partnerId, props.subscriber.id);
+      subscriptionDetails.value = await getSubscriberInfo(props.subscriber.id);
     } catch (e) {
       console.error(e);
       subscriptionDetails.value = null;

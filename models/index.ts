@@ -418,7 +418,9 @@ export interface AdminUser extends BaseEntityModel {
     email: string;
     username: string;
     phoneNumber?: string;
+    isActive: boolean;
     roles: [];
+    userGroups: [];
     createdAt: string;
 }
 
@@ -476,6 +478,15 @@ export interface Role extends BaseEntityModel {
     partnerId: string;
     permissions: string[]
     
+}
+
+export interface UserGroup extends BaseEntityModel {
+    id: string;
+    title: string;
+    parentId: string;
+    roles: [];
+    activeUsers: string,
+    blockedUsers: string,
 }
 
 export interface Permission {

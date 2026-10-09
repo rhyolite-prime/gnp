@@ -36,7 +36,79 @@ export const useAdminAuthStore = defineStore('auth',  () => {
   const authProvider = ref<'microsoft' | 'google' | 'gnp' | null>(null);
   const accessToken = ref<string | null>(null);
   const userPhotoUrl = ref<string>();
-  const gnpUserIdentityCookie = useCookie('gnp-user-identity');
+  const permissions = ref<string[]>([]);
+  const gnpAdminUserIdentityCookie = useCookie('gnp-admin-user-identity');
+
+  const initDB = (): Promise<IDBDatabase> => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('gnp_admin_db', 1);
+      request.onupgradeneeded = (e: any) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('auth')) {
+          db.createObjectStore('auth');
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  };
+
+  const setIDB = async (key: string, value: any) => {
+    try {
+      const db = await initDB();
+      return new Promise<void>((resolve, reject) => {
+        const tx = db.transaction('auth', 'readwrite');
+        const store = tx.objectStore('auth');
+        const request = store.put(value, key);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    } catch (e) {
+      console.error('IDB set error', e);
+    }
+  };
+
+  const getIDB = async (key: string): Promise<any> => {
+    try {
+      const db = await initDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('auth', 'readonly');
+        const store = tx.objectStore('auth');
+        const request = store.get(key);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    } catch (e) {
+      console.error('IDB get error', e);
+      return null;
+    }
+  };
+
+  const removeIDB = async (key: string) => {
+    try {
+      const db = await initDB();
+      return new Promise<void>((resolve, reject) => {
+        const tx = db.transaction('auth', 'readwrite');
+        const store = tx.objectStore('auth');
+        const request = store.delete(key);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    } catch (e) {
+      console.error('IDB remove error', e);
+    }
+  };
+
+  async function savePermissions(perms: string[]) {
+    permissions.value = perms || [];
+    if (typeof window !== 'undefined') {
+      await setIDB('permissions', permissions.value);
+    }
+  }
+
+  function setPermissions(perms: string[]) {
+    permissions.value = perms || [];
+  }
   
   // Track session start time for session-duration-on-logout metric
   const sessionStartedAt = ref<number | null>(null);
@@ -141,11 +213,22 @@ export const useAdminAuthStore = defineStore('auth',  () => {
         accessToken.value = storedToken;
         sessionStartedAt.value = Date.now();
        
+        // Read permissions asynchronously from IndexedDB
+        if (typeof window !== 'undefined') {
+          getIDB('permissions').then((perms) => {
+            if (perms) permissions.value = perms;
+          });
+        }
         
-      } else if (gnpUserIdentityCookie.value) {
+      } else if (gnpAdminUserIdentityCookie.value) {
         // Fallback to cookie if sessionStorage is empty (e.g. browser was closed and reopened)
-        setAccessToken(gnpUserIdentityCookie.value as string);
-
+        setAccessToken(gnpAdminUserIdentityCookie.value as string);
+        // We still need to load permissions from IDB
+        if (typeof window !== 'undefined') {
+          getIDB('permissions').then((perms) => {
+            if (perms) permissions.value = perms;
+          });
+        }
          
       }
 
@@ -198,6 +281,10 @@ export const useAdminAuthStore = defineStore('auth',  () => {
     sessionStartedAt.value = null;
     sessionStorage.removeItem('authUser');
     sessionStorage.removeItem('accessToken');
+    permissions.value = [];
+    if (typeof window !== 'undefined') {
+      removeIDB('permissions');
+    }
   }
   
   // Initialize from storage when store is created
@@ -212,6 +299,9 @@ export const useAdminAuthStore = defineStore('auth',  () => {
     authProvider,
     accessToken,
     userPhotoUrl,
+    permissions,
+    savePermissions,
+    setPermissions,
     setUser,
     setAccessToken,
     setUserPhotoUrl,
