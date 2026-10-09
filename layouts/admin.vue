@@ -24,74 +24,76 @@
 
       <!-- Navigation -->
       <nav class="flex-1 overflow-y-auto py-6 px-3 space-y-1">
-        <div v-for="item in navigation" :key="item.name" class="space-y-1">
-          <!-- Single menu item -->
-          <NuxtLink
-            v-if="!item.children || !item.children.length"
-            :to="item.href"
-            class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200"
-            :class="[
-              route.path === item.href
-                ? 'bg-primary-50 text-primary-700 shadow-sm'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-            ]"
-          >
-            <component
-              :is="item.icon"
-              class="mr-3 h-5 w-5"
-              :class="route.path === item.href ? 'text-primary-600' : 'text-gray-400'"
-            />
-            {{ item.name }}
-          </NuxtLink>
-
-          <!-- Grouped menu -->
-          <div v-else>
-            <button
-              type="button"
-              class="w-full flex items-center px-3 py-2.5 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-50 transition-colors"
-              @click="expandedMenus[item.name] = !expandedMenus[item.name]"
+        <ClientOnly>
+          <div v-for="item in filteredNavigation" :key="item.name" class="space-y-1">
+            <!-- Single menu item -->
+            <NuxtLink
+              v-if="!item.children || !item.children.length"
+              :to="item.href"
+              class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200"
+              :class="[
+                route.path === item.href
+                  ? 'bg-primary-50 text-primary-700 shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              ]"
             >
               <component
                 :is="item.icon"
-                class="mr-3 h-5 w-5 text-gray-400"
+                class="mr-3 h-5 w-5"
+                :class="route.path === item.href ? 'text-primary-600' : 'text-gray-400'"
               />
-              <span class="flex-1 text-left">
-                {{ item.name }}
-              </span>
+              {{ item.name }}
+            </NuxtLink>
 
-              <svg
-                class="h-4 w-4 text-gray-400 transition-transform"
-                :class="expandedMenus[item.name] ? 'rotate-90' : ''"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            <!-- Grouped menu -->
+            <div v-else>
+              <button
+                type="button"
+                class="w-full flex items-center px-3 py-2.5 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-50 transition-colors"
+                @click="expandedMenus[item.name] = !expandedMenus[item.name]"
               >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+                <component
+                  :is="item.icon"
+                  class="mr-3 h-5 w-5 text-gray-400"
+                />
+                <span class="flex-1 text-left">
+                  {{ item.name }}
+                </span>
 
-            <transition name="slide-fade">
-              <div
-                v-show="expandedMenus[item.name]"
-                class="ml-8 space-y-1"
-              >
-                <NuxtLink
-                  v-for="child in item.children"
-                  :key="child.name"
-                  :to="child.href"
-                  class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200"
-                  :class="[
-                    route.path === child.href
-                      ? 'bg-primary-50 text-primary-700 shadow-sm'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  ]"
+                <svg
+                  class="h-4 w-4 text-gray-400 transition-transform"
+                  :class="expandedMenus[item.name] ? 'rotate-90' : ''"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  {{ child.name }}
-                </NuxtLink>
-              </div>
-            </transition>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              <transition name="slide-fade">
+                <div
+                  v-show="expandedMenus[item.name]"
+                  class="ml-8 space-y-1"
+                >
+                  <NuxtLink
+                    v-for="child in item.children"
+                    :key="child.name"
+                    :to="child.href"
+                    class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200"
+                    :class="[
+                      route.path === child.href
+                        ? 'bg-primary-50 text-primary-700 shadow-sm'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ]"
+                  >
+                    {{ child.name }}
+                  </NuxtLink>
+                </div>
+              </transition>
+            </div>
           </div>
-        </div>
+        </ClientOnly>
       </nav>
 
       <!-- User Profile (Bottom Sidebar) -->
@@ -175,10 +177,12 @@ import {
   ChatBubbleLeftRightIcon
 } from '@heroicons/vue/24/outline'
 import { useAdminAuthStore } from '~/stores/admin-auth'
+import { usePermissions } from '~/composables/usePermissions'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAdminAuthStore()
+const { hasPermission } = usePermissions()
 
 const isSidebarOpen = ref(false)
 
@@ -264,6 +268,24 @@ const navigation = [
   { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon, permission: 'reports.manage' },
   { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon, permission: 'settings.manage' },
 ]
+
+const filteredNavigation = computed(() => {
+  return navigation.filter(item => {
+    if (item.permission && !hasPermission(item.permission)) return false
+    return true
+  }).map(item => {
+    if (item.children) {
+      return {
+        ...item,
+        children: item.children.filter(child => !child.permission || hasPermission(child.permission))
+      }
+    }
+    return item
+  }).filter(item => {
+    if (item.children && item.children.length === 0) return false
+    return true
+  })
+})
 
 const pageTitle = computed(() => {
   for (const item of navigation) {

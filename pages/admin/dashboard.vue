@@ -272,6 +272,7 @@ import {
   MegaphoneIcon
 } from '@heroicons/vue/24/outline'
 import CountUp from 'vue-countup-v3'
+const { hasPermission } = usePermissions();
 
 
 const today = new Date()

@@ -225,23 +225,12 @@
             >
               <DialogPanel class="relative transform rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl overflow-hidden">
                 <!-- Modal Header -->
-                <div class="bg-primary-600 px-6 py-5">
-                  <div class="flex items-center justify-between">
-                    <DialogTitle class="text-lg font-bold leading-6 text-white flex items-center gap-2">
-                      <FolderIcon class="h-6 w-6 text-primary-200" />
-                      {{ editingGroupId ? 'Edit User Group Details' : 'Create User Group' }}
-                    </DialogTitle>
-                    <button 
-                      type="button" 
-                      class="rounded-md text-primary-200 hover:text-white focus:outline-none transition-all p-1"
-                      @click="closeModal"
-                    >
-                      <span class="sr-only">Close</span>
-                      <XMarkIcon class="h-6 w-6" aria-hidden="true" />
-                    </button>
-                  </div>
-                  <p class="mt-1 text-sm text-primary-100">
-                    Configure user group metadata, hierarchy structures, and assign core security roles with real-time permissions tracking.
+                <div class="px-6 pt-6">
+                  <DialogTitle as="h3" class="text-lg font-semibold leading-6 text-gray-900">
+                    {{ editingGroupId ? 'Edit User Group' : 'Create User Group' }}
+                  </DialogTitle>
+                  <p class="mt-1 text-sm text-gray-500">
+                    {{ editingGroupId ? 'Update user group metadata, hierarchy structures, and assigned core security roles.' : 'Configure user group metadata, hierarchy structures, and assign core security roles with real-time permissions tracking.' }}
                   </p>
                 </div>
 

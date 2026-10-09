@@ -4,23 +4,24 @@
     <div class="sm:flex sm:items-center sm:justify-between mb-8">
       <div>
         <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">Subscribers</h1>
-        <p class="mt-2 text-sm text-gray-700">Manage subscribers</p>
+        <p class="mt-2 text-sm text-gray-700">Manage and monitor all subscribers and their subscription packages</p>
       </div>
-      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none" v-if="hasPermission('subscribers.create')">
         <button
           @click="openCreateModal"
           type="button"
-          class="block rounded-md bg-primary-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
-          Create Subscriber
+          class="block rounded-md bg-primary-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+        >
+          Add Subscriber
         </button>
       </div>
     </div>
 
     <!-- Filters Toggle -->
     <div class="flex justify-end mb-4">
-      <button 
-        @click="showFilters = !showFilters" 
-        type="button" 
+      <button
+        @click="showFilters = !showFilters"
+        type="button"
         class="inline-flex items-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
       >
         <FunnelIcon class="-ml-0.5 h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -37,11 +38,11 @@
           <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
           </div>
-          <input 
-            type="text" 
+          <input
+            type="text"
             v-model="filters.query"
-            class="block w-full rounded-md border-0 py-1.5 pl-10 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6" 
-            placeholder="Search subscribers..." 
+            class="block w-full rounded-md border-0 py-1.5 pl-10 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
+            placeholder="Search subscribers..."
           />
         </div>
       </div>
@@ -50,16 +51,16 @@
       <div class="flex flex-col">
         <label class="block text-sm font-medium text-gray-700 mb-1">Date Joined</label>
         <div class="flex items-center space-x-2 bg-white rounded-md ring-1 ring-inset ring-gray-300 px-2 py-1 shadow-sm">
-          <input 
-            type="date" 
-            v-model="filters.dateJoinedStartDate" 
+          <input
+            type="date"
+            v-model="filters.dateJoinedStartDate"
             class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
             placeholder="Start Date"
           />
           <span class="text-gray-400 text-sm">to</span>
-          <input 
-            type="date" 
-            v-model="filters.dateJoinedEndDate" 
+          <input
+            type="date"
+            v-model="filters.dateJoinedEndDate"
             class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
             placeholder="End Date"
           />
@@ -70,16 +71,16 @@
       <div class="flex flex-col">
         <label class="block text-sm font-medium text-gray-700 mb-1">Last Active</label>
         <div class="flex items-center space-x-2 bg-white rounded-md ring-1 ring-inset ring-gray-300 px-2 py-1 shadow-sm">
-          <input 
-            type="date" 
-            v-model="filters.lastActiveStartDate" 
+          <input
+            type="date"
+            v-model="filters.lastActiveStartDate"
             class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
             placeholder="Start Date"
           />
           <span class="text-gray-400 text-sm">to</span>
-          <input 
-            type="date" 
-            v-model="filters.lastActiveEndDate" 
+          <input
+            type="date"
+            v-model="filters.lastActiveEndDate"
             class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
             placeholder="End Date"
           />
@@ -99,16 +100,16 @@
 
       <!-- Filter Actions -->
       <div class="flex items-end gap-2">
-        <button 
-          @click="applyFilters" 
-          type="button" 
+        <button
+          @click="applyFilters"
+          type="button"
           class="rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 flex-1"
         >
           Search
         </button>
-        <button 
-          @click="resetFilters" 
-          type="button" 
+        <button
+          @click="resetFilters"
+          type="button"
           class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 flex-1"
         >
           Reset
@@ -117,7 +118,7 @@
     </div>
 
     <!-- Subscriber List -->
-    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-hidden">
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-visible min-h-[450px]">
       <table class="min-w-full divide-y divide-gray-300">
         <thead class="bg-gray-50">
           <tr>
@@ -147,18 +148,18 @@
           <tr v-else-if="subscriberList.length === 0">
             <td colspan="8" class="px-3 py-10 text-center text-gray-500">
               <p class="text-sm">No subscribers found.</p>
-              <button @click="openUploadModal" class="mt-2 text-primary-600 hover:text-primary-500 text-sm font-medium">Upload a list to get started</button>
+              <button @click="openCreateModal" class="mt-2 text-primary-600 hover:text-primary-500 text-sm font-medium">Add a subscriber to get started</button>
             </td>
           </tr>
 
-          <tr v-else v-for="sub in subscriberList" :key="sub.id" class="hover:bg-gray-50 transition-colors">
+          <tr v-else v-for="(sub, index) in subscriberList" :key="sub.id" class="hover:bg-gray-50 transition-colors">
             <td class="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900">{{ sub.firstName }} {{ sub.lastName }}</td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ sub.email }}</td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ sub.phoneNumber || 'N/A' }}</td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ longDateAndTimeFormat(sub.createdAt) }}</td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ longDateAndTimeFormat(sub.lastActive) }}</td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-              <span 
+              <span
                 class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
                 :class="badgeClass(sub)"
               >
@@ -166,7 +167,7 @@
               </span>
             </td>
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-              <span 
+              <span
                 class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
                 :class="{
                   'bg-green-50 text-green-700 ring-green-600/20': sub.status === 'Active' || sub.status === 'active',
@@ -175,55 +176,75 @@
                 {{ sub.status || 'Active' }}
               </span>
             </td>
-            
+
             <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
               <div class="relative dropdown-container flex justify-end">
-                <button 
-                  @click.stop="toggleDropdown(sub.id)" 
+                <button
+                  @click.stop="toggleDropdown(sub.id)"
                   class="text-gray-400 hover:text-gray-600 focus:outline-none"
                 >
                   <EllipsisVerticalIcon class="h-5 w-5" />
                 </button>
 
                 <!-- Dropdown Menu -->
-                <div 
-                  v-if="activeDropdownId === sub.id" 
-                  class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-100 ring-1 ring-black ring-opacity-5"
+                <div
+                  v-if="activeDropdownId === sub.id"
+                  class="absolute right-0 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-100 ring-1 ring-black ring-opacity-5"
+                  :class="index > 3 && index > subscriberList.length - 4 ? 'bottom-full mb-2' : 'top-full mt-2'"
                 >
                   <div class="py-1">
-                    <button 
+                    <button
                       class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                      @click.prevent="openDetailModal(sub)">
+                      @click.prevent="openDetailModal(sub)"
+                    >
                       View Details
                     </button>
-                    <button 
+
+                    <button
+                      v-if="!sub.subscriptionPlanId"
                       class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                      @click.prevent="openDetailModal(sub)">
-                      Update
+                      @click.prevent="initAssignSubscription(sub)"
+                    >
+                      Assign Subscription
                     </button>
-                    <button v-if="!sub.isActive"
+
+                    <button
+                      v-if="sub.subscriptionPlanId"
                       class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                      @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Active')">
+                      @click.prevent="initAssignSubscription(sub)"
+                    >
+                      Modify Subscription
+                    </button>
+
+                    <button
+                      v-if="!sub.isActive"
+                      class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                      @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Active')"
+                    >
                       Activate
                     </button>
-                    <button 
-                      class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                      @click.prevent="resetSubscriberPassword(sub.id)"
-                    >
-                      Reset Password
-                    </button>
-                    <button v-if="sub.isActive"
+
+                    <button
+                      v-if="sub.isActive"
                       class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
                       @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Inactive')"
                     >
                       Deactivate
                     </button>
-                    <button 
+
+                    <button
+                      class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                      @click.prevent="handleResetPassword(sub.id)"
+                    >
+                      Reset Password
+                    </button>
+
+                    <button
                       class="block w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left"
-                      @click.prevent="confirmRemoveSubscriber(sub.id)"
+                      @click.prevent="confirmRemoveSubscriber(sub)"
                     >
                       Delete
-                    </button> 
+                    </button>
                   </div>
                 </div>
               </div>
@@ -233,39 +254,62 @@
       </table>
 
       <client-only>
-        <SimplePagination :lower-bound="paginationParams.lowerBound" 
+        <SimplePagination
+          :lower-bound="paginationParams.lowerBound"
           :upper-bound="paginationParams.upperBound"
           @on-page-changed="onPageChange"
-          :page-no="filters.pageNo" 
+          :page-no="filters.pageNo"
           :total-pages="paginationParams.totalPages"
-          :total-count="paginationParams.totalCount" 
-          :disabled="isShimmerLoading" />
+          :total-count="paginationParams.totalCount"
+          :disabled="isShimmerLoading"
+        />
       </client-only>
     </div>
 
-    <!-- Partner Subscriber Modal -->
-    <PartnerSubscriberModal 
-      v-if="showCreateModal" 
-      @close="closeCreateModal" 
+    <!-- Add Subscriber Modal (2-step wizard) -->
+    <AdminSubscriberModal
+      v-if="showCreateModal"
+      @close="closeCreateModal"
       @save="handleCreateSubscriber"
       :loading="isCreatingSubscriber"
     />
 
-    <!-- Subscriber Detail Modal -->
+    <!-- Assign / Modify Subscription Modal -->
+    <PartnerSubscriptionModal
+      v-if="showAssignModal"
+      @close="closeAssignModal"
+      @assign="handleAssignSubscription"
+      :loading="isAssigning"
+    />
+
+    <!-- Subscriber Detail / Subscription History Modal -->
     <AdminSubscriberSubscriptionModal
       :show="showDetailModal"
       :subscriber="selectedSubscriber"
       @close="closeDetailModal"
     />
+
+    <!-- Delete Confirmation Modal -->
+    <ConfirmModal
+      :show="showDeleteConfirmModal"
+      title="Delete Subscriber"
+      message="Are you sure you want to delete this subscriber? This action cannot be undone."
+      confirm-text="Delete Subscriber"
+      cancel-text="Cancel"
+      type="danger"
+      :loading="isDeletingSubscriber"
+      @confirm="handleConfirmDelete"
+      @cancel="showDeleteConfirmModal = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
-import { ArrowLeftIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, CheckCircleIcon, EllipsisVerticalIcon, FunnelIcon } from '@heroicons/vue/24/outline'
-import { isEmpty, debounce } from "lodash-es";
-import type { Subscriber } from "~/models";
-const { $toast } = useNuxtApp();
+import { MagnifyingGlassIcon, EllipsisVerticalIcon, FunnelIcon } from '@heroicons/vue/24/outline'
+import { isEmpty, debounce } from 'lodash-es'
+import type { Subscriber } from '~/models'
+const { hasPermission } = usePermissions();
+const { $toast } = useNuxtApp()
 
 definePageMeta({
   layout: 'admin',
@@ -276,8 +320,11 @@ useHead({
   title: 'Subscribers | Graphic News Plus'
 })
 
-const router = useRouter();
-const route = useRoute();
+const router = useRouter()
+const route = useRoute()
+
+// ─── Filters ───────────────────────────────────────────────────────────────
+const showFilters = ref(false)
 
 const filters = reactive({
   query: '',
@@ -288,202 +335,264 @@ const filters = reactive({
   lastActiveEndDate: '',
   pageNo: 1,
   pageSize: 30,
-});
+})
 
+// ─── Pagination ─────────────────────────────────────────────────────────────
 const paginationParams = reactive({
   totalPages: 0,
   totalCount: 0,
   lowerBound: 0,
   upperBound: 0
-});
+})
 
-const subscriberList = ref<Subscriber[]>([]);
-const showDetailModal = ref(false);
-const selectedSubscriber = ref<Subscriber | null>(null);
+// ─── List State ─────────────────────────────────────────────────────────────
+const subscriberList = ref<Subscriber[]>([])
+const isShimmerLoading = ref(true)
 
-const isShimmerLoading = ref(true);
-const showCreateModal = ref(false);
-const isCreatingSubscriber = ref(false);
-const activeDropdownId = ref<string | null>(null);
+// ─── Dropdown ───────────────────────────────────────────────────────────────
+const activeDropdownId = ref<string | null>(null)
+
+const toggleDropdown = (id: string) => {
+  activeDropdownId.value = activeDropdownId.value === id ? null : id
+}
+
+const closeDropdown = () => {
+  activeDropdownId.value = null
+}
+
+onMounted(() => {
+  document.addEventListener('click', (e: any) => {
+    if (!e.target.closest('.dropdown-container')) {
+      closeDropdown()
+    }
+  })
+})
+
+// ─── Fetch Subscribers ───────────────────────────────────────────────────────
+const getPaginatedSubscribers = async () => {
+  isShimmerLoading.value = true
+  try {
+    const result = await getSubscribers(filters)
+    subscriberList.value = result.data
+    paginationParams.totalPages = result.totalPages
+    paginationParams.totalCount = result.totalCount
+    paginationParams.lowerBound = result.lowerBound
+    paginationParams.upperBound = result.upperBound
+  } catch (error) {
+    $toast.error('Unable to fetch subscribers!')
+  } finally {
+    isShimmerLoading.value = false
+  }
+}
 
 const onPageChange = async (pageNumber: number) => {
-  filters.pageNo = pageNumber;
-  const filteredQuery = filterQueryParams({ ...route.query, ...filters });
-  router.replace({ name: route.name ?? '', query: filteredQuery });
+  filters.pageNo = pageNumber
+  const filteredQuery = filterQueryParams({ ...route.query, ...filters })
+  router.replace({ name: route.name ?? '', query: filteredQuery })
   await getPaginatedSubscribers()
 }
 
-const closeCreateModal = () => {
-  showCreateModal.value = false;
-};
-
-const closeDropdown = () => {
-  activeDropdownId.value = null;
-};
-
-const openDetailModal = (subscriber: Subscriber) => {
-  selectedSubscriber.value = subscriber;
-  showDetailModal.value = true;
-  closeDropdown();
-};
-
-const closeDetailModal = () => {
-  showDetailModal.value = false;
-  setTimeout(() => {
-    selectedSubscriber.value = null;
-  }, 300);
-};
-
-const getPaginatedSubscribers = async () => {
-  isShimmerLoading.value = true;
-
-  try {
-    let result = await getSubscribers(filters);
-    subscriberList.value = result.data;
-    paginationParams.totalPages = result.totalPages;
-    paginationParams.totalCount = result.totalCount;
-    paginationParams.lowerBound = result.lowerBound;
-    paginationParams.upperBound = result.upperBound;
-  } catch (error) {
-    $toast.error('Unable to fetch subscribers !');
-  } finally {
-    isShimmerLoading.value = false;
-  }
+const applyFilters = async () => {
+  filters.pageNo = 1
+  const filteredQuery = filterQueryParams({ ...route.query, ...filters })
+  router.replace({ name: route.name ?? '', query: filteredQuery })
+  await getPaginatedSubscribers()
 }
 
-const badgeClass = (sub) => {
-  if (sub.affiliateId) {
-    return 'bg-green-50 text-green-700 ring-green-600/20'
-  }
-  if (sub.partnerId) {
-    return 'bg-blue-50 text-blue-700 ring-blue-600/20'
-  }
-  return 'bg-gray-50 text-gray-700 ring-gray-600/20' // regular
-};
+const resetFilters = async () => {
+  filters.query = ''
+  filters.accountType = ''
+  filters.dateJoinedStartDate = ''
+  filters.dateJoinedEndDate = ''
+  filters.lastActiveStartDate = ''
+  filters.lastActiveEndDate = ''
+  filters.pageNo = 1
+  const filteredQuery = filterQueryParams({ ...route.query, ...filters })
+  router.replace({ name: route.name ?? '', query: filteredQuery })
+  await getPaginatedSubscribers()
+}
 
-const badgeLabel = (sub) => {
+const debouncedSearch = debounce(() => {
+  filters.pageNo = 1
+  getPaginatedSubscribers()
+}, 300)
+
+watch(() => filters.query, debouncedSearch)
+
+// ─── Badge Helpers ───────────────────────────────────────────────────────────
+const badgeClass = (sub: Subscriber) => {
+  if (sub.affiliateId) return 'bg-green-50 text-green-700 ring-green-600/20'
+  if (sub.partnerId) return 'bg-blue-50 text-blue-700 ring-blue-600/20'
+  return 'bg-gray-50 text-gray-700 ring-gray-600/20'
+}
+
+const badgeLabel = (sub: Subscriber) => {
   if (sub.affiliateId) return 'Affiliate Account'
   if (sub.partnerId) return 'Partner Account'
   return 'Regular Account'
-};
+}
 
-const toggleDropdown = (id: string) => {
-  if (activeDropdownId.value === id) {
-    activeDropdownId.value = null;
-  } else {
-    activeDropdownId.value = id;
-  }
-};
-
-const applyFilters = async () => {
-  filters.pageNo = 1;
-  const filteredQuery = filterQueryParams({ ...route.query, ...filters });
-  router.replace({ name: route.name ?? '', query: filteredQuery });
-  await getPaginatedSubscribers();
-};
-
-const resetFilters = async () => {
-  filters.query = '';
-  filters.accountType = '';
-  filters.dateJoinedStartDate = '';
-  filters.dateJoinedEndDate = '';
-  filters.lastActiveStartDate = '';
-  filters.lastActiveEndDate = '';
-  filters.pageNo = 1;
-  
-  const filteredQuery = filterQueryParams({ ...route.query, ...filters });
-  router.replace({ name: route.name ?? '', query: filteredQuery });
-  await getPaginatedSubscribers();
-};
-
-// Filters
-const showFilters = ref(false)
-
-// Active filters
-const searchQuery = ref('')
-const selectedStatus = ref('all')
-const selectedChannel = ref('all')
-
-const isModalOpen = ref(false)
-const isSaving = ref(false)
+// ─── Create Subscriber (2-step wizard) ──────────────────────────────────────
+const showCreateModal = ref(false)
+const isCreatingSubscriber = ref(false)
 
 const openCreateModal = () => {
-  showCreateModal.value = true;
+  showCreateModal.value = true
 }
 
-const closeModal = () => {
-  isModalOpen.value = false
+const closeCreateModal = () => {
+  showCreateModal.value = false
 }
+
 
 const handleCreateSubscriber = async (subscriberData: any) => {
-  isCreatingSubscriber.value = true;
+  isCreatingSubscriber.value = true
+  console.log('subscriberData->', subscriberData);
   try {
-    const payload = {
-      ...subscriberData,
-    };
-    
-    const success = await createSubscriber(payload);
-    
+    const success = await createSubscriber(subscriberData)
     if (success) {
-      $toast.success('Subscriber added successfully');
-      closeCreateModal();
-      await getPaginatedSubscribers();
+      $toast.success(`Subscriber created successfully. A welcome email has been sent to ${subscriberData.email}.`)
+      closeCreateModal()
+      await getPaginatedSubscribers()
     } else {
-      closeCreateModal();
-      $toast.error('Failed to add subscriber');
+      $toast.error('Failed to create subscriber')
     }
   } catch (error: any) {
-    console.error('Error adding subscriber:', error);
-    closeCreateModal();
+    console.error('Error creating subscriber:', error)
+    $toast.error('An error occurred while creating the subscriber')
   } finally {
-    isCreatingSubscriber.value = false;
-    closeCreateModal();
-    await getPaginatedSubscribers();
+    isCreatingSubscriber.value = false
   }
-};
+}
 
-const resetSubscriberPassword = async (subscriberId: string) => {
+// ─── Assign / Modify Subscription ───────────────────────────────────────────
+const showAssignModal = ref(false)
+const isAssigning = ref(false)
+const selectedSubscriber = ref<Subscriber | null>(null)
+
+const initAssignSubscription = (subscriber: Subscriber) => {
+  selectedSubscriber.value = subscriber
+  showAssignModal.value = true
+  closeDropdown()
+}
+
+const closeAssignModal = () => {
+  showAssignModal.value = false
+  setTimeout(() => { selectedSubscriber.value = null }, 300)
+}
+
+const handleAssignSubscription = async (planData: any) => {
+  if (!selectedSubscriber.value) return
+
+  isAssigning.value = true
   try {
-    const success = await resetStandardSubscriberPassword(subscriberId);
-    
+    const payload = {
+      subscriberId: selectedSubscriber.value.id,
+      planId: planData.planId,
+      billingCycle: planData.billingCycle,
+      planName: planData.planName,
+      price: planData.price,
+    }
+
+    const success = await assignSubscriptionToSubscriber(payload)
     if (success) {
-      $toast.success('Subscriber Password Reset Successfully.');
-      await fetchSubscribers();
+      $toast.success(`Subscription plan assigned successfully to ${selectedSubscriber.value.firstName} ${selectedSubscriber.value.lastName}.`)
+      closeAssignModal()
+      await getPaginatedSubscribers()
     } else {
-      $toast.error('Failed to reset subscriber password');
+      $toast.error('Failed to assign subscription plan')
     }
   } catch (error) {
-    $toast.error('An error occurred while reseting subsriber password');
+    console.error('Error assigning subscription:', error)
+    $toast.error('An error occurred while assigning the subscription plan')
   } finally {
-    closeDropdown();
+    isAssigning.value = false
   }
-};
+}
 
-const delSubscriber = async (subscriber: Subscriber) => {
+// ─── View Subscription Details ───────────────────────────────────────────────
+const showDetailModal = ref(false)
+
+const openDetailModal = (subscriber: Subscriber) => {
+  selectedSubscriber.value = subscriber
+  showDetailModal.value = true
+  closeDropdown()
+}
+
+const closeDetailModal = () => {
+  showDetailModal.value = false
+  setTimeout(() => { selectedSubscriber.value = null }, 300)
+}
+
+// ─── Activate / Deactivate Subscriber ────────────────────────────────────────
+const handleUpdateSubscriberStatus = async (subscriberId: string, status: string) => {
+  closeDropdown()
   try {
-    await deleteSubscriber(subscriber.id);
-    $toast.success('Subscriber deleted successfully');
-    await getPaginatedSubscribers();
+    const success = await updateSubscriberStatus({ subscriberId, status })
+    if (success) {
+      $toast.success(`Subscriber ${status === 'Active' ? 'activated' : 'deactivated'} successfully`)
+      await getPaginatedSubscribers()
+    } else {
+      $toast.error('Failed to update subscriber status')
+    }
   } catch (error) {
-    console.error('Failed to delete subscriber.', error);
-    $toast.error('Failed to delete subscriber.');
+    $toast.error('An error occurred while updating subscriber status')
   }
-};
+}
 
-const debouncedSearch = debounce(() => {
-  filters.pageNo = 1; // Reset to first page for new search
-  getPaginatedSubscribers();
-}, 300); // 300ms delay
+// ─── Reset Password ──────────────────────────────────────────────────────────
+const handleResetPassword = async (subscriberId: string) => {
+  closeDropdown()
+  try {
+    const success = await resetStandardSubscriberPassword(subscriberId)
+    if (success) {
+      $toast.success('Subscriber password reset successfully')
+    } else {
+      $toast.error('Failed to reset subscriber password')
+    }
+  } catch (error) {
+    $toast.error('An error occurred while resetting subscriber password')
+  }
+}
 
-watch(() => filters.query, debouncedSearch);
+// ─── Delete Subscriber ───────────────────────────────────────────────────────
+const showDeleteConfirmModal = ref(false)
+const isDeletingSubscriber = ref(false)
+const subscriberToDelete = ref<Subscriber | null>(null)
 
+const confirmRemoveSubscriber = (subscriber: Subscriber) => {
+  subscriberToDelete.value = subscriber
+  showDeleteConfirmModal.value = true
+  closeDropdown()
+}
+
+const handleConfirmDelete = async () => {
+  if (!subscriberToDelete.value) return
+  isDeletingSubscriber.value = true
+  try {
+    const success = await deleteSubscriber(subscriberToDelete.value.id)
+    if (success) {
+      $toast.success('Subscriber deleted successfully')
+      showDeleteConfirmModal.value = false
+      await getPaginatedSubscribers()
+    } else {
+      $toast.error('Failed to delete subscriber')
+    }
+  } catch (error) {
+    $toast.error('An error occurred while deleting the subscriber')
+  } finally {
+    isDeletingSubscriber.value = false
+    subscriberToDelete.value = null
+  }
+}
+
+// ─── Lifecycle ───────────────────────────────────────────────────────────────
 onMounted(async () => {
   if (!isEmpty(route.query)) {
-    filters.pageNo = parseInt(route.query.pageNo as string);
+    filters.pageNo = parseInt(route.query.pageNo as string) || 1
   }
-  
-  await getPaginatedSubscribers();
-});
+  await getPaginatedSubscribers()
+})
 </script>
 
 <style scoped>
