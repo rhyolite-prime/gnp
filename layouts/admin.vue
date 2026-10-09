@@ -305,9 +305,12 @@ navigation.forEach(item => {
 })
 
 const handleLogout = () => {
+  // The store owns the admin session: it clears the reactive state, IndexedDB
+  // permissions, the 'gnp-admin-user-identity' cookie and the shared
+  // 'gnpAdminUserAuth' useState that the admin HTTP client reads from.
+  // (This used to null 'gnp-user-identity', which is the *consumer* cookie and
+  //  would log the admin out of the public site without ending the admin session.)
   authStore.clearUser()
-  const cookie = useCookie('gnp-user-identity')
-  cookie.value = null
   router.push('/admin/account/login')
 }
 </script>
