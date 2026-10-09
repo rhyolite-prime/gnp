@@ -90,6 +90,15 @@ export interface SigninResponseModel {
     username: string;
 }
 
+export interface AdminSigninResponseModel extends SigninResponseModel {
+    /**
+     * Permission ids granted to this admin user (e.g. "dashboard",
+     * "subscribers.manage"). Absent/empty for accounts with no explicit grants;
+     * "*" denotes a super-admin. Persisted via useAdminAuthStore().savePermissions().
+     */
+    permissions?: string[];
+}
+
 export interface PartnerSigninResponseModel {
     partnerEmail: string;
     fullName: string;

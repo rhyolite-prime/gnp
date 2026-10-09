@@ -1,6 +1,13 @@
 import { defineStore } from 'pinia';
 import type { AccountInfo } from '@azure/msal-browser';
 
+// sessionStorage keys are namespaced per auth domain. The consumer store
+// (stores/basic-user-auth.ts) owns the generic 'authUser' / 'accessToken' keys,
+// so the admin store must NOT reuse them: an admin JWT written there would be
+// hydrated into the public-site session on the next page load (and vice versa).
+const ADMIN_USER_STORAGE_KEY = 'adminAuthUser';
+const ADMIN_TOKEN_STORAGE_KEY = 'adminAccessToken';
+
 // Enhanced user interface with additional profile info
 export interface EnhancedUserInfo extends AccountInfo {
 
@@ -28,7 +35,10 @@ export interface EnhancedUserInfo extends AccountInfo {
 
  
 
-export const useAdminAuthStore = defineStore('auth',  () => {
+// NOTE: this id MUST stay unique across the app. Pinia caches store instances by
+// id (pinia._s), so a second defineStore('auth', ...) would silently shadow this
+// one and useAdminAuthStore() would hand back the other store's instance.
+export const useAdminAuthStore = defineStore('adminAuth',  () => {
   
   const user = ref<EnhancedUserInfo | null>(null);
   const isAuthenticated = ref(false);
@@ -131,8 +141,8 @@ export const useAdminAuthStore = defineStore('auth',  () => {
     }
     
     // You could store this info in localStorage/sessionStorage for persistence
-    if (userInfo) {
-      sessionStorage.setItem('authUser', JSON.stringify({
+    if (userInfo && typeof window !== 'undefined') {
+      sessionStorage.setItem(ADMIN_USER_STORAGE_KEY, JSON.stringify({
         user: userInfo,
         provider,
         isAuthenticated: true,
@@ -147,7 +157,9 @@ export const useAdminAuthStore = defineStore('auth',  () => {
   function setAccessToken(token: string) {
     accessToken.value = token;
     if (token) {
-      sessionStorage.setItem('accessToken', token);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, token);
+      }
 
       //decode the jwt and store object in authUser in key in localstorage
       // Decode JWT and store in localStorage
@@ -174,7 +186,9 @@ export const useAdminAuthStore = defineStore('auth',  () => {
             }
         };
 
-        sessionStorage.setItem('authUser', JSON.stringify(userInfo));
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(ADMIN_USER_STORAGE_KEY, JSON.stringify(userInfo));
+        }
         
         // Update state reactively
         user.value = userInfo as any;
@@ -191,7 +205,9 @@ export const useAdminAuthStore = defineStore('auth',  () => {
       }
 
     } else {
-      sessionStorage.removeItem('accessToken');
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+      }
     }
   }
   
@@ -202,8 +218,8 @@ export const useAdminAuthStore = defineStore('auth',  () => {
 
     try {
 
-      const storedAuth = sessionStorage.getItem('authUser');
-      const storedToken = sessionStorage.getItem('accessToken');
+      const storedAuth = sessionStorage.getItem(ADMIN_USER_STORAGE_KEY);
+      const storedToken = sessionStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
       
       if (storedAuth && storedToken) {
 
@@ -246,7 +262,7 @@ export const useAdminAuthStore = defineStore('auth',  () => {
     userPhotoUrl.value = url || undefined;
     
     // Update in session storage and user object if user exists
-    if (user.value) {
+    if (user.value && typeof window !== 'undefined') {
       // Update the photoUrl in the user object
       user.value = {
         ...user.value,
@@ -254,7 +270,7 @@ export const useAdminAuthStore = defineStore('auth',  () => {
       };
       
       // Update in session storage
-      const storedAuth = sessionStorage.getItem('authUser');
+      const storedAuth = sessionStorage.getItem(ADMIN_USER_STORAGE_KEY);
       if (storedAuth) {
         const parsedAuth = JSON.parse(storedAuth);
         parsedAuth.photoUrl = url;
@@ -264,7 +280,7 @@ export const useAdminAuthStore = defineStore('auth',  () => {
           parsedAuth.user.photoUrl = url || undefined;
         }
         
-        sessionStorage.setItem('authUser', JSON.stringify(parsedAuth));
+        sessionStorage.setItem(ADMIN_USER_STORAGE_KEY, JSON.stringify(parsedAuth));
       }
     }
   }
@@ -279,12 +295,25 @@ export const useAdminAuthStore = defineStore('auth',  () => {
     accessToken.value = null;
     userPhotoUrl.value = undefined;
     sessionStartedAt.value = null;
-    sessionStorage.removeItem('authUser');
-    sessionStorage.removeItem('accessToken');
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem(ADMIN_USER_STORAGE_KEY);
+      sessionStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+    }
+
     permissions.value = [];
     if (typeof window !== 'undefined') {
       removeIDB('permissions');
     }
+
+    // Expire the cookie so the browser removes it
+    gnpAdminUserIdentityCookie.value = null;
+
+    // CRITICAL: also clear the shared useState that gnpAdminUserHttpClient reads from.
+    // Without this, the stale JWT persists in memory even though the cookie is gone,
+    // causing authenticated admin API calls to fire after logout.
+    const gnpAdminUserAuthState = useState<string | null>('gnpAdminUserAuth');
+    gnpAdminUserAuthState.value = null;
   }
   
   // Initialize from storage when store is created
