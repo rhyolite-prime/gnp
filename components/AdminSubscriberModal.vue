@@ -122,6 +122,25 @@
             </div>
           </div>
 
+          <!-- ByPass Payment -->
+          <div class="sm:col-span-6">
+            <div class="relative flex items-start">
+              <div class="flex h-6 items-center">
+                <input
+                  id="byPassPayment"
+                  name="byPassPayment"
+                  type="checkbox"
+                  v-model="form.byPassPayment"
+                  class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-600"
+                />
+              </div>
+              <div class="ml-3 text-sm leading-6">
+                <label for="byPassPayment" class="font-medium text-gray-900">Bypass Payment</label>
+                <p class="text-gray-500">Enable this if the subscriber should not pay for the subscription.</p>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         <!-- Step 2: Subscription Plan -->
@@ -341,6 +360,7 @@ const form = reactive({
   username: '',
   email: '',
   phoneNumber: '',
+  byPassPayment: false,
   subscriptionPlanId: '',
   subscriptionPlanName: '',
   billingCycle: '',
@@ -447,6 +467,7 @@ const handleSubmit = () => {
       username: form.username || generateUsername(form.firstName, form.lastName),
       email: form.email,
       phoneNumber: form.phoneNumber,
+      byPassPayment: form.byPassPayment,
       subscriptionPlanId: form.subscriptionPlanId,
       subscriptionPlanName: `${form.subscriptionPlanName} (${form.billingCycle})`,
       billingCycle: form.billingCycle,
