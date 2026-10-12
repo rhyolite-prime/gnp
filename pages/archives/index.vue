@@ -287,7 +287,7 @@
                   <p class="text-xs font-medium text-gray-500 mb-3">
                     Page {{ item.pageNumber }}<span v-if="item.editionNumber"> · Edition {{ item.editionNumber }}</span>
                   </p>
-                  <p class="text-sm text-gray-600 line-clamp-3 mb-5 flex-1 leading-relaxed">
+                  <p class="text-sm text-gray-600 line-clamp-3 mb-4 flex-1 leading-relaxed">
                     {{ snippetText(item) }}
                   </p>
                   
