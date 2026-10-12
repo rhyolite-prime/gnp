@@ -568,6 +568,9 @@ export * from './games';
 // ── Archives search ───────────────────────────────────────────────────────────
 // POST news-papers/search-archives
 
+/** Date sort direction on publicationDate. Omit for "Most Relevant" (backend default). */
+export type ArchiveSortOrder = 'asc' | 'desc';
+
 /** Request body for POST news-papers/search-archives. */
 export interface ArchiveSearchRequest {
     pageNo: number;
@@ -581,6 +584,8 @@ export interface ArchiveSearchRequest {
     publicationDate: string;
     /** Set only when a year is picked from the "Browse Collections" tab. Omitted otherwise. */
     publicationYear?: number;
+    /** 'desc' = Newest First, 'asc' = Oldest First. Omitted for Most Relevant. */
+    sortOrder?: ArchiveSortOrder;
 }
 
 /** A single matching newspaper page returned by the archive search. */

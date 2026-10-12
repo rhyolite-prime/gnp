@@ -161,11 +161,33 @@
              <div class="space-y-4">
                <div>
                  <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">From</label>
-                 <input type="date" v-model="dateFrom" @change="search" class="w-full text-sm rounded-lg border-gray-300 bg-gray-50 focus:bg-white focus:ring-[#e32932] focus:border-[#e32932] transition-colors py-2">
+                 <VueDatePicker
+                   class="archive-date-picker"
+                   :model-value="dateFrom || null"
+                   model-type="yyyy-MM-dd"
+                   :formats="{ input: 'dd MMM yyyy' }"
+                   placeholder="Any date"
+                   :max-date="dateToLimit"
+                   :time-picker="false"
+                   auto-apply
+                   clearable
+                   @update:model-value="onDateFromChange"
+                 />
                </div>
                <div>
                  <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">To</label>
-                 <input type="date" v-model="dateTo" @change="search" class="w-full text-sm rounded-lg border-gray-300 bg-gray-50 focus:bg-white focus:ring-[#e32932] focus:border-[#e32932] transition-colors py-2">
+                 <VueDatePicker
+                   class="archive-date-picker"
+                   :model-value="dateTo || null"
+                   model-type="yyyy-MM-dd"
+                   :formats="{ input: 'dd MMM yyyy' }"
+                   placeholder="Any date"
+                   :min-date="dateFromLimit"
+                   :time-picker="false"
+                   auto-apply
+                   clearable
+                   @update:model-value="onDateToChange"
+                 />
                </div>
              </div>
           </div>
@@ -214,10 +236,10 @@
              <!-- Sort & View Toggles -->
              <div class="flex items-center gap-3">
                <div class="relative">
-                 <select class="text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e32932]/20 focus:border-[#e32932] py-2 pl-3 pr-8 shadow-sm font-medium text-gray-700 appearance-none bg-white">
-                   <option>Most Relevant</option>
-                   <option>Newest First</option>
-                   <option>Oldest First</option>
+                 <select :value="sortOrder ?? ''" @change="onSortChange" class="text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e32932]/20 focus:border-[#e32932] py-2 pl-3 pr-8 shadow-sm font-medium text-gray-700 appearance-none bg-white">
+                   <option value="">Most Relevant</option>
+                   <option value="desc">Newest First</option>
+                   <option value="asc">Oldest First</option>
                  </select>
                </div>
                <div class="flex bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
@@ -456,6 +478,8 @@ import {
   FolderIcon
 } from '@heroicons/vue/24/outline'
 import type { ArchiveSearchItem } from '~/models'
+import { VueDatePicker } from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 
 // UI state
 const activeTab = useState<'search' | 'collections'>('archive-activeTab', () => 'search')
@@ -479,6 +503,7 @@ const {
   dateFrom,
   dateTo,
   publicationYear,
+  sortOrder,
   items,
   totalCount,
   hasMore,
@@ -492,6 +517,7 @@ const {
   clearDateRange,
   clearPublicationYear,
   clearAllFilters,
+  setSortOrder,
 } = useArchiveSearch()
 
 // Filter Data (display labels; not yet sent to the API)
@@ -548,6 +574,30 @@ const performSearch = () => {
   search()
 }
 
+// Sidebar date pickers bind "yyyy-MM-dd" strings; these turn them into local Dates for min/max limits.
+const parseIsoDate = (value: string): Date | undefined => {
+  const match = value?.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : undefined
+}
+const dateFromLimit = computed(() => parseIsoDate(dateFrom.value))
+const dateToLimit = computed(() => parseIsoDate(dateTo.value))
+
+const onDateFromChange = (value: string | null) => {
+  dateFrom.value = value ?? ''
+  search()
+}
+
+const onDateToChange = (value: string | null) => {
+  dateTo.value = value ?? ''
+  search()
+}
+
+// Sort dropdown: '' = Most Relevant (no sortOrder sent), 'desc' = Newest First, 'asc' = Oldest First
+const onSortChange = (event: Event) => {
+  const value = (event.target as HTMLSelectElement).value
+  setSortOrder(value === 'asc' || value === 'desc' ? value : null)
+}
+
 // Presentation helpers
 const isHttpUrl = (value: string) => /^https?:\/\//i.test(value)
 
@@ -599,6 +649,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
+}
+
+/* Sidebar date pickers: match the page's red accent */
+.archive-date-picker {
+  --dp-primary-color: #e32932;
+  --dp-primary-text-color: #ffffff;
+  --dp-font-family: inherit;
 }
 
 /* Custom scrollbar for webkit browsers to make the page look cleaner */
