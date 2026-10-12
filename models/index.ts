@@ -564,3 +564,65 @@ export interface RenewalHistory {
 export * from './games';
 
 
+
+// ── Archives search ───────────────────────────────────────────────────────────
+// POST news-papers/search-archives
+
+/** Request body for POST news-papers/search-archives. */
+export interface ArchiveSearchRequest {
+    pageNo: number;
+    pageSize: number;
+    query: string;
+    /** yyyy-MM-dd or "" when unset. */
+    dateFrom: string;
+    /** yyyy-MM-dd or "" when unset. */
+    dateTo: string;
+    /** yyyy-MM-dd or "" when unset. */
+    publicationDate: string;
+    /** Set only when a year is picked from the "Browse Collections" tab. Omitted otherwise. */
+    publicationYear?: number;
+}
+
+/** A single matching newspaper page returned by the archive search. */
+export interface ArchiveSearchItem {
+    id: string;
+    newspaperId: string;
+    publicationId: string;
+    publicationName: string;
+    publicationDate: string;
+    editionNumber: string;
+    documentId: string;
+    pageNumber: number;
+    fileType: number;
+    contentType: string;
+    categories: string[];
+    tags: string[];
+    relevance: number;
+    snippet: string;
+    supportingText: string;
+    /** Usually an absolute thumbnail URL; may be empty. */
+    thumbnailId: string;
+    isFree: boolean;
+    views: number;
+}
+
+/** Paged payload carried in `result` of the archive search response. */
+export interface ArchiveSearchResult {
+    data: ArchiveSearchItem[];
+    pageNo: number;
+    pageSize: number;
+    query: string;
+    totalCount: number;
+    totalPages: number;
+    lowerBound: number;
+    upperBound: number;
+}
+
+/** Envelope returned by POST news-papers/search-archives. */
+export interface ArchiveSearchResponse {
+    error: { code?: boolean; details?: boolean; message?: any; validationErrors?: any } | null;
+    message: string;
+    result: ArchiveSearchResult | null;
+    success: boolean;
+    targetUrl: string;
+}
