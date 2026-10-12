@@ -170,10 +170,10 @@
               <span
                 class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset"
                 :class="{
-                  'bg-green-50 text-green-700 ring-green-600/20': sub.status === 'Active' || sub.status === 'active',
-                  'bg-red-50 text-red-700 ring-red-600/20': sub.status === 'Inactive' || sub.status === 'inactive'
+                  'bg-green-50 text-green-700 ring-green-600/20': sub.isActive,
+                  'bg-red-50 text-red-700 ring-red-600/20': !sub.isActive
                 }">
-                {{ sub.status || 'Active' }}
+                {{ sub.isActive ? 'Active' : 'In Active' }}
               </span>
             </td>
 
@@ -219,7 +219,7 @@
                     <button
                       v-if="!sub.isActive"
                       class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                      @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Active')"
+                      @click.prevent="handleUpdateSubscriberStatus(sub.id, 'active')"
                     >
                       Activate
                     </button>
@@ -227,7 +227,7 @@
                     <button
                       v-if="sub.isActive"
                       class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                      @click.prevent="handleUpdateSubscriberStatus(sub.id, 'Inactive')"
+                      @click.prevent="handleUpdateSubscriberStatus(sub.id, 'inactive')"
                     >
                       Deactivate
                     </button>
@@ -280,6 +280,7 @@
       @close="closeAssignModal"
       @assign="handleAssignSubscription"
       :loading="isAssigning"
+      :subscriber="selectedSubscriber"
     />
 
     <!-- Subscriber Detail / Subscription History Modal -->
@@ -492,19 +493,27 @@ const handleAssignSubscription = async (planData: any) => {
       billingCycle: planData.billingCycle,
       planName: planData.planName,
       price: planData.price,
+      // 'replace' | 'extend' | undefined (new assignment when no prior plan)
+      action: planData.action || '',
     }
+
+    console.log('payload->', payload);
+ 
 
     const success = await assignSubscriptionToSubscriber(payload)
     if (success) {
-      $toast.success(`Subscription plan assigned successfully to ${selectedSubscriber.value.firstName} ${selectedSubscriber.value.lastName}.`)
+      const actionLabel =
+        planData.action === 'replace' ? 'replaced' :
+        planData.action === 'extend'  ? 'extended' : 'assigned'
+      $toast.success(`Subscription plan ${actionLabel} successfully for ${selectedSubscriber.value.firstName} ${selectedSubscriber.value.lastName}.`)
       closeAssignModal()
       await getPaginatedSubscribers()
     } else {
-      $toast.error('Failed to assign subscription plan')
+      $toast.error('Failed to update subscription plan')
     }
   } catch (error) {
     console.error('Error assigning subscription:', error)
-    $toast.error('An error occurred while assigning the subscription plan')
+    $toast.error('An error occurred while updating the subscription plan')
   } finally {
     isAssigning.value = false
   }

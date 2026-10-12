@@ -556,7 +556,7 @@ export async function deleteSubscriber(subscriberId: string) {
 
 export async function updateSubscriberStatus(payload: object) {
     const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/update-subscriber-status', "", {
-        method: "post",
+        method: "put",
         body: payload,
     });
     return response.success;
