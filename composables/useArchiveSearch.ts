@@ -17,6 +17,8 @@ export const useArchiveSearch = () => {
   const sortOrder = useState<ArchiveSortOrder | null>('archive-sortOrder', () => null)
 
   // Results
+  // Keyword used by the results currently shown (used for snippet highlighting).
+  const appliedQuery = useState<string>('archive-appliedQuery', () => '')
   const items = useState<ArchiveSearchItem[]>('archive-items', () => [])
   const pageNo = useState<number>('archive-pageNo', () => 0)
   const totalCount = useState<number>('archive-totalCount', () => 0)
@@ -58,6 +60,7 @@ export const useArchiveSearch = () => {
       if (requestId !== latestRequestId) return
 
       items.value = append ? [...items.value, ...result.data] : result.data
+      appliedQuery.value = payload.query
       pageNo.value = page
       totalCount.value = result.totalCount
       totalPages.value = result.totalPages
@@ -129,6 +132,7 @@ export const useArchiveSearch = () => {
     publicationYear,
     sortOrder,
     items,
+    appliedQuery,
     pageNo,
     totalCount,
     totalPages,

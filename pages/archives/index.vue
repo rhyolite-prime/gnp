@@ -288,7 +288,7 @@
                 <div :class="viewMode === 'grid' ? 'h-48 w-full' : 'h-48 sm:h-full w-full sm:w-64 flex-shrink-0 border-r border-gray-100'" class="bg-gray-100 relative overflow-hidden">
                   <div v-if="!thumbnailUrl(item)" class="absolute inset-0 p-6 flex flex-col justify-center items-center bg-[#fdfbf7] border-b border-gray-100">
                      <div class="font-serif font-bold text-center text-base leading-snug text-gray-800 line-clamp-5 group-hover:text-[#e32932] transition-colors relative z-10">
-                       "{{ snippetText(item) }}"
+                       "<template v-for="(segment, index) in snippetSegments(item)" :key="index"><mark v-if="segment.match" class="bg-red-100 text-[#e32932] rounded-sm px-0.5">{{ segment.text }}</mark><template v-else>{{ segment.text }}</template></template>"
                      </div>
                      <DocumentTextIcon class="absolute w-32 h-32 text-gray-900/5 -right-4 -bottom-4 transform -rotate-12" />
                   </div>
@@ -310,7 +310,7 @@
                     Page {{ item.pageNumber }}<span v-if="item.editionNumber"> · Edition {{ item.editionNumber }}</span>
                   </p>
                   <p class="text-sm text-gray-600 line-clamp-3 mb-5 flex-1 leading-relaxed">
-                    {{ snippetText(item) }}
+                    <template v-for="(segment, index) in snippetSegments(item)" :key="index"><mark v-if="segment.match" class="bg-red-100 text-[#e32932] font-semibold rounded-sm px-0.5">{{ segment.text }}</mark><template v-else>{{ segment.text }}</template></template>
                   </p>
                   
                   <div class="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
@@ -504,6 +504,7 @@ const {
   dateTo,
   publicationYear,
   sortOrder,
+  appliedQuery,
   items,
   totalCount,
   hasMore,
@@ -609,6 +610,37 @@ const thumbnailUrl = (item: ArchiveSearchItem): string => {
 
 const snippetText = (item: ArchiveSearchItem): string => {
   return item.snippet?.trim() || item.supportingText?.trim() || 'No preview available for this page.'
+}
+
+// Keyword highlighting for snippets. Uses the keyword behind the current results (not unsubmitted input).
+// Quotes are ignored, terms shorter than 2 characters are skipped, and the full phrase is matched first.
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+const highlightPattern = computed<RegExp | null>(() => {
+  const phrase = appliedQuery.value.replace(/["“”]/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!phrase) return null
+  const words = phrase.split(' ').filter(word => word.length >= 2)
+  const candidates = [...new Set([...(phrase.includes(' ') ? [phrase] : []), ...words])]
+  if (candidates.length === 0) return null
+  candidates.sort((a, b) => b.length - a.length)
+  return new RegExp(`(${candidates.map(escapeRegExp).join('|')})`, 'gi')
+})
+
+interface SnippetSegment {
+  text: string
+  match: boolean
+}
+
+// Plain-text segments only (rendered as text nodes, never as HTML).
+const snippetSegments = (item: ArchiveSearchItem): SnippetSegment[] => {
+  const text = snippetText(item)
+  const pattern = highlightPattern.value
+  if (!pattern) return [{ text, match: false }]
+  // split() with a capture group places the matched keywords at odd indexes
+  return text
+    .split(pattern)
+    .map((part, index) => ({ text: part, match: index % 2 === 1 }))
+    .filter(segment => segment.text !== '')
 }
 
 const primaryCategory = (item: ArchiveSearchItem): string => {
