@@ -333,7 +333,7 @@
                   <p class="text-xs font-medium text-gray-500 mb-3">
                     Page {{ item.pageNumber }}<span v-if="item.editionNumber"> · Edition {{ item.editionNumber }}</span>
                   </p>
-                  <p class="text-sm text-gray-600 line-clamp-3 mb-5 flex-1 leading-relaxed">
+                  <p class="text-sm text-gray-600 line-clamp-3 mb-4 flex-1 leading-relaxed">
                     <template v-for="(segment, index) in snippetSegments(item)" :key="index"><mark v-if="segment.match" class="bg-red-100 text-[#e32932] font-semibold rounded-sm px-0.5">{{ segment.text }}</mark><template v-else>{{ segment.text }}</template></template>
                   </p>
                   
