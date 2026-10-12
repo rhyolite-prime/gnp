@@ -52,19 +52,43 @@
                 </div>
                 <div class="w-full md:w-40 relative">
                   <label class="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">From</label>
-                  <input 
-                    type="date" 
-                    v-model="dateFrom" 
-                    class="w-full py-3.5 px-4 rounded-lg border-gray-200 bg-gray-50 focus:bg-white focus:border-[#e32932] focus:ring-1 focus:ring-[#e32932] text-sm text-gray-700 transition-all" 
-                  />
+                  <ClientOnly>
+                    <VueDatePicker
+                      class="archive-date-picker"
+                      :model-value="dateFrom || null"
+                      model-type="yyyy-MM-dd"
+                      :formats="{ input: 'dd MMM yyyy' }"
+                      placeholder="Any date"
+                      :max-date="dateToLimit"
+                      :time-picker="false"
+                      auto-apply
+                      clearable
+                      @update:model-value="dateFrom = $event ?? ''"
+                    />
+                    <template #fallback>
+                      <div class="h-[46px] w-full rounded-lg border border-gray-200 bg-gray-50"></div>
+                    </template>
+                  </ClientOnly>
                 </div>
                 <div class="w-full md:w-40 relative">
                   <label class="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">To</label>
-                  <input 
-                    type="date" 
-                    v-model="dateTo" 
-                    class="w-full py-3.5 px-4 rounded-lg border-gray-200 bg-gray-50 focus:bg-white focus:border-[#e32932] focus:ring-1 focus:ring-[#e32932] text-sm text-gray-700 transition-all" 
-                  />
+                  <ClientOnly>
+                    <VueDatePicker
+                      class="archive-date-picker"
+                      :model-value="dateTo || null"
+                      model-type="yyyy-MM-dd"
+                      :formats="{ input: 'dd MMM yyyy' }"
+                      placeholder="Any date"
+                      :min-date="dateFromLimit"
+                      :time-picker="false"
+                      auto-apply
+                      clearable
+                      @update:model-value="dateTo = $event ?? ''"
+                    />
+                    <template #fallback>
+                      <div class="h-[46px] w-full rounded-lg border border-gray-200 bg-gray-50"></div>
+                    </template>
+                  </ClientOnly>
                 </div>
                 <button 
                   type="submit" 
@@ -388,7 +412,7 @@
                 leave-from="opacity-100 scale-100 translate-y-0"
                 leave-to="opacity-0 scale-95 translate-y-4"
               >
-                <DialogPanel class="w-full max-w-3xl transform overflow-hidden rounded-2xl md:rounded-[2rem] bg-white p-5 md:p-8 text-left align-middle shadow-2xl transition-all">
+                <DialogPanel class="w-full max-w-3xl transform overflow-visible rounded-2xl md:rounded-[2rem] bg-white p-5 md:p-8 text-left align-middle shadow-2xl transition-all">
                   <div class="flex items-center justify-between mb-6 md:mb-8">
                     <DialogTitle as="h3" class="text-xl md:text-2xl font-bold text-black-500 flex items-center gap-2 md:gap-3">
                       <MagnifyingGlassIcon class="w-6 h-6 md:w-7 md:h-7 stroke-[2.5]" />
@@ -422,11 +446,33 @@
                   <div class="mb-8 flex flex-col md:flex-row gap-6">
                      <div class="flex-1">
                        <label class="block text-xs font-bold text-gray-400 tracking-widest uppercase mb-3">Date From</label>
-                       <input type="date" v-model="modalDateFrom" class="w-full text-sm rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-[#900B3E] focus:border-[#900B3E] transition-colors py-3 px-4">
+                       <VueDatePicker
+                         class="archive-date-picker"
+                         :model-value="modalDateFrom || null"
+                         model-type="yyyy-MM-dd"
+                         :formats="{ input: 'dd MMM yyyy' }"
+                         placeholder="Any date"
+                         :max-date="modalDateFromMax"
+                         :time-picker="false"
+                         auto-apply
+                         clearable
+                         @update:model-value="modalDateFrom = $event ?? ''"
+                       />
                      </div>
                      <div class="flex-1">
                        <label class="block text-xs font-bold text-gray-400 tracking-widest uppercase mb-3">Date To</label>
-                       <input type="date" v-model="modalDateTo" class="w-full text-sm rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-[#900B3E] focus:border-[#900B3E] transition-colors py-3 px-4">
+                       <VueDatePicker
+                         class="archive-date-picker"
+                         :model-value="modalDateTo || null"
+                         model-type="yyyy-MM-dd"
+                         :formats="{ input: 'dd MMM yyyy' }"
+                         placeholder="Any date"
+                         :min-date="modalDateToMin"
+                         :time-picker="false"
+                         auto-apply
+                         clearable
+                         @update:model-value="modalDateTo = $event ?? ''"
+                       />
                      </div>
                   </div>
 
@@ -531,6 +577,8 @@ const modalSearchQuery = ref('')
 const modalDateFrom = ref('')
 const modalDateTo = ref('')
 const modalCategories = ref<string[]>([])
+const modalDateFromMax = computed(() => parseIsoDate(modalDateTo.value))
+const modalDateToMin = computed(() => parseIsoDate(modalDateFrom.value))
 
 const allTags = computed(() => [...categories, ...tags])
 
@@ -551,8 +599,8 @@ const openModal = () => {
 
 const performModalSearch = () => {
   searchQuery.value = modalSearchQuery.value
-  if (modalDateFrom.value) dateFrom.value = modalDateFrom.value
-  if (modalDateTo.value) dateTo.value = modalDateTo.value
+  dateFrom.value = modalDateFrom.value
+  dateTo.value = modalDateTo.value
   isModalOpen.value = false
   searchAdvanced()
 }
@@ -673,15 +721,6 @@ useIntersectionObserver(
 </script>
 
 <style scoped>
-/* Optional styling adjustments */
-input[type="date"]::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  opacity: 0.6;
-  transition: 0.2s;
-}
-input[type="date"]::-webkit-calendar-picker-indicator:hover {
-  opacity: 1;
-}
 
 /* Sidebar date pickers: match the page's red accent */
 .archive-date-picker {
