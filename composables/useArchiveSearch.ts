@@ -1,4 +1,4 @@
-import type { ArchiveSearchItem } from "~/models";
+import type { ArchiveSearchItem, ArchiveSortOrder } from "~/models";
 
 /**
  * Shared state and actions for the Archives search module.
@@ -13,6 +13,8 @@ export const useArchiveSearch = () => {
   const dateFrom = useState<string>('archive-dateFrom', () => '')
   const dateTo = useState<string>('archive-dateTo', () => '')
   const publicationYear = useState<number | null>('archive-publicationYear', () => null)
+  // null = Most Relevant (backend default), 'desc' = Newest First, 'asc' = Oldest First
+  const sortOrder = useState<ArchiveSortOrder | null>('archive-sortOrder', () => null)
 
   // Results
   const items = useState<ArchiveSearchItem[]>('archive-items', () => [])
@@ -40,6 +42,7 @@ export const useArchiveSearch = () => {
       dateFrom: dateFrom.value,
       dateTo: dateTo.value,
       publicationYear: publicationYear.value,
+      sortOrder: sortOrder.value,
     })
 
     errorMessage.value = null
@@ -100,6 +103,12 @@ export const useArchiveSearch = () => {
     return search()
   }
 
+  /** Changes the sort order and re-runs the search from page 1. */
+  const setSortOrder = (value: ArchiveSortOrder | null) => {
+    sortOrder.value = value
+    return search()
+  }
+
   const clearPublicationYear = () => {
     publicationYear.value = null
     return search()
@@ -118,6 +127,7 @@ export const useArchiveSearch = () => {
     dateFrom,
     dateTo,
     publicationYear,
+    sortOrder,
     items,
     pageNo,
     totalCount,
@@ -133,5 +143,6 @@ export const useArchiveSearch = () => {
     clearDateRange,
     clearPublicationYear,
     clearAllFilters,
+    setSortOrder,
   }
 }

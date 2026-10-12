@@ -1,11 +1,12 @@
-import type { ArchiveSearchRequest, ArchiveSearchResponse, ArchiveSearchResult } from "~/models";
+import type { ArchiveSearchRequest, ArchiveSearchResponse, ArchiveSearchResult, ArchiveSortOrder } from "~/models";
 
 export const ARCHIVE_PAGE_SIZE = 12;
 
 /**
  * Builds the POST body for news-papers/search-archives.
  * Empty strings are sent for unset text/date filters; `publicationYear` is only
- * included when a year was chosen from the "Browse Collections" tab.
+ * included when a year was chosen from the "Browse Collections" tab, and `sortOrder`
+ * only for a date sort (null = Most Relevant, backend default).
  */
 export function buildArchiveSearchRequest(params: {
     pageNo: number;
@@ -15,6 +16,7 @@ export function buildArchiveSearchRequest(params: {
     dateTo?: string | null;
     publicationDate?: string | null;
     publicationYear?: number | null;
+    sortOrder?: ArchiveSortOrder | null;
 }): ArchiveSearchRequest {
     const request: ArchiveSearchRequest = {
         pageNo: params.pageNo,
@@ -27,6 +29,10 @@ export function buildArchiveSearchRequest(params: {
 
     if (params.publicationYear != null) {
         request.publicationYear = params.publicationYear;
+    }
+
+    if (params.sortOrder) {
+        request.sortOrder = params.sortOrder;
     }
 
     return request;
