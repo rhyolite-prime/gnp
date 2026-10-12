@@ -51,7 +51,7 @@
                   />
                 </div>
                 <div class="w-full md:w-40 relative">
-                  <label class="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">From</label>
+                  <label class="absolute -top-2.5 left-3 z-10 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">From</label>
                   <ClientOnly>
                     <VueDatePicker
                       class="archive-date-picker"
@@ -71,7 +71,7 @@
                   </ClientOnly>
                 </div>
                 <div class="w-full md:w-40 relative">
-                  <label class="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">To</label>
+                  <label class="absolute -top-2.5 left-3 z-10 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">To</label>
                   <ClientOnly>
                     <VueDatePicker
                       class="archive-date-picker"
