@@ -1,4 +1,4 @@
-import type { NewsPaper, Publication, Payment, CommercialPartner, AdminUser,UserGroup, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice } from "~/models";
+import type { NewsPaper, Publication, Payment, CommercialPartner, AdminUser,UserGroup, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice, PartnerApiRequestLog, PartnerApiRequestLogQuery } from "~/models";
 
 //publication setups
 
@@ -285,6 +285,11 @@ export async function disablePartnerSubaccount(query: object) {
 
 export async function getCommercialPartnerSubscribers(query: object) {
     const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Subscriber[]>>>('admin/get-partner-subscribers', "", { query });
+    return response.result;
+}
+
+export async function getPartnerApiRequestLogs(query: PartnerApiRequestLogQuery) {
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<PartnerApiRequestLog[]>>>('admin/get-partner-api-request-logs', "", { query });
     return response.result;
 }
 

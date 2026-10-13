@@ -564,3 +564,105 @@ export interface RenewalHistory {
 export * from './games';
 
 
+
+// ── Archives search ───────────────────────────────────────────────────────────
+// POST news-papers/search-archives
+
+/** Date sort direction on publicationDate. Omit for "Most Relevant" (backend default). */
+export type ArchiveSortOrder = 'asc' | 'desc';
+
+/** Request body for POST news-papers/search-archives. */
+export interface ArchiveSearchRequest {
+    pageNo: number;
+    pageSize: number;
+    query: string;
+    /** yyyy-MM-dd or "" when unset. */
+    dateFrom: string;
+    /** yyyy-MM-dd or "" when unset. */
+    dateTo: string;
+    /** yyyy-MM-dd or "" when unset. */
+    publicationDate: string;
+    /** Set only when a year is picked from the "Browse Collections" tab. Omitted otherwise. */
+    publicationYear?: number;
+    /** 'desc' = Newest First, 'asc' = Oldest First. Omitted for Most Relevant. */
+    sortOrder?: ArchiveSortOrder;
+}
+
+/** A single matching newspaper page returned by the archive search. */
+export interface ArchiveSearchItem {
+    id: string;
+    newspaperId: string;
+    publicationId: string;
+    publicationName: string;
+    publicationDate: string;
+    editionNumber: string;
+    documentId: string;
+    pageNumber: number;
+    fileType: number;
+    contentType: string;
+    categories: string[];
+    tags: string[];
+    relevance: number;
+    snippet: string;
+    supportingText: string;
+    /** Usually an absolute thumbnail URL; may be empty. */
+    thumbnailId: string;
+    isFree: boolean;
+    views: number;
+}
+
+/** Paged payload carried in `result` of the archive search response. */
+export interface ArchiveSearchResult {
+    data: ArchiveSearchItem[];
+    pageNo: number;
+    pageSize: number;
+    query: string;
+    totalCount: number;
+    totalPages: number;
+    lowerBound: number;
+    upperBound: number;
+}
+
+/** Envelope returned by POST news-papers/search-archives. */
+export interface ArchiveSearchResponse {
+    error: { code?: boolean; details?: boolean; message?: any; validationErrors?: any } | null;
+    message: string;
+    result: ArchiveSearchResult | null;
+    success: boolean;
+    targetUrl: string;
+}
+
+// ── Partner API request logs (admin) ──────────────────────────────────────────
+// GET admin/get-partner-api-request-logs
+// NOTE: item field names below are assumptions until confirmed against the API.
+
+/** Query string for GET admin/get-partner-api-request-logs. Unset filters are omitted. */
+export interface PartnerApiRequestLogQuery {
+    partnerId: string;
+    query?: string;
+    method?: string;
+    /** Sent as "true" / "false" only when filtering by outcome. */
+    isSuccessful?: boolean;
+    /** yyyy-MM-dd */
+    dateFrom?: string;
+    /** yyyy-MM-dd */
+    dateTo?: string;
+    pageNo: number;
+    pageSize: number;
+}
+
+/** One partner API request. `requestBody` / `responseBody` may be JSON objects or JSON strings. */
+export interface PartnerApiRequestLog {
+    id: string;
+    partnerId: string;
+    method: string;
+    endpoint: string;
+    statusCode: number;
+    isSuccessful: boolean;
+    durationMs?: number;
+    ipAddress?: string;
+    apiKeyLabel?: string;
+    requestBody?: unknown;
+    responseBody?: unknown;
+    createdAt: string;
+}
