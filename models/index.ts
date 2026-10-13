@@ -631,3 +631,38 @@ export interface ArchiveSearchResponse {
     success: boolean;
     targetUrl: string;
 }
+
+// ── Partner API request logs (admin) ──────────────────────────────────────────
+// GET admin/get-partner-api-request-logs
+// NOTE: item field names below are assumptions until confirmed against the API.
+
+/** Query string for GET admin/get-partner-api-request-logs. Unset filters are omitted. */
+export interface PartnerApiRequestLogQuery {
+    partnerId: string;
+    query?: string;
+    method?: string;
+    /** Sent as "true" / "false" only when filtering by outcome. */
+    isSuccessful?: boolean;
+    /** yyyy-MM-dd */
+    dateFrom?: string;
+    /** yyyy-MM-dd */
+    dateTo?: string;
+    pageNo: number;
+    pageSize: number;
+}
+
+/** One partner API request. `requestBody` / `responseBody` may be JSON objects or JSON strings. */
+export interface PartnerApiRequestLog {
+    id: string;
+    partnerId: string;
+    method: string;
+    endpoint: string;
+    statusCode: number;
+    isSuccessful: boolean;
+    durationMs?: number;
+    ipAddress?: string;
+    apiKeyLabel?: string;
+    requestBody?: unknown;
+    responseBody?: unknown;
+    createdAt: string;
+}
