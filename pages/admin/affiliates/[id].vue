@@ -179,9 +179,11 @@ import {
 } from '@heroicons/vue/24/outline'
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['admin-auth']
 })
 
+ 
 const route = useRoute()
 const affiliateId = route.params.id
 

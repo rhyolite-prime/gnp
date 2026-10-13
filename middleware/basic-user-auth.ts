@@ -15,7 +15,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
 
   // If no token and no cookie, redirect to login
   // Avoid infinite redirect loop if we're already on the login page
-  if (to.path !== '/') {
-    return navigateTo('/?al=t')
+  if (to.path !== '/newspapers') {
+    return navigateTo('/newspapers/?al=t')
   }
 })

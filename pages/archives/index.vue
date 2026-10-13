@@ -12,7 +12,7 @@
         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
       </div>
       
-      <div class="relative z-10 w-full max-w-4xl px-4 text-center mt-[-10vh]">
+      <div class="relative z-10 w-full max-w-5xl px-4 text-center mt-[-10vh]">
         <h1 class="text-5xl md:text-6xl font-extrabold text-white mb-6 tracking-tight drop-shadow-lg">
           Explore Graphic <span class="text-[#e32932]">Archives</span>
         </h1>
@@ -20,7 +20,7 @@
           Uncover decades of history, news, and powerful stories through our comprehensive digital collection.
         </p>
         
-        <div class="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl p-2 max-w-3xl mx-auto border border-white/20">
+        <div class="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl p-2 max-w-5xl mx-auto border border-white/20">
           <div class="bg-white rounded-xl p-4 md:p-6 text-left">
             <div class="flex items-center space-x-8 border-b border-gray-100 mb-6 px-2">
               <button 
@@ -51,20 +51,44 @@
                   />
                 </div>
                 <div class="w-full md:w-40 relative">
-                  <label class="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">From</label>
-                  <input 
-                    type="date" 
-                    v-model="dateFrom" 
-                    class="w-full py-3.5 px-4 rounded-lg border-gray-200 bg-gray-50 focus:bg-white focus:border-[#e32932] focus:ring-1 focus:ring-[#e32932] text-sm text-gray-700 transition-all" 
-                  />
+                  <label class="absolute -top-2.5 left-3 z-10 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">From</label>
+                  <ClientOnly>
+                    <VueDatePicker
+                      class="archive-date-picker"
+                      :model-value="dateFrom || null"
+                      model-type="yyyy-MM-dd"
+                      :formats="{ input: 'dd MMM yyyy' }"
+                      placeholder="Any date"
+                      :max-date="dateToLimit"
+                      :time-picker="false"
+                      auto-apply
+                      clearable
+                      @update:model-value="dateFrom = $event ?? ''"
+                    />
+                    <template #fallback>
+                      <div class="h-[46px] w-full rounded-lg border border-gray-200 bg-gray-50"></div>
+                    </template>
+                  </ClientOnly>
                 </div>
                 <div class="w-full md:w-40 relative">
-                  <label class="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">To</label>
-                  <input 
-                    type="date" 
-                    v-model="dateTo" 
-                    class="w-full py-3.5 px-4 rounded-lg border-gray-200 bg-gray-50 focus:bg-white focus:border-[#e32932] focus:ring-1 focus:ring-[#e32932] text-sm text-gray-700 transition-all" 
-                  />
+                  <label class="absolute -top-2.5 left-3 z-10 bg-white px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">To</label>
+                  <ClientOnly>
+                    <VueDatePicker
+                      class="archive-date-picker"
+                      :model-value="dateTo || null"
+                      model-type="yyyy-MM-dd"
+                      :formats="{ input: 'dd MMM yyyy' }"
+                      placeholder="Any date"
+                      :min-date="dateFromLimit"
+                      :time-picker="false"
+                      auto-apply
+                      clearable
+                      @update:model-value="dateTo = $event ?? ''"
+                    />
+                    <template #fallback>
+                      <div class="h-[46px] w-full rounded-lg border border-gray-200 bg-gray-50"></div>
+                    </template>
+                  </ClientOnly>
                 </div>
                 <button 
                   type="submit" 
@@ -86,7 +110,7 @@
                        <button 
                          v-for="year in decade.years" 
                          :key="year" 
-                         @click="browseYear(year)"
+                         @click="openYear(year)"
                          class="py-2 text-sm font-medium text-gray-600 bg-white rounded-lg border border-gray-200 hover:bg-[#e32932] hover:text-white hover:border-[#e32932] transition-all shadow-sm"
                        >
                          {{ year }}
@@ -150,7 +174,7 @@
                <AdjustmentsHorizontalIcon class="w-5 h-5 text-gray-500"/> 
                Filters
              </h3>
-             <button class="text-xs font-medium text-[#e32932] hover:underline">Clear All</button>
+             <button @click="clearAllFilters" class="text-xs font-medium text-[#e32932] hover:underline">Clear All</button>
           </div>
           
           <!-- Date Range Filter -->
@@ -161,11 +185,33 @@
              <div class="space-y-4">
                <div>
                  <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">From</label>
-                 <input type="date" v-model="dateFrom" class="w-full text-sm rounded-lg border-gray-300 bg-gray-50 focus:bg-white focus:ring-[#e32932] focus:border-[#e32932] transition-colors py-2">
+                 <VueDatePicker
+                   class="archive-date-picker"
+                   :model-value="dateFrom || null"
+                   model-type="yyyy-MM-dd"
+                   :formats="{ input: 'dd MMM yyyy' }"
+                   placeholder="Any date"
+                   :max-date="dateToLimit"
+                   :time-picker="false"
+                   auto-apply
+                   clearable
+                   @update:model-value="onDateFromChange"
+                 />
                </div>
                <div>
                  <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">To</label>
-                 <input type="date" v-model="dateTo" class="w-full text-sm rounded-lg border-gray-300 bg-gray-50 focus:bg-white focus:ring-[#e32932] focus:border-[#e32932] transition-colors py-2">
+                 <VueDatePicker
+                   class="archive-date-picker"
+                   :model-value="dateTo || null"
+                   model-type="yyyy-MM-dd"
+                   :formats="{ input: 'dd MMM yyyy' }"
+                   placeholder="Any date"
+                   :min-date="dateFromLimit"
+                   :time-picker="false"
+                   auto-apply
+                   clearable
+                   @update:model-value="onDateToChange"
+                 />
                </div>
              </div>
           </div>
@@ -204,18 +250,20 @@
           <div class="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
              <div>
                <h2 class="text-2xl font-bold text-gray-900 leading-tight">
-                 Results for <span class="text-[#e32932]">"{{ searchQuery }}"</span>
+                 <template v-if="searchQuery">Results for <span class="text-[#e32932]">"{{ searchQuery }}"</span></template>
+                 <template v-else-if="publicationYear">Archives from <span class="text-[#e32932]">{{ publicationYear }}</span></template>
+                 <template v-else>All Archives</template>
                </h2>
-               <p class="text-sm text-gray-500 mt-1.5">{{ totalResults.toLocaleString() }} records found <span class="text-gray-400 font-mono text-xs">(0.093s)</span></p>
+               <p class="text-sm text-gray-500 mt-1.5">{{ totalCount.toLocaleString() }} records found</p>
              </div>
              
              <!-- Sort & View Toggles -->
              <div class="flex items-center gap-3">
                <div class="relative">
-                 <select class="text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e32932]/20 focus:border-[#e32932] py-2 pl-3 pr-8 shadow-sm font-medium text-gray-700 appearance-none bg-white">
-                   <option>Most Relevant</option>
-                   <option>Newest First</option>
-                   <option>Oldest First</option>
+                 <select :value="sortOrder ?? ''" @change="onSortChange" class="text-sm border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e32932]/20 focus:border-[#e32932] py-2 pl-3 pr-8 shadow-sm font-medium text-gray-700 appearance-none bg-white">
+                   <option value="">Most Relevant</option>
+                   <option value="desc">Newest First</option>
+                   <option value="asc">Oldest First</option>
                  </select>
                </div>
                <div class="flex bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
@@ -226,51 +274,73 @@
           </div>
           
           <!-- Active Filters Chips -->
-          <div class="flex flex-wrap items-center gap-2 mb-6 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+          <div v-if="dateFrom || dateTo || publicationYear" class="flex flex-wrap items-center gap-2 mb-6 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
              <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider mr-2">Active Filters:</span>
-             <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-[#e32932] border border-red-100 rounded-full text-sm font-medium">
-               Date: {{ dateFrom }} to {{ dateTo }}
-               <button class="hover:bg-red-200 hover:text-red-900 rounded-full p-0.5 transition-colors"><XMarkIcon class="w-3 h-3"/></button>
+             <span v-if="dateFrom || dateTo" class="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-[#e32932] border border-red-100 rounded-full text-sm font-medium">
+               Date: {{ dateFrom || 'Any' }} to {{ dateTo || 'Any' }}
+               <button @click="clearDateRange" class="hover:bg-red-200 hover:text-red-900 rounded-full p-0.5 transition-colors" title="Clear date range"><XMarkIcon class="w-3 h-3"/></button>
              </span>
-             <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 border border-gray-200 rounded-full text-sm font-medium">
-               Category: Politics
-               <button class="hover:bg-gray-200 hover:text-gray-900 rounded-full p-0.5 transition-colors"><XMarkIcon class="w-3 h-3"/></button>
+             <span v-if="publicationYear" class="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 border border-gray-200 rounded-full text-sm font-medium">
+               Year: {{ publicationYear }}
+               <button @click="clearPublicationYear" class="hover:bg-gray-200 hover:text-gray-900 rounded-full p-0.5 transition-colors" title="Clear year"><XMarkIcon class="w-3 h-3"/></button>
              </span>
           </div>
 
+          <!-- Error -->
+          <div v-if="errorMessage" class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            {{ errorMessage }}
+          </div>
+
+          <!-- Initial loading -->
+          <div v-if="isLoading" class="flex-1 flex flex-col items-center justify-center gap-3 py-24 text-gray-500">
+            <ArrowPathIcon class="w-8 h-8 animate-spin text-[#e32932]" />
+            <span class="font-medium text-sm">Searching the archives...</span>
+          </div>
+
+          <!-- Empty state -->
+          <div v-else-if="!errorMessage && items.length === 0" class="flex-1 flex flex-col items-center justify-center gap-3 py-24 text-center">
+            <DocumentTextIcon class="w-12 h-12 text-gray-300" />
+            <p class="font-semibold text-gray-700">No archive records match your search.</p>
+            <p class="text-sm text-gray-500">Try a different keyword or a wider date range.</p>
+          </div>
+
           <!-- Results Grid/List -->
+          <template v-else-if="items.length > 0">
           <div :class="viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'flex flex-col gap-4'" class="flex-1 relative">
-             <NuxtLink :to="`/archives/${index}`" v-for="(item, index) in items" :key="index" :class="viewMode === 'grid' ? 'flex-col h-full' : 'flex-col sm:flex-row h-auto sm:h-56'" class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex group transform hover:-translate-y-1">
+             <NuxtLink :to="`/archives/${item.id}`" v-for="item in items" :key="item.id" :class="viewMode === 'grid' ? 'flex-col h-full' : 'flex-col sm:flex-row h-auto sm:h-56'" class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex group transform hover:-translate-y-1">
                 <!-- Card Image/Header -->
                 <div :class="viewMode === 'grid' ? 'h-48 w-full' : 'h-48 sm:h-full w-full sm:w-64 flex-shrink-0 border-r border-gray-100'" class="bg-gray-100 relative overflow-hidden">
-                  <div v-if="item.type === 'text'" class="absolute inset-0 p-6 flex flex-col justify-center items-center bg-[#fdfbf7] border-b border-gray-100">
-                     <div class="font-serif font-bold text-center text-xl leading-snug text-gray-800 group-hover:text-[#e32932] transition-colors relative z-10">
-                       "{{ item.headlineExcerpt }}"
+                  <div v-if="!thumbnailUrl(item)" class="absolute inset-0 p-6 flex flex-col justify-center items-center bg-[#fdfbf7] border-b border-gray-100">
+                     <div class="font-serif font-bold text-center text-base leading-snug text-gray-800 line-clamp-5 group-hover:text-[#e32932] transition-colors relative z-10">
+                       "<template v-for="(segment, index) in snippetSegments(item)" :key="index"><mark v-if="segment.match" class="bg-red-100 text-[#e32932] rounded-sm px-0.5">{{ segment.text }}</mark><template v-else>{{ segment.text }}</template></template>"
                      </div>
                      <DocumentTextIcon class="absolute w-32 h-32 text-gray-900/5 -right-4 -bottom-4 transform -rotate-12" />
                   </div>
                   <div v-else class="absolute inset-0 bg-gray-200">
-                     <img :src="item.image" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+                     <img :src="thumbnailUrl(item)" :alt="`${item.publicationName} page ${item.pageNumber}`" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
                      <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   <div class="absolute top-3 left-3">
-                    <span class="px-2.5 py-1 bg-white/95 backdrop-blur shadow-sm text-[10px] font-bold uppercase tracking-wider rounded text-gray-800 border border-gray-100">{{ item.category }}</span>
+                    <span class="px-2.5 py-1 bg-white/95 backdrop-blur shadow-sm text-[10px] font-bold uppercase tracking-wider rounded text-gray-800 border border-gray-100">{{ primaryCategory(item) }}</span>
                   </div>
                 </div>
                 
                 <!-- Card Body -->
                 <div class="p-5 flex-1 flex flex-col relative">
-                  <h3 class="font-bold text-gray-900 mb-3 text-lg leading-tight line-clamp-2 group-hover:text-[#e32932] transition-colors cursor-pointer">
-                    {{ item.title }}
+                  <h3 class="font-bold text-gray-900 mb-1 text-lg leading-tight line-clamp-2 group-hover:text-[#e32932] transition-colors cursor-pointer">
+                    {{ item.publicationName }}
                   </h3>
-                  <p class="text-sm text-gray-600 line-clamp-3 mb-5 flex-1 leading-relaxed">
-                    {{ item.excerpt }}
+                  <p class="text-xs font-medium text-gray-500 mb-3">
+                    Page {{ item.pageNumber }}<span v-if="item.editionNumber"> · Edition {{ item.editionNumber }}</span>
+                  </p>
+                  <p class="text-sm text-gray-600 line-clamp-3 mb-4 flex-1 leading-relaxed">
+                    <template v-for="(segment, index) in snippetSegments(item)" :key="index"><mark v-if="segment.match" class="bg-red-100 text-[#e32932] font-semibold rounded-sm px-0.5">{{ segment.text }}</mark><template v-else>{{ segment.text }}</template></template>
                   </p>
                   
                   <div class="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
                     <div class="text-xs font-medium text-gray-500 flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
                       <CalendarIcon class="w-3.5 h-3.5" />
-                      {{ item.date }}
+                      {{ formatDate(item.publicationDate) }}
                     </div>
                     <div class="flex items-center gap-1">
                       <button @click.prevent class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Like">
@@ -291,10 +361,11 @@
                 <ArrowPathIcon class="w-6 h-6 animate-spin text-[#e32932]" />
                 <span class="font-medium text-sm">Loading more records...</span>
              </div>
-             <div v-else-if="items.length >= totalResults" class="text-gray-400 text-sm font-medium bg-gray-100 px-4 py-2 rounded-full">
+             <div v-else-if="!hasMore" class="text-gray-400 text-sm font-medium bg-gray-100 px-4 py-2 rounded-full">
                 You've reached the end of the results.
              </div>
           </div>
+          </template>
         </main>
       </div>
       
@@ -341,7 +412,7 @@
                 leave-from="opacity-100 scale-100 translate-y-0"
                 leave-to="opacity-0 scale-95 translate-y-4"
               >
-                <DialogPanel class="w-full max-w-3xl transform overflow-hidden rounded-2xl md:rounded-[2rem] bg-white p-5 md:p-8 text-left align-middle shadow-2xl transition-all">
+                <DialogPanel class="w-full max-w-3xl transform overflow-visible rounded-2xl md:rounded-[2rem] bg-white p-5 md:p-8 text-left align-middle shadow-2xl transition-all">
                   <div class="flex items-center justify-between mb-6 md:mb-8">
                     <DialogTitle as="h3" class="text-xl md:text-2xl font-bold text-black-500 flex items-center gap-2 md:gap-3">
                       <MagnifyingGlassIcon class="w-6 h-6 md:w-7 md:h-7 stroke-[2.5]" />
@@ -375,11 +446,33 @@
                   <div class="mb-8 flex flex-col md:flex-row gap-6">
                      <div class="flex-1">
                        <label class="block text-xs font-bold text-gray-400 tracking-widest uppercase mb-3">Date From</label>
-                       <input type="date" v-model="modalDateFrom" class="w-full text-sm rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-[#900B3E] focus:border-[#900B3E] transition-colors py-3 px-4">
+                       <VueDatePicker
+                         class="archive-date-picker"
+                         :model-value="modalDateFrom || null"
+                         model-type="yyyy-MM-dd"
+                         :formats="{ input: 'dd MMM yyyy' }"
+                         placeholder="Any date"
+                         :max-date="modalDateFromMax"
+                         :time-picker="false"
+                         auto-apply
+                         clearable
+                         @update:model-value="modalDateFrom = $event ?? ''"
+                       />
                      </div>
                      <div class="flex-1">
                        <label class="block text-xs font-bold text-gray-400 tracking-widest uppercase mb-3">Date To</label>
-                       <input type="date" v-model="modalDateTo" class="w-full text-sm rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-[#900B3E] focus:border-[#900B3E] transition-colors py-3 px-4">
+                       <VueDatePicker
+                         class="archive-date-picker"
+                         :model-value="modalDateTo || null"
+                         model-type="yyyy-MM-dd"
+                         :formats="{ input: 'dd MMM yyyy' }"
+                         placeholder="Any date"
+                         :min-date="modalDateToMin"
+                         :time-picker="false"
+                         auto-apply
+                         clearable
+                         @update:model-value="modalDateTo = $event ?? ''"
+                       />
                      </div>
                   </div>
 
@@ -430,10 +523,14 @@ import {
   DocumentTextIcon,
   FolderIcon
 } from '@heroicons/vue/24/outline'
+import type { ArchiveSearchItem } from '~/models'
+import { VueDatePicker } from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 
-// State
+// UI state
 const activeTab = useState<'search' | 'collections'>('archive-activeTab', () => 'search')
 const viewMode = useState<'grid' | 'list'>('archive-viewMode', () => 'grid')
+const isSearching = useState('archive-isSearching', () => false)
 
 const collectionsData = computed(() => {
   const decades = []
@@ -446,18 +543,31 @@ const collectionsData = computed(() => {
   return decades
 })
 
-const browseYear = (year: number) => {
-  searchQuery.value = ''
-  dateFrom.value = `${year}-01-01`
-  dateTo.value = `${year}-12-31`
-  handleSearch()
-}
-const isSearching = useState('archive-isSearching', () => false)
-const searchQuery = useState('archive-searchQuery', () => 'nkrumah')
-const dateFrom = useState('archive-dateFrom', () => '1970-01-29')
-const dateTo = useState('archive-dateTo', () => '2026-05-28')
+// Search state and API actions (POST news-papers/search-archives)
+const {
+  query: searchQuery,
+  dateFrom,
+  dateTo,
+  publicationYear,
+  sortOrder,
+  appliedQuery,
+  items,
+  totalCount,
+  hasMore,
+  isLoading,
+  isLoadingMore,
+  errorMessage,
+  search,
+  loadMore,
+  searchAdvanced,
+  browseYear,
+  clearDateRange,
+  clearPublicationYear,
+  clearAllFilters,
+  setSortOrder,
+} = useArchiveSearch()
 
-// Filter Data
+// Filter Data (display labels; not yet sent to the API)
 const categories = ['Politics', 'Education', 'Sports', 'Economy', 'International', 'Opinion']
 const tags = ['KNUST', 'CPP', 'Ghana', 'University', 'Independence', 'History', 'Osagyefo']
 
@@ -467,6 +577,8 @@ const modalSearchQuery = ref('')
 const modalDateFrom = ref('')
 const modalDateTo = ref('')
 const modalCategories = ref<string[]>([])
+const modalDateFromMax = computed(() => parseIsoDate(modalDateTo.value))
+const modalDateToMin = computed(() => parseIsoDate(modalDateFrom.value))
 
 const allTags = computed(() => [...categories, ...tags])
 
@@ -487,63 +599,113 @@ const openModal = () => {
 
 const performModalSearch = () => {
   searchQuery.value = modalSearchQuery.value
-  if(modalDateFrom.value) dateFrom.value = modalDateFrom.value
-  if(modalDateTo.value) dateTo.value = modalDateTo.value
+  dateFrom.value = modalDateFrom.value
+  dateTo.value = modalDateTo.value
   isModalOpen.value = false
-  performSearch()
+  searchAdvanced()
 }
 
+// Landing "Search Now": a new advanced search (replaces any browsed year)
 const handleSearch = () => {
   isSearching.value = true
-  if (items.value.length === 0) loadInitial()
+  searchAdvanced()
 }
 
+// Browse Collections: switch to results and search the chosen year
+const openYear = (year: number) => {
+  isSearching.value = true
+  browseYear(year)
+}
+
+// Results-page header search: keeps the current filters, replaces the keyword
 const performSearch = () => {
-  // Re-trigger search logic
-  items.value = []
-  loadInitial()
+  isSearching.value = true
+  search()
 }
 
-// Mock Items Data
-const generateMockItem = (index: number) => {
-  const isText = index % 4 === 1
-  return {
-    id: index,
-    title: `Nkrumah${index % 2 === 0 ? '-led Convention People\'s Party' : ', for his vision towards establishing the university'} and the future of Ghana.`,
-    excerpt: 'The historical journey of Ghana has seen many great leaders, but the foundational impact of early independence movements continues to shape the nation\'s trajectory today. The archives reveal deeply rooted traditions and political discourse.',
-    headlineExcerpt: 'Where is the patriotism Osagyefo Kwame Nkrumah taught us as proud Ghanaians?',
-    date: 'July 2, 2025',
-    category: categories[index % categories.length],
-    type: isText ? 'text' : 'image',
-    image: `https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=500&q=80&random=${index}`
-  }
+// Sidebar date pickers bind "yyyy-MM-dd" strings; these turn them into local Dates for min/max limits.
+const parseIsoDate = (value: string): Date | undefined => {
+  const match = value?.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : undefined
+}
+const dateFromLimit = computed(() => parseIsoDate(dateFrom.value))
+const dateToLimit = computed(() => parseIsoDate(dateTo.value))
+
+const onDateFromChange = (value: string | null) => {
+  dateFrom.value = value ?? ''
+  search()
 }
 
-const items = useState<any[]>('archive-items', () => [])
-const totalResults = 16176
-const isLoadingMore = useState('archive-isLoadingMore', () => false)
+const onDateToChange = (value: string | null) => {
+  dateTo.value = value ?? ''
+  search()
+}
+
+// Sort dropdown: '' = Most Relevant (no sortOrder sent), 'desc' = Newest First, 'asc' = Oldest First
+const onSortChange = (event: Event) => {
+  const value = (event.target as HTMLSelectElement).value
+  setSortOrder(value === 'asc' || value === 'desc' ? value : null)
+}
+
+// Presentation helpers
+const isHttpUrl = (value: string) => /^https?:\/\//i.test(value)
+
+// thumbnailId is expected to be an absolute URL; tolerate it being wrapped in markdown link syntax.
+const thumbnailUrl = (item: ArchiveSearchItem): string => {
+  const match = item.thumbnailId?.match(/https?:\/\/[^\s)\]]+/i)
+  return match && isHttpUrl(match[0]) ? match[0] : ''
+}
+
+const snippetText = (item: ArchiveSearchItem): string => {
+  return item.snippet?.trim() || item.supportingText?.trim() || 'No preview available for this page.'
+}
+
+// Keyword highlighting for snippets. Uses the keyword behind the current results (not unsubmitted input).
+// Quotes are ignored, terms shorter than 2 characters are skipped, and the full phrase is matched first.
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+const highlightPattern = computed<RegExp | null>(() => {
+  const phrase = appliedQuery.value.replace(/["“”]/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!phrase) return null
+  const words = phrase.split(' ').filter(word => word.length >= 2)
+  const candidates = [...new Set([...(phrase.includes(' ') ? [phrase] : []), ...words])]
+  if (candidates.length === 0) return null
+  candidates.sort((a, b) => b.length - a.length)
+  return new RegExp(`(${candidates.map(escapeRegExp).join('|')})`, 'gi')
+})
+
+interface SnippetSegment {
+  text: string
+  match: boolean
+}
+
+// Plain-text segments only (rendered as text nodes, never as HTML).
+const snippetSegments = (item: ArchiveSearchItem): SnippetSegment[] => {
+  const text = snippetText(item)
+  const pattern = highlightPattern.value
+  if (!pattern) return [{ text, match: false }]
+  // split() with a capture group places the matched keywords at odd indexes
+  return text
+    .split(pattern)
+    .map((part, index) => ({ text: part, match: index % 2 === 1 }))
+    .filter(segment => segment.text !== '')
+}
+
+const primaryCategory = (item: ArchiveSearchItem): string => {
+  return item.categories?.[0] || item.contentType || 'Archive'
+}
+
+// publicationDate is "yyyy-MM-dd"; format in UTC so the calendar day never shifts.
+const formatDate = (value: string): string => {
+  const match = value?.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!match) return value || ''
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])))
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+}
+
+// Infinite Scroll Setup (appends the next pageNo)
 const loadMoreTrigger = ref(null)
 
-// Initialize with some items
-const loadInitial = () => {
-  items.value = Array.from({ length: 9 }, (_, i) => generateMockItem(i))
-}
-
-const loadMore = async () => {
-  if (isLoadingMore.value || items.value.length >= totalResults) return
-  isLoadingMore.value = true
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  
-  const currentLength = items.value.length
-  const newItems = Array.from({ length: 6 }, (_, i) => generateMockItem(currentLength + i))
-  items.value.push(...newItems)
-  
-  isLoadingMore.value = false
-}
-
-// Infinite Scroll Setup
 useIntersectionObserver(
   loadMoreTrigger,
   ([{ isIntersecting }]) => {
@@ -556,22 +718,15 @@ useIntersectionObserver(
     rootMargin: '100px' // Load slightly before reaching the element
   }
 )
-
-onMounted(() => {
-  // Optionally load initial data if you want to start on results
-  // loadInitial()
-})
 </script>
 
 <style scoped>
-/* Optional styling adjustments */
-input[type="date"]::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  opacity: 0.6;
-  transition: 0.2s;
-}
-input[type="date"]::-webkit-calendar-picker-indicator:hover {
-  opacity: 1;
+
+/* Sidebar date pickers: match the page's red accent */
+.archive-date-picker {
+  --dp-primary-color: #e32932;
+  --dp-primary-text-color: #ffffff;
+  --dp-font-family: inherit;
 }
 
 /* Custom scrollbar for webkit browsers to make the page look cleaner */

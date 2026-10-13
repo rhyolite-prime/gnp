@@ -418,7 +418,8 @@ const { $toast } = useNuxtApp();
 const router = useRouter()
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['admin-auth']
 })
 
 useHead({
@@ -450,9 +451,6 @@ interface Headline {
   text: string;
 }
 
- 
- 
- 
 
 const relatedOptions = [
   { id: 101, name: 'Daily Graphic - Dec 14' },
@@ -605,22 +603,23 @@ const savePublication = async () => {
     .replace(/(^-|-$)/g, '');
 
   try {
-    
 
     // Create newspaper/publication
-    let newspaperIngestionResult = await createNewsPaper({
-      ...form.value,
-      title,
-      slug,
-      documentId: "--",
-      thumbnailId: "--",
-    });
+      let newspaperIngestionResult = await createNewsPaper({
+        ...form.value,
+        title,
+        slug,
+        documentId: "",
+        thumbnailId: "",
+      });
 
     // Upload file to storage service
     const uploadResult = await uploadFileAsset(form.value.file, newspaperIngestionResult.id);
     
     if (uploadResult && uploadResult.status == "success") {
+
       $toast.success('Publication ingested successfully.');
+
       await navigateTo('/admin/content-management/newspapers/');
     }
     

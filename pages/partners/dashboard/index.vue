@@ -473,15 +473,16 @@ import {
   KeyIcon
 } from '@heroicons/vue/24/outline'
 
-import { usePartnerAuthStore } from '~/stores/partnerAuth';
+import { usePartnerAuthStore } from '~/stores/partner-auth';
 import type { PartnerSubscriber, PartnerStats } from "~/models";
 import { isEmpty, debounce } from "lodash-es";
 const { $toast } = useNuxtApp();
 
 definePageMeta({
-  layout: 'default'
+  layout: 'default',
+  middleware: ['partner-auth']
 })
-
+ 
 useHead({
   title: 'Partner Dashboard - Graphic NewsPlus',
   meta: [

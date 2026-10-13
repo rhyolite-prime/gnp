@@ -247,7 +247,8 @@ const thumbnailUrls = reactive<Record<string, string>>({});
 const isShimmerLoading = ref(true);
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['admin-auth']
 })
 
 useHead({

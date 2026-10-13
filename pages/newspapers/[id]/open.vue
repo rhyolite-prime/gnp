@@ -50,7 +50,7 @@
         <h1 class="text-2xl font-bold text-gray-900">{{ newspaperTitle }}</h1>
       </div>
       
-      <div class="flex justify-center items-center min-h-[600px] bg-gray-100 rounded-lg overflow-hidden relative border border-gray-200">
+      <div class="flex justify-center items-center bg-gray-100 rounded-lg overflow-hidden relative border border-gray-200" style="height: calc(100dvh - 130px); min-height: 400px;">
           <!-- Loading state -->
           <div v-if="isLoading" class="absolute inset-0 flex flex-col items-center justify-center bg-white z-20 transition-all duration-300">
               <div class="relative w-20 h-20 mb-6">
@@ -82,11 +82,11 @@
 
           <!-- Reader state -->
           <ClientOnly v-else>
-            <iframe
-              title="NewsPaper"
-              :src="assetUrl"
-              class="w-full h-screen border-0 shadow-2xl"
-            ></iframe>
+            <NewspaperReader
+              :pdf-url="assetUrl"
+              :title="newspaperTitle"
+              class="w-full h-full border-0 shadow-2xl rounded-b-lg overflow-hidden"
+            />
           </ClientOnly>
       </div>
     </div>
@@ -96,13 +96,13 @@
 <script setup lang="ts">
 import type { NewsPaper,Publication, SubscriptionResponseModel } from "~/models";
 import { Lock, FileText, Search } from 'lucide-vue-next';
+import { useWindowSize } from '@vueuse/core';
 
 const route = useRoute();
 const router = useRouter();
 const { $toast } = useNuxtApp();
 const newspaperId = route.params.id as string;
 const newspaperTitle = ref('');
-const assetBaseUrl = ref('https://docviewer.graphicnewsplus.com/ResourceShell');
 const assetUrl = ref('');
 const isLoading = ref(true);
 const accessGranted = ref(false);
@@ -166,10 +166,36 @@ const getNewspaperByDate = async () => {
     } finally {
         isLoading.value = false;
     }
- 
-
+  
 
 }
+
+// Call useWindowSize at the top level of the setup script
+const { width } = useWindowSize();
+
+onBeforeUnmount(async() => {
+   //call api to update user engagement metrics
+   try {
+     // use vueusecore to get the user agent and device info 
+     let deviceType = 'web';
+     if (width.value < 768) {
+       deviceType = 'mobile';
+     } else if (width.value < 1024) {
+       deviceType = 'tablet';
+     }
+     
+     const userAgent = window?.navigator?.userAgent || 'Unknown';
+      
+     await updateUserEngagementMetrics({ 
+       newspaperId : newsPaperDetail.value.id, 
+       deviceType,
+       userAgent // Assuming your method supports this; feel free to omit if not in schema
+     });
+    
+   } catch (error) {
+    console.error("Failed to update engagement metrics on unmount:", error)
+   }
+ })
 
 onMounted( async() => {
 
@@ -190,12 +216,13 @@ onMounted( async() => {
   selectedPublication.value = response.data.publicationId;
   selectedDate.value = response.data.publicationDate.split('T')[0];
   accessGranted.value = true;
-  
-  isLoading.value = false;
 
+  // Build the proxy URL: the server handler validates the subscription
+  // and fetches the PDF asset using the supplied uniqueId + JWT token.
   const gnpUserAuthIdentity = useGnpUserAuthIdentity();
+  assetUrl.value = `/api/pdf?uniqueId=${encodeURIComponent(newspaperId)}&accessToken=${encodeURIComponent(gnpUserAuthIdentity.value ?? '')}`;
 
-  assetUrl.value = `${assetBaseUrl.value}?id=${newspaperId}&tkn=${gnpUserAuthIdentity.value}`;
+  isLoading.value = false;
 
 });
 

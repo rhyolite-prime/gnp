@@ -272,6 +272,7 @@ import {
   MegaphoneIcon
 } from '@heroicons/vue/24/outline'
 import CountUp from 'vue-countup-v3'
+const { hasPermission } = usePermissions();
 
 
 const today = new Date()
@@ -289,7 +290,7 @@ watch([dateFrom, dateTo], () => {
 
 definePageMeta({
   layout: 'admin',
-  //middleware: 'auth' // Assuming auth middleware exists or will be added
+  middleware: ['admin-auth']
 })
 
 const stats = [

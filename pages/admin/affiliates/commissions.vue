@@ -134,7 +134,8 @@ import { ref, computed } from 'vue'
 import { ArrowDownTrayIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['admin-auth']
 })
 
 const affiliateFilter = ref('')

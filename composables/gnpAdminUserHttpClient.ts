@@ -29,6 +29,20 @@ export const gnpAdminUserHttpClient = async <T>(urlPath: string, baseURL?: strin
 
      onResponseError({ request, response, options }) {
         console.log(response);
+        
+        // Show error message using the global $toast plugin
+        if (import.meta.client) {
+            const { $toast } = useNuxtApp();
+          const data = response._data;
+            
+            if (data?.message) {
+                $toast.error(data.message);
+            } else if (data?.error?.detail) {
+                $toast.error(data.error.detail);
+            } else {
+                $toast.error("An unexpected error occurred");
+            }
+        }
     },
   });
 };

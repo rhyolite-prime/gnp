@@ -424,7 +424,8 @@ interface Headline {
 }
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['admin-auth']
 });
 
 const route = useRoute();

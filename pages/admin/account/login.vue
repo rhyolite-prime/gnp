@@ -168,6 +168,10 @@ const handleLogin = async () => {
       
       // Update store
       authStore.setAccessToken(response.token)
+
+      if (response.permissions) {
+        await authStore.savePermissions(response.permissions)
+      }
       
       // Redirect to admin dashboard
       router.push('/admin/dashboard')

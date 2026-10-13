@@ -121,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+
 import * as echarts from 'echarts'
 import { 
   CurrencyDollarIcon, 
@@ -133,7 +133,9 @@ import {
 } from '@heroicons/vue/24/outline'
 
 definePageMeta({
-  layout: 'default'
+  layout: 'default',
+  middleware: ['affiliate-auth']
+
 })
 
 const chartContainer = ref<HTMLElement | null>(null)

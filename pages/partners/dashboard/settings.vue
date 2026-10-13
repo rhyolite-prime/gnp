@@ -142,6 +142,10 @@ import { changePassword } from "~/services/users";
 
 const { $toast } = useNuxtApp();
 
+definePageMeta({
+  middleware: ['partner-auth']
+})
+
 const isShimmerLoading = ref(false)
 const isSaving = ref(false)
 
@@ -155,6 +159,7 @@ const passwordForm = reactive({
   newPassword: '',
   confirmPassword: ''
 })
+
 
 const handleChangePassword = async () => {
   passwordError.value = '';

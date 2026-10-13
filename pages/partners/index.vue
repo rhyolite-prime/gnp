@@ -281,7 +281,7 @@ import {
 const router = useRouter()
 
 onMounted(() => {
-  const partnerAuthIdentity = usePartnerAuthIdentity();
+  const partnerAuthIdentity = useGnpPartnerUserAuthIdentity();
     
   if (partnerAuthIdentity.value) {
     router.push('/partners/dashboard')

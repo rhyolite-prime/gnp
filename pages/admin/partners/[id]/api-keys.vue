@@ -315,7 +315,8 @@ import {
 } from "~/services/admin";
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['admin-auth']
 });
 
 const route = useRoute();

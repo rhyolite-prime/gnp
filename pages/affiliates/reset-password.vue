@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+
 import { setPassword } from '~/services/auth'
 
 definePageMeta({

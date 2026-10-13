@@ -146,7 +146,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { BuildingOfficeIcon, EnvelopeIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
-import { usePartnerAuthStore } from '~/stores/partnerAuth'
+import { usePartnerAuthStore } from '~/stores/partner-auth'
 const { $toast } = useNuxtApp();
 
 definePageMeta({

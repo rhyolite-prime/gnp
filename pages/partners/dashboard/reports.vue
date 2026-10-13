@@ -249,6 +249,10 @@ const apiStats = ref<ApiUsageStats | null>(null)
 const analyticsCharts = ref<PartnerAnalyticsCharts | null>(null)
 const engagementReport = ref<PartnerEngagementReport | null>(null)
 
+definePageMeta({
+  middleware: ['partner-auth']
+})
+
 const mockApiEndpoints = [
   { endpoint: '/subscribers/onboard', count: 1240, successRate: 98.5 },
   { endpoint: '/partner/subscribers/subscription-status', count: 8520, successRate: 99.2 },

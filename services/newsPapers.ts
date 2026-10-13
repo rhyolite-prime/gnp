@@ -1,9 +1,16 @@
-import type { NewsPaper, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { NewsPaper, Article, BaseApiResponse, BasePaginationModel } from "~/models";
 
  
 export async function getNewsPapers(query: object) {
  
     const response = await httpClient<BaseApiResponse<BasePaginationModel<NewsPaper[]>>>('news-papers/get-all', "", { query });
+    
+   return response.result;
+}
+
+export async function getTopStories() {
+ 
+    const response = await httpClient<BaseApiResponse<Article[]>>('news-papers/get-top-stories', "");
     
    return response.result;
 }
@@ -21,6 +28,20 @@ export async function getNewsPaperDetails(query: object) {
     
    return response.result;
 }
+
+
+export async function updateUserEngagementMetrics(payload: object) {
+ 
+    const response = await gnpUserHttpClient<BaseApiResponse<object>>('news-papers/update-user-engagement', "",
+        {
+            method: "post",
+            body: payload,
+        });
+    
+   return response.success;
+}
+
+
 
 const blobCache: Record<string, string> = {};
 
@@ -91,8 +112,8 @@ export async function getSecureThumbnail(fileId: string) {
 
         // 3. Fallback to network request
         const response = await gnpUserHttpClient<Blob>(`g3/get-file/gnp-thumbnails/${fileId}.png`, "", { 
-            responseType: 'blob',
-            query: { cb: new Date().getTime() }
+            responseType: 'blob'
+             
         });
 
         // 4. Save to both caches

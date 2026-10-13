@@ -7,7 +7,7 @@ export const useAuth = () => {
     const { $generateAlertError } = useNuxtApp();
 
     const gnpUserIdentityCookie = useCookie("gnp-user-identity", {
-        maxAge: 60 * 60 * 24 * 30,
+        maxAge: 60 * 60 * 24 * 366,
     });
 
     const gnpUserAuthIdentity = useGnpUserAuthIdentity();
@@ -41,13 +41,12 @@ export const useAuth = () => {
     };
 
     const signOut = () => {
-        
+        // Delegate to the store so ALL auth state (cookie, useState, sessionStorage)
+        // is cleared atomically from one place.
+        const authStore = useBasicAuthStore();
+        authStore.clearUser();
 
-        gnpUserIdentityCookie.value = null;
-
-        window.location.href = "/";
-
-        //router.push("/");
+        window.location.href = '/';
     };
 
     return {

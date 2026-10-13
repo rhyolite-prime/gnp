@@ -5,6 +5,8 @@
       <slot />
     </main>
     <AppFooter />
+    <!-- Global Floating AI Research Assistant Launcher -->
+    <RagWidgetLauncher />
   </div>
 </template>
 

@@ -1,6 +1,11 @@
 import { useAdminAuthStore } from '~/stores/admin-auth'
 
 export default defineNuxtRouteMiddleware((to, from) => {
+  // Only apply this middleware to /admin routes
+  if (!to.path.startsWith('/admin')) {
+    return
+  }
+
   const adminAuthStore = useAdminAuthStore()
   const cookie = useCookie('gnp-admin-user-identity')
 

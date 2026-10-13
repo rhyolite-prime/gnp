@@ -381,7 +381,7 @@ import {
   PencilSquareIcon,
   TrashIcon
 } from '@heroicons/vue/24/outline'
-import { usePartnerAuthStore } from '~/stores/partnerAuth'
+import { usePartnerAuthStore } from '~/stores/partner-auth'
 import VueMultiselect from 'vue-multiselect'
 import 'vue-multiselect/dist/vue-multiselect.css'
 import type { Role, AdminUser } from "~/models";
@@ -389,6 +389,10 @@ import { isEmpty, debounce } from "lodash-es";
 
 const partnerAuthStore = usePartnerAuthStore();
 const { $toast } = useNuxtApp();
+
+definePageMeta({
+  middleware: ['partner-auth']
+})
 
 const partnerDomain = computed(() => {
   const name = partnerAuthStore.partner?.partnerName || 'Organization'

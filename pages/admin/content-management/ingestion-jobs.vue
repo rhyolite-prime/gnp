@@ -128,6 +128,12 @@ useHead({
 const router = useRouter();
 const route = useRoute();
 
+
+definePageMeta({
+  layout: 'admin',
+  middleware: ['admin-auth']
+})
+
 const filters = reactive({
   query: '',
   pageNo: 1,
@@ -180,9 +186,7 @@ const getPaginatedIngestionJobs = async () => {
 
  }
 
-definePageMeta({
-  layout: 'admin'
-})
+
 
 interface Job {
   id: string;

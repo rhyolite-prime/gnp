@@ -221,7 +221,8 @@ import {
 import CountUp from 'vue-countup-v3'
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['admin-auth']
 })
 
 const chartContainer = ref<HTMLElement | null>(null)

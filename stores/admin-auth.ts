@@ -1,6 +1,35 @@
 import { defineStore } from 'pinia';
 import type { AccountInfo } from '@azure/msal-browser';
 
+// sessionStorage keys are namespaced per auth domain. The consumer store
+// (stores/basic-user-auth.ts) owns the generic 'authUser' / 'accessToken' keys,
+// so the admin store must NOT reuse them: an admin JWT written there would be
+// hydrated into the public-site session on the next page load (and vice versa).
+const ADMIN_USER_STORAGE_KEY = 'adminAuthUser';
+const ADMIN_TOKEN_STORAGE_KEY = 'adminAccessToken';
+
+/**
+ * IndexedDB persists values with the HTML structured clone algorithm, which
+ * throws `DataCloneError: ... could not be cloned` on Vue reactive proxies —
+ * i.e. on anything read back out of a `ref`/`reactive`. Always hand IndexedDB a
+ * plain copy instead.
+ *
+ * structuredClone is attempted first so cloneable non-JSON values (Blob, Date,
+ * Map, Set) survive intact; the JSON round-trip is the fallback for anything
+ * still wrapped in a proxy, since it reads through to the underlying data.
+ */
+function toPlainValue<T>(value: T): T {
+  const raw = toRaw(value) as T;
+  if (raw === null || typeof raw !== 'object') return raw;
+  try {
+    return typeof structuredClone === 'function'
+      ? structuredClone(raw)
+      : JSON.parse(JSON.stringify(raw));
+  } catch {
+    return JSON.parse(JSON.stringify(raw));
+  }
+}
+
 // Enhanced user interface with additional profile info
 export interface EnhancedUserInfo extends AccountInfo {
 
@@ -28,7 +57,10 @@ export interface EnhancedUserInfo extends AccountInfo {
 
  
 
-export const useAdminAuthStore = defineStore('auth',  () => {
+// NOTE: this id MUST stay unique across the app. Pinia caches store instances by
+// id (pinia._s), so a second defineStore('auth', ...) would silently shadow this
+// one and useAdminAuthStore() would hand back the other store's instance.
+export const useAdminAuthStore = defineStore('adminAuth',  () => {
   
   const user = ref<EnhancedUserInfo | null>(null);
   const isAuthenticated = ref(false);
@@ -36,7 +68,88 @@ export const useAdminAuthStore = defineStore('auth',  () => {
   const authProvider = ref<'microsoft' | 'google' | 'gnp' | null>(null);
   const accessToken = ref<string | null>(null);
   const userPhotoUrl = ref<string>();
-  const gnpUserIdentityCookie = useCookie('gnp-user-identity');
+  const permissions = ref<string[]>([]);
+  const gnpAdminUserIdentityCookie = useCookie('gnp-admin-user-identity');
+
+  const initDB = (): Promise<IDBDatabase> => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('gnp_admin_db', 1);
+      request.onupgradeneeded = (e: any) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('auth')) {
+          db.createObjectStore('auth');
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  };
+
+  const setIDB = async (key: string, value: any) => {
+    try {
+      const db = await initDB();
+      // `await`, not `return`: a rejection from inside a Promise executor is NOT
+      // caught by the surrounding try/catch, so returning it let IDB failures
+      // escape and abort the caller (this is what broke admin login).
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction('auth', 'readwrite');
+        const store = tx.objectStore('auth');
+        // Never pass a reactive proxy to put() — see toPlainValue().
+        const request = store.put(toPlainValue(value), key);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    } catch (e) {
+      // IndexedDB is only a cache to speed up the next page load. A failure to
+      // write it must never break authentication or any other caller.
+      console.error('IDB set error', e);
+    }
+  };
+
+  const getIDB = async (key: string): Promise<any> => {
+    try {
+      const db = await initDB();
+      return await new Promise<any>((resolve, reject) => {
+        const tx = db.transaction('auth', 'readonly');
+        const store = tx.objectStore('auth');
+        const request = store.get(key);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    } catch (e) {
+      console.error('IDB get error', e);
+      return null;
+    }
+  };
+
+  const removeIDB = async (key: string) => {
+    try {
+      const db = await initDB();
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction('auth', 'readwrite');
+        const store = tx.objectStore('auth');
+        const request = store.delete(key);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    } catch (e) {
+      console.error('IDB remove error', e);
+    }
+  };
+
+  async function savePermissions(perms: string[]) {
+    // Persist a plain copy. `permissions.value` is a reactive proxy, and passing
+    // it straight to IndexedDB threw DataCloneError, which aborted login.
+    const plainPerms = toPlainValue(perms ?? []);
+    permissions.value = plainPerms;
+    if (typeof window !== 'undefined') {
+      await setIDB('permissions', plainPerms);
+    }
+  }
+
+  function setPermissions(perms: string[]) {
+    permissions.value = toPlainValue(perms ?? []);
+  }
   
   // Track session start time for session-duration-on-logout metric
   const sessionStartedAt = ref<number | null>(null);
@@ -59,8 +172,8 @@ export const useAdminAuthStore = defineStore('auth',  () => {
     }
     
     // You could store this info in localStorage/sessionStorage for persistence
-    if (userInfo) {
-      sessionStorage.setItem('authUser', JSON.stringify({
+    if (userInfo && typeof window !== 'undefined') {
+      sessionStorage.setItem(ADMIN_USER_STORAGE_KEY, JSON.stringify({
         user: userInfo,
         provider,
         isAuthenticated: true,
@@ -75,7 +188,9 @@ export const useAdminAuthStore = defineStore('auth',  () => {
   function setAccessToken(token: string) {
     accessToken.value = token;
     if (token) {
-      sessionStorage.setItem('accessToken', token);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, token);
+      }
 
       //decode the jwt and store object in authUser in key in localstorage
       // Decode JWT and store in localStorage
@@ -102,7 +217,9 @@ export const useAdminAuthStore = defineStore('auth',  () => {
             }
         };
 
-        sessionStorage.setItem('authUser', JSON.stringify(userInfo));
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(ADMIN_USER_STORAGE_KEY, JSON.stringify(userInfo));
+        }
         
         // Update state reactively
         user.value = userInfo as any;
@@ -119,7 +236,9 @@ export const useAdminAuthStore = defineStore('auth',  () => {
       }
 
     } else {
-      sessionStorage.removeItem('accessToken');
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+      }
     }
   }
   
@@ -130,8 +249,8 @@ export const useAdminAuthStore = defineStore('auth',  () => {
 
     try {
 
-      const storedAuth = sessionStorage.getItem('authUser');
-      const storedToken = sessionStorage.getItem('accessToken');
+      const storedAuth = sessionStorage.getItem(ADMIN_USER_STORAGE_KEY);
+      const storedToken = sessionStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
       
       if (storedAuth && storedToken) {
 
@@ -141,11 +260,22 @@ export const useAdminAuthStore = defineStore('auth',  () => {
         accessToken.value = storedToken;
         sessionStartedAt.value = Date.now();
        
+        // Read permissions asynchronously from IndexedDB
+        if (typeof window !== 'undefined') {
+          getIDB('permissions').then((perms) => {
+            if (perms) permissions.value = perms;
+          });
+        }
         
-      } else if (gnpUserIdentityCookie.value) {
+      } else if (gnpAdminUserIdentityCookie.value) {
         // Fallback to cookie if sessionStorage is empty (e.g. browser was closed and reopened)
-        setAccessToken(gnpUserIdentityCookie.value as string);
-
+        setAccessToken(gnpAdminUserIdentityCookie.value as string);
+        // We still need to load permissions from IDB
+        if (typeof window !== 'undefined') {
+          getIDB('permissions').then((perms) => {
+            if (perms) permissions.value = perms;
+          });
+        }
          
       }
 
@@ -163,7 +293,7 @@ export const useAdminAuthStore = defineStore('auth',  () => {
     userPhotoUrl.value = url || undefined;
     
     // Update in session storage and user object if user exists
-    if (user.value) {
+    if (user.value && typeof window !== 'undefined') {
       // Update the photoUrl in the user object
       user.value = {
         ...user.value,
@@ -171,7 +301,7 @@ export const useAdminAuthStore = defineStore('auth',  () => {
       };
       
       // Update in session storage
-      const storedAuth = sessionStorage.getItem('authUser');
+      const storedAuth = sessionStorage.getItem(ADMIN_USER_STORAGE_KEY);
       if (storedAuth) {
         const parsedAuth = JSON.parse(storedAuth);
         parsedAuth.photoUrl = url;
@@ -181,7 +311,7 @@ export const useAdminAuthStore = defineStore('auth',  () => {
           parsedAuth.user.photoUrl = url || undefined;
         }
         
-        sessionStorage.setItem('authUser', JSON.stringify(parsedAuth));
+        sessionStorage.setItem(ADMIN_USER_STORAGE_KEY, JSON.stringify(parsedAuth));
       }
     }
   }
@@ -196,8 +326,25 @@ export const useAdminAuthStore = defineStore('auth',  () => {
     accessToken.value = null;
     userPhotoUrl.value = undefined;
     sessionStartedAt.value = null;
-    sessionStorage.removeItem('authUser');
-    sessionStorage.removeItem('accessToken');
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem(ADMIN_USER_STORAGE_KEY);
+      sessionStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+    }
+
+    permissions.value = [];
+    if (typeof window !== 'undefined') {
+      removeIDB('permissions');
+    }
+
+    // Expire the cookie so the browser removes it
+    gnpAdminUserIdentityCookie.value = null;
+
+    // CRITICAL: also clear the shared useState that gnpAdminUserHttpClient reads from.
+    // Without this, the stale JWT persists in memory even though the cookie is gone,
+    // causing authenticated admin API calls to fire after logout.
+    const gnpAdminUserAuthState = useState<string | null>('gnpAdminUserAuth');
+    gnpAdminUserAuthState.value = null;
   }
   
   // Initialize from storage when store is created
@@ -212,6 +359,9 @@ export const useAdminAuthStore = defineStore('auth',  () => {
     authProvider,
     accessToken,
     userPhotoUrl,
+    permissions,
+    savePermissions,
+    setPermissions,
     setUser,
     setAccessToken,
     setUserPhotoUrl,

@@ -90,6 +90,15 @@ export interface SigninResponseModel {
     username: string;
 }
 
+export interface AdminSigninResponseModel extends SigninResponseModel {
+    /**
+     * Permission ids granted to this admin user (e.g. "dashboard",
+     * "subscribers.manage"). Absent/empty for accounts with no explicit grants;
+     * "*" denotes a super-admin. Persisted via useAdminAuthStore().savePermissions().
+     */
+    permissions?: string[];
+}
+
 export interface PartnerSigninResponseModel {
     partnerEmail: string;
     fullName: string;
@@ -252,6 +261,76 @@ export interface Campaign extends BaseEntityModel {
 
 }
 
+export interface ArticleImages {
+  float_fulltext: string;
+  float_intro: string;
+  image_fulltext: string;
+  image_fulltext_alt: string;
+  image_fulltext_caption: string;
+  image_intro: string;
+  image_intro_alt: string;
+  image_intro_caption: string;
+}
+
+export interface ArticleMetadata {
+  author: string;
+  rights: string;
+  robots: string;
+}
+
+export interface ArticleAttributes {
+  access: number;
+  alias: string;
+  asset_id: number;
+  created: string;
+  created_by: number;
+  created_by_alias: string;
+  featured: number;
+  featured_down: string | null;
+  featured_up: string | null;
+  hits: number;
+  id: number;
+  images: ArticleImages;
+  language: string;
+  metadata: ArticleMetadata;
+  metadesc: string;
+  metakey: string;
+  modified: string;
+  note: string;
+  publish_down: string | null;
+  publish_up: string;
+  state: number;
+  tags: any[];
+  text: string;
+  title: string;
+  typeAlias: string;
+  version: number;
+}
+
+export interface RelationshipData {
+  id: string;
+  type: string;
+}
+
+export interface ArticleRelationships {
+  category: {
+    data: RelationshipData;
+  };
+  created_by: {
+    data: RelationshipData;
+  };
+  tags: {
+    data: RelationshipData[];
+  };
+}
+
+export interface Article {
+  id: string;
+  type: string;
+  attributes: ArticleAttributes;
+  relationships: ArticleRelationships;
+}
+
 export interface Payment extends BaseEntityModel {
 
     userName: string;
@@ -338,7 +417,7 @@ export interface Subscriber extends BaseEntityModel {
     createdAt: string;
     partnerId: string;
     subscriptionPlanDescription: string;
-    status: string;
+    isActve: boolean;
 }
 
 export interface AdminUser extends BaseEntityModel {
@@ -348,7 +427,9 @@ export interface AdminUser extends BaseEntityModel {
     email: string;
     username: string;
     phoneNumber?: string;
+    isActive: boolean;
     roles: [];
+    userGroups: [];
     createdAt: string;
 }
 
@@ -406,6 +487,15 @@ export interface Role extends BaseEntityModel {
     partnerId: string;
     permissions: string[]
     
+}
+
+export interface UserGroup extends BaseEntityModel {
+    id: string;
+    title: string;
+    parentId: string;
+    roles: [];
+    activeUsers: string,
+    blockedUsers: string,
 }
 
 export interface Permission {
@@ -471,3 +561,108 @@ export interface RenewalHistory {
     status: string;
 }
 
+export * from './games';
+
+
+
+// ── Archives search ───────────────────────────────────────────────────────────
+// POST news-papers/search-archives
+
+/** Date sort direction on publicationDate. Omit for "Most Relevant" (backend default). */
+export type ArchiveSortOrder = 'asc' | 'desc';
+
+/** Request body for POST news-papers/search-archives. */
+export interface ArchiveSearchRequest {
+    pageNo: number;
+    pageSize: number;
+    query: string;
+    /** yyyy-MM-dd or "" when unset. */
+    dateFrom: string;
+    /** yyyy-MM-dd or "" when unset. */
+    dateTo: string;
+    /** yyyy-MM-dd or "" when unset. */
+    publicationDate: string;
+    /** Set only when a year is picked from the "Browse Collections" tab. Omitted otherwise. */
+    publicationYear?: number;
+    /** 'desc' = Newest First, 'asc' = Oldest First. Omitted for Most Relevant. */
+    sortOrder?: ArchiveSortOrder;
+}
+
+/** A single matching newspaper page returned by the archive search. */
+export interface ArchiveSearchItem {
+    id: string;
+    newspaperId: string;
+    publicationId: string;
+    publicationName: string;
+    publicationDate: string;
+    editionNumber: string;
+    documentId: string;
+    pageNumber: number;
+    fileType: number;
+    contentType: string;
+    categories: string[];
+    tags: string[];
+    relevance: number;
+    snippet: string;
+    supportingText: string;
+    /** Usually an absolute thumbnail URL; may be empty. */
+    thumbnailId: string;
+    isFree: boolean;
+    views: number;
+}
+
+/** Paged payload carried in `result` of the archive search response. */
+export interface ArchiveSearchResult {
+    data: ArchiveSearchItem[];
+    pageNo: number;
+    pageSize: number;
+    query: string;
+    totalCount: number;
+    totalPages: number;
+    lowerBound: number;
+    upperBound: number;
+}
+
+/** Envelope returned by POST news-papers/search-archives. */
+export interface ArchiveSearchResponse {
+    error: { code?: boolean; details?: boolean; message?: any; validationErrors?: any } | null;
+    message: string;
+    result: ArchiveSearchResult | null;
+    success: boolean;
+    targetUrl: string;
+}
+
+// ── Partner API request logs (admin) ──────────────────────────────────────────
+// GET admin/get-partner-api-request-logs
+// NOTE: item field names below are assumptions until confirmed against the API.
+
+/** Query string for GET admin/get-partner-api-request-logs. Unset filters are omitted. */
+export interface PartnerApiRequestLogQuery {
+    partnerId: string;
+    query?: string;
+    method?: string;
+    /** Sent as "true" / "false" only when filtering by outcome. */
+    isSuccessful?: boolean;
+    /** yyyy-MM-dd */
+    dateFrom?: string;
+    /** yyyy-MM-dd */
+    dateTo?: string;
+    pageNo: number;
+    pageSize: number;
+}
+
+/** One partner API request. `requestBody` / `responseBody` may be JSON objects or JSON strings. */
+export interface PartnerApiRequestLog {
+    id: string;
+    partnerId: string;
+    method: string;
+    endpoint: string;
+    statusCode: number;
+    isSuccessful: boolean;
+    durationMs?: number;
+    ipAddress?: string;
+    apiKeyLabel?: string;
+    requestBody?: unknown;
+    responseBody?: unknown;
+    createdAt: string;
+}

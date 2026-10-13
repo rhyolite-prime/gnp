@@ -202,7 +202,8 @@ import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 import AffiliateModal from '~/components/AffiliateModal.vue'
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: ['admin-auth']
 })
 
 const showAddModal = ref(false)

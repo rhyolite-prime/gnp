@@ -69,20 +69,7 @@
                 </div>
               </div>
 
-              <!-- Website/Social -->
-              <div class="sm:col-span-2">
-                <label for="website" class="block text-sm font-medium text-gray-700">Website or Primary Social Media Link</label>
-                <div class="mt-1">
-                  <input 
-                    id="website" 
-                    v-model="form.website" 
-                    type="url" 
-                    required 
-                    class="block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors"
-                    placeholder="https://..."
-                  />
-                </div>
-              </div>
+          
 
               <!-- Password -->
               <div class="sm:col-span-1">
@@ -124,7 +111,7 @@
                 class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
               />
               <label for="terms" class="ml-2 block text-sm text-gray-900">
-                I agree to the <a href="#" class="text-primary-600 hover:text-primary-500 underline">Affiliate Terms & Conditions</a>
+                I agree to the <NuxtLink to="/affiliates/terms" class="text-primary-600 hover:text-primary-500 underline">Affiliate Terms & Conditions</NuxtLink>
               </label>
             </div>
 
@@ -156,8 +143,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { createAffiliate } from '~/services/affiliate'
+
 
 definePageMeta({
   layout: 'default'
@@ -168,7 +154,6 @@ const form = reactive({
   fullName: '',
   email: '',
   phone: '',
-  website: '',
   password: '',
   confirmPassword: '',
   terms: false
