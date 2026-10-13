@@ -121,7 +121,7 @@
               <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Endpoint</th>
               <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
               <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Duration</th>
-              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">IP Address</th>
+              <!-- <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">IP Address</th> -->
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 bg-white">
@@ -164,8 +164,8 @@
                     {{ log.statusCode }} · {{ isLogSuccessful(log) ? 'Success' : 'Failed' }}
                   </span>
                 </td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ log.durationMs != null ? `${log.durationMs} ms` : '—' }}</td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ log.ipAddress || '—' }}</td>
+                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ log.responseTimeMs != null ? `${log.responseTimeMs} ms` : '—' }}</td>
+                <!-- <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ log.ipAddress || '—' }}</td> -->
               </tr>
             </template>
           </tbody>
