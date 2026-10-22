@@ -5,6 +5,7 @@ import {
   detectBrowserAndOs,
   executeBroadcastDispatch,
   getPushHub,
+  persistPushHubState,
 } from '~/server/utils/pushDispatchStore';
 
 export default defineEventHandler(async (event) => {
@@ -129,6 +130,7 @@ export default defineEventHandler(async (event) => {
     };
 
     hub.subscriptions.set(endpoint, record);
+    persistPushHubState(hub);
 
     return {
       success: true,
@@ -149,6 +151,7 @@ export default defineEventHandler(async (event) => {
       if (body.quietHours) target.quietHours = body.quietHours;
       target.lastSeenAt = new Date().toISOString();
       hub.subscriptions.set(endpoint, target);
+      persistPushHubState(hub);
       return {
         success: true,
         message: 'Notification preferences saved.',
@@ -171,6 +174,7 @@ export default defineEventHandler(async (event) => {
     const body = await readBody<any>(event).catch(() => ({}));
     if (body?.endpoint) {
       hub.subscriptions.delete(body.endpoint);
+      persistPushHubState(hub);
     }
     return {
       success: true,

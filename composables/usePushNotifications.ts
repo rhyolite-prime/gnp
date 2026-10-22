@@ -124,9 +124,17 @@ export function usePushNotifications() {
     }
   }
 
+  const CLIENT_CATEGORY_ALIAS: Record<string, PushTopicCategory> = {
+    weekend_digest: 'morning_edition',
+    subscription: 'subscriptions_billing',
+    promo_offer: 'promotions_offers',
+    system: 'platform_updates',
+  };
+
   function handleIncomingPayload(payload: any, fromSwPushEvent = false) {
     if (!payload) return;
-    const category = (payload.category || 'platform_updates') as PushTopicCategory;
+    const rawCat = String(payload.category || 'platform_updates');
+    const category = (CLIENT_CATEGORY_ALIAS[rawCat] || rawCat) as PushTopicCategory;
 
     // Filter out unsubscribed topics unless user hasn't configured topics yet
     if (
@@ -139,9 +147,13 @@ export function usePushNotifications() {
 
     store.addNotification(payload, { showToast: true });
 
-    // Trigger genuine OS notification when delivered over SSE/BroadcastChannel
-    // (When `fromSwPushEvent` is true, `sw-push.js` already called `registration.showNotification`)
-    if (!fromSwPushEvent && store.isSubscribed) {
+    const alreadyDeliveredBySwWebPush =
+      Array.isArray(payload.deliveredWebPushEndpoints) &&
+      Boolean(store.activeEndpoint) &&
+      payload.deliveredWebPushEndpoints.includes(store.activeEndpoint);
+
+    // Trigger genuine OS notification over SSE/BroadcastChannel ONLY if Web Push didn't already display it
+    if (!fromSwPushEvent && !alreadyDeliveredBySwWebPush && store.isSubscribed) {
       showNativeBrowserNotification(payload);
     }
   }

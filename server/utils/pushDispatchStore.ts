@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import webpush from 'web-push';
 import type {
   BrowserPushSubscriptionRecord,
@@ -7,6 +9,58 @@ import type {
   PushTopicCategory,
 } from '~/models/pushNotifications';
 import dayjs from 'dayjs';
+
+const PERSIST_FILE_PATH = path.resolve(process.cwd(), '.data', 'push-hub-state.json');
+
+const CATEGORY_ALIAS_MAP: Record<string, PushTopicCategory> = {
+  weekend_digest: 'morning_edition',
+  subscription: 'subscriptions_billing',
+  promo_offer: 'promotions_offers',
+  system: 'platform_updates',
+};
+
+export function normalizePushTopic(category?: string): PushTopicCategory {
+  if (!category) return 'platform_updates';
+  if (category in CATEGORY_ALIAS_MAP) {
+    return CATEGORY_ALIAS_MAP[category];
+  }
+  return category as PushTopicCategory;
+}
+
+function readPersistedPushState(): {
+  vapidKeys?: { publicKey: string; privateKey: string; subject: string };
+  subscriptions?: BrowserPushSubscriptionRecord[];
+} | null {
+  try {
+    if (!fs.existsSync(PERSIST_FILE_PATH)) return null;
+    return JSON.parse(fs.readFileSync(PERSIST_FILE_PATH, 'utf-8'));
+  } catch {
+    return null;
+  }
+}
+
+export function persistPushHubState(hub: GlobalPushHubState) {
+  try {
+    const dir = path.dirname(PERSIST_FILE_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(
+      PERSIST_FILE_PATH,
+      JSON.stringify(
+        {
+          vapidKeys: hub.vapidKeys,
+          subscriptions: Array.from(hub.subscriptions.values()),
+        },
+        null,
+        2
+      ),
+      'utf-8'
+    );
+  } catch {
+    // Ignore read-only filesystem environments
+  }
+}
 
 interface SseClient {
   id: string;
@@ -36,10 +90,14 @@ const ALL_TOPICS: PushTopicCategory[] = [
 ];
 
 function createInitialSeedState(): GlobalPushHubState {
-  const generated = webpush.generateVAPIDKeys();
+  const persisted = readPersistedPushState();
+  const generated = persisted?.vapidKeys || webpush.generateVAPIDKeys();
   const publicKey = process.env.NUXT_VAPID_PUBLIC_KEY || generated.publicKey;
   const privateKey = process.env.NUXT_VAPID_PRIVATE_KEY || generated.privateKey;
-  const subject = process.env.NUXT_VAPID_SUBJECT || 'mailto:digital-alerts@graphic.com.gh';
+  const subject =
+    process.env.NUXT_VAPID_SUBJECT ||
+    (generated as any).subject ||
+    'mailto:digital-alerts@graphic.com.gh';
 
   webpush.setVapidDetails(subject, publicKey, privateKey);
 
@@ -109,6 +167,13 @@ function createInitialSeedState(): GlobalPushHubState {
   const subscriptions = new Map<string, BrowserPushSubscriptionRecord>();
   for (const s of seedSubs) {
     subscriptions.set(s.endpoint, s);
+  }
+  if (Array.isArray(persisted?.subscriptions)) {
+    for (const saved of persisted.subscriptions) {
+      if (saved?.endpoint) {
+        subscriptions.set(saved.endpoint, saved);
+      }
+    }
   }
 
   const broadcasts: PushBroadcastRecord[] = [
@@ -236,6 +301,7 @@ export function getPushHub(): GlobalPushHubState {
   const g = globalThis as any;
   if (!g.__gnpPushHub) {
     g.__gnpPushHub = createInitialSeedState();
+    persistPushHubState(g.__gnpPushHub);
   }
   return g.__gnpPushHub as GlobalPushHubState;
 }
@@ -309,6 +375,8 @@ export async function executeBroadcastDispatch(
     return scheduledRecord;
   }
 
+  const normalizedCategory = normalizePushTopic(dto.category);
+
   const wirePayload = {
     id,
     notificationId: id,
@@ -316,7 +384,7 @@ export async function executeBroadcastDispatch(
     subject: dto.title,
     body: dto.body,
     messageBody: dto.body,
-    category: dto.category,
+    category: normalizedCategory,
     urgency: dto.urgency || 'normal',
     deepLink: dto.deepLink || '/',
     imageUrl: dto.imageUrl || '',
@@ -333,12 +401,14 @@ export async function executeBroadcastDispatch(
 
   let realDelivered = 0;
   let failedCount = 0;
+  let prunedAny = false;
+  const deliveredWebPushEndpoints: string[] = [];
 
   const candidates = Array.from(hub.subscriptions.values()).filter((sub) => {
     if (options.targetEndpointOnly) {
       return sub.endpoint === options.targetEndpointOnly;
     }
-    if (!sub.topics.includes(dto.category)) return false;
+    if (sub.topics?.length && !sub.topics.includes(normalizedCategory)) return false;
     if (dto.targetSegment !== 'all_subscribers' && sub.segment !== dto.targetSegment) {
       // Always deliver live dispatches to real interactive browser sessions in dev/demo
       if (sub.isSimulated) return false;
@@ -347,6 +417,7 @@ export async function executeBroadcastDispatch(
   });
 
   // 1. Deliver genuine RFC 8291 Web Push payloads to real browser PushSubscription endpoints
+  //    (Wakes up `/sw-push.js` even when all Graphic NewsPlus tabs are completely closed)
   await Promise.all(
     candidates
       .filter((s) => !s.isSimulated && s.endpoint.startsWith('https://'))
@@ -359,25 +430,35 @@ export async function executeBroadcastDispatch(
             },
             JSON.stringify(wirePayload),
             {
-              TTL: dto.ttlSeconds || 3600,
+              TTL: dto.ttlSeconds || 43200,
               urgency: dto.urgency === 'high' ? 'high' : dto.urgency === 'low' ? 'low' : 'normal',
             }
           );
           realDelivered++;
+          deliveredWebPushEndpoints.push(sub.endpoint);
         } catch (err: any) {
           failedCount++;
           if (err?.statusCode === 404 || err?.statusCode === 410) {
             hub.subscriptions.delete(sub.endpoint);
+            prunedAny = true;
           }
         }
       })
   );
 
+  if (prunedAny) {
+    persistPushHubState(hub);
+  }
+
   // 2. Simultaneously broadcast over live SSE stream to every open browser tab
   let sseDelivered = 0;
+  const ssePayload = {
+    ...wirePayload,
+    deliveredWebPushEndpoints,
+  };
   for (const [, client] of hub.sseClients) {
     try {
-      client.send('push-notification', wirePayload);
+      client.send('push-notification', ssePayload);
       sseDelivered++;
     } catch {
       // Stale stream cleaned on close
