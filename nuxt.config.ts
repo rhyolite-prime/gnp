@@ -5,8 +5,21 @@ export default defineNuxtConfig({
   vite: {
     server: {
       allowedHosts: true,
-      hmr: process.env.E2B_SANDBOX_ID ? false : true,
     },
+    plugins: [
+      {
+        name: 'gnp-prevent-ws-reload-loop',
+        enforce: 'post',
+        transform(code: string, id: string) {
+          if (id.includes('vite/dist/client/client.mjs')) {
+            return code.replace(
+              /await waitForSuccessfulPing\([^)]+\);\s*location\.reload\(\);/g,
+              'return;'
+            );
+          }
+        },
+      },
+    ],
   },
   
   modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt', '@vite-pwa/nuxt'],
