@@ -6,7 +6,13 @@
         <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">Campaigns</h1>
         <p class="mt-2 text-sm text-gray-700">Manage multi-channel marketing campaigns via Email and In-App Notifications.</p>
       </div>
-      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex items-center gap-2.5">
+        <NuxtLink
+          to="/admin/push-notifications"
+          class="rounded-md bg-slate-900 px-3.5 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
+        >
+          Browser Push Studio &rarr;
+        </NuxtLink>
         <button
           @click="openCreateModal"
           type="button"

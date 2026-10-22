@@ -1,63 +1,9 @@
-import { defineEventHandler, getQuery } from 'h3';
-import { buildPartnerPortalAnalyticsMock } from '~/utils/reportsMockEngine';
+import { defineEventHandler } from 'h3';
 import dayjs from 'dayjs';
 
 export default defineEventHandler((event) => {
   const slugParam = event.context.params?.slug;
   const route = Array.isArray(slugParam) ? slugParam.join('/') : slugParam || '';
-  const query = getQuery(event);
-  const range = String(query.range || '30d');
-
-  if (route === 'partner-reports') {
-    return {
-      success: true,
-      message: 'Partner analytics bundle retrieved successfully.',
-      unAuthorizedRequest: false,
-      error: null,
-      result: buildPartnerPortalAnalyticsMock(range),
-    };
-  }
-
-  if (route === 'affiliate-stats') {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
-    const earningsOverTime = [1180, 1490, 1820, 2140, 2060, 2590, 2940, 3280, 3610, 4120];
-    const clicksOverTime = [490, 610, 740, 860, 815, 980, 1120, 1290, 1410, 1625];
-    const signupsOverTime = [29, 36, 44, 52, 48, 61, 69, 78, 86, 98];
-
-    return {
-      success: true,
-      message: 'Affiliate telemetry retrieved successfully.',
-      unAuthorizedRequest: false,
-      error: null,
-      result: {
-        affiliateCode: 'KWAME2026',
-        tier: 'Gold Tier (18%)',
-        totalClicks: clicksOverTime.reduce((a, b) => a + b, 0),
-        totalSignups: signupsOverTime.reduce((a, b) => a + b, 0),
-        conversionRate: 6.05,
-        totalEarnings: earningsOverTime.reduce((a, b) => a + b, 0),
-        pendingEarnings: 1485.0,
-        paidEarnings: 23745.0,
-        months,
-        earningsOverTime,
-        clicksOverTime,
-        signupsOverTime,
-        conversionsByPlan: [
-          { plan: 'Standard Monthly (GHS 65)', signups: 342, revenueGhs: 22230, commissionGhs: 10944 },
-          { plan: 'Annual Pro (GHS 720)', signups: 118, revenueGhs: 84960, commissionGhs: 9126 },
-          { plan: 'Weekly Pass (GHS 18)', signups: 96, revenueGhs: 1728, commissionGhs: 1940 },
-          { plan: 'Institutional Lead Referral', signups: 45, revenueGhs: 32400, commissionGhs: 3220 },
-        ],
-        recentCommissions: [
-          { id: 'COM-9941', date: '2026-10-22', subscriberMasked: 'a.mensah***@gmail.com', plan: 'Annual Pro', subscriptionAmount: 720, commissionRate: '18%', commissionAmount: 129.6, status: 'PENDING' },
-          { id: 'COM-9918', date: '2026-10-20', subscriberMasked: 'k.owusu***@yahoo.com', plan: 'Standard Monthly', subscriptionAmount: 65, commissionRate: '18%', commissionAmount: 11.7, status: 'PENDING' },
-          { id: 'COM-9872', date: '2026-10-16', subscriberMasked: 'efua.d***@ug.edu.gh', plan: 'Annual Pro', subscriptionAmount: 720, commissionRate: '18%', commissionAmount: 129.6, status: 'APPROVED' },
-          { id: 'COM-9815', date: '2026-10-11', subscriberMasked: 'nana.b***@mtn.com.gh', plan: 'Standard Monthly', subscriptionAmount: 65, commissionRate: '18%', commissionAmount: 11.7, status: 'PAID' },
-          { id: 'COM-9764', date: '2026-10-05', subscriberMasked: 's.adjei***@gcgl.com.gh', plan: 'Annual Pro', subscriptionAmount: 720, commissionRate: '18%', commissionAmount: 129.6, status: 'PAID' },
-        ],
-      },
-    };
-  }
 
   if (route === 'admin-executive-summary') {
     const days = Array.from({ length: 14 }, (_, i) =>
@@ -97,7 +43,7 @@ export default defineEventHandler((event) => {
 
   return {
     success: false,
-    message: `Unknown portal analytics route: ${route}`,
+    message: `Unknown admin analytics route: ${route}`,
     unAuthorizedRequest: false,
     error: { code: 404, message: 'Not Found' },
     result: null,

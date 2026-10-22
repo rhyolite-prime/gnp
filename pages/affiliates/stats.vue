@@ -1,247 +1,135 @@
 <template>
-  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-    <!-- Header & Quick Referral Link Copy -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
       <div>
-        <div class="inline-flex items-center gap-2 mb-1">
-          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200">
-            {{ stats.tier }}
+        <h1 class="text-3xl font-bold text-gray-900">Performance Stats</h1>
+        <p class="text-gray-600 mt-1">Deep dive into your traffic and conversion data.</p>
+      </div>
+      <div class="mt-4 md:mt-0 flex gap-3">
+        <select class="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium bg-white focus:ring-primary-500 focus:border-primary-500 shadow-sm">
+          <option>Custom Date Range</option>
+          <option>Last 30 Days</option>
+          <option>This Quarter</option>
+          <option>This Year</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Stats Breakdown -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+      <div v-for="item in statsBreakdown" :key="item.label" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{{ item.label }}</div>
+        <div class="text-2xl font-black text-gray-900">{{ item.value }}</div>
+        <div class="mt-4 flex items-center">
+          <span :class="`text-xs font-bold ${item.trend > 0 ? 'text-green-600' : 'text-red-600'}`">
+            {{ item.trend > 0 ? '+' : '' }}{{ item.trend }}%
           </span>
-          <code class="px-2 py-0.5 rounded bg-gray-100 text-xs font-mono text-gray-800">
-            Code: {{ stats.affiliateCode }}
-          </code>
+          <span class="text-[10px] text-gray-400 ml-2">vs previous period</span>
         </div>
-        <h1 class="text-2xl font-extrabold text-gray-900">Affiliate Performance & Earnings</h1>
-        <p class="mt-0.5 text-sm text-gray-500">
-          Track referral link clicks, paid subscriber conversions, and Mobile Money commission payouts.
-        </p>
       </div>
+    </div>
 
-      <div class="flex flex-wrap items-center gap-2">
-        <div class="px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-xs font-mono text-gray-700">
-          https://graphicnewsplus.com/?ref={{ stats.affiliateCode }}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <!-- Traffic Sources -->
+      <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-900 mb-8">Traffic Sources</h2>
+        <div class="space-y-6">
+          <div v-for="source in trafficSources" :key="source.name">
+            <div class="flex justify-between text-sm mb-2 font-bold">
+              <span class="text-gray-700">{{ source.name }}</span>
+              <span class="text-gray-900">{{ source.percentage }}%</span>
+            </div>
+            <div class="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div :class="`h-full ${source.barColor} rounded-full`" :style="{ width: `${source.percentage}%` }"></div>
+            </div>
+          </div>
         </div>
-        <button
-          type="button"
-          class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white transition-colors cursor-pointer"
-          @click="copyRefLink"
-        >
-          <Icon :name="copied ? 'lucide:check' : 'lucide:copy'" class="h-3.5 w-3.5" />
-          {{ copied ? 'Copied Link!' : 'Copy Referral Link' }}
-        </button>
+      </div>
+
+      <!-- Device Distribution -->
+      <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-900 mb-8">Device Distribution</h2>
+        <div class="flex items-center justify-around h-full py-4">
+           <div v-for="device in devices" :key="device.name" class="flex flex-col items-center">
+              <div :class="`h-16 w-16 rounded-2xl ${device.bgColor} flex items-center justify-center mb-4`">
+                <component :is="device.icon" :class="`h-8 w-8 ${device.iconColor}`" />
+              </div>
+              <span class="text-sm font-bold text-gray-900">{{ device.percentage }}%</span>
+              <span class="text-xs text-gray-400">{{ device.name }}</span>
+           </div>
+        </div>
       </div>
     </div>
 
-    <!-- 4 KPI Sparkline Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <ReportKpiSparkCard v-for="m in kpiMetrics" :key="m.key" :metric="m" />
-    </div>
-
-    <!-- Apache ECharts Visualizations -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-      <div class="lg:col-span-7">
-        <EChartCanvas
-          title="Monthly Commission Earnings & Referral Conversions (2026)"
-          subtitle="Dual-axis telemetry (`affiliate_commissions` + `affiliate_referral_clicks`)"
-          chart-type-badge="Dual-Axis Bar + Area"
-          :option="earningsAndClicksOption"
-          :height="320"
-          export-filename="affiliate-monthly-earnings"
-        />
+    <!-- Daily Performance Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="p-6 border-b border-gray-100">
+        <h2 class="text-xl font-bold text-gray-900">Daily Breakdown</h2>
       </div>
-
-      <div class="lg:col-span-5">
-        <EChartCanvas
-          title="Commission Earned by Subscription Plan"
-          subtitle="Contribution across Standard Monthly, Annual Pro & Weekly Pass"
-          chart-type-badge="Donut"
-          :option="planBreakdownOption"
-          :height="320"
-          export-filename="affiliate-plan-breakdown"
-        />
+      <div class="overflow-x-auto">
+        <table class="w-full text-left font-sans">
+          <thead class="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Date</th>
+              <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Clicks</th>
+              <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Unique Visitors</th>
+              <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Conversions</th>
+              <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Conv. Rate</th>
+              <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Earnings</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr v-for="day in dailyStats" :key="day.date" class="hover:bg-gray-50 transition">
+              <td class="px-6 py-4 text-sm font-bold text-gray-900">{{ day.date }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600 font-medium">{{ day.clicks }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600 font-medium">{{ day.visitors }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600 font-medium">{{ day.conversions }}</td>
+              <td class="px-6 py-4">
+                <span class="text-xs font-bold px-2 py-1 bg-primary-100 text-primary-700 rounded-lg">{{ day.rate }}%</span>
+              </td>
+              <td class="px-6 py-4 text-sm font-black text-gray-900">₵{{ day.earnings }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
-
-    <!-- Commission Ledger Table -->
-    <ReportDataTable
-      title="Recent Referral Commissions Ledger"
-      :columns="commissionColumns"
-      :rows="stats.recentCommissions"
-      filename="affiliate-commissions-ledger"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import type { ReportKpiMetric, ReportTableColumn } from '~/models/reports';
-import {
-  BASE_TOOLTIP,
-  BOTTOM_LEGEND,
-  DUAL_AXIS_GRID,
-  GNP_PALETTE,
-  areaGradient,
-  barGradient,
-  categoryXAxis,
-  valueYAxis,
-} from '~/utils/echartsHelpers';
-import EChartCanvas from '~/components/reports/EChartCanvas.vue';
-import ReportKpiSparkCard from '~/components/reports/ReportKpiSparkCard.vue';
-import ReportDataTable from '~/components/reports/ReportDataTable.vue';
+import { ComputerDesktopIcon, DevicePhoneMobileIcon, DeviceTabletIcon } from '@heroicons/vue/24/outline'
 
 definePageMeta({
-  middleware: 'affiliate-auth',
-});
+  layout: 'default',
+  middleware: ['affiliate-auth']
+})
 
-const copied = ref(false);
+const statsBreakdown = [
+  { label: 'Total Clicks', value: '42,910', trend: 14.2 },
+  { label: 'Conversions', value: '1,562', trend: 8.5 },
+  { label: 'Engagement', value: '28.4%', trend: -2.1 },
+  { label: 'EPC (Avg)', value: '₵1.05', trend: 4.8 },
+]
 
-const stats = ref({
-  affiliateCode: 'KWAME2026',
-  tier: 'Gold Tier (18%)',
-  totalClicks: 9935,
-  totalSignups: 601,
-  conversionRate: 6.05,
-  totalEarnings: 25230.0,
-  pendingEarnings: 1485.0,
-  paidEarnings: 23745.0,
-  months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
-  earningsOverTime: [1180, 1490, 1820, 2140, 2060, 2590, 2940, 3280, 3610, 4120],
-  clicksOverTime: [490, 610, 740, 860, 815, 980, 1120, 1290, 1410, 1625],
-  signupsOverTime: [29, 36, 44, 52, 48, 61, 69, 78, 86, 98],
-  conversionsByPlan: [
-    { plan: 'Standard Monthly (GHS 65)', signups: 342, revenueGhs: 22230, commissionGhs: 10944 },
-    { plan: 'Annual Pro (GHS 720)', signups: 118, revenueGhs: 84960, commissionGhs: 9126 },
-    { plan: 'Weekly Pass (GHS 18)', signups: 96, revenueGhs: 1728, commissionGhs: 1940 },
-    { plan: 'Institutional Lead Referral', signups: 45, revenueGhs: 32400, commissionGhs: 3220 },
-  ],
-  recentCommissions: [
-    { id: 'COM-9941', date: '2026-10-22', subscriberMasked: 'a.mensah***@gmail.com', plan: 'Annual Pro', subscriptionAmount: 720, commissionRate: '18%', commissionAmount: 129.6, status: 'PENDING' },
-    { id: 'COM-9918', date: '2026-10-20', subscriberMasked: 'k.owusu***@yahoo.com', plan: 'Standard Monthly', subscriptionAmount: 65, commissionRate: '18%', commissionAmount: 11.7, status: 'PENDING' },
-    { id: 'COM-9872', date: '2026-10-16', subscriberMasked: 'efua.d***@ug.edu.gh', plan: 'Annual Pro', subscriptionAmount: 720, commissionRate: '18%', commissionAmount: 129.6, status: 'APPROVED' },
-    { id: 'COM-9815', date: '2026-10-11', subscriberMasked: 'nana.b***@mtn.com.gh', plan: 'Standard Monthly', subscriptionAmount: 65, commissionRate: '18%', commissionAmount: 11.7, status: 'PAID' },
-    { id: 'COM-9764', date: '2026-10-05', subscriberMasked: 's.adjei***@gcgl.com.gh', plan: 'Annual Pro', subscriptionAmount: 720, commissionRate: '18%', commissionAmount: 129.6, status: 'PAID' },
-  ],
-});
+const trafficSources = [
+  { name: 'X / Twitter', percentage: 42, barColor: 'bg-blue-500' },
+  { name: 'Facebook', percentage: 28, barColor: 'bg-blue-700' },
+  { name: 'Direct Links', percentage: 15, barColor: 'bg-green-500' },
+  { name: 'Instagram', percentage: 10, barColor: 'bg-pink-500' },
+  { name: 'Others', percentage: 5, barColor: 'bg-gray-400' },
+]
 
-onMounted(async () => {
-  try {
-    const res = await $fetch<any>('/api/v1/portal-analytics/affiliate-stats');
-    if (res?.success && res.result) {
-      stats.value = res.result;
-    }
-  } catch {
-    // Keep pre-rendered stats
-  }
-});
+const devices = [
+  { name: 'Mobile', icon: DevicePhoneMobileIcon, percentage: 74, bgColor: 'bg-primary-50', iconColor: 'text-primary-600' },
+  { name: 'Desktop', icon: ComputerDesktopIcon, percentage: 21, bgColor: 'bg-blue-50', iconColor: 'text-blue-600' },
+  { name: 'Tablet', icon: DeviceTabletIcon, percentage: 5, bgColor: 'bg-purple-50', iconColor: 'text-purple-600' },
+]
 
-async function copyRefLink() {
-  if (!import.meta.client) return;
-  await navigator.clipboard.writeText(`https://graphicnewsplus.com/?ref=${stats.value.affiliateCode}`);
-  copied.value = true;
-  setTimeout(() => (copied.value = false), 2000);
-}
-
-const kpiMetrics = computed<ReportKpiMetric[]>(() => [
-  {
-    key: 'clicks',
-    label: 'Referral Link Clicks',
-    value: stats.value.totalClicks.toLocaleString(),
-    rawValue: stats.value.totalClicks,
-    changePercent: 15.2,
-    changeDirection: 'up',
-    positiveIsGood: true,
-    subtitle: 'Tracked via ?ref= landing cookies',
-    sparkline: stats.value.clicksOverTime,
-  },
-  {
-    key: 'signups',
-    label: 'Paid Conversions',
-    value: stats.value.totalSignups.toLocaleString(),
-    rawValue: stats.value.totalSignups,
-    changePercent: 13.9,
-    changeDirection: 'up',
-    positiveIsGood: true,
-    subtitle: 'Verified Paystack subscription checkouts',
-    sparkline: stats.value.signupsOverTime,
-  },
-  {
-    key: 'conv_rate',
-    label: 'Click-to-Paid Rate',
-    value: `${stats.value.conversionRate}%`,
-    rawValue: stats.value.conversionRate,
-    changePercent: 0.8,
-    changeDirection: 'up',
-    positiveIsGood: true,
-    subtitle: 'Top 10% across GCGL creator network',
-  },
-  {
-    key: 'earnings',
-    label: 'Total Earned (YTD)',
-    value: `GHS ${stats.value.totalEarnings.toLocaleString('en-GH', { minimumFractionDigits: 2 })}`,
-    rawValue: stats.value.totalEarnings,
-    changePercent: 22.4,
-    changeDirection: 'up',
-    positiveIsGood: true,
-    subtitle: `Pending next MoMo batch: GHS ${stats.value.pendingEarnings.toFixed(2)}`,
-    sparkline: stats.value.earningsOverTime,
-  },
-]);
-
-const earningsAndClicksOption = computed(() => ({
-  color: ['#059669', '#2563eb'],
-  tooltip: { ...BASE_TOOLTIP, trigger: 'axis' },
-  legend: BOTTOM_LEGEND,
-  grid: DUAL_AXIS_GRID,
-  xAxis: categoryXAxis(stats.value.months),
-  yAxis: [valueYAxis('GHS', '₵'), valueYAxis('Signups')],
-  series: [
-    {
-      name: 'Commission Earned (GHS)',
-      type: 'bar',
-      barMaxWidth: 22,
-      itemStyle: { color: barGradient('#059669', '#047857'), borderRadius: [6, 6, 0, 0] },
-      data: stats.value.earningsOverTime,
-    },
-    {
-      name: 'Paid Conversions',
-      type: 'line',
-      yAxisIndex: 1,
-      smooth: 0.35,
-      lineStyle: { width: 3, color: '#2563eb' },
-      areaStyle: { color: areaGradient('#2563eb', 0.16) },
-      data: stats.value.signupsOverTime,
-    },
-  ],
-}));
-
-const planBreakdownOption = computed(() => ({
-  color: GNP_PALETTE,
-  tooltip: { ...BASE_TOOLTIP, trigger: 'item', formatter: '{b}<br/><b>GHS {c}</b> ({d}%)' },
-  legend: BOTTOM_LEGEND,
-  series: [
-    {
-      name: 'Commission by Plan',
-      type: 'pie',
-      radius: ['42%', '68%'],
-      center: ['50%', '44%'],
-      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
-      label: { show: false },
-      data: stats.value.conversionsByPlan.map((p) => ({
-        name: p.plan,
-        value: p.commissionGhs,
-      })),
-    },
-  ],
-}));
-
-const commissionColumns: ReportTableColumn[] = [
-  { key: 'id', label: 'Commission ID', format: 'code' },
-  { key: 'date', label: 'Date', format: 'text' },
-  { key: 'subscriberMasked', label: 'Subscriber', format: 'text' },
-  { key: 'plan', label: 'Plan Tier', format: 'text' },
-  { key: 'subscriptionAmount', label: 'Checkout Amount', format: 'currency', align: 'right' },
-  { key: 'commissionRate', label: 'Tier Rate', format: 'text', align: 'right' },
-  { key: 'commissionAmount', label: 'Commission Earned', format: 'currency', align: 'right' },
-  { key: 'status', label: 'Status', format: 'badge', align: 'center' },
-];
+const dailyStats = [
+  { date: 'Feb 17, 2026', clicks: 1240, visitors: 1102, conversions: 45, rate: 3.6, earnings: 450 },
+  { date: 'Feb 16, 2026', clicks: 980, visitors: 856, conversions: 28, rate: 2.8, earnings: 280 },
+  { date: 'Feb 15, 2026', clicks: 1450, visitors: 1320, conversions: 52, rate: 3.5, earnings: 520 },
+  { date: 'Feb 14, 2026', clicks: 1100, visitors: 980, conversions: 38, rate: 3.4, earnings: 380 },
+  { date: 'Feb 13, 2026', clicks: 750, visitors: 680, conversions: 21, rate: 2.8, earnings: 210 },
+]
 </script>

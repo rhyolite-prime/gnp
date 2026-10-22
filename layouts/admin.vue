@@ -137,10 +137,28 @@
           </h1>
         </div>
 
-        <div class="flex items-center space-x-4">
-          <!-- Notifications -->
-          <button class="p-2 text-gray-400 hover:text-gray-500 rounded-full hover:bg-gray-100 transition-colors relative">
-            <span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+        <div class="flex items-center space-x-3">
+          <NuxtLink
+            to="/admin/push-notifications"
+            class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 text-red-700 hover:bg-red-100 border border-red-200/80 transition-colors"
+          >
+            <BellIcon class="h-4 w-4 text-red-600" />
+            <span>Push Studio</span>
+          </NuxtLink>
+
+          <!-- Notifications Drawer Trigger -->
+          <button
+            type="button"
+            title="Open Notifications & Browser Push Settings"
+            class="p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100 transition-colors relative cursor-pointer"
+            @click="notificationStore.isCenterOpen = true"
+          >
+            <span
+              v-if="notificationStore.unreadCount > 0"
+              class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold ring-2 ring-white"
+            >
+              {{ notificationStore.unreadCount }}
+            </span>
             <BellIcon class="h-6 w-6" />
           </button>
         </div>
@@ -177,11 +195,13 @@ import {
   ChatBubbleLeftRightIcon
 } from '@heroicons/vue/24/outline'
 import { useAdminAuthStore } from '~/stores/admin-auth'
+import { useNotificationStore } from '~/stores/notification'
 import { usePermissions } from '~/composables/usePermissions'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAdminAuthStore()
+const notificationStore = useNotificationStore()
 const { hasPermission } = usePermissions()
 
 const isSidebarOpen = ref(false)
@@ -242,6 +262,7 @@ const navigation = [
   { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon, permission: 'subscription_plans.manage' },
   { name: 'Payments', href: '/admin/payments', icon: BanknotesIcon, permission: 'payments.manage' },
   { name: 'Campaigns', href: '/admin/campaigns', icon: MegaphoneIcon, permission: 'campaigns.manage' },
+  { name: 'Push Notifications', href: '/admin/push-notifications', icon: BellIcon, permission: 'campaigns.manage' },
   { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon, permission: 'coupons.manage' },
   {
     name: 'Advert Management',

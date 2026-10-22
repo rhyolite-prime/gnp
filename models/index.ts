@@ -563,6 +563,7 @@ export interface RenewalHistory {
 
 export * from './games';
 export * from './reports';
+export * from './pushNotifications';
 
 
 

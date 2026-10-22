@@ -260,6 +260,6 @@ const quickLinks = [
   { to: '/admin/reports', title: '26 Platform Reports', desc: 'Full SQL & API contracts', icon: 'lucide:file-bar-chart-2' },
   { to: '/admin/affiliates/dashboard', title: 'Affiliate Program', desc: 'Commissions & MoMo payouts', icon: 'lucide:megaphone' },
   { to: '/admin/archives/dashboard', title: 'Archives & AI RAG', desc: '1950–2026 search & credits', icon: 'lucide:library' },
-  { to: '/partners/dashboard/reports', title: 'Partner B2B Portal', desc: 'API health & corporate reads', icon: 'lucide:building-2' },
+  { to: '/admin/push-notifications', title: 'Push Notifications', desc: 'Web Push & live broadcasts', icon: 'lucide:bell-ring' },
 ];
 </script>

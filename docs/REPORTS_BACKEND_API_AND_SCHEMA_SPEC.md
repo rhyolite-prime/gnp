@@ -1,7 +1,7 @@
 # Graphic NewsPlus — Platform Reports, Backend API Contracts & PostgreSQL Schema Architecture
 
 > **Target Backend Repository:** [`https://github.com/rhyolite-prime/gnp-api`](https://github.com/rhyolite-prime/gnp-api) (C++20 / Drogon Framework + PostgreSQL + `pgvector`)  
-> **Frontend Reference Implementation:** `/admin/reports`, `/partners/dashboard/reports`, `/affiliates/stats`, `/admin/dashboard`, `/admin/affiliates/dashboard`, `/admin/archives/dashboard`  
+> **Frontend Reference Implementation (`/admin` Routes):** `/admin/reports`, `/admin/dashboard`, `/admin/affiliates/dashboard`, `/admin/archives/dashboard`  
 > **Charting Engine:** **100% Apache ECharts v6 (`echarts ^6.1.0`)** via `components/reports/EChartCanvas.vue` & `components/reports/ReportKpiSparkCard.vue`  
 > **Runnable SQL DDL File:** [`docs/sql/gnp_reports_schema_migrations.sql`](./sql/gnp_reports_schema_migrations.sql)
 

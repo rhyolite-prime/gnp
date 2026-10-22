@@ -67,10 +67,10 @@
         </div>
       </div>
 
-      <!-- Cross-portal links -->
+      <!-- Admin Analytics Navigation -->
       <div class="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-2 text-xs">
         <span class="font-semibold text-gray-400 uppercase tracking-wider text-[11px] mr-1">
-          Related Portal Dashboards:
+          Admin Analytics Views:
         </span>
         <NuxtLink
           to="/admin/dashboard"
@@ -80,13 +80,6 @@
           Executive Overview
         </NuxtLink>
         <NuxtLink
-          to="/partners/dashboard/reports"
-          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium border border-gray-200/80 transition-colors"
-        >
-          <Icon name="lucide:building-2" class="h-3.5 w-3.5 text-blue-600" />
-          B2B Partner Reports Portal
-        </NuxtLink>
-        <NuxtLink
           to="/admin/affiliates/dashboard"
           class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium border border-gray-200/80 transition-colors"
         >
@@ -94,18 +87,18 @@
           Admin Affiliates Analytics
         </NuxtLink>
         <NuxtLink
-          to="/affiliates/stats"
-          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium border border-gray-200/80 transition-colors"
-        >
-          <Icon name="lucide:trending-up" class="h-3.5 w-3.5 text-emerald-600" />
-          Affiliate Self-Service Stats
-        </NuxtLink>
-        <NuxtLink
           to="/admin/archives/dashboard"
           class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium border border-gray-200/80 transition-colors"
         >
           <Icon name="lucide:library" class="h-3.5 w-3.5 text-purple-600" />
           Archives & AI RAG Telemetry
+        </NuxtLink>
+        <NuxtLink
+          to="/admin/push-notifications"
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium border border-gray-200/80 transition-colors"
+        >
+          <Icon name="lucide:bell-ring" class="h-3.5 w-3.5 text-emerald-600" />
+          Push Notifications Analytics
         </NuxtLink>
       </div>
     </div>
