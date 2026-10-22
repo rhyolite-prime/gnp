@@ -506,7 +506,7 @@ import {
 } from '@heroicons/vue/24/outline';
 import EChartCanvas from '~/components/reports/EChartCanvas.vue';
 import type { GeneratedReportResult, ReportKpiCard } from '~/models/reports';
-import { REPORT_GROUPS, MOCK_PARTNERS, MOCK_PUBLICATIONS } from '~/utils/reportsSchemaCatalog';
+import { REPORT_GROUPS, MOCK_COMMERCIAL_PARTNERS, GRAPHIC_PUBLICATIONS } from '~/utils/reportsSchemaCatalog';
 
 const { $toast } = useNuxtApp();
 
@@ -577,8 +577,8 @@ const tableSearch = ref('');
 const currentPage = ref(1);
 const pageSize = 10;
 
-const partnerList = ref<{ id: string; name: string }[]>([...MOCK_PARTNERS]);
-const publicationList = MOCK_PUBLICATIONS;
+const partnerList = ref<{ id: string; name: string }[]>([...MOCK_COMMERCIAL_PARTNERS]);
+const publicationList = GRAPHIC_PUBLICATIONS;
 
 const getAllPartners = async () => {
   try {
@@ -587,7 +587,7 @@ const getAllPartners = async () => {
       partnerList.value = result.data;
     }
   } catch {
-    partnerList.value = [...MOCK_PARTNERS];
+    partnerList.value = [...MOCK_COMMERCIAL_PARTNERS];
   }
 };
 
