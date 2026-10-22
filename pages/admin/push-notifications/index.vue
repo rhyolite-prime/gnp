@@ -1,1132 +1,679 @@
 <template>
-  <div class="space-y-6 pb-14">
-    <!-- Feedback Banner Toast -->
-    <Transition
-      enter-active-class="transition ease-out duration-200"
-      enter-from-class="opacity-0 translate-y-2"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition ease-in duration-150"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
+  <div>
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-xl font-semibold text-gray-900">Push Notifications</h1>
+        <p class="text-sm text-gray-500">
+          Compose and dispatch browser push alerts and platform updates to subscribed readers.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          :disabled="isSendingTest"
+          @click="handleSendTest"
+          class="inline-flex items-center px-3.5 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          <BellAlertIcon class="h-4 w-4 mr-2 text-gray-500" />
+          {{ isSendingTest ? 'Sending Test...' : 'Send Test Alert' }}
+        </button>
+
+        <button
+          type="button"
+          @click="handleToggleThisBrowser"
+          class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white transition-colors"
+          :class="notificationStore.isSubscribed ? 'bg-green-600 hover:bg-green-700' : 'bg-primary-600 hover:bg-primary-700'"
+        >
+          <CheckCircleIcon v-if="notificationStore.isSubscribed" class="h-4 w-4 mr-2" />
+          <BellIcon v-else class="h-4 w-4 mr-2" />
+          {{ notificationStore.isSubscribed ? 'Browser Subscribed' : 'Subscribe This Browser' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Grid (matching Admin Dashboard & Affiliate Dashboard) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <div
-        v-if="feedbackMessage"
-        class="fixed top-20 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-2xl border border-slate-700"
+        v-for="stat in stats"
+        :key="stat.name"
+        class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300"
       >
-        <Icon name="lucide:check-circle-2" class="h-4 w-4 text-emerald-400 shrink-0" />
-        <span>{{ feedbackMessage }}</span>
-      </div>
-    </Transition>
-
-    <!-- Header & Instant Browser Diagnostics Toolbar -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6">
-      <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-        <div>
-          <div class="flex flex-wrap items-center gap-2 mb-1.5">
-            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-red-50 text-red-700 border border-red-200">
-              Web Push & Real-Time Broadcast Engine
-            </span>
-            <span
-              class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold inline-flex items-center gap-1.5"
-              :class="
-                sseConnected
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : 'bg-amber-50 text-amber-800 border border-amber-200'
-              "
-            >
-              <span
-                class="w-2 h-2 rounded-full"
-                :class="sseConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'"
-              />
-              {{
-                sseConnected
-                  ? `Live Stream Active (${dashboard?.summary.liveConnectedClients || 1} connected)`
-                  : 'Connecting Stream...'
-              }}
-            </span>
-            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
-              W3C Push API + VAPID P-256 + `sw-push.js`
-            </span>
+        <div class="flex items-center justify-between mb-4">
+          <div class="p-2 rounded-lg" :class="stat.bgColor">
+            <component :is="stat.icon" class="h-6 w-6" :class="stat.iconColor" />
           </div>
-          <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">
-            Browser Push Notification Dispatch Studio
-          </h1>
-          <p class="mt-1 text-sm text-gray-500 max-w-3xl">
-            Compose, preview, schedule, and dispatch encrypted Web Push notifications & real-time platform updates across desktop and mobile browsers.
-          </p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2.5 shrink-0">
-          <button
-            type="button"
-            :disabled="isSubscribing"
-            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition-colors cursor-pointer"
-            :class="
-              isSubscribed
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
-                : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50'
-            "
-            @click="handleToggleCurrentBrowser"
+          <span
+            class="text-xs font-medium px-2.5 py-0.5 rounded-full"
+            :class="stat.changeType === 'increase' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'"
           >
-            <Icon :name="isSubscribed ? 'lucide:bell-ring' : 'lucide:bell-plus'" class="h-4 w-4 text-red-600" />
-            <span>{{ isSubscribed ? 'My Browser: Subscribed' : 'Subscribe My Browser' }}</span>
-          </button>
-
-          <button
-            type="button"
-            :disabled="sendingTest"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-colors cursor-pointer disabled:opacity-50"
-            @click="handleSendTestPush"
-          >
-            <Icon name="lucide:zap" class="h-4 w-4 text-amber-400" />
-            <span>{{ sendingTest ? 'Sending Test...' : 'Send Live Test Push' }}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4 Executive KPI Sparkline Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-      <ReportKpiSparkCard v-for="m in kpiCards" :key="m.key" :metric="m" />
-    </div>
-
-    <!-- MAIN WORKBENCH: Composer (7 cols) + Multi-OS Live Preview & Diagnostics (5 cols) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      <!-- LEFT: Rich Push Notification & Update Composer -->
-      <div class="lg:col-span-7 bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 space-y-5">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-100">
-          <div>
-            <h2 class="text-base font-extrabold text-gray-900 flex items-center gap-2">
-              <Icon name="lucide:send" class="h-4 w-4 text-red-600" />
-              <span>Compose Notification or Platform Update</span>
-            </h2>
-            <p class="text-xs text-gray-500 mt-0.5">
-              Click a quick newsroom preset below or craft a custom notification payload.
-            </p>
-          </div>
-        </div>
-
-        <!-- Quick Presets -->
-        <div class="space-y-1.5">
-          <span class="block text-[11px] font-bold uppercase tracking-wider text-gray-400">
-            1-Click Newsroom & Update Templates
+            {{ stat.change }}
           </span>
+        </div>
+        <h3 class="text-sm font-medium text-gray-500">{{ stat.name }}</h3>
+        <p class="text-2xl font-bold text-gray-900 mt-1">
+          <count-up :end-val="stat.value" :duration="1.5" :options="{ prefix: stat.prefix, suffix: stat.suffix, decimalPlaces: stat.decimals || 0 }" />
+        </p>
+      </div>
+    </div>
+
+    <!-- Composer + Preview Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+      <!-- Composer Card (2/3) -->
+      <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900">New Broadcast</h2>
+            <p class="text-sm text-gray-500">Configure payload, target segment, and delivery timing</p>
+          </div>
+
           <div class="flex flex-wrap gap-1.5">
             <button
-              v-for="preset in COMPOSER_PRESETS"
+              v-for="preset in presets"
               :key="preset.id"
               type="button"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer"
-              :class="
-                activePresetId === preset.id
-                  ? 'bg-red-50 text-red-700 border-red-300 font-bold'
-                  : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-              "
-              @click="applyTemplatePreset(preset)"
+              @click="applyPreset(preset)"
+              class="px-2.5 py-1 text-xs font-medium rounded-lg border border-gray-200 text-gray-700 bg-gray-50 hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700 transition-colors"
             >
               {{ preset.label }}
             </button>
           </div>
         </div>
 
-        <!-- Form -->
-        <form class="space-y-4" @submit.prevent="handleDispatchBroadcast">
-          <!-- Category + Urgency + Target Audience -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <form @submit.prevent="handleDispatch" class="p-6 space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">
-                Alert Category
-              </label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
               <select
                 v-model="form.category"
-                class="w-full px-3 py-2 text-xs border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-red-500"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border bg-white"
               >
-                <option v-for="t in PUSH_TOPIC_DEFINITIONS" :key="t.id" :value="t.id">
-                  {{ t.label }}
-                </option>
+                <option v-for="t in topics" :key="t.id" :value="t.id">{{ t.label }}</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">
-                Delivery Priority
-              </label>
-              <select
-                v-model="form.urgency"
-                class="w-full px-3 py-2 text-xs border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-red-500"
-              >
-                <option value="high">High — Urgent / Persistent</option>
-                <option value="normal">Normal — Standard Alert</option>
-                <option value="low">Low — Silent Inbox Update</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">
-                Target Segment
-              </label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Audience Segment</label>
               <select
                 v-model="form.targetSegment"
-                class="w-full px-3 py-2 text-xs border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-red-500"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border bg-white"
               >
-                <option value="all_subscribers">All Browsers (14,820)</option>
-                <option value="paid_active">Active Paid Subscribers (11,240)</option>
-                <option value="free_readers">Free Registered Readers (3,580)</option>
-                <option value="corporate_b2b">Corporate B2B Seats (4,315)</option>
-                <option value="ghana_local">Ghana Readers (11,190)</option>
-                <option value="diaspora">Diaspora Readers (3,630)</option>
+                <option value="all_subscribers">All Subscribed Browsers</option>
+                <option value="paid_active">Paid Active Subscribers</option>
+                <option value="free_readers">Free Registered Readers</option>
+                <option value="corporate_b2b">Corporate B2B Readers</option>
+                <option value="ghana_readers">Ghana Readers</option>
+                <option value="diaspora_readers">Diaspora Readers</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+              <select
+                v-model="form.urgency"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border bg-white"
+              >
+                <option value="high">High (Persistent Alert)</option>
+                <option value="normal">Normal</option>
+                <option value="low">Low (Silent Digest)</option>
               </select>
             </div>
           </div>
 
-          <!-- Notification Headline -->
           <div>
             <div class="flex items-center justify-between mb-1">
-              <label class="text-[11px] font-bold uppercase tracking-wider text-gray-500">
-                Notification Headline *
-              </label>
-              <span
-                class="text-[11px] font-mono"
-                :class="form.title.length > 75 ? 'text-amber-600 font-bold' : 'text-gray-400'"
-              >
-                {{ form.title.length }} / 90 chars
-              </span>
+              <label class="block text-sm font-medium text-gray-700">Notification Title</label>
+              <span class="text-xs text-gray-400">{{ form.title.length }}/90</span>
             </div>
             <input
               v-model="form.title"
               type="text"
+              maxlength="90"
               required
-              maxlength="120"
-              placeholder="e.g. BREAKING: Parliament Passes 2027 Digital Economy Bill"
-              class="w-full px-3.5 py-2.5 text-sm font-medium border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              placeholder="e.g. Daily Graphic Friday Edition is Ready"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2.5 border"
             />
           </div>
 
-          <!-- Notification Body -->
           <div>
             <div class="flex items-center justify-between mb-1">
-              <label class="text-[11px] font-bold uppercase tracking-wider text-gray-500">
-                Notification Message Body *
-              </label>
-              <span class="text-[11px] font-mono text-gray-400">
-                {{ form.body.length }} / 180 chars
-              </span>
+              <label class="block text-sm font-medium text-gray-700">Message Body</label>
+              <span class="text-xs text-gray-400">{{ form.body.length }}/220</span>
             </div>
             <textarea
               v-model="form.body"
               rows="3"
+              maxlength="220"
               required
-              maxlength="240"
-              placeholder="Concise summary shown in the browser banner and lockscreen notification..."
-              class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              placeholder="Write a clear summary for the notification banner..."
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2.5 border"
             />
           </div>
 
-          <!-- Deep Link + Rich Hero Image -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">
-                Click Deep-Link Route / URL
-              </label>
-              <div class="flex gap-1.5">
-                <input
-                  v-model="form.deepLink"
-                  type="text"
-                  placeholder="/newspapers"
-                  class="flex-1 px-3 py-2 text-xs font-mono border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500"
-                />
-                <select
-                  class="px-2.5 py-2 text-xs border border-gray-300 rounded-xl bg-gray-50"
-                  @change="form.deepLink = ($event.target as HTMLSelectElement).value"
-                >
-                  <option value="/newspapers">Newspapers</option>
-                  <option value="/archives">Archives</option>
-                  <option value="/originals">Originals</option>
-                  <option value="/games">Games</option>
-                  <option value="/pricing">Pricing</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">
-                Optional Hero Image Banner
-              </label>
-              <div class="flex gap-1.5">
-                <input
-                  v-model="form.imageUrl"
-                  type="text"
-                  placeholder="Optional /welcome-1.png or HTTPS URL"
-                  class="flex-1 px-3 py-2 text-xs font-mono border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500"
-                />
-                <button
-                  type="button"
-                  class="px-2.5 py-2 text-xs font-semibold rounded-xl border border-gray-300 bg-gray-50 hover:bg-gray-100 cursor-pointer shrink-0"
-                  @click="form.imageUrl = form.imageUrl ? '' : '/welcome-1.png'"
-                >
-                  {{ form.imageUrl ? 'Clear' : 'Sample Img' }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Interactive Action Buttons -->
-          <div class="p-3.5 rounded-xl bg-gray-50 border border-gray-200/80 space-y-2.5">
-            <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-gray-500">
-                Interactive Notification Action Buttons (Max 2 — Service Worker)
-              </span>
-              <label class="inline-flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
-                <input
-                  v-model="form.requireInteraction"
-                  type="checkbox"
-                  class="rounded text-red-600 focus:ring-red-500"
-                />
-                <span>Keep on screen until clicked</span>
-              </label>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div class="flex gap-1.5">
-                <input
-                  v-model="action1Title"
-                  type="text"
-                  placeholder="Button 1 e.g. Read Story"
-                  class="w-1/2 px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg bg-white"
-                />
-                <input
-                  v-model="action1Url"
-                  type="text"
-                  placeholder="/newspapers"
-                  class="w-1/2 px-2.5 py-1.5 text-xs font-mono border border-gray-300 rounded-lg bg-white"
-                />
-              </div>
-              <div class="flex gap-1.5">
-                <input
-                  v-model="action2Title"
-                  type="text"
-                  placeholder="Button 2 (Optional)"
-                  class="w-1/2 px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg bg-white"
-                />
-                <input
-                  v-model="action2Url"
-                  type="text"
-                  placeholder="/archives"
-                  class="w-1/2 px-2.5 py-1.5 text-xs font-mono border border-gray-300 rounded-lg bg-white"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Delivery Timing: Instant vs Scheduled -->
-          <div class="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-gray-100">
-            <div class="flex flex-wrap items-center gap-3">
-              <label class="inline-flex items-center gap-1.5 text-xs font-bold text-gray-800 cursor-pointer">
-                <input
-                  v-model="form.scheduleMode"
-                  type="radio"
-                  value="now"
-                  class="text-red-600 focus:ring-red-500"
-                />
-                <span>Dispatch Immediately</span>
-              </label>
-
-              <label class="inline-flex items-center gap-1.5 text-xs font-bold text-gray-800 cursor-pointer">
-                <input
-                  v-model="form.scheduleMode"
-                  type="radio"
-                  value="scheduled"
-                  class="text-red-600 focus:ring-red-500"
-                />
-                <span>Schedule Delivery</span>
-              </label>
-
+              <label class="block text-sm font-medium text-gray-700 mb-1">Destination URL</label>
               <input
-                v-if="form.scheduleMode === 'scheduled'"
-                v-model="form.scheduledAt"
-                type="datetime-local"
-                class="px-3 py-1.5 text-xs border border-gray-300 rounded-lg"
+                v-model="form.deepLink"
+                type="text"
+                placeholder="/newspapers"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border"
               />
             </div>
 
-            <div class="flex items-center gap-2 ml-auto">
-              <button
-                type="button"
-                :disabled="sendingTest"
-                class="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors cursor-pointer"
-                @click="handlePreviewTestFromForm"
-              >
-                Test Payload on My Browser
-              </button>
-
-              <button
-                type="submit"
-                :disabled="dispatching"
-                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold bg-red-600 hover:bg-red-700 text-white shadow-sm transition-colors cursor-pointer disabled:opacity-50"
-              >
-                <Icon
-                  :name="form.scheduleMode === 'scheduled' ? 'lucide:calendar-clock' : 'lucide:send'"
-                  class="h-4 w-4"
-                />
-                <span>
-                  {{
-                    dispatching
-                      ? 'Dispatching...'
-                      : form.scheduleMode === 'scheduled'
-                      ? 'Schedule Broadcast'
-                      : 'Dispatch Broadcast Now'
-                  }}
-                </span>
-              </button>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Hero Banner Image (Optional)</label>
+              <input
+                v-model="form.imageUrl"
+                type="text"
+                placeholder="https://example.com/banner.jpg"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border"
+              />
             </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Primary Button Label (Optional)</label>
+              <input
+                v-model="primaryActionTitle"
+                type="text"
+                maxlength="28"
+                placeholder="Read Now"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Delivery Timing</label>
+              <div class="flex items-center gap-3">
+                <select
+                  v-model="form.scheduleMode"
+                  class="block w-40 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border bg-white"
+                >
+                  <option value="now">Send Immediately</option>
+                  <option value="scheduled">Schedule</option>
+                </select>
+                <input
+                  v-if="form.scheduleMode === 'scheduled'"
+                  v-model="form.scheduledAt"
+                  type="datetime-local"
+                  required
+                  class="block flex-1 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-gray-100 flex items-center justify-between">
+            <p class="text-xs text-gray-500">
+              Estimated reach: <span class="font-semibold text-gray-900">{{ estimatedAudience.toLocaleString() }}</span> browsers
+            </p>
+
+            <button
+              type="submit"
+              :disabled="isDispatching"
+              class="inline-flex items-center px-5 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50"
+            >
+              <PaperAirplaneIcon class="h-4 w-4 mr-2" />
+              {{ isDispatching ? 'Dispatching...' : form.scheduleMode === 'scheduled' ? 'Schedule Broadcast' : 'Send Broadcast' }}
+            </button>
           </div>
         </form>
       </div>
 
-      <!-- RIGHT: Live Multi-Platform Browser Preview & VAPID Diagnostics -->
-      <div class="lg:col-span-5 space-y-5">
-        <!-- Multi-OS Preview Card -->
-        <div class="bg-slate-950 text-white rounded-2xl border border-slate-800 p-5 space-y-4 shadow-sm">
-          <div class="flex items-center justify-between gap-2">
-            <div>
-              <h3 class="text-sm font-bold text-white">Live Browser Notification Preview</h3>
-              <p class="text-[11px] text-slate-400">Real-time rendering across desktop & mobile OS shells</p>
-            </div>
-
-            <div class="flex bg-slate-900 p-1 rounded-lg border border-slate-800 text-[11px] font-bold">
-              <button
-                v-for="os in (['macos', 'windows', 'android'] as const)"
-                :key="os"
-                type="button"
-                class="px-2.5 py-1 rounded-md uppercase transition-colors cursor-pointer"
-                :class="previewOs === os ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'"
-                @click="previewOs = os"
-              >
-                {{ os === 'macos' ? 'macOS' : os === 'windows' ? 'Win 11' : 'Android' }}
-              </button>
-            </div>
+      <!-- Live Preview Card (1/3) -->
+      <div class="space-y-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">Live Preview</h2>
+            <select
+              v-model="previewPlatform"
+              class="text-xs border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 py-1"
+            >
+              <option value="desktop">Desktop Browser</option>
+              <option value="mobile">Mobile Lockscreen</option>
+            </select>
           </div>
 
-          <!-- Simulated Desktop / Mobile Wallpaper Stage -->
-          <div class="rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 border border-slate-700/70">
-            <!-- macOS Banner Style -->
-            <div
-              v-if="previewOs === 'macos'"
-              class="bg-white/95 backdrop-blur-md text-gray-900 rounded-2xl p-3.5 shadow-xl border border-gray-200 space-y-2.5"
-            >
-              <div class="flex items-start gap-3">
-                <img src="/pwa-icons/pwa-192x192.png" alt="GN+" class="w-10 h-10 rounded-xl shrink-0" />
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center justify-between text-[11px] text-gray-500">
-                    <span class="font-bold text-gray-800">Graphic NewsPlus • Chrome</span>
-                    <span>Now</span>
-                  </div>
-                  <p class="text-xs font-extrabold text-gray-900 mt-0.5 leading-snug">
-                    {{ form.title || 'Notification headline preview' }}
-                  </p>
-                  <p class="text-xs text-gray-600 mt-0.5 line-clamp-2 leading-snug">
-                    {{ form.body || 'Notification message preview appears here...' }}
-                  </p>
-                </div>
-              </div>
-              <img
-                v-if="form.imageUrl"
-                :src="form.imageUrl"
-                alt=""
-                class="w-full h-28 object-cover rounded-xl border border-gray-200"
-              />
-            </div>
-
-            <!-- Windows 11 Action Center Style -->
-            <div
-              v-else-if="previewOs === 'windows'"
-              class="bg-slate-900 text-slate-100 rounded-xl p-4 shadow-xl border border-slate-700 space-y-3"
-            >
-              <div class="flex items-center justify-between text-[11px] text-slate-400">
+          <div class="p-4 rounded-xl bg-gray-50 border border-gray-200">
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+              <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
                 <div class="flex items-center gap-2">
-                  <img src="/pwa-icons/pwa-64x64.png" alt="" class="w-4 h-4 rounded" />
-                  <span>Microsoft Edge • graphicnewsplus.com</span>
+                  <span class="inline-flex h-5 w-5 items-center justify-center rounded bg-primary-600 text-[10px] font-bold text-white">G</span>
+                  <span class="font-medium text-gray-800">Graphic NewsPlus</span>
                 </div>
-                <span>Just now</span>
-              </div>
-              <img
-                v-if="form.imageUrl"
-                :src="form.imageUrl"
-                alt=""
-                class="w-full h-28 object-cover rounded-lg"
-              />
-              <div>
-                <p class="text-sm font-bold text-white leading-snug">{{ form.title }}</p>
-                <p class="text-xs text-slate-300 mt-1 leading-relaxed">{{ form.body }}</p>
-              </div>
-              <div class="grid grid-cols-2 gap-2 pt-1">
-                <span class="py-1.5 px-3 rounded bg-slate-800 text-center text-xs font-semibold text-white border border-slate-700">
-                  {{ action1Title || 'Read Story' }}
-                </span>
-                <span
-                  v-if="action2Title"
-                  class="py-1.5 px-3 rounded bg-slate-800 text-center text-xs font-semibold text-white border border-slate-700"
-                >
-                  {{ action2Title }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Android Lockscreen Card -->
-            <div
-              v-else
-              class="bg-white text-gray-900 rounded-3xl p-4 shadow-xl space-y-2.5"
-            >
-              <div class="flex items-center justify-between text-[11px] text-gray-500">
-                <span class="font-bold text-red-600 flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-red-600" />
-                  Graphic NewsPlus • {{ form.urgency.toUpperCase() }}
-                </span>
                 <span>now</span>
               </div>
-              <p class="text-xs font-extrabold text-gray-900">{{ form.title }}</p>
-              <p class="text-xs text-gray-600 leading-snug">{{ form.body }}</p>
+
+              <p class="text-sm font-semibold text-gray-900 leading-snug">
+                {{ form.title || 'Notification headline preview' }}
+              </p>
+              <p class="mt-1 text-xs text-gray-600 leading-relaxed">
+                {{ form.body || 'Notification message summary appears here as you type.' }}
+              </p>
+
               <img
                 v-if="form.imageUrl"
                 :src="form.imageUrl"
-                alt=""
-                class="w-full h-28 object-cover rounded-2xl"
+                alt="Preview banner"
+                class="mt-3 h-32 w-full rounded-lg object-cover border border-gray-100"
               />
-              <div class="flex items-center gap-4 pt-1 text-xs font-extrabold text-red-600">
-                <span>{{ action1Title || 'OPEN' }}</span>
-                <span v-if="action2Title">{{ action2Title }}</span>
+
+              <div v-if="primaryActionTitle" class="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between">
+                <span class="text-xs font-medium text-primary-600">{{ primaryActionTitle }}</span>
+                <span class="text-[11px] text-gray-400">{{ previewPlatform === 'mobile' ? 'Android / iOS Web Push' : 'Chrome / Edge / Safari' }}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- VAPID & Service Worker Diagnostics Card -->
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <Icon name="lucide:shield-check" class="h-4 w-4 text-emerald-600" />
-              <span>W3C Web Push & VAPID Configuration</span>
-            </h3>
-            <button
-              type="button"
-              class="text-xs font-bold text-red-600 hover:text-red-700 cursor-pointer"
-              @click="copyVapidKey"
-            >
-              {{ copiedVapid ? 'Copied Key!' : 'Copy VAPID Public Key' }}
-            </button>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2.5 text-xs">
-            <div class="p-2.5 rounded-xl bg-gray-50 border border-gray-100">
-              <span class="text-[10px] font-bold uppercase text-gray-400 block">Service Worker</span>
-              <span class="font-bold text-gray-900">
-                {{ swReady ? '/sw-push.js Active' : 'Initializing...' }}
+        <!-- Connection Status Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Delivery Status</h2>
+          <div class="space-y-3 text-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-gray-500">Service Worker</span>
+              <span class="font-medium" :class="notificationStore.swReady ? 'text-green-600' : 'text-amber-600'">
+                {{ notificationStore.swReady ? 'Active (/sw-push.js)' : 'Initializing' }}
               </span>
             </div>
-            <div class="p-2.5 rounded-xl bg-gray-50 border border-gray-100">
-              <span class="text-[10px] font-bold uppercase text-gray-400 block">OS Permission</span>
-              <span class="font-bold uppercase text-gray-900">{{ permissionState }}</span>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-500">Live Stream</span>
+              <span class="font-medium" :class="notificationStore.sseConnected ? 'text-green-600' : 'text-amber-600'">
+                {{ notificationStore.sseConnected ? 'Connected' : 'Standby' }}
+              </span>
             </div>
-          </div>
-
-          <div class="p-2.5 rounded-xl bg-slate-950 text-emerald-300 font-mono text-[11px] break-all">
-            {{ dashboard?.vapidPublicKey || 'Loading ECDSA P-256 VAPID Public Key...' }}
+            <div class="flex items-center justify-between">
+              <span class="text-gray-500">Browser Permission</span>
+              <span class="font-medium text-gray-900 capitalize">{{ notificationStore.permissionState }}</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- APACHE ECHARTS TELEMETRY GRID -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-      <div class="lg:col-span-7">
-        <EChartCanvas
-          title="14-Day Browser Push Delivery & Click-Through Velocity"
-          subtitle="Encrypted Web Push + SSE deliveries vs verified reader deep-link clicks"
-          chart-type-badge="Dual-Axis Bar + Area"
-          :option="deliveryVelocityOption"
-          :height="310"
-          export-filename="push-delivery-velocity"
-        />
+    <!-- Analytics Row (Apache ECharts) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+      <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">14-Day Delivery & Click Performance</h2>
+        <EChartCanvas v-if="deliveryChartOption" :option="deliveryChartOption" :height="270" />
       </div>
 
-      <div class="lg:col-span-5">
-        <EChartCanvas
-          title="Subscribed Endpoints by Browser & OS"
-          subtitle="Active W3C PushSubscription user-agent distribution"
-          chart-type-badge="Donut"
-          :option="browserMixOption"
-          :height="310"
-          export-filename="push-browser-mix"
-        />
-      </div>
-
-      <div class="lg:col-span-12">
-        <EChartCanvas
-          title="Click-Through Rate (CTR %) Across Notification Categories"
-          subtitle="Morning Edition drops (05:30 GMT) and Breaking News alerts drive highest reader engagement"
-          chart-type-badge="Horizontal Bar"
-          :option="categoryCtrOption"
-          :height="270"
-          export-filename="push-category-ctr"
-        />
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Browser Breakdown</h2>
+        <EChartCanvas v-if="browserChartOption" :option="browserChartOption" :height="270" />
       </div>
     </div>
 
-    <!-- BOTTOM TABS: Broadcast History / Scheduled Queue / Registered Devices / C++ & SQL Blueprint -->
-    <div class="space-y-4">
-      <div class="border-b border-gray-200 flex flex-wrap gap-6">
-        <button
-          v-for="tab in bottomTabs"
-          :key="tab.id"
-          type="button"
-          class="pb-3 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer"
-          :class="
-            activeBottomTab === tab.id
-              ? 'border-red-600 text-red-600'
-              : 'border-transparent text-gray-500 hover:text-gray-800'
-          "
-          @click="activeBottomTab = tab.id"
-        >
-          {{ tab.label }}
-        </button>
+    <!-- Broadcast History Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-gray-900">Recent & Scheduled Broadcasts</h2>
+        <span class="text-xs text-gray-500">{{ broadcasts.length }} broadcasts</span>
       </div>
-
-      <!-- TAB 1: Broadcast Ledger & Scheduled Queue -->
-      <div v-if="activeBottomTab === 'broadcasts'" class="space-y-4">
-        <!-- Scheduled Queue Quick Action Strip -->
-        <div
-          v-if="scheduledBroadcasts.length"
-          class="bg-amber-50/80 border border-amber-200 rounded-xl p-4 space-y-2.5"
-        >
-          <p class="text-xs font-extrabold uppercase tracking-wider text-amber-900">
-            Scheduled Broadcast Queue ({{ scheduledBroadcasts.length }})
-          </p>
-          <div
-            v-for="sched in scheduledBroadcasts"
-            :key="sched.id"
-            class="bg-white rounded-xl p-3.5 border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-          >
-            <div>
-              <p class="text-sm font-bold text-gray-900">{{ sched.title }}</p>
-              <p class="text-xs text-gray-500">
-                Scheduled: <strong>{{ sched.scheduledAt }}</strong> • Segment:
-                <code class="text-xs bg-gray-100 px-1.5 py-0.5 rounded">{{ sched.targetSegment }}</code>
-                ({{ sched.targetedDevices.toLocaleString() }} devices)
-              </p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
-                @click="handleTriggerScheduledNow(sched.id)"
-              >
-                Dispatch Now
-              </button>
-              <button
-                type="button"
-                class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 cursor-pointer"
-                @click="handleCancelScheduled(sched.id)"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <ReportDataTable
-          title="Dispatched & Scheduled Browser Push Broadcasts"
-          :columns="broadcastColumns"
-          :rows="dashboard?.recentBroadcasts || []"
-          filename="gnp-push-broadcast-history"
-        />
-      </div>
-
-      <!-- TAB 2: Subscribed Browsers Registry -->
-      <div v-else-if="activeBottomTab === 'devices'">
-        <ReportDataTable
-          title="Registered Browser Push Endpoints (`web_push_subscriptions`)"
-          :columns="deviceColumns"
-          :rows="deviceRows"
-          filename="gnp-push-subscribed-devices"
-        />
-      </div>
-
-      <!-- TAB 3: C++ Drogon & PostgreSQL Backend Blueprint -->
-      <div v-else class="bg-slate-950 text-slate-100 rounded-2xl border border-slate-800 p-6 space-y-5">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 class="text-base font-bold text-white">
-              `rhyolite-prime/gnp-api` — Web Push Module Implementation Guide
-            </h3>
-            <p class="text-xs text-slate-400 mt-0.5">
-              Extends existing `controllers/NotificationsHub.{h,cc}` with persistent W3C VAPID Web Push + PostgreSQL storage
-            </p>
-          </div>
-          <button
-            type="button"
-            class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer"
-            @click="copySqlBlueprint"
-          >
-            {{ copiedSql ? 'Copied PostgreSQL DDL!' : 'Copy PostgreSQL DDL' }}
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <div>
-            <p class="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-2">
-              PostgreSQL Tables (`web_push_subscriptions` & `push_broadcasts`)
-            </p>
-            <pre class="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-emerald-300 overflow-x-auto leading-relaxed">{{ dashboard?.backendBlueprint.sqlDdl }}</pre>
-          </div>
-
-          <div>
-            <p class="text-xs font-bold uppercase tracking-wider text-sky-400 mb-2">
-              Drogon Controller Header (`controllers/PushNotificationsController.h`)
-            </p>
-            <pre class="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-sky-300 overflow-x-auto leading-relaxed">{{ dashboard?.backendBlueprint.cppControllerHeader }}</pre>
-          </div>
-        </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Broadcast</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Segment</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Delivered</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">CTR</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="item in broadcasts" :key="item.id" class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4">
+                <div class="text-sm font-medium text-gray-900 max-w-md truncate">{{ item.title }}</div>
+                <div class="text-xs text-gray-500">{{ item.sentAt || item.scheduledAt }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                {{ segmentLabels[item.targetSegment] || item.targetSegment }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                {{ item.deliveredCount.toLocaleString() }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+                {{ item.ctrPercent.toFixed(1) }}%
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize"
+                  :class="
+                    item.status === 'sent'
+                      ? 'bg-green-100 text-green-800'
+                      : item.status === 'scheduled'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-gray-100 text-gray-700'
+                  "
+                >
+                  {{ item.status }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                <template v-if="item.status === 'scheduled'">
+                  <button type="button" @click="triggerScheduledNow(item.id)" class="text-primary-600 hover:text-primary-900">
+                    Send Now
+                  </button>
+                  <button type="button" @click="cancelScheduled(item.id)" class="text-gray-500 hover:text-red-600">
+                    Cancel
+                  </button>
+                </template>
+                <span v-else class="text-xs text-gray-400">Completed</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import dayjs from 'dayjs';
+<script lang="ts" setup>
+import type { EChartsOption } from 'echarts';
+import {
+  BellIcon,
+  BellAlertIcon,
+  PaperAirplaneIcon,
+  CursorArrowRaysIcon,
+  CheckCircleIcon,
+  ClockIcon,
+} from '@heroicons/vue/24/outline';
+import CountUp from 'vue-countup-v3';
+import EChartCanvas from '~/components/reports/EChartCanvas.vue';
 import type {
-  DispatchPushRequestDto,
+  PushCategory,
   PushDashboardPayload,
-  ReportKpiMetric,
-  ReportTableColumn,
-} from '~/models';
+  PushDispatchRequestDto,
+  PushTargetSegment,
+  PushUrgency,
+} from '~/models/pushNotifications';
 import {
   PUSH_TOPIC_DEFINITIONS,
   cancelScheduledBroadcastApi,
   dispatchPushBroadcastApi,
-  fetchPushDashboard,
+  fetchPushDashboardApi,
   triggerScheduledBroadcastApi,
 } from '~/services/pushNotifications';
-import { usePushNotifications } from '~/composables/usePushNotifications';
-import {
-  BASE_TOOLTIP,
-  BOTTOM_LEGEND,
-  DUAL_AXIS_GRID,
-  GNP_PALETTE,
-  areaGradient,
-  barGradient,
-  categoryXAxis,
-  valueYAxis,
-} from '~/utils/echartsHelpers';
-import EChartCanvas from '~/components/reports/EChartCanvas.vue';
-import ReportKpiSparkCard from '~/components/reports/ReportKpiSparkCard.vue';
-import ReportDataTable from '~/components/reports/ReportDataTable.vue';
+import { createCartesianOption, createPieOption } from '~/utils/echartsHelpers';
 
 definePageMeta({
   layout: 'admin',
   middleware: ['admin-auth'],
 });
 
-const {
-  permissionState,
-  isSubscribed,
-  isSubscribing,
-  swReady,
-  sseConnected,
-  enableBrowserPush,
-  disableBrowserPush,
-  triggerLiveTestNotification,
-} = usePushNotifications();
+const { $toast } = useNuxtApp();
+const notificationStore = useNotificationStore();
+const { enablePushNotifications, disablePushNotifications, sendLiveBrowserTestPush } =
+  usePushNotifications();
 
+const topics = PUSH_TOPIC_DEFINITIONS;
 const dashboard = ref<PushDashboardPayload | null>(null);
-const previewOs = ref<'macos' | 'windows' | 'android'>('macos');
-const activeBottomTab = ref<'broadcasts' | 'devices' | 'blueprint'>('broadcasts');
-const activePresetId = ref('breaking');
-const dispatching = ref(false);
-const sendingTest = ref(false);
-const feedbackMessage = ref('');
-const copiedVapid = ref(false);
-const copiedSql = ref(false);
+const isDispatching = ref(false);
+const isSendingTest = ref(false);
+const previewPlatform = ref<'desktop' | 'mobile'>('desktop');
+const primaryActionTitle = ref('Read Edition');
 
-const COMPOSER_PRESETS = [
+const form = reactive<{
+  title: string;
+  body: string;
+  category: PushCategory;
+  urgency: PushUrgency;
+  deepLink: string;
+  imageUrl: string;
+  targetSegment: PushTargetSegment;
+  scheduleMode: 'now' | 'scheduled';
+  scheduledAt: string;
+}>({
+  title: 'Daily Graphic Friday Edition Now Live — Read the 48-Page Digital Replica',
+  body: 'Top stories: 2027 Fiscal Framework, Tema Port Expansion & Weekend Sports Preview.',
+  category: 'morning_edition',
+  urgency: 'normal',
+  deepLink: '/newspapers',
+  imageUrl: '',
+  targetSegment: 'all_subscribers',
+  scheduleMode: 'now',
+  scheduledAt: '2026-10-23T05:30',
+});
+
+interface QuickPreset {
+  id: string;
+  label: string;
+  title: string;
+  body: string;
+  category: PushCategory;
+  urgency: PushUrgency;
+  deepLink: string;
+  actionLabel: string;
+}
+
+const presets: QuickPreset[] = [
   {
     id: 'breaking',
     label: 'Breaking News',
-    title: 'BREAKING: Bank of Ghana Announces New FX Market Guidelines for Importers',
-    body: 'Tap to read Graphic Business’ instant breakdown of commercial bank settlement rules taking effect Monday.',
-    category: 'breaking_news' as const,
-    urgency: 'high' as const,
+    title: 'BREAKING: Bank of Ghana Holds Policy Rate Following MPC Review',
+    body: 'Read Graphic Business live coverage, economist reaction, and market impact across Ghana.',
+    category: 'breaking_news',
+    urgency: 'high',
     deepLink: '/newspapers',
-    imageUrl: '/welcome-1.png',
-    a1Title: 'Read Full Story',
-    a1Url: '/newspapers',
-    a2Title: 'Archive Context',
-    a2Url: '/archives',
+    actionLabel: 'Read Live Story',
   },
   {
     id: 'edition',
-    label: '05:30 AM Edition Ready',
-    title: 'Daily Graphic Digital Edition (22 Oct 2026) Is Now Live',
-    body: 'Read all 48 crisp pages including Parliament highlights, business brief, editorials & sports.',
-    category: 'morning_edition' as const,
-    urgency: 'normal' as const,
+    label: 'Morning Edition',
+    title: 'Good Morning Ghana: Today’s Daily Graphic & Graphic Sports Are Ready',
+    body: 'Flip through full page-turn replicas or switch to clean article view on any device.',
+    category: 'morning_edition',
+    urgency: 'normal',
     deepLink: '/newspapers',
-    imageUrl: '',
-    a1Title: 'Open Today’s Paper',
-    a1Url: '/newspapers',
-    a2Title: 'Play Crossword',
-    a2Url: '/games',
+    actionLabel: 'Open Newsstand',
   },
   {
     id: 'update',
     label: 'Platform Update',
-    title: 'New Feature: Instant AI Archive Summaries & Offline Reading',
-    body: 'Search 75+ years of Ghanaian history faster with citation export and instant page bookmarking.',
-    category: 'platform_updates' as const,
-    urgency: 'normal' as const,
-    deepLink: '/archives',
-    imageUrl: '',
-    a1Title: 'Try Archives Now',
-    a1Url: '/archives',
-    a2Title: '',
-    a2Url: '',
+    title: 'New Feature: Instant Browser Push & Offline Reading Improvements',
+    body: 'Customize alert topics and quiet hours anytime from your notification bell.',
+    category: 'platform_updates',
+    urgency: 'normal',
+    deepLink: '/account',
+    actionLabel: 'Explore',
   },
   {
-    id: 'renewal',
-    label: 'Renewal Nudge',
-    title: 'Keep Your All-Access Reading Streak Going — Renew in 1 Tap via MoMo',
-    body: 'Upgrade to Annual Pro today and save 15% across Daily Graphic, Business, Mirror & Archives.',
-    category: 'subscriptions_billing' as const,
-    urgency: 'normal' as const,
-    deepLink: '/pricing',
-    imageUrl: '',
-    a1Title: 'View Plans',
-    a1Url: '/pricing',
-    a2Title: 'My Account',
-    a2Url: '/account',
-  },
-  {
-    id: 'games',
-    label: 'Daily Games Drop',
-    title: 'Today’s Accra Newsroom Crossword & Sudoku Challenge Are Live!',
-    body: 'Protect your daily solver streak before midnight GMT and climb the subscriber leaderboard.',
-    category: 'games_daily' as const,
-    urgency: 'low' as const,
-    deepLink: '/games',
-    imageUrl: '',
-    a1Title: 'Play Now',
-    a1Url: '/games',
-    a2Title: '',
-    a2Url: '',
+    id: 'promo',
+    label: 'Renewal Offer',
+    title: 'Renew Your Graphic NewsPlus Plan with 1-Tap MTN MoMo Checkout',
+    body: 'Keep uninterrupted access to all 6 Graphic publications plus historical archives.',
+    category: 'subscription_billing',
+    urgency: 'normal',
+    deepLink: '/packages',
+    actionLabel: 'View Plans',
   },
 ];
 
-const form = ref<DispatchPushRequestDto>({
-  title: COMPOSER_PRESETS[0].title,
-  body: COMPOSER_PRESETS[0].body,
-  category: COMPOSER_PRESETS[0].category,
-  urgency: COMPOSER_PRESETS[0].urgency,
-  deepLink: COMPOSER_PRESETS[0].deepLink,
-  imageUrl: COMPOSER_PRESETS[0].imageUrl,
-  requireInteraction: true,
-  targetSegment: 'all_subscribers',
-  scheduleMode: 'now',
-  scheduledAt: dayjs().add(3, 'hour').format('YYYY-MM-DDTHH:mm'),
-});
-
-const action1Title = ref(COMPOSER_PRESETS[0].a1Title);
-const action1Url = ref(COMPOSER_PRESETS[0].a1Url);
-const action2Title = ref(COMPOSER_PRESETS[0].a2Title);
-const action2Url = ref(COMPOSER_PRESETS[0].a2Url);
-
-function applyTemplatePreset(p: (typeof COMPOSER_PRESETS)[number]) {
-  activePresetId.value = p.id;
-  form.value.title = p.title;
-  form.value.body = p.body;
-  form.value.category = p.category;
-  form.value.urgency = p.urgency;
-  form.value.deepLink = p.deepLink;
-  form.value.imageUrl = p.imageUrl;
-  form.value.requireInteraction = p.urgency === 'high';
-  action1Title.value = p.a1Title;
-  action1Url.value = p.a1Url;
-  action2Title.value = p.a2Title;
-  action2Url.value = p.a2Url;
+function applyPreset(p: QuickPreset) {
+  form.title = p.title;
+  form.body = p.body;
+  form.category = p.category;
+  form.urgency = p.urgency;
+  form.deepLink = p.deepLink;
+  primaryActionTitle.value = p.actionLabel;
 }
 
-function buildActionsPayload() {
-  const list = [];
-  if (action1Title.value.trim()) {
-    list.push({ action: 'primary', title: action1Title.value.trim(), url: action1Url.value || form.value.deepLink });
-  }
-  if (action2Title.value.trim()) {
-    list.push({ action: 'secondary', title: action2Title.value.trim(), url: action2Url.value || form.value.deepLink });
-  }
-  return list;
-}
+const segmentAudienceMap: Record<PushTargetSegment, number> = {
+  all_subscribers: 14820,
+  paid_active: 9640,
+  free_readers: 5180,
+  corporate_b2b: 3420,
+  ghana_readers: 10520,
+  diaspora_readers: 4300,
+};
 
-function showBanner(msg: string) {
-  feedbackMessage.value = msg;
-  setTimeout(() => {
-    feedbackMessage.value = '';
-  }, 4000);
-}
+const segmentLabels: Record<string, string> = {
+  all_subscribers: 'All Subscribers',
+  paid_active: 'Paid Active',
+  free_readers: 'Free Readers',
+  corporate_b2b: 'Corporate B2B',
+  ghana_readers: 'Ghana Readers',
+  diaspora_readers: 'Diaspora Readers',
+};
 
-async function refreshDashboard() {
-  dashboard.value = await fetchPushDashboard();
-}
+const estimatedAudience = computed(() => segmentAudienceMap[form.targetSegment] || 14820);
 
-async function handleToggleCurrentBrowser() {
-  if (isSubscribed.value) {
-    await disableBrowserPush();
-    showBanner('Paused browser push alerts on this device.');
-  } else {
-    const res = await enableBrowserPush();
-    showBanner(res.message);
-  }
-  await refreshDashboard();
-}
-
-async function handleSendTestPush() {
-  sendingTest.value = true;
-  try {
-    await triggerLiveTestNotification();
-    showBanner('Live test notification dispatched! Check your browser popup & toast.');
-    await refreshDashboard();
-  } finally {
-    sendingTest.value = false;
-  }
-}
-
-async function handlePreviewTestFromForm() {
-  sendingTest.value = true;
-  try {
-    await triggerLiveTestNotification({
-      ...form.value,
-      actions: buildActionsPayload(),
-    });
-    showBanner('Composer payload delivered live to your browser!');
-    await refreshDashboard();
-  } finally {
-    sendingTest.value = false;
-  }
-}
-
-async function handleDispatchBroadcast() {
-  dispatching.value = true;
-  try {
-    const res = await dispatchPushBroadcastApi({
-      ...form.value,
-      actions: buildActionsPayload(),
-    });
-    showBanner(
-      res.status === 'SCHEDULED'
-        ? `Scheduled "${res.title.slice(0, 38)}..." for delivery.`
-        : `Broadcast delivered across ${res.deliveredCount.toLocaleString()} subscribed browsers!`
-    );
-    await refreshDashboard();
-  } finally {
-    dispatching.value = false;
-  }
-}
-
-async function handleTriggerScheduledNow(id: string) {
-  await triggerScheduledBroadcastApi(id);
-  showBanner('Scheduled broadcast dispatched immediately!');
-  await refreshDashboard();
-}
-
-async function handleCancelScheduled(id: string) {
-  await cancelScheduledBroadcastApi(id);
-  showBanner('Scheduled broadcast cancelled.');
-  await refreshDashboard();
-}
-
-async function copyVapidKey() {
-  if (!import.meta.client || !dashboard.value?.vapidPublicKey) return;
-  await navigator.clipboard.writeText(dashboard.value.vapidPublicKey);
-  copiedVapid.value = true;
-  setTimeout(() => (copiedVapid.value = false), 2000);
-}
-
-async function copySqlBlueprint() {
-  if (!import.meta.client || !dashboard.value?.backendBlueprint.sqlDdl) return;
-  await navigator.clipboard.writeText(dashboard.value.backendBlueprint.sqlDdl);
-  copiedSql.value = true;
-  setTimeout(() => (copiedSql.value = false), 2000);
-}
-
-onMounted(() => {
-  refreshDashboard();
-});
-
-const scheduledBroadcasts = computed(() =>
-  (dashboard.value?.recentBroadcasts || []).filter((b) => b.status === 'SCHEDULED')
-);
-
-const kpiCards = computed<ReportKpiMetric[]>(() => {
-  const s = dashboard.value?.summary;
-  const c = dashboard.value?.charts;
+const stats = computed(() => {
+  const k = dashboard.value?.kpis;
   return [
     {
-      key: 'subs',
-      label: 'Subscribed Browsers',
-      value: (s?.activeBrowserSubscriptions ?? 14820).toLocaleString(),
-      rawValue: s?.activeBrowserSubscriptions ?? 14820,
-      changePercent: 19.4,
-      changeDirection: 'up',
-      positiveIsGood: true,
-      subtitle: `${s?.optInRatePct ?? 42.6}% reader opt-in rate`,
-      sparkline: c?.dailyNewOptIns || [94, 112, 138, 156, 149, 178, 164],
+      name: 'Subscribed Browsers',
+      value: k?.activeEndpoints ?? 14820,
+      change: '+14.6%',
+      changeType: 'increase',
+      icon: BellIcon,
+      bgColor: 'bg-blue-50',
+      iconColor: 'text-blue-600',
+      prefix: '',
+      suffix: '',
+      decimals: 0,
     },
     {
-      key: 'deliv',
-      label: 'Push Delivery Rate',
-      value: `${s?.avgDeliveryRatePct ?? 98.1}%`,
-      rawValue: s?.avgDeliveryRatePct ?? 98.1,
-      changePercent: 1.3,
-      changeDirection: 'up',
-      positiveIsGood: true,
-      subtitle: 'Auto-prunes HTTP 410 expired tokens',
-      sparkline: c?.dailyDelivered || [24100, 26800, 28900, 31200, 32100, 34900, 31800],
+      name: 'Delivered (30 Days)',
+      value: k?.sentLast30d ?? 129610,
+      change: '98.4% delivery',
+      changeType: 'increase',
+      icon: PaperAirplaneIcon,
+      bgColor: 'bg-green-50',
+      iconColor: 'text-green-600',
+      prefix: '',
+      suffix: '',
+      decimals: 0,
     },
     {
-      key: 'ctr',
-      label: 'Avg Click-Through Rate',
-      value: `${s?.avgCtrPct ?? 17.5}%`,
-      rawValue: s?.avgCtrPct ?? 17.5,
-      changePercent: 4.8,
-      changeDirection: 'up',
-      positiveIsGood: true,
-      subtitle: '22.4% on 05:30 GMT edition drops',
-      sparkline: c?.dailyClicked || [4120, 4890, 5420, 6180, 6240, 6910, 6080],
+      name: 'Average CTR',
+      value: k?.avgCtrPercent ?? 17.8,
+      change: '+2.3%',
+      changeType: 'increase',
+      icon: CursorArrowRaysIcon,
+      bgColor: 'bg-purple-50',
+      iconColor: 'text-purple-600',
+      prefix: '',
+      suffix: '%',
+      decimals: 1,
     },
     {
-      key: 'queue',
-      label: 'Broadcasts Sent (30D)',
-      value: String(s?.totalBroadcastsSent ?? 41),
-      rawValue: s?.totalBroadcastsSent ?? 41,
-      changePercent: 12.0,
-      changeDirection: 'up',
-      positiveIsGood: true,
-      subtitle: `${s?.scheduledQueueCount ?? 1} scheduled in queue`,
+      name: 'Scheduled Queue',
+      value: k?.scheduledCount ?? 2,
+      change: 'Upcoming',
+      changeType: 'neutral',
+      icon: ClockIcon,
+      bgColor: 'bg-orange-50',
+      iconColor: 'text-orange-600',
+      prefix: '',
+      suffix: '',
+      decimals: 0,
     },
   ];
 });
 
-const deliveryVelocityOption = computed(() => {
-  const c = dashboard.value?.charts;
-  return {
-    color: ['#2563eb', '#dc2626'],
-    tooltip: { ...BASE_TOOLTIP, trigger: 'axis' },
-    legend: BOTTOM_LEGEND,
-    grid: DUAL_AXIS_GRID,
-    xAxis: categoryXAxis(c?.days || []),
-    yAxis: [valueYAxis('Delivered'), valueYAxis('Clicks')],
+const broadcasts = computed(() => dashboard.value?.broadcasts || []);
+
+const deliveryChartOption = computed<EChartsOption | null>(() => {
+  const ts = dashboard.value?.deliveryTimeSeries;
+  if (!ts) return null;
+  return createCartesianOption({
+    categories: ts.dates,
+    yAxisName: 'Delivered',
+    secondaryYAxisName: 'Clicked',
     series: [
-      {
-        name: 'Notifications Delivered',
-        type: 'bar',
-        barMaxWidth: 20,
-        itemStyle: { color: barGradient('#3b82f6', '#1d4ed8'), borderRadius: [5, 5, 0, 0] },
-        data: c?.dailyDelivered || [],
-      },
-      {
-        name: 'Deep-Link Clicks',
-        type: 'line',
-        yAxisIndex: 1,
-        smooth: 0.35,
-        lineStyle: { width: 3, color: '#dc2626' },
-        areaStyle: { color: areaGradient('#dc2626', 0.2) },
-        data: c?.dailyClicked || [],
-      },
+      { name: 'Delivered', type: 'bar', data: ts.delivered, color: '#2563EB' },
+      { name: 'Clicked', type: 'line', yAxisIndex: 1, data: ts.clicked, color: '#DC2626', area: true },
     ],
-  };
+  });
 });
 
-const browserMixOption = computed(() => ({
-  color: GNP_PALETTE,
-  tooltip: { ...BASE_TOOLTIP, trigger: 'item', formatter: '{b}<br/><b>{c} devices</b> ({d}%)' },
-  legend: BOTTOM_LEGEND,
-  series: [
-    {
-      name: 'Subscribed Endpoints',
-      type: 'pie',
-      radius: ['42%', '68%'],
-      center: ['50%', '44%'],
-      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
-      label: { show: false },
-      data: dashboard.value?.charts.platformBreakdown || [],
-    },
-  ],
-}));
-
-const categoryCtrOption = computed(() => {
-  const list = [...(dashboard.value?.charts.categoryPerformance || [])].reverse();
-  return {
-    tooltip: { ...BASE_TOOLTIP, trigger: 'axis', axisPointer: { type: 'shadow' } },
-    grid: { top: 18, right: 32, bottom: 24, left: 16, containLabel: true },
-    xAxis: valueYAxis('CTR %', '', '%'),
-    yAxis: categoryXAxis(list.map((i) => i.label)),
-    series: [
-      {
-        name: 'Click-Through Rate (%)',
-        type: 'bar',
-        barMaxWidth: 20,
-        itemStyle: { color: barGradient('#dc2626', '#f97316'), borderRadius: [0, 6, 6, 0] },
-        data: list.map((i) => i.ctrPct),
-      },
-    ],
-  };
+const browserChartOption = computed<EChartsOption | null>(() => {
+  if (!dashboard.value?.browserBreakdown) return null;
+  return createPieOption(dashboard.value.browserBreakdown, { donut: true, centerLabel: 'Browsers' });
 });
 
-const bottomTabs = computed(() => [
-  {
-    id: 'broadcasts' as const,
-    label: `Broadcast History & Queue (${dashboard.value?.recentBroadcasts.length || 0})`,
-  },
-  {
-    id: 'devices' as const,
-    label: `Subscribed Browser Endpoints (${dashboard.value?.subscriptions.length || 0})`,
-  },
-  {
-    id: 'blueprint' as const,
-    label: '`gnp-api` C++ & PostgreSQL Blueprint',
-  },
-]);
+async function loadDashboard() {
+  try {
+    dashboard.value = await fetchPushDashboardApi();
+  } catch (err) {
+    console.error('[PushStudio] Failed to load dashboard:', err);
+  }
+}
 
-const broadcastColumns: ReportTableColumn[] = [
-  { key: 'id', label: 'Broadcast ID', format: 'code' },
-  { key: 'title', label: 'Headline', format: 'text' },
-  { key: 'category', label: 'Topic', format: 'badge', align: 'center' },
-  { key: 'targetSegment', label: 'Audience', format: 'code' },
-  { key: 'deliveredCount', label: 'Delivered', format: 'number', align: 'right' },
-  { key: 'clickedCount', label: 'Clicks', format: 'number', align: 'right' },
-  { key: 'ctrPercent', label: 'CTR %', format: 'percent', align: 'right' },
-  { key: 'status', label: 'Status', format: 'badge', align: 'center' },
-];
+async function handleToggleThisBrowser() {
+  if (notificationStore.isSubscribed) {
+    await disablePushNotifications();
+    $toast?.info?.('Browser push paused for this device.');
+  } else {
+    const res = await enablePushNotifications();
+    if (res.ok) {
+      $toast?.success?.('This browser is now subscribed to push notifications.');
+    }
+  }
+  await loadDashboard();
+}
 
-const deviceColumns: ReportTableColumn[] = [
-  { key: 'userLabel', label: 'Reader / Session', format: 'text' },
-  { key: 'browserOs', label: 'Browser & OS', format: 'text' },
-  { key: 'segment', label: 'Segment', format: 'code' },
-  { key: 'topicsCount', label: 'Topics Enabled', format: 'number', align: 'right' },
-  { key: 'mode', label: 'Transport Mode', format: 'badge', align: 'center' },
-  { key: 'lastSeenFormatted', label: 'Last Active', format: 'text' },
-];
+async function handleSendTest() {
+  isSendingTest.value = true;
+  try {
+    await sendLiveBrowserTestPush();
+    await loadDashboard();
+  } finally {
+    isSendingTest.value = false;
+  }
+}
 
-const deviceRows = computed(() =>
-  (dashboard.value?.subscriptions || []).map((s) => ({
-    userLabel: s.userLabel || s.id,
-    browserOs: `${s.browserName} • ${s.osName}`,
-    segment: s.segment,
-    topicsCount: s.topics.length,
-    mode: s.isSimulated ? 'LIVE STREAM' : 'ENCRYPTED VAPID',
-    lastSeenFormatted: dayjs(s.lastSeenAt).format('DD MMM HH:mm'),
-  }))
-);
+async function handleDispatch() {
+  isDispatching.value = true;
+  try {
+    const payload: PushDispatchRequestDto = {
+      title: form.title.trim(),
+      body: form.body.trim(),
+      category: form.category,
+      urgency: form.urgency,
+      deepLink: form.deepLink.trim() || '/',
+      imageUrl: form.imageUrl.trim() || undefined,
+      actions: primaryActionTitle.value.trim()
+        ? [{ action: 'primary', title: primaryActionTitle.value.trim(), url: form.deepLink.trim() || '/' }]
+        : [],
+      targetSegment: form.targetSegment,
+      scheduleMode: form.scheduleMode,
+      scheduledAt: form.scheduleMode === 'scheduled' ? form.scheduledAt : undefined,
+    };
 
-useHead({
-  title: 'Browser Push Dispatch Studio | Graphic NewsPlus Admin',
+    const record = await dispatchPushBroadcastApi(payload);
+    if (record.status === 'scheduled') {
+      $toast?.success?.(`Broadcast scheduled for ${record.scheduledAt}.`);
+    } else {
+      $toast?.success?.(`Broadcast dispatched to ${record.deliveredCount.toLocaleString()} browsers.`);
+    }
+    await loadDashboard();
+  } catch {
+    $toast?.error?.('Failed to dispatch broadcast.');
+  } finally {
+    isDispatching.value = false;
+  }
+}
+
+async function triggerScheduledNow(id: string) {
+  await triggerScheduledBroadcastApi(id);
+  $toast?.success?.('Scheduled broadcast dispatched.');
+  await loadDashboard();
+}
+
+async function cancelScheduled(id: string) {
+  await cancelScheduledBroadcastApi(id);
+  $toast?.info?.('Scheduled broadcast cancelled.');
+  await loadDashboard();
+}
+
+onMounted(() => {
+  loadDashboard();
 });
 </script>
