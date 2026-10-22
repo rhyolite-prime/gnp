@@ -257,3 +257,119 @@ export function fmtCompactGhs(amount: number): string {
 export function fmtInt(n: number): string {
   return Math.round(n).toLocaleString('en-US');
 }
+
+export interface CartesianSeriesInput {
+  name: string;
+  type: 'bar' | 'line';
+  data: number[];
+  color?: string;
+  yAxisIndex?: number;
+  stack?: string;
+  area?: boolean;
+}
+
+export function createCartesianOption(config: {
+  categories: string[];
+  series: CartesianSeriesInput[];
+  yAxisName?: string;
+  secondaryYAxisName?: string;
+  prefix?: string;
+  suffix?: string;
+}): Record<string, any> {
+  const hasSecondary = config.series.some((s) => s.yAxisIndex === 1) || Boolean(config.secondaryYAxisName);
+
+  const yAxis = hasSecondary
+    ? [
+        valueYAxis(config.yAxisName || '', config.prefix || '', config.suffix || ''),
+        {
+          ...valueYAxis(config.secondaryYAxisName || '', '', ''),
+          position: 'right',
+          splitLine: { show: false },
+        },
+      ]
+    : valueYAxis(config.yAxisName || '', config.prefix || '', config.suffix || '');
+
+  return {
+    tooltip: {
+      ...BASE_TOOLTIP,
+      trigger: 'axis',
+    },
+    legend: BOTTOM_LEGEND,
+    grid: hasSecondary ? DUAL_AXIS_GRID : BASE_GRID,
+    xAxis: categoryXAxis(config.categories),
+    yAxis,
+    series: config.series.map((s, idx) => {
+      const color = s.color || GNP_PALETTE[idx % GNP_PALETTE.length];
+      if (s.type === 'bar') {
+        return {
+          name: s.name,
+          type: 'bar',
+          yAxisIndex: s.yAxisIndex || 0,
+          stack: s.stack,
+          barMaxWidth: 26,
+          data: s.data,
+          itemStyle: {
+            color: barGradient(color),
+            borderRadius: [5, 5, 0, 0],
+          },
+        };
+      }
+      return {
+        name: s.name,
+        type: 'line',
+        smooth: true,
+        symbolSize: 6,
+        yAxisIndex: s.yAxisIndex || 0,
+        data: s.data,
+        itemStyle: { color },
+        lineStyle: { width: 2.5, color },
+        areaStyle: s.area ? { color: areaGradient(color) } : undefined,
+      };
+    }),
+  };
+}
+
+export function createPieOption(
+  items: { name: string; value: number; color?: string }[],
+  options: { donut?: boolean; centerLabel?: string } = {}
+): Record<string, any> {
+  return {
+    tooltip: {
+      ...BASE_TOOLTIP,
+      trigger: 'item',
+      formatter: '{b}: {c} ({d}%)',
+    },
+    legend: BOTTOM_LEGEND,
+    series: [
+      {
+        name: options.centerLabel || 'Breakdown',
+        type: 'pie',
+        radius: options.donut !== false ? ['50%', '72%'] : '68%',
+        center: ['50%', '43%'],
+        avoidLabelOverlap: true,
+        itemStyle: {
+          borderRadius: 6,
+          borderColor: '#ffffff',
+          borderWidth: 2,
+        },
+        label: {
+          show: false,
+        },
+        emphasis: {
+          label: {
+            show: true,
+            fontSize: 12,
+            fontWeight: 'bold',
+          },
+        },
+        data: items.map((item, idx) => ({
+          name: item.name,
+          value: item.value,
+          itemStyle: {
+            color: item.color || GNP_PALETTE[idx % GNP_PALETTE.length],
+          },
+        })),
+      },
+    ],
+  };
+}

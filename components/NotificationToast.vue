@@ -95,6 +95,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
+import Icon from '~/components/reports/Icon.vue';
 import { useNotificationStore } from '~/stores/notification';
 import { trackPushInteractionApi } from '~/services/pushNotifications';
 import type { PushNotificationInboxItem } from '~/models';

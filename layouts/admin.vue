@@ -262,7 +262,7 @@ const navigation = [
   { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon, permission: 'subscription_plans.manage' },
   { name: 'Payments', href: '/admin/payments', icon: BanknotesIcon, permission: 'payments.manage' },
   { name: 'Campaigns', href: '/admin/campaigns', icon: MegaphoneIcon, permission: 'campaigns.manage' },
-  { name: 'Push Notifications', href: '/admin/push-notifications', icon: BellIcon, permission: 'campaigns.manage' },
+  { name: 'Push Studio', href: '/admin/push-notifications', icon: BellIcon, permission: 'campaigns.manage' },
   { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon, permission: 'coupons.manage' },
   {
     name: 'Advert Management',

@@ -62,6 +62,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import Icon from '~/components/reports/Icon.vue';
 import { usePushNotifications } from '~/composables/usePushNotifications';
 
 const DISMISS_KEY = 'gnp_push_optin_dismissed_until';

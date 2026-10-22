@@ -70,6 +70,7 @@
 </template>
 
 <script setup lang="ts">
+import Icon from '~/components/reports/Icon.vue';
 import { PUSH_TOPIC_DEFINITIONS } from '~/services/pushNotifications';
 import { usePushNotifications } from '~/composables/usePushNotifications';
 

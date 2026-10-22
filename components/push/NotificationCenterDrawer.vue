@@ -251,6 +251,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import Icon from '~/components/reports/Icon.vue';
 import { PUSH_TOPIC_DEFINITIONS, trackPushInteractionApi } from '~/services/pushNotifications';
 import { usePushNotifications } from '~/composables/usePushNotifications';
 import type { PushNotificationInboxItem } from '~/models';

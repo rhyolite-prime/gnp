@@ -6,6 +6,34 @@ export default defineNuxtConfig({
     server: {
       allowedHosts: true,
     },
+    optimizeDeps: {
+      entries: [
+        'app.vue',
+        'layouts/**/*.vue',
+        'pages/**/*.vue',
+        'components/**/*.vue',
+      ],
+      include: [
+        '@azure/msal-browser',
+        '@headlessui/vue',
+        '@heroicons/vue/24/outline',
+        '@heroicons/vue/24/solid',
+        '@vuepic/vue-datepicker',
+        'dayjs',
+        'echarts',
+        'jspdf',
+        'lodash',
+        'lodash-es',
+        'lucide-vue-next',
+        'numeral',
+        'uuid',
+        'v-money3',
+        'vue-countup-v3',
+        'vue-multiselect',
+        'vue3-toastify',
+        'xlsx',
+      ],
+    },
     plugins: [
       {
         name: 'gnp-prevent-ws-reload-loop',

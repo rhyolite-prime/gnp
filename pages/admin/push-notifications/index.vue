@@ -3,7 +3,7 @@
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
       <div>
-        <h1 class="text-xl font-semibold text-gray-900">Push Notifications</h1>
+        <h1 class="text-xl font-semibold text-gray-900">Push Studio</h1>
         <p class="text-sm text-gray-500">
           Compose and dispatch browser push alerts and platform updates to subscribed readers.
         </p>
@@ -14,7 +14,7 @@
           type="button"
           :disabled="isSendingTest"
           @click="handleSendTest"
-          class="inline-flex items-center px-3.5 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+          class="inline-flex items-center px-3.5 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
         >
           <BellAlertIcon class="h-4 w-4 mr-2 text-gray-500" />
           {{ isSendingTest ? 'Sending Test...' : 'Send Test Alert' }}
@@ -23,7 +23,7 @@
         <button
           type="button"
           @click="handleToggleThisBrowser"
-          class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white transition-colors"
+          class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white transition-colors cursor-pointer"
           :class="notificationStore.isSubscribed ? 'bg-green-600 hover:bg-green-700' : 'bg-primary-600 hover:bg-primary-700'"
         >
           <CheckCircleIcon v-if="notificationStore.isSubscribed" class="h-4 w-4 mr-2" />
@@ -53,7 +53,11 @@
         </div>
         <h3 class="text-sm font-medium text-gray-500">{{ stat.name }}</h3>
         <p class="text-2xl font-bold text-gray-900 mt-1">
-          <count-up :end-val="stat.value" :duration="1.5" :options="{ prefix: stat.prefix, suffix: stat.suffix, decimalPlaces: stat.decimals || 0 }" />
+          <count-up
+            :end-val="stat.value"
+            :duration="1.5"
+            :options="{ prefix: stat.prefix, suffix: stat.suffix, decimalPlaces: stat.decimals || 0 }"
+          />
         </p>
       </div>
     </div>
@@ -74,7 +78,7 @@
               :key="preset.id"
               type="button"
               @click="applyPreset(preset)"
-              class="px-2.5 py-1 text-xs font-medium rounded-lg border border-gray-200 text-gray-700 bg-gray-50 hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700 transition-colors"
+              class="px-2.5 py-1 text-xs font-medium rounded-lg border border-gray-200 text-gray-700 bg-gray-50 hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700 transition-colors cursor-pointer"
             >
               {{ preset.label }}
             </button>
@@ -103,8 +107,8 @@
                 <option value="paid_active">Paid Active Subscribers</option>
                 <option value="free_readers">Free Registered Readers</option>
                 <option value="corporate_b2b">Corporate B2B Readers</option>
-                <option value="ghana_readers">Ghana Readers</option>
-                <option value="diaspora_readers">Diaspora Readers</option>
+                <option value="ghana_local">Ghana Readers</option>
+                <option value="diaspora">Diaspora Readers</option>
               </select>
             </div>
 
@@ -214,7 +218,7 @@
             <button
               type="submit"
               :disabled="isDispatching"
-              class="inline-flex items-center px-5 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50"
+              class="inline-flex items-center px-5 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50 cursor-pointer"
             >
               <PaperAirplaneIcon class="h-4 w-4 mr-2" />
               {{ isDispatching ? 'Dispatching...' : form.scheduleMode === 'scheduled' ? 'Schedule Broadcast' : 'Send Broadcast' }}
@@ -298,12 +302,12 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
       <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">14-Day Delivery & Click Performance</h2>
-        <EChartCanvas v-if="deliveryChartOption" :option="deliveryChartOption" :height="270" />
+        <EChartCanvas :option="deliveryChartOption" :height="270" />
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Browser Breakdown</h2>
-        <EChartCanvas v-if="browserChartOption" :option="browserChartOption" :height="270" />
+        <EChartCanvas :option="browserChartOption" :height="270" />
       </div>
     </div>
 
@@ -329,7 +333,7 @@
             <tr v-for="item in broadcasts" :key="item.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4">
                 <div class="text-sm font-medium text-gray-900 max-w-md truncate">{{ item.title }}</div>
-                <div class="text-xs text-gray-500">{{ item.sentAt || item.scheduledAt }}</div>
+                <div class="text-xs text-gray-500">{{ formatTimestamp(item.sentAt || item.scheduledAt || item.createdAt) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                 {{ segmentLabels[item.targetSegment] || item.targetSegment }}
@@ -342,28 +346,38 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
-                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize"
+                  class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full capitalize"
                   :class="
-                    item.status === 'sent'
+                    isStatus(item.status, 'sent')
                       ? 'bg-green-100 text-green-800'
-                      : item.status === 'scheduled'
+                      : isStatus(item.status, 'scheduled')
                       ? 'bg-yellow-100 text-yellow-800'
                       : 'bg-gray-100 text-gray-700'
                   "
                 >
-                  {{ item.status }}
+                  {{ item.status.toLowerCase() }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                <template v-if="item.status === 'scheduled'">
-                  <button type="button" @click="triggerScheduledNow(item.id)" class="text-primary-600 hover:text-primary-900">
+                <template v-if="isStatus(item.status, 'scheduled')">
+                  <button
+                    type="button"
+                    @click="triggerScheduledNow(item.id)"
+                    class="text-primary-600 hover:text-primary-900 cursor-pointer"
+                  >
                     Send Now
                   </button>
-                  <button type="button" @click="cancelScheduled(item.id)" class="text-gray-500 hover:text-red-600">
+                  <button
+                    type="button"
+                    @click="cancelScheduled(item.id)"
+                    class="text-gray-500 hover:text-red-600 cursor-pointer"
+                  >
                     Cancel
                   </button>
                 </template>
-                <span v-else class="text-xs text-gray-400">Completed</span>
+                <span v-else class="text-xs text-gray-400">
+                  {{ isStatus(item.status, 'cancelled') ? 'Cancelled' : 'Completed' }}
+                </span>
               </td>
             </tr>
           </tbody>
@@ -374,7 +388,6 @@
 </template>
 
 <script lang="ts" setup>
-import type { EChartsOption } from 'echarts';
 import {
   BellIcon,
   BellAlertIcon,
@@ -386,17 +399,17 @@ import {
 import CountUp from 'vue-countup-v3';
 import EChartCanvas from '~/components/reports/EChartCanvas.vue';
 import type {
-  PushCategory,
+  DispatchPushRequestDto,
+  PushAudienceSegment,
   PushDashboardPayload,
-  PushDispatchRequestDto,
-  PushTargetSegment,
+  PushTopicCategory,
   PushUrgency,
 } from '~/models/pushNotifications';
 import {
   PUSH_TOPIC_DEFINITIONS,
   cancelScheduledBroadcastApi,
   dispatchPushBroadcastApi,
-  fetchPushDashboardApi,
+  fetchPushDashboard,
   triggerScheduledBroadcastApi,
 } from '~/services/pushNotifications';
 import { createCartesianOption, createPieOption } from '~/utils/echartsHelpers';
@@ -421,11 +434,11 @@ const primaryActionTitle = ref('Read Edition');
 const form = reactive<{
   title: string;
   body: string;
-  category: PushCategory;
+  category: PushTopicCategory;
   urgency: PushUrgency;
   deepLink: string;
   imageUrl: string;
-  targetSegment: PushTargetSegment;
+  targetSegment: PushAudienceSegment;
   scheduleMode: 'now' | 'scheduled';
   scheduledAt: string;
 }>({
@@ -445,7 +458,7 @@ interface QuickPreset {
   label: string;
   title: string;
   body: string;
-  category: PushCategory;
+  category: PushTopicCategory;
   urgency: PushUrgency;
   deepLink: string;
   actionLabel: string;
@@ -487,9 +500,9 @@ const presets: QuickPreset[] = [
     label: 'Renewal Offer',
     title: 'Renew Your Graphic NewsPlus Plan with 1-Tap MTN MoMo Checkout',
     body: 'Keep uninterrupted access to all 6 Graphic publications plus historical archives.',
-    category: 'subscription_billing',
+    category: 'subscriptions_billing',
     urgency: 'normal',
-    deepLink: '/packages',
+    deepLink: '/pricing',
     actionLabel: 'View Plans',
   },
 ];
@@ -503,13 +516,13 @@ function applyPreset(p: QuickPreset) {
   primaryActionTitle.value = p.actionLabel;
 }
 
-const segmentAudienceMap: Record<PushTargetSegment, number> = {
+const segmentAudienceMap: Record<PushAudienceSegment, number> = {
   all_subscribers: 14820,
-  paid_active: 9640,
-  free_readers: 5180,
-  corporate_b2b: 3420,
-  ghana_readers: 10520,
-  diaspora_readers: 4300,
+  paid_active: 11240,
+  free_readers: 3580,
+  corporate_b2b: 4315,
+  ghana_local: 11190,
+  diaspora: 3630,
 };
 
 const segmentLabels: Record<string, string> = {
@@ -517,19 +530,20 @@ const segmentLabels: Record<string, string> = {
   paid_active: 'Paid Active',
   free_readers: 'Free Readers',
   corporate_b2b: 'Corporate B2B',
-  ghana_readers: 'Ghana Readers',
-  diaspora_readers: 'Diaspora Readers',
+  ghana_local: 'Ghana Readers',
+  diaspora: 'Diaspora Readers',
 };
 
 const estimatedAudience = computed(() => segmentAudienceMap[form.targetSegment] || 14820);
 
 const stats = computed(() => {
-  const k = dashboard.value?.kpis;
+  const s = dashboard.value?.summary;
+  const totalDelivered = dashboard.value?.charts.dailyDelivered.reduce((a, b) => a + b, 0) ?? 387500;
   return [
     {
       name: 'Subscribed Browsers',
-      value: k?.activeEndpoints ?? 14820,
-      change: '+14.6%',
+      value: s?.activeBrowserSubscriptions ?? 14820,
+      change: `${s?.optInRatePct ?? 42.6}% opt-in`,
       changeType: 'increase',
       icon: BellIcon,
       bgColor: 'bg-blue-50',
@@ -539,9 +553,9 @@ const stats = computed(() => {
       decimals: 0,
     },
     {
-      name: 'Delivered (30 Days)',
-      value: k?.sentLast30d ?? 129610,
-      change: '98.4% delivery',
+      name: 'Delivered (14 Days)',
+      value: totalDelivered,
+      change: `${s?.avgDeliveryRatePct ?? 98.1}% delivery`,
       changeType: 'increase',
       icon: PaperAirplaneIcon,
       bgColor: 'bg-green-50',
@@ -552,7 +566,7 @@ const stats = computed(() => {
     },
     {
       name: 'Average CTR',
-      value: k?.avgCtrPercent ?? 17.8,
+      value: s?.avgCtrPct ?? 17.5,
       change: '+2.3%',
       changeType: 'increase',
       icon: CursorArrowRaysIcon,
@@ -564,8 +578,8 @@ const stats = computed(() => {
     },
     {
       name: 'Scheduled Queue',
-      value: k?.scheduledCount ?? 2,
-      change: 'Upcoming',
+      value: s?.scheduledQueueCount ?? 1,
+      change: `${s?.totalBroadcastsSent ?? 41} sent total`,
       changeType: 'neutral',
       icon: ClockIcon,
       bgColor: 'bg-orange-50',
@@ -577,30 +591,62 @@ const stats = computed(() => {
   ];
 });
 
-const broadcasts = computed(() => dashboard.value?.broadcasts || []);
+const broadcasts = computed(() => dashboard.value?.recentBroadcasts || []);
 
-const deliveryChartOption = computed<EChartsOption | null>(() => {
-  const ts = dashboard.value?.deliveryTimeSeries;
-  if (!ts) return null;
+const defaultDays = [
+  '09 Oct', '10 Oct', '11 Oct', '12 Oct', '13 Oct', '14 Oct', '15 Oct',
+  '16 Oct', '17 Oct', '18 Oct', '19 Oct', '20 Oct', '21 Oct', '22 Oct',
+];
+const defaultDelivered = [24100, 26800, 25400, 28900, 31200, 19800, 18400, 27600, 29400, 32100, 30800, 34900, 26300, 31800];
+const defaultClicked = [4120, 4890, 4510, 5420, 6180, 3490, 3180, 5090, 5580, 6240, 5890, 6910, 4780, 6080];
+const defaultPlatforms = [
+  { name: 'Chrome on Android (Ghana Mobile)', value: 6840 },
+  { name: 'Chrome on Windows / macOS', value: 3920 },
+  { name: 'Safari on iOS / macOS (Web Push)', value: 2190 },
+  { name: 'Microsoft Edge Corporate Desktop', value: 1280 },
+  { name: 'Mozilla Firefox Desktop', value: 590 },
+];
+
+const deliveryChartOption = computed(() => {
+  const c = dashboard.value?.charts;
   return createCartesianOption({
-    categories: ts.dates,
+    categories: c?.days || defaultDays,
     yAxisName: 'Delivered',
     secondaryYAxisName: 'Clicked',
     series: [
-      { name: 'Delivered', type: 'bar', data: ts.delivered, color: '#2563EB' },
-      { name: 'Clicked', type: 'line', yAxisIndex: 1, data: ts.clicked, color: '#DC2626', area: true },
+      { name: 'Delivered', type: 'bar', data: c?.dailyDelivered || defaultDelivered, color: '#2563eb' },
+      { name: 'Clicked', type: 'line', yAxisIndex: 1, data: c?.dailyClicked || defaultClicked, color: '#dc2626', area: true },
     ],
   });
 });
 
-const browserChartOption = computed<EChartsOption | null>(() => {
-  if (!dashboard.value?.browserBreakdown) return null;
-  return createPieOption(dashboard.value.browserBreakdown, { donut: true, centerLabel: 'Browsers' });
+const browserChartOption = computed(() => {
+  return createPieOption(dashboard.value?.charts.platformBreakdown || defaultPlatforms, {
+    donut: true,
+    centerLabel: 'Browsers',
+  });
 });
+
+function isStatus(rawStatus: string, expected: string): boolean {
+  return (rawStatus || '').toLowerCase() === expected.toLowerCase();
+}
+
+function formatTimestamp(iso?: string): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
 async function loadDashboard() {
   try {
-    dashboard.value = await fetchPushDashboardApi();
+    dashboard.value = await fetchPushDashboard();
   } catch (err) {
     console.error('[PushStudio] Failed to load dashboard:', err);
   }
@@ -632,7 +678,7 @@ async function handleSendTest() {
 async function handleDispatch() {
   isDispatching.value = true;
   try {
-    const payload: PushDispatchRequestDto = {
+    const payload: DispatchPushRequestDto = {
       title: form.title.trim(),
       body: form.body.trim(),
       category: form.category,
@@ -648,8 +694,8 @@ async function handleDispatch() {
     };
 
     const record = await dispatchPushBroadcastApi(payload);
-    if (record.status === 'scheduled') {
-      $toast?.success?.(`Broadcast scheduled for ${record.scheduledAt}.`);
+    if (isStatus(record.status, 'scheduled')) {
+      $toast?.success?.(`Broadcast scheduled for ${formatTimestamp(record.scheduledAt)}.`);
     } else {
       $toast?.success?.(`Broadcast dispatched to ${record.deliveredCount.toLocaleString()} browsers.`);
     }

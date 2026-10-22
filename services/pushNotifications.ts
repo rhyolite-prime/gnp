@@ -97,6 +97,8 @@ export async function fetchPushDashboard(): Promise<PushDashboardPayload> {
   return res.result;
 }
 
+export const fetchPushDashboardApi = fetchPushDashboard;
+
 export async function registerPushSubscriptionOnServer(payload: {
   subscription?: PushSubscriptionJSON | null;
   deviceId?: string;
