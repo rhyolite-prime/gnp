@@ -9,12 +9,11 @@
  * 5. `pushsubscriptionchange` automatic token rotation back to `/api/v1/push/subscribe`
  */
 
+// Dedicated isolated sub-scope push worker (`/sw-push-scope/`):
+// Never call `self.clients.claim()` so we never hijack root `/` pages or trigger
+// `@vite-pwa/nuxt` `controllerchange` -> `window.location.reload()` loops.
 self.addEventListener('install', () => {
   self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
 });
 
 function buildNotificationOptions(payload) {

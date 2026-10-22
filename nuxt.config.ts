@@ -5,6 +5,7 @@ export default defineNuxtConfig({
   vite: {
     server: {
       allowedHosts: true,
+      hmr: process.env.E2B_SANDBOX_ID ? false : true,
     },
   },
   
@@ -75,7 +76,6 @@ export default defineNuxtConfig({
       ]
     },
     workbox: {
-      importScripts: ['/sw-push.js'],
       navigateFallback: '/',
       globPatterns: ['**/*.{js,css,html,png,svg,ico}']
     },
@@ -84,7 +84,7 @@ export default defineNuxtConfig({
       periodicSyncForUpdates: 3600
     },
     devOptions: {
-      enabled: true,
+      enabled: false,
       suppressWarnings: true,
       navigateFallbackAllowlist: [/^\/$/],
       type: 'module'

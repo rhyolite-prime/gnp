@@ -45,6 +45,28 @@ export function usePushNotifications() {
     permissionState.value = Notification.permission;
   }
 
+  async function cleanupConflictingRootServiceWorkers() {
+    if (!import.meta.client || !('serviceWorker' in navigator)) return;
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const r of regs) {
+        const scriptUrl =
+          r.active?.scriptURL || r.waiting?.scriptURL || r.installing?.scriptURL || '';
+        const scopePath = new URL(r.scope).pathname;
+        // Remove stale dev-sw.js or previous root-scoped sw-push.js registrations
+        // that fought over scope '/' and triggered controllerchange reload loops.
+        if (
+          scriptUrl.includes('dev-sw.js') ||
+          (scriptUrl.endsWith('/sw-push.js') && scopePath === '/')
+        ) {
+          await r.unregister().catch(() => {});
+        }
+      }
+    } catch {
+      // Ignore cleanup errors
+    }
+  }
+
   async function ensureServiceWorker(): Promise<ServiceWorkerRegistration | null> {
     if (!import.meta.client || !('serviceWorker' in navigator)) return null;
     if (sharedSwRegistration) {
@@ -52,7 +74,12 @@ export function usePushNotifications() {
       return sharedSwRegistration;
     }
     try {
-      const reg = await navigator.serviceWorker.register('/sw-push.js', { scope: '/' });
+      await cleanupConflictingRootServiceWorkers();
+      // Register on dedicated sub-scope '/sw-push-scope/' so it NEVER collides
+      // with root '/' navigation or triggers controllerchange reloads.
+      const reg = await navigator.serviceWorker.register('/sw-push.js', {
+        scope: '/sw-push-scope/',
+      });
       sharedSwRegistration = reg;
       swReady.value = true;
       return reg;
@@ -333,9 +360,12 @@ export function usePushNotifications() {
     initRealtimeListenersOnce,
     enableBrowserPush,
     disableBrowserPush,
+    enablePushNotifications: enableBrowserPush,
+    disablePushNotifications: disableBrowserPush,
     toggleTopicPreference,
     updateQuietHours,
     triggerLiveTestNotification,
+    sendLiveBrowserTestPush: triggerLiveTestNotification,
     markAsRead: store.markAsRead,
     clearUnreadCount: store.clearUnreadCount,
     clearInbox: store.clearInbox,
