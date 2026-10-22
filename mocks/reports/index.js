@@ -1,10 +1,10 @@
 // Central Plain-JavaScript Mock Registry for Graphic NewsPlus Platform Reports
 // Used directly by the Report Viewer UI and as exact JSON contract examples for `gnp-api` (C++ Drogon + PostgreSQL).
 
-import { FINANCIAL_REPORTS_MOCK, MOCK_PARTNERS_LIST } from './financialReports';
-import { USER_AND_CONTENT_REPORTS_MOCK } from './userAndContentReports';
-import { PARTNER_AND_MARKETING_REPORTS_MOCK } from './partnerAndMarketingReports';
-import { ARCHIVE_GAMES_ADMIN_REPORTS_MOCK } from './archiveGamesAndAdminReports';
+import { FINANCIAL_REPORTS_MOCK, MOCK_PARTNERS_LIST } from './financialReports.js';
+import { USER_AND_CONTENT_REPORTS_MOCK } from './userAndContentReports.js';
+import { PARTNER_AND_MARKETING_REPORTS_MOCK } from './partnerAndMarketingReports.js';
+import { ARCHIVE_GAMES_ADMIN_REPORTS_MOCK } from './archiveGamesAndAdminReports.js';
 
 export { MOCK_PARTNERS_LIST };
 

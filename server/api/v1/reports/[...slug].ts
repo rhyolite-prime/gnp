@@ -1,5 +1,5 @@
 import { defineEventHandler, getQuery, readBody } from 'h3';
-import { getMockReportData } from '~/mocks/reports';
+import { getMockReportData } from '~/mocks/reports/index.js';
 
 export default defineEventHandler(async (event) => {
   const slugParam = event.context.params?.slug;

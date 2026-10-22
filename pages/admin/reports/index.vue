@@ -466,8 +466,8 @@ import {
   EnvelopeIcon,
 } from '@heroicons/vue/24/outline';
 import EChartCanvas from '~/components/reports/EChartCanvas.vue';
-import { MOCK_REPORT_GROUPS, MOCK_PARTNERS_LIST } from '~/mocks/reports';
-import { buildEChartOptionFromPlainData } from '~/utils/reportChartOption';
+import { MOCK_REPORT_GROUPS, MOCK_PARTNERS_LIST } from '~/mocks/reports/index.js';
+import { buildEChartOptionFromPlainData } from '~/utils/reportChartOption.js';
 
 const { $toast } = useNuxtApp();
 

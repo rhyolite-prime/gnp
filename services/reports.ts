@@ -1,4 +1,4 @@
-import { getMockReportData, MOCK_PARTNERS_LIST } from '~/mocks/reports';
+import { getMockReportData, MOCK_PARTNERS_LIST } from '~/mocks/reports/index.js';
 
 export interface ReportFilterDto {
   startDate?: string;
