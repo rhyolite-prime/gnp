@@ -139,11 +139,11 @@
 
         <div class="flex items-center space-x-3">
           <NuxtLink
-            to="/admin/push-notifications"
+            to="/admin/campaigns/new"
             class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 text-red-700 hover:bg-red-100 border border-red-200/80 transition-colors"
           >
-            <BellIcon class="h-4 w-4 text-red-600" />
-            <span>Push Studio</span>
+            <MegaphoneIcon class="h-4 w-4 text-red-600" />
+            <span>New Broadcast</span>
           </NuxtLink>
 
           <!-- Notifications Drawer Trigger -->
@@ -173,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { 
   HomeIcon, 
@@ -261,8 +261,16 @@ const navigation = [
   { name: 'Publications', href: '/admin/publications', icon: TicketIcon,  },
   { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon, permission: 'subscription_plans.manage' },
   { name: 'Payments', href: '/admin/payments', icon: BanknotesIcon, permission: 'payments.manage' },
-  { name: 'Campaigns', href: '/admin/campaigns', icon: MegaphoneIcon, permission: 'campaigns.manage' },
-  { name: 'Push Studio', href: '/admin/push-notifications', icon: BellIcon, permission: 'campaigns.manage' },
+  {
+    name: 'Campaigns',
+    icon: MegaphoneIcon,
+    permission: 'campaigns.manage',
+    children: [
+      { name: 'Overview & Analytics', href: '/admin/campaigns' },
+      { name: 'New Broadcast', href: '/admin/campaigns/new' },
+      { name: 'Broadcast History', href: '/admin/campaigns/history' },
+    ],
+  },
   { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon, permission: 'coupons.manage' },
   {
     name: 'Advert Management',
@@ -319,11 +327,16 @@ const pageTitle = computed(() => {
   return 'Dashboard'
 })
 
-navigation.forEach(item => {
-  if (item.children?.some(c => c.href === route.path)) {
-    expandedMenus.value[item.name] = true
-  }
-})
+const syncExpandedMenus = (path: string) => {
+  navigation.forEach(item => {
+    if (item.children?.some(c => c.href === path)) {
+      expandedMenus.value[item.name] = true
+    }
+  })
+}
+
+syncExpandedMenus(route.path)
+watch(() => route.path, syncExpandedMenus)
 
 const handleLogout = () => {
   // The store owns the admin session: it clears the reactive state, IndexedDB
