@@ -1,8 +1,9 @@
 # Graphic NewsPlus — Platform Reports, Backend API Contracts & PostgreSQL Schema Architecture
 
 > **Target Backend Repository:** [`https://github.com/rhyolite-prime/gnp-api`](https://github.com/rhyolite-prime/gnp-api) (C++20 / Drogon Framework + PostgreSQL + `pgvector`)  
+> **Plain JavaScript Mock Payloads (1-to-1 API Contract Templates):** [`mocks/reports/index.js`](../mocks/reports/index.js), [`mocks/reports/financialReports.js`](../mocks/reports/financialReports.js), [`mocks/reports/userAndContentReports.js`](../mocks/reports/userAndContentReports.js), [`mocks/reports/partnerAndMarketingReports.js`](../mocks/reports/partnerAndMarketingReports.js), [`mocks/reports/archiveGamesAndAdminReports.js`](../mocks/reports/archiveGamesAndAdminReports.js)  
 > **Frontend Reference Implementation (`/admin` Routes):** `/admin/reports`, `/admin/dashboard`, `/admin/affiliates/dashboard`, `/admin/archives/dashboard`  
-> **Charting Engine:** **100% Apache ECharts v6 (`echarts ^6.1.0`)** via `components/reports/EChartCanvas.vue` & `components/reports/ReportKpiSparkCard.vue`  
+> **Charting Engine:** **100% Apache ECharts v6 (`echarts ^6.1.0`)** via `utils/reportChartOption.js` & `components/reports/EChartCanvas.vue`  
 > **Runnable SQL DDL File:** [`docs/sql/gnp_reports_schema_migrations.sql`](./sql/gnp_reports_schema_migrations.sql)
 
 ---

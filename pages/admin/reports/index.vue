@@ -8,7 +8,7 @@
       </div>
       <button
         v-if="selectedGroup"
-        @click="backToGroups"
+        @click="selectedGroup = null; selectedReport = null"
         class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
       >
         <ArrowLeft class="w-4 h-4 mr-2" />
@@ -77,8 +77,7 @@
               <div v-if="selectedReport.parameters.includes('partner')">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Select Partner</label>
                 <select v-model="params.partnerId" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border bg-white">
-                  <option v-if="selectedReport.id === 'partner_invoices'" value="" disabled>Choose a partner...</option>
-                  <option v-else value="">All Partners</option>
+                  <option value="" disabled>Choose a partner...</option>
                   <option v-for="partner in partnerList" :key="partner.id" :value="partner.id">
                     {{ partner.name }}
                   </option>
@@ -105,17 +104,6 @@
                     <input type="date" v-model="params.endDate" class="block w-full pl-10 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border" />
                   </div>
                 </div>
-              </div>
-
-              <!-- Publication Dropdown -->
-              <div v-if="selectedReport.parameters.includes('publication')">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Publication</label>
-                <select v-model="params.publicationId" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border bg-white">
-                  <option value="">All Publications</option>
-                  <option v-for="pub in publicationList" :key="pub.id" :value="pub.id">
-                    {{ pub.name }}
-                  </option>
-                </select>
               </div>
 
               <!-- Status Dropdown -->
@@ -160,11 +148,11 @@
             <div class="mt-6 flex flex-col gap-3" v-if="selectedReport">
               <button
                 @click="generateReport"
-                :disabled="isLoading || (selectedReport.id === 'partner_invoices' && !isValidInvoice)"
+                :disabled="selectedReport.id === 'partner_invoices' && !isValidInvoice"
                 class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Activity class="w-4 h-4 mr-2" :class="{ 'animate-spin': isLoading }" />
-                {{ isLoading ? 'Generating...' : 'Run Report' }}
+                <Activity class="w-4 h-4 mr-2" />
+                Run Report
               </button>
 
               <button
@@ -173,28 +161,18 @@
                 :disabled="!invoiceGenerated"
                 class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <DocumentArrowDownIcon class="h-4 w-4 mr-2 text-gray-500" />
+                <DocumentArrowDownIcon class="w-4 h-4 mr-2 text-gray-500" />
                 Download PDF
               </button>
 
-              <template v-else>
-                <button
-                  @click="downloadReport"
-                  :disabled="!reportResult"
-                  class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Download class="w-4 h-4 mr-2" />
-                  Export CSV
-                </button>
-                <button
-                  @click="handleDownloadPDF"
-                  :disabled="!reportResult"
-                  class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <DocumentArrowDownIcon class="h-4 w-4 mr-2 text-gray-500" />
-                  Download PDF
-                </button>
-              </template>
+              <button
+                v-else
+                @click="downloadReport"
+                class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+              >
+                <Download class="w-4 h-4 mr-2" />
+                Export CSV
+              </button>
             </div>
           </div>
 
@@ -247,8 +225,8 @@
                   <div class="text-right">
                     <h2 class="text-3xl font-bold text-gray-900 mb-2">INVOICE</h2>
                     <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Invoice No:</span> {{ generatedInvoiceId }}</p>
-                    <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Date:</span> {{ invoiceData.issueDate }}</p>
-                    <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Due Date:</span> {{ invoiceData.dueDate }}</p>
+                    <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Date:</span> {{ new Date().toLocaleDateString() }}</p>
+                    <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Due Date:</span> {{ new Date(new Date().setDate(new Date().getDate() + 14)).toLocaleDateString() }}</p>
                   </div>
                 </div>
 
@@ -256,14 +234,14 @@
                 <div class="mb-12 grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div>
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Billed To</h3>
-                    <p class="text-base font-semibold text-gray-900">{{ invoiceData.partnerName }}</p>
-                    <p class="text-sm text-gray-500 whitespace-pre-line">{{ invoiceData.partnerAddress }}</p>
-                    <p class="text-sm text-gray-500">{{ invoiceData.partnerEmail }}</p>
+                    <p class="text-base font-semibold text-gray-900">{{ selectedPartnerDetails?.name || invoiceData.partnerName }}</p>
+                    <p class="text-sm text-gray-500 whitespace-pre-line">{{ selectedPartnerDetails?.address || invoiceData.partnerAddress }}</p>
+                    <p class="text-sm text-gray-500">{{ selectedPartnerDetails?.email || invoiceData.partnerEmail }}</p>
                   </div>
                   <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Billing Period</h3>
                     <p class="text-sm font-medium text-gray-900">
-                      {{ invoiceData.periodStart }} - {{ invoiceData.periodEnd }}
+                      {{ new Date(params.startDate).toLocaleDateString() }} - {{ new Date(params.endDate).toLocaleDateString() }}
                     </p>
                   </div>
                 </div>
@@ -286,8 +264,8 @@
                           <div class="text-xs text-gray-500">{{ item.details }}</div>
                         </td>
                         <td class="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-700">{{ Number(item.quantity).toLocaleString() }}</td>
-                        <td class="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-700">{{ formatCurrency(item.unitPrice) }}</td>
-                        <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">{{ formatCurrency(item.quantity * item.unitPrice) }}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-700">{{ formatMoney(item.unitPrice) }}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">{{ formatMoney(item.quantity * item.unitPrice) }}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -298,24 +276,32 @@
                   <div class="w-full max-w-sm space-y-3">
                     <div class="flex justify-between text-sm text-gray-600 px-4">
                       <span>Subtotal</span>
-                      <span class="font-medium text-gray-900">GHS {{ formatCurrency(invoiceData.subtotal) }}</span>
+                      <span class="font-medium text-gray-900">GHS {{ formatMoney(invoiceData.subtotal) }}</span>
                     </div>
                     <div class="flex justify-between text-sm text-gray-600 px-4">
                       <span>VAT (15%)</span>
-                      <span class="font-medium text-gray-900">GHS {{ formatCurrency(invoiceData.vat) }}</span>
+                      <span class="font-medium text-gray-900">GHS {{ formatMoney(invoiceData.vat) }}</span>
                     </div>
                     <div class="flex justify-between text-sm text-gray-600 px-4">
                       <span>NHIL + GETFL (5%)</span>
-                      <span class="font-medium text-gray-900">GHS {{ formatCurrency(invoiceData.getflNhil) }}</span>
+                      <span class="font-medium text-gray-900">GHS {{ formatMoney(invoiceData.getflNhil) }}</span>
                     </div>
                     <div class="flex justify-between text-sm text-gray-600 px-4">
                       <span>Discount</span>
-                      <span class="font-medium text-red-600">GHS {{ formatCurrency(invoiceData.discount) }}</span>
+                      <span class="font-medium text-red-600">GHS {{ formatMoney(invoiceData.discount) }}</span>
                     </div>
                     <div class="pt-3 border-t border-gray-200 flex justify-between px-4">
                       <span class="text-base font-bold text-gray-900">Total Due</span>
-                      <span class="text-xl font-bold text-primary-600">GHS {{ formatCurrency(invoiceData.totalDue) }}</span>
+                      <span class="text-xl font-bold text-primary-600">GHS {{ formatMoney(invoiceData.totalDue) }}</span>
                     </div>
+                  </div>
+                </div>
+
+                <!-- Partner Invoice ECharts Overview (Hidden when printing invoice) -->
+                <div v-if="invoiceData.charts?.length" class="mt-12 pt-8 border-t border-gray-100 grid grid-cols-1 lg:grid-cols-2 gap-8 print:hidden">
+                  <div v-for="chart in invoiceData.charts" :key="chart.id">
+                    <h3 class="text-base font-medium text-gray-900 mb-4">{{ chart.title }}</h3>
+                    <EChartCanvas :option="buildEChartOptionFromPlainData(chart)" :height="250" />
                   </div>
                 </div>
 
@@ -323,14 +309,14 @@
                 <div class="mt-16 pt-8 border-t border-gray-100 text-sm text-gray-500">
                   <p class="font-medium text-gray-700 mb-1">Payment Instructions:</p>
                   <p>Please make payment to Graphic Communications Group Ltd. via Bank Transfer.</p>
-                  <p>Bank: Ghana Commercial Bank (GCB)<br>Account No: 3201001382531<br>Branch: High Street</p>
+                  <p>Bank: Ghana Commercial Bank (GCB)<br />Account No: 3201001382531<br />Branch: High Street</p>
                   <p class="mt-4 text-xs">If you have any questions concerning this invoice, please contact billing@graphic.com.gh.</p>
                 </div>
               </div>
             </div>
 
-            <!-- Standard Generated Report View (Apache ECharts + Summary Stats + Clean Table) -->
-            <div v-else-if="selectedReport && reportResult" class="bg-white rounded-xl border border-gray-200 overflow-hidden print:border-none shadow-sm flex flex-col h-full">
+            <!-- Standard Generated Report View (All Reports with Apache ECharts + Summary Metrics + Data Table) -->
+            <div v-else-if="selectedReport && reportGenerated && activeReportData" class="bg-white rounded-xl border border-gray-200 overflow-hidden print:border-none shadow-sm flex flex-col h-full">
               <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between print:hidden">
                 <div class="flex items-center space-x-2">
                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -339,10 +325,6 @@
                   <span class="text-sm text-gray-500">{{ selectedReport.name }}</span>
                 </div>
                 <div class="flex space-x-3">
-                  <button @click="handleExportExcel" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                    <Download class="h-4 w-4 mr-2 text-gray-500" />
-                    Excel
-                  </button>
                   <button @click="handlePrint" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors">
                     <PrinterIcon class="h-4 w-4 mr-2 text-gray-500" />
                     Print
@@ -351,106 +333,85 @@
               </div>
 
               <div class="p-6 flex-1 overflow-auto space-y-8">
-                <!-- Summary Stats Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                  <div v-for="kpi in reportResult.kpis" :key="kpi.key" class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <div class="text-sm font-medium text-gray-500 mb-1 truncate" :title="kpi.label">{{ kpi.label }}</div>
-                    <div class="text-2xl font-bold text-gray-900">{{ formatKpi(kpi) }}</div>
-                    <div v-if="kpi.deltaPercent !== undefined" class="mt-1 flex items-center gap-1.5 text-xs">
-                      <span
-                        class="font-medium"
-                        :class="isPositiveDelta(kpi) ? 'text-green-600' : 'text-red-600'"
-                      >
-                        {{ kpi.deltaPercent > 0 ? '+' : '' }}{{ kpi.deltaPercent }}%
-                      </span>
-                      <span v-if="kpi.subtitle" class="text-gray-400 truncate">{{ kpi.subtitle }}</span>
+                <!-- Partner Enrollment Quotas (preserved when present, e.g. Newspaper Engagement) -->
+                <div v-if="activeReportData.partners?.length">
+                  <h3 class="text-lg font-semibold text-gray-900 mb-4">Partner Enrollment Quotas</h3>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div v-for="partner in activeReportData.partners" :key="partner.name" class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div class="text-sm font-medium text-gray-500 mb-1 truncate" :title="partner.name">{{ partner.name }}</div>
+                      <div class="text-2xl font-bold text-gray-900 mb-2">
+                        {{ partner.enrolled }} <span class="text-sm font-normal text-gray-500">/ {{ partner.quota }}</span>
+                      </div>
+                      <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-primary-600 h-2 rounded-full" :style="{ width: Math.min((partner.enrolled / partner.quota) * 100, 100) + '%' }"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <!-- Apache ECharts Visualizations -->
-                <div v-if="reportResult.charts.length" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div
-                    v-for="chart in reportResult.charts"
-                    :key="chart.id"
-                    :class="chart.span === 'full' ? 'lg:col-span-2' : 'lg:col-span-1'"
-                  >
-                    <h3 class="text-base font-medium text-gray-900 mb-4">{{ chart.title }}</h3>
-                    <EChartCanvas :option="chart.option" :height="chart.height || 270" />
+                <!-- Summary Metrics Grid -->
+                <div v-if="activeReportData.summary?.length" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                  <div v-for="metric in activeReportData.summary" :key="metric.key" class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="text-sm font-medium text-gray-500 mb-1 truncate" :title="metric.label">{{ metric.label }}</div>
+                    <div class="text-2xl font-bold text-gray-900">{{ formatSummaryValue(metric) }}</div>
+                    <div v-if="metric.changePct !== undefined" class="mt-1 text-xs font-medium" :class="metric.changePct >= 0 ? 'text-green-600' : 'text-red-600'">
+                      {{ metric.changePct > 0 ? '+' : '' }}{{ metric.changePct }}% vs prior period
+                    </div>
                   </div>
                 </div>
 
-                <!-- Clean Records Table -->
-                <div v-if="reportResult.columns.length">
-                  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                    <h3 class="text-base font-medium text-gray-900">Detailed Records ({{ filteredRows.length }})</h3>
-                    <input
-                      v-model="tableSearch"
-                      type="text"
-                      placeholder="Filter rows..."
-                      class="rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500 sm:w-56 p-1.5 border print:hidden"
-                    />
+                <!-- Apache ECharts Graphs -->
+                <div v-if="activeReportData.charts?.length" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div
+                    v-for="chart in activeReportData.charts"
+                    :key="chart.id"
+                    :class="chart.span === 'full' || activeReportData.charts.length === 1 ? 'lg:col-span-2' : 'lg:col-span-1'"
+                  >
+                    <h3 class="text-base font-medium text-gray-900 mb-4">{{ chart.title }}</h3>
+                    <EChartCanvas :option="buildEChartOptionFromPlainData(chart)" :height="265" />
                   </div>
+                </div>
 
+                <!-- Report Data Table -->
+                <div v-if="activeReportData.columns?.length">
+                  <h3 class="text-base font-medium text-gray-900 mb-4">Report Breakdown</h3>
                   <div class="overflow-x-auto rounded-lg border border-gray-200">
                     <table class="min-w-full divide-y divide-gray-200">
                       <thead class="bg-gray-50">
                         <tr>
                           <th
-                            v-for="col in reportResult.columns"
+                            v-for="col in activeReportData.columns"
                             :key="col.key"
                             scope="col"
                             class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                            :class="col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'"
+                            :class="col.align === 'right' ? 'text-right' : 'text-left'"
                           >
                             {{ col.label }}
                           </th>
                         </tr>
                       </thead>
                       <tbody class="bg-white divide-y divide-gray-200">
-                        <tr v-for="(row, rIdx) in paginatedRows" :key="rIdx" class="hover:bg-gray-50 transition-colors">
+                        <tr v-for="(row, rIdx) in activeReportData.rows" :key="rIdx" class="hover:bg-gray-50 transition-colors">
                           <td
-                            v-for="col in reportResult.columns"
+                            v-for="col in activeReportData.columns"
                             :key="col.key"
-                            class="px-4 py-3 whitespace-nowrap text-sm"
-                            :class="col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'"
+                            class="px-4 py-3.5 whitespace-nowrap text-sm"
+                            :class="col.align === 'right' ? 'text-right' : 'text-left'"
                           >
                             <span
                               v-if="col.format === 'badge'"
                               class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-medium rounded-full"
-                              :class="badgeClass(row[col.key])"
+                              :class="statusBadgeClass(row[col.key])"
                             >
                               {{ row[col.key] }}
                             </span>
-                            <span v-else class="text-gray-700" :class="{ 'font-medium text-gray-900': col.align === 'right' || col.format === 'currency' }">
-                              {{ formatCell(row[col.key], col.format) }}
+                            <span v-else class="text-gray-700" :class="{ 'font-medium text-gray-900': col.format === 'currency' }">
+                              {{ formatTableCell(row[col.key], col.format) }}
                             </span>
                           </td>
                         </tr>
                       </tbody>
                     </table>
-                  </div>
-
-                  <div v-if="totalPages > 1" class="mt-3 flex items-center justify-between text-xs text-gray-500 print:hidden">
-                    <span>Showing {{ pageStart + 1 }}–{{ Math.min(pageStart + pageSize, filteredRows.length) }} of {{ filteredRows.length }}</span>
-                    <div class="flex items-center gap-2">
-                      <button
-                        type="button"
-                        :disabled="currentPage <= 1"
-                        @click="currentPage--"
-                        class="px-3 py-1 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40"
-                      >
-                        Previous
-                      </button>
-                      <button
-                        type="button"
-                        :disabled="currentPage >= totalPages"
-                        @click="currentPage++"
-                        class="px-3 py-1 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40"
-                      >
-                        Next
-                      </button>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -505,8 +466,8 @@ import {
   EnvelopeIcon,
 } from '@heroicons/vue/24/outline';
 import EChartCanvas from '~/components/reports/EChartCanvas.vue';
-import type { GeneratedReportResult, ReportKpiCard } from '~/models/reports';
-import { REPORT_GROUPS, MOCK_COMMERCIAL_PARTNERS, GRAPHIC_PUBLICATIONS } from '~/utils/reportsSchemaCatalog';
+import { MOCK_REPORT_GROUPS, MOCK_PARTNERS_LIST } from '~/mocks/reports';
+import { buildEChartOptionFromPlainData } from '~/utils/reportChartOption';
 
 const { $toast } = useNuxtApp();
 
@@ -515,43 +476,35 @@ definePageMeta({
   middleware: ['admin-auth'],
 });
 
-interface ReportItem {
+interface ReportParameter {
   id: string;
   name: string;
   description: string;
   parameters: string[];
 }
 
-interface ReportGroupView {
+interface ReportGroup {
   id: string;
   title: string;
   description: string;
   icon: any;
-  reports: ReportItem[];
+  reports: ReportParameter[];
 }
 
-const groupIcons: Record<string, any> = {
+const groupIconMap: Record<string, any> = {
   financial: DollarSign,
   users: Users,
   content: BookOpen,
-  archives: Library,
   partners: Briefcase,
   marketing: Megaphone,
+  archives: Library,
   games: Gamepad2,
   admin: ShieldCheck,
 };
 
-const reportGroups: ReportGroupView[] = REPORT_GROUPS.map((g) => ({
-  id: g.id,
-  title: g.title,
-  description: g.description,
-  icon: groupIcons[g.id] || FileBarChart2,
-  reports: g.reports.map((r) => ({
-    id: r.id,
-    name: r.name,
-    description: r.description,
-    parameters: r.parameters,
-  })),
+const reportGroups: ReportGroup[] = MOCK_REPORT_GROUPS.map((g: any) => ({
+  ...g,
+  icon: groupIconMap[g.id] || FileBarChart2,
 }));
 
 const params = reactive({
@@ -560,25 +513,19 @@ const params = reactive({
   status: 'all',
   plan: 'all',
   channel: 'all',
-  partnerId: '',
-  publicationId: '',
+  partnerId: 'p-mtn-001',
 });
 
-const selectedGroup = ref<ReportGroupView | null>(null);
-const selectedReport = ref<ReportItem | null>(null);
-const reportResult = ref<GeneratedReportResult | null>(null);
+const selectedGroup = ref<ReportGroup | null>(null);
+const selectedReport = ref<ReportParameter | null>(null);
 const invoiceGenerated = ref(false);
 const generatedInvoiceId = ref('');
 const invoiceData = ref<any>(null);
-const isLoading = ref(false);
+const reportGenerated = ref(false);
+const activeReportData = ref<any>(null);
 const isSendingInvoice = ref(false);
 
-const tableSearch = ref('');
-const currentPage = ref(1);
-const pageSize = 10;
-
-const partnerList = ref<{ id: string; name: string }[]>([...MOCK_COMMERCIAL_PARTNERS]);
-const publicationList = GRAPHIC_PUBLICATIONS;
+const partnerList = ref<any[]>([...MOCK_PARTNERS_LIST]);
 
 const getAllPartners = async () => {
   try {
@@ -587,22 +534,21 @@ const getAllPartners = async () => {
       partnerList.value = result.data;
     }
   } catch {
-    partnerList.value = [...MOCK_COMMERCIAL_PARTNERS];
+    partnerList.value = [...MOCK_PARTNERS_LIST];
   }
 };
 
-const selectGroup = (group: ReportGroupView) => {
+const selectGroup = (group: ReportGroup) => {
   selectedGroup.value = group;
   selectedReport.value = null;
   resetParams();
 };
 
-const backToGroups = () => {
-  selectedGroup.value = null;
-  selectedReport.value = null;
-  reportResult.value = null;
+watch(selectedReport, () => {
   invoiceGenerated.value = false;
-};
+  reportGenerated.value = false;
+  activeReportData.value = null;
+});
 
 const resetParams = () => {
   params.startDate = '2026-09-23';
@@ -610,23 +556,11 @@ const resetParams = () => {
   params.status = 'all';
   params.plan = 'all';
   params.channel = 'all';
-  params.partnerId = '';
-  params.publicationId = '';
-  reportResult.value = null;
+  params.partnerId = partnerList.value[0]?.id || 'p-mtn-001';
   invoiceGenerated.value = false;
-  tableSearch.value = '';
-  currentPage.value = 1;
+  reportGenerated.value = false;
+  activeReportData.value = null;
 };
-
-watch(selectedReport, (rep) => {
-  reportResult.value = null;
-  invoiceGenerated.value = false;
-  tableSearch.value = '';
-  currentPage.value = 1;
-  if (rep?.id === 'partner_invoices' && !params.partnerId && partnerList.value.length) {
-    params.partnerId = partnerList.value[0].id;
-  }
-});
 
 const isValidInvoice = computed(() => {
   return (
@@ -637,192 +571,179 @@ const isValidInvoice = computed(() => {
   );
 });
 
+const selectedPartnerDetails = computed(() => {
+  return partnerList.value.find((p) => p.id === params.partnerId);
+});
+
+const reportHandlers: Record<string, (p: typeof params) => Promise<any>> = {
+  // 1. Revenue & Financial
+  sales_revenue: (p) => generateSalesReport({ startDate: p.startDate, endDate: p.endDate, plan: p.plan !== 'all' ? p.plan : undefined }),
+  payment_transactions: (p) => generatePaymentTransactionsReport({ startDate: p.startDate, endDate: p.endDate, status: p.status !== 'all' ? p.status : undefined }),
+  partner_invoices: (p) => generatePartnerInvoice({ partnerId: p.partnerId, startDate: p.startDate, endDate: p.endDate }),
+  subscription_renewals: (p) => generateSubscriptionRenewalsReport({ startDate: p.startDate, endDate: p.endDate }),
+  single_copy_paywall_funnel: (p) => generateSingleCopyFunnelReport({ startDate: p.startDate, endDate: p.endDate }),
+
+  // 2. User & Subscriber
+  subscriber_demographics: (p) => generateSubscriberDemographicsReport({ status: p.status !== 'all' ? p.status : undefined, startDate: p.startDate, endDate: p.endDate }),
+  plan_distribution: (p) => generatePlanDistributionReport({ plan: p.plan !== 'all' ? p.plan : undefined }),
+  subscriber_retention_cohorts: (p) => generateSubscriberRetentionReport({ startDate: p.startDate, endDate: p.endDate, plan: p.plan !== 'all' ? p.plan : undefined }),
+
+  // 3. Content & Newspaper
+  newspaper_engagement: (p) => generateNewspaperEngagementReport({ startDate: p.startDate, endDate: p.endDate }),
+  content_inventory: (p) => generateContentInventoryReport({ status: p.status !== 'all' ? p.status : undefined }),
+  ingestion_jobs: (p) => generateIngestionJobLogsReport({ startDate: p.startDate, endDate: p.endDate, status: p.status !== 'all' ? p.status : undefined }),
+  multimedia_originals_performance: (p) => generateMultimediaOriginalsReport({ startDate: p.startDate, endDate: p.endDate }),
+
+  // 4. Commercial Partner (B2B)
+  partner_engagement: (p) => generatePartnerEngagementReport({ startDate: p.startDate, endDate: p.endDate }),
+  partner_quota: () => generatePartnerQuotaReport(),
+  partner_api_usage: (p) => generatePartnerApiUsageReport({ startDate: p.startDate, endDate: p.endDate }),
+
+  // 5. Marketing & Campaigns
+  campaign_performance: (p) => generateCampaignPerformanceReport({ startDate: p.startDate, endDate: p.endDate, channel: p.channel !== 'all' ? p.channel : undefined }),
+  coupon_usage: (p) => generateCouponUsageReport({ status: p.status !== 'all' ? p.status : undefined, startDate: p.startDate, endDate: p.endDate }),
+  affiliate_performance: (p) => generateAffiliatePerformanceReport({ startDate: p.startDate, endDate: p.endDate }),
+  affiliate_payout_reconciliation: (p) => generateAffiliatePayoutReport({ startDate: p.startDate, endDate: p.endDate, status: p.status !== 'all' ? p.status : undefined }),
+  push_notification_analytics: (p) => generatePushNotificationReport({ startDate: p.startDate, endDate: p.endDate }),
+
+  // 6. Historical Archives & AI RAG
+  archive_rag_intelligence: (p) => generateArchiveRagReport({ startDate: p.startDate, endDate: p.endDate }),
+  institutional_archive_credits: (p) => generateInstitutionalArchiveCreditsReport({ startDate: p.startDate, endDate: p.endDate, status: p.status !== 'all' ? p.status : undefined }),
+
+  // 7. Interactive Games & Puzzles
+  games_engagement_retention: (p) => generateGamesEngagementReport({ startDate: p.startDate, endDate: p.endDate }),
+
+  // 8. Admin & Security Audits
+  admin_roles: () => generateAdminRolesReport(),
+  api_key_audit: (p) => generateApiKeyAuditReport({ status: p.status !== 'all' ? p.status : undefined }),
+  security_audit_logs: (p) => generateSecurityAuditLogsReport({ startDate: p.startDate, endDate: p.endDate, status: p.status !== 'all' ? p.status : undefined }),
+  support_tickets_sla: (p) => generateSupportTicketsSlaReport({ startDate: p.startDate, endDate: p.endDate, status: p.status !== 'all' ? p.status : undefined }),
+};
+
 const generateReport = async () => {
   if (!selectedReport.value) return;
 
-  if (selectedReport.value.id === 'partner_invoices' && !isValidInvoice.value) {
+  const reportId = selectedReport.value.id;
+  const handler = reportHandlers[reportId] || ((p: typeof params) => runReportById(reportId, p));
+
+  if (reportId === 'partner_invoices' && !isValidInvoice.value) {
     $toast?.error?.('Please fill out all invoice parameters correctly (Partner, Start Date, End Date).');
     return;
   }
 
-  isLoading.value = true;
   try {
-    const data = await runPlatformReportById(selectedReport.value.id, {
-      startDate: params.startDate || undefined,
-      endDate: params.endDate || undefined,
-      partnerId: params.partnerId || undefined,
-      publicationId: params.publicationId || undefined,
-      status: params.status !== 'all' ? params.status : undefined,
-      plan: params.plan !== 'all' ? params.plan : undefined,
-      channel: params.channel !== 'all' ? params.channel : undefined,
-    });
-
-    reportResult.value = data;
-    currentPage.value = 1;
-
-    if (selectedReport.value.id === 'partner_invoices' && data.invoice) {
-      invoiceData.value = data.invoice;
-      generatedInvoiceId.value = data.invoice.invoiceNo;
+    const data = await handler(params);
+    if (reportId === 'partner_invoices') {
+      invoiceData.value = data;
+      generatedInvoiceId.value = data?.invoiceNo;
       invoiceGenerated.value = true;
+    } else {
+      activeReportData.value = data;
+      reportGenerated.value = true;
     }
   } catch (error) {
     console.error('Error generating report:', error);
     $toast?.error?.('An error occurred while running report.');
-  } finally {
-    isLoading.value = false;
   }
 };
 
-const filteredRows = computed(() => {
-  const rows = reportResult.value?.rows || [];
-  const q = tableSearch.value.trim().toLowerCase();
-  if (!q) return rows;
-  return rows.filter((row) =>
-    Object.values(row).some((v) => String(v ?? '').toLowerCase().includes(q))
-  );
-});
-
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredRows.value.length / pageSize)));
-const pageStart = computed(() => (currentPage.value - 1) * pageSize);
-const paginatedRows = computed(() => filteredRows.value.slice(pageStart.value, pageStart.value + pageSize));
-
-function formatCurrency(val: number): string {
+function formatMoney(val: number): string {
   return Number(val || 0).toLocaleString('en-GH', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 }
 
-function formatKpi(kpi: ReportKpiCard): string {
-  const v = Number(kpi.value || 0);
-  if (kpi.format === 'currency') return `GHS ${formatCurrency(v)}`;
-  if (kpi.format === 'percent') return `${v.toFixed(1)}%`;
-  if (kpi.format === 'duration') return `${v} ms`;
-  return `${kpi.prefix || ''}${v.toLocaleString('en-GH')}${kpi.suffix || ''}`;
+function formatSummaryValue(metric: any): string {
+  const v = Number(metric.value || 0);
+  if (metric.format === 'currency') return `GHS ${formatMoney(v)}`;
+  if (metric.format === 'percent') return `${v.toFixed(1)}%`;
+  return v.toLocaleString('en-GH');
 }
 
-function isPositiveDelta(kpi: ReportKpiCard): boolean {
-  const d = kpi.deltaPercent ?? 0;
-  return kpi.upIsGood === false ? d <= 0 : d >= 0;
-}
-
-function formatCell(val: any, format?: string): string {
+function formatTableCell(val: any, format?: string): string {
   if (val === null || val === undefined || val === '') return '—';
-  if (format === 'currency') return `GHS ${formatCurrency(Number(val))}`;
+  if (format === 'currency') return `GHS ${formatMoney(Number(val))}`;
   if (format === 'number') return Number(val).toLocaleString('en-GH');
   if (format === 'percent') return `${Number(val).toFixed(1)}%`;
   return String(val);
 }
 
-function badgeClass(value: any): string {
+function statusBadgeClass(value: any): string {
   const s = String(value || '').toLowerCase();
-  if (['success', 'active', 'published', 'settled', 'paid', 'verified'].some((w) => s.includes(w))) {
+  if (['active', 'settled', 'published', 'paid'].some((w) => s.includes(w))) {
     return 'bg-green-100 text-green-800';
   }
-  if (['pending', 'scheduled', 'processing', 'warning', 'expiring'].some((w) => s.includes(w))) {
+  if (['pending', 'scheduled'].some((w) => s.includes(w))) {
     return 'bg-yellow-100 text-yellow-800';
   }
-  if (['failed', 'expired', 'revoked', 'inactive', 'churned', 'critical'].some((w) => s.includes(w))) {
+  if (['failed', 'inactive', 'expired', 'revoked'].some((w) => s.includes(w))) {
     return 'bg-red-100 text-red-800';
   }
   return 'bg-gray-100 text-gray-800';
 }
 
-const downloadReport = () => {
-  if (!selectedReport.value || !reportResult.value) return;
-  const cols = reportResult.value.columns;
-  const header = cols.map((c) => `"${c.label}"`).join(',');
-  const lines = filteredRows.value.map((r) =>
-    cols.map((c) => `"${String(r[c.key] ?? '').replace(/"/g, '""')}"`).join(',')
+const downloadReport = async () => {
+  if (!selectedReport.value) return;
+  if (!activeReportData.value) {
+    await generateReport();
+  }
+  const cols = activeReportData.value?.columns || [];
+  const rows = activeReportData.value?.rows || [];
+  if (!cols.length) return;
+
+  const header = cols.map((c: any) => `"${c.label}"`).join(',');
+  const lines = rows.map((r: any) =>
+    cols.map((c: any) => `"${String(r[c.key] ?? '').replace(/"/g, '""')}"`).join(',')
   );
   const blob = new Blob([[header, ...lines].join('\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${selectedReport.value.id}-${params.startDate || 'report'}.csv`;
-  a.click();
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${selectedReport.value.id}-${params.startDate || 'report'}.csv`;
+  link.click();
   URL.revokeObjectURL(url);
   $toast?.success?.(`Exported ${selectedReport.value.name} as CSV.`);
-};
-
-const handleExportExcel = async () => {
-  if (!selectedReport.value || !reportResult.value) return;
-  const XLSX = await import('xlsx');
-  const cols = reportResult.value.columns;
-  const wsData = [
-    cols.map((c) => c.label),
-    ...filteredRows.value.map((r) => cols.map((c) => r[c.key] ?? '')),
-  ];
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  XLSX.utils.book_append_sheet(wb, ws, 'Report');
-  XLSX.writeFile(wb, `${selectedReport.value.id}-${params.startDate || 'report'}.xlsx`);
-  $toast?.success?.(`Exported ${selectedReport.value.name} as Excel.`);
-};
-
-const handleDownloadPDF = async () => {
-  if (!selectedReport.value || !reportResult.value) return;
-  const { jsPDF } = await import('jspdf');
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.setTextColor(17, 24, 39);
-  doc.text(`Graphic NewsPlus — ${selectedReport.value.name}`, 14, 15);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(107, 114, 128);
-  doc.text(`Period: ${params.startDate || 'All'} to ${params.endDate || 'Current'}`, 14, 21);
-
-  const cols = reportResult.value.columns;
-  const colW = (pageWidth - 28) / Math.max(cols.length, 1);
-  let y = 28;
-
-  doc.setFillColor(249, 250, 251);
-  doc.rect(14, y, pageWidth - 28, 8, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(55, 65, 81);
-  cols.forEach((c, idx) => {
-    doc.text(c.label.slice(0, 22), 16 + idx * colW, y + 5.3);
-  });
-  y += 9;
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(31, 41, 55);
-  for (const row of filteredRows.value) {
-    if (y > pageHeight - 16) {
-      doc.addPage();
-      y = 16;
-    }
-    cols.forEach((c, idx) => {
-      const cellText = formatCell(row[c.key], c.format).slice(0, 26);
-      doc.text(cellText, 16 + idx * colW, y + 4.5);
-    });
-    doc.setDrawColor(243, 244, 246);
-    doc.line(14, y + 6.5, pageWidth - 14, y + 6.5);
-    y += 7;
-  }
-
-  doc.save(`${selectedReport.value.id}-${params.startDate || 'report'}.pdf`);
-  $toast?.success?.('PDF downloaded.');
 };
 
 const handlePrint = () => {
   window.print();
 };
 
+const handleDownloadPDF = async () => {
+  if (!invoiceData.value) return;
+  const { jsPDF } = await import('jspdf');
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text(`INVOICE #${generatedInvoiceId.value}`, 14, 20);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text(`Billed To: ${selectedPartnerDetails.value?.name || invoiceData.value.partnerName}`, 14, 29);
+  doc.text(`Billing Period: ${params.startDate} to ${params.endDate}`, 14, 35);
+
+  let y = 48;
+  for (const item of invoiceData.value.items || []) {
+    doc.text(`${item.description} (${item.quantity} x GHS ${formatMoney(item.unitPrice)})`, 14, y);
+    doc.text(`GHS ${formatMoney(item.quantity * item.unitPrice)}`, 160, y);
+    y += 8;
+  }
+  y += 6;
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Total Due: GHS ${formatMoney(invoiceData.value.totalDue)}`, 14, y);
+  doc.save(`${generatedInvoiceId.value}.pdf`);
+  $toast?.success?.('PDF downloaded');
+};
+
 const handleEmail = async () => {
   isSendingInvoice.value = true;
   try {
-    const success = await sendPartnerInvoiceAsEmail({
+    const payload = {
       partnerId: params.partnerId,
       startDate: params.startDate,
       endDate: params.endDate,
-    });
+    };
+    const success = await sendPartnerInvoiceAsEmail(payload);
     if (success) {
       $toast?.success?.('Invoice sent to partner via email.');
     }
@@ -839,6 +760,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* Print-specific styles to ensure the invoice looks good when printed */
 @media print {
   body {
     background-color: white !important;
