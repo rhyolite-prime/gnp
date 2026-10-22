@@ -562,6 +562,7 @@ export interface RenewalHistory {
 }
 
 export * from './games';
+export * from './reports';
 
 
 

@@ -44,7 +44,7 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
      */
     function initializeFromStorage() {
         try {
-            const storedAuth = sessionStorage.getItem('partnerAuth');
+            const storedAuth = sessionStorage.getItem('affiliateAuth');
             if (storedAuth) {
                 const parsedAuth = JSON.parse(storedAuth);
                 affiliateUser.value = parsedAuth.affiliate;
@@ -52,9 +52,8 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
                 accessToken.value = parsedAuth.accessToken;
             }
         } catch (e) {
-            console.error('Failed to restore partner auth from storage:', e);
-            // Clear storage if it's corrupted
-            sessionStorage.removeItem('partnerAuth');
+            console.error('Failed to restore affiliate auth from storage:', e);
+            sessionStorage.removeItem('affiliateAuth');
         }
     }
 
