@@ -47,40 +47,41 @@
         </div>
       </div>
 
-      <!-- Date Joined Date Range Filter -->
+      <!-- Date Filter (Date Joined / Last Active Toggle) -->
       <div class="flex flex-col">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Date Joined</label>
-        <div class="flex items-center space-x-2 bg-white rounded-md ring-1 ring-inset ring-gray-300 px-2 py-1 shadow-sm">
-          <input
-            type="date"
-            v-model="filters.dateJoinedStartDate"
-            class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
-            placeholder="Start Date"
-          />
-          <span class="text-gray-400 text-sm">to</span>
-          <input
-            type="date"
-            v-model="filters.dateJoinedEndDate"
-            class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
-            placeholder="End Date"
-          />
+        <div class="flex items-center space-x-4 mb-1">
+          <label class="inline-flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+            <input
+              type="radio"
+              name="dateFilterType"
+              value="dateJoined"
+              v-model="dateFilterType"
+              class="h-4 w-4 text-primary-600 focus:ring-primary-600 border-gray-300 cursor-pointer"
+            />
+            <span class="ml-1.5">Date Joined</span>
+          </label>
+          <label class="inline-flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+            <input
+              type="radio"
+              name="dateFilterType"
+              value="lastActive"
+              v-model="dateFilterType"
+              class="h-4 w-4 text-primary-600 focus:ring-primary-600 border-gray-300 cursor-pointer"
+            />
+            <span class="ml-1.5">Last Active</span>
+          </label>
         </div>
-      </div>
-
-      <!-- Last Active Date Range Filter -->
-      <div class="flex flex-col">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Last Active</label>
-        <div class="flex items-center space-x-2 bg-white rounded-md ring-1 ring-inset ring-gray-300 px-2 py-1 shadow-sm">
+        <div class="flex items-center space-x-2 bg-white rounded-md ring-1 ring-inset ring-gray-300 px-2 py-1.5 shadow-sm">
           <input
             type="date"
-            v-model="filters.lastActiveStartDate"
+            v-model="dateRange.startDate"
             class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
             placeholder="Start Date"
           />
           <span class="text-gray-400 text-sm">to</span>
           <input
             type="date"
-            v-model="filters.lastActiveEndDate"
+            v-model="dateRange.endDate"
             class="block w-full border-0 p-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
             placeholder="End Date"
           />
@@ -327,6 +328,14 @@ const route = useRoute()
 // ─── Filters ───────────────────────────────────────────────────────────────
 const showFilters = ref(false)
 
+type DateFilterType = 'dateJoined' | 'lastActive'
+const dateFilterType = ref<DateFilterType>('dateJoined')
+
+const dateRange = reactive({
+  startDate: '',
+  endDate: '',
+})
+
 const filters = reactive({
   query: '',
   accountType: '',
@@ -336,6 +345,28 @@ const filters = reactive({
   lastActiveEndDate: '',
   pageNo: 1,
   pageSize: 30,
+})
+
+const syncDateFilters = () => {
+  if (dateFilterType.value === 'dateJoined') {
+    filters.dateJoinedStartDate = dateRange.startDate
+    filters.dateJoinedEndDate = dateRange.endDate
+    filters.lastActiveStartDate = ''
+    filters.lastActiveEndDate = ''
+  } else {
+    filters.lastActiveStartDate = dateRange.startDate
+    filters.lastActiveEndDate = dateRange.endDate
+    filters.dateJoinedStartDate = ''
+    filters.dateJoinedEndDate = ''
+  }
+}
+
+watch(dateFilterType, () => {
+  syncDateFilters()
+})
+
+watch(() => [dateRange.startDate, dateRange.endDate], () => {
+  syncDateFilters()
 })
 
 // ─── Pagination ─────────────────────────────────────────────────────────────
@@ -361,12 +392,18 @@ const closeDropdown = () => {
   activeDropdownId.value = null
 }
 
+const handleOutsideDropdownClick = (e: any) => {
+  if (!e.target.closest('.dropdown-container')) {
+    closeDropdown()
+  }
+}
+
 onMounted(() => {
-  document.addEventListener('click', (e: any) => {
-    if (!e.target.closest('.dropdown-container')) {
-      closeDropdown()
-    }
-  })
+  document.addEventListener('click', handleOutsideDropdownClick)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleOutsideDropdownClick)
 })
 
 // ─── Fetch Subscribers ───────────────────────────────────────────────────────
@@ -395,6 +432,7 @@ const onPageChange = async (pageNumber: number) => {
 
 const applyFilters = async () => {
   filters.pageNo = 1
+  syncDateFilters()
   const filteredQuery = filterQueryParams({ ...route.query, ...filters })
   router.replace({ name: route.name ?? '', query: filteredQuery })
   await getPaginatedSubscribers()
@@ -408,6 +446,9 @@ const resetFilters = async () => {
   filters.lastActiveStartDate = ''
   filters.lastActiveEndDate = ''
   filters.pageNo = 1
+  dateRange.startDate = ''
+  dateRange.endDate = ''
+  dateFilterType.value = 'dateJoined'
   const filteredQuery = filterQueryParams({ ...route.query, ...filters })
   router.replace({ name: route.name ?? '', query: filteredQuery })
   await getPaginatedSubscribers()
@@ -599,6 +640,28 @@ const handleConfirmDelete = async () => {
 onMounted(async () => {
   if (!isEmpty(route.query)) {
     filters.pageNo = parseInt(route.query.pageNo as string) || 1
+    if (route.query.query) filters.query = route.query.query as string
+    if (route.query.accountType) filters.accountType = route.query.accountType as string
+
+    if (route.query.lastActiveStartDate || route.query.lastActiveEndDate) {
+      dateFilterType.value = 'lastActive'
+      dateRange.startDate = (route.query.lastActiveStartDate as string) || ''
+      dateRange.endDate = (route.query.lastActiveEndDate as string) || ''
+      filters.lastActiveStartDate = dateRange.startDate
+      filters.lastActiveEndDate = dateRange.endDate
+      showFilters.value = true
+    } else if (route.query.dateJoinedStartDate || route.query.dateJoinedEndDate) {
+      dateFilterType.value = 'dateJoined'
+      dateRange.startDate = (route.query.dateJoinedStartDate as string) || ''
+      dateRange.endDate = (route.query.dateJoinedEndDate as string) || ''
+      filters.dateJoinedStartDate = dateRange.startDate
+      filters.dateJoinedEndDate = dateRange.endDate
+      showFilters.value = true
+    }
+
+    if (filters.query || filters.accountType) {
+      showFilters.value = true
+    }
   }
   await getPaginatedSubscribers()
 })
