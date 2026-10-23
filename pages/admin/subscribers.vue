@@ -241,6 +241,13 @@
                     </button>
 
                     <button
+                      class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                      @click.prevent="handleResetPassword(sub.id)"
+                    >
+                      View Assessible Newspapers
+                    </button>
+
+                    <button
                       class="block w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left"
                       @click.prevent="confirmRemoveSubscriber(sub)"
                     >
