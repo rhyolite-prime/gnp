@@ -133,15 +133,19 @@ export function usePushNotifications() {
 
   function handleIncomingPayload(payload: any, fromSwPushEvent = false) {
     if (!payload) return;
+    // Never surface incoming notifications if user disallowed or hasn't enabled notifications
+    if (
+      !store.isSubscribed ||
+      (typeof Notification !== 'undefined' && Notification.permission !== 'granted')
+    ) {
+      return;
+    }
+
     const rawCat = String(payload.category || 'platform_updates');
     const category = (CLIENT_CATEGORY_ALIAS[rawCat] || rawCat) as PushTopicCategory;
 
     // Filter out unsubscribed topics unless user hasn't configured topics yet
-    if (
-      store.isSubscribed &&
-      store.subscribedTopics.length > 0 &&
-      !store.subscribedTopics.includes(category)
-    ) {
+    if (store.subscribedTopics.length > 0 && !store.subscribedTopics.includes(category)) {
       return;
     }
 
@@ -153,7 +157,7 @@ export function usePushNotifications() {
       payload.deliveredWebPushEndpoints.includes(store.activeEndpoint);
 
     // Trigger genuine OS notification over SSE/BroadcastChannel ONLY if Web Push didn't already display it
-    if (!fromSwPushEvent && !alreadyDeliveredBySwWebPush && store.isSubscribed) {
+    if (!fromSwPushEvent && !alreadyDeliveredBySwWebPush) {
       showNativeBrowserNotification(payload);
     }
   }
@@ -164,23 +168,18 @@ export function usePushNotifications() {
 
     store.hydrateFromLocalStorage();
     refreshPermissionState();
-    ensureServiceWorker().then(async (reg) => {
-      // If user reset browser permissions back to 'default' in browser settings,
-      // re-arm the opt-in prompt automatically if no real PushSubscription exists.
-      if (
-        typeof Notification !== 'undefined' &&
-        Notification.permission === 'default' &&
-        store.isSubscribed &&
-        !store.isSimulatedSubscription
-      ) {
-        const sub = await reg?.pushManager?.getSubscription().catch(() => null);
-        if (!sub) {
-          isSubscribed.value = false;
-          activeEndpoint.value = '';
-          store.persistState();
-        }
+
+    // Immediately enforce actual browser permission state on load:
+    // if permission is 'denied', 'default', or unsupported, never treat device as subscribed.
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') {
+      if (store.isSubscribed) {
+        isSubscribed.value = false;
+        activeEndpoint.value = '';
+        store.persistState();
       }
-    });
+    }
+
+    ensureServiceWorker();
 
     // 1. Service Worker postMessage bridge (Web Push arrival + notification click routing)
     if ('serviceWorker' in navigator) {
@@ -241,34 +240,62 @@ export function usePushNotifications() {
   }
 
   /**
-   * Requests browser notification permission, registers W3C PushManager subscription
-   * using server VAPID public key, and gracefully falls back to Live Stream Subscription
-   * when running inside a cross-origin preview iframe that restricts OS permission dialogs.
+   * Requests browser notification permission and ONLY enables notifications
+   * when `Notification.permission === 'granted'`. If the user blocks/disallows
+   * or dismisses the browser prompt, keeps `isSubscribed = false` and returns `ok: false`.
    */
-  async function enableBrowserPush(): Promise<{ ok: boolean; message: string }> {
-    if (!import.meta.client) return { ok: false, message: 'Client-only action.' };
+  async function enableBrowserPush(): Promise<{
+    ok: boolean;
+    permission: 'granted' | 'denied' | 'default' | 'unsupported';
+    message: string;
+  }> {
+    if (!import.meta.client) {
+      return { ok: false, permission: 'default', message: 'Client-only action.' };
+    }
     isSubscribing.value = true;
 
     try {
-      let granted = false;
-      if ('Notification' in window) {
-        if (Notification.permission === 'granted') {
-          granted = true;
-        } else if (Notification.permission !== 'denied') {
-          try {
-            const result = await Notification.requestPermission();
-            permissionState.value = result;
-            granted = result === 'granted';
-          } catch {
-            refreshPermissionState();
-          }
+      if (!('Notification' in window)) {
+        permissionState.value = 'unsupported';
+        isSubscribed.value = false;
+        activeEndpoint.value = '';
+        store.persistState();
+        const msg = 'Browser notifications are not supported in this browser.';
+        statusBannerMessage.value = msg;
+        return { ok: false, permission: 'unsupported', message: msg };
+      }
+
+      let currentPermission = Notification.permission;
+      if (currentPermission === 'default') {
+        try {
+          currentPermission = await Notification.requestPermission();
+        } catch {
+          currentPermission = Notification.permission;
         }
+      }
+      permissionState.value = currentPermission;
+
+      if (currentPermission !== 'granted') {
+        isSubscribed.value = false;
+        activeEndpoint.value = '';
+        store.persistState();
+
+        const msg =
+          currentPermission === 'denied'
+            ? 'Notification permission was disallowed. Enable notifications in your browser site settings if you want alerts.'
+            : '';
+        statusBannerMessage.value = msg;
+        return {
+          ok: false,
+          permission: currentPermission,
+          message: msg,
+        };
       }
 
       const reg = await ensureServiceWorker();
       let realPushJson: PushSubscriptionJSON | null = null;
 
-      if (granted && reg && 'pushManager' in reg) {
+      if (reg && 'pushManager' in reg) {
         try {
           const existingSub = await reg.pushManager.getSubscription();
           if (existingSub) {
@@ -282,7 +309,7 @@ export function usePushNotifications() {
             realPushJson = created.toJSON();
           }
         } catch {
-          // Falls back cleanly to live SSE/SW stream subscription below
+          // Service Worker push manager fallback while browser Notification permission IS granted
         }
       }
 
@@ -299,14 +326,9 @@ export function usePushNotifications() {
       activeEndpoint.value = savedRecord.endpoint;
       store.persistState();
 
-      const msg = realPushJson
-        ? 'Native Browser Web Push enabled (VAPID encrypted + Service Worker active)!'
-        : granted
-        ? 'Browser Push enabled via Service Worker + Real-Time Stream!'
-        : 'Real-Time Push Stream active! (Grant OS browser permission anytime for desktop popups.)';
-
+      const msg = 'Browser & in-app notifications are now active on this device.';
       statusBannerMessage.value = msg;
-      return { ok: true, message: msg };
+      return { ok: true, permission: 'granted', message: msg };
     } finally {
       isSubscribing.value = false;
     }
@@ -363,7 +385,10 @@ export function usePushNotifications() {
 
   async function triggerLiveTestNotification(custom?: Partial<DispatchPushRequestDto>) {
     if (!isSubscribed.value) {
-      await enableBrowserPush();
+      const res = await enableBrowserPush();
+      if (!res.ok) {
+        return null;
+      }
     }
     return sendTestPushApi({
       ...custom,

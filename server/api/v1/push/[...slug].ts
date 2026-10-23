@@ -217,7 +217,7 @@ export default defineEventHandler(async (event) => {
       imageUrl: body.imageUrl,
       actions: body.actions || [
         { action: 'open', title: 'Open Today’s Paper', url: '/newspapers' },
-        { action: 'reports', title: 'View Analytics', url: '/admin/push-notifications' },
+        { action: 'archives', title: 'Explore Archives', url: '/archives' },
       ],
       targetSegment: 'all_subscribers',
       scheduleMode: 'now',

@@ -46,15 +46,31 @@
             <div class="min-w-0">
               <p class="text-xs font-bold text-gray-900">
                 Browser Push:
-                <span :class="isSubscribed ? 'text-emerald-600' : 'text-gray-500'">
-                  {{ isSubscribed ? 'Subscribed' : 'Not Subscribed' }}
+                <span
+                  :class="
+                    isSubscribed
+                      ? 'text-emerald-600'
+                      : permissionState === 'denied'
+                        ? 'text-red-600'
+                        : 'text-gray-500'
+                  "
+                >
+                  {{
+                    isSubscribed
+                      ? 'Subscribed'
+                      : permissionState === 'denied'
+                        ? 'Blocked in Browser'
+                        : 'Not Subscribed'
+                  }}
                 </span>
               </p>
               <p class="text-[11px] text-gray-500 truncate">
                 {{
                   isSubscribed
                     ? `${subscribedTopics.length}/8 topics active on this browser`
-                    : 'Turn on alerts for breaking news & edition drops'
+                    : permissionState === 'denied'
+                      ? 'Allow notifications in browser address-bar settings to enable'
+                      : 'Turn on alerts for breaking news & edition drops'
                 }}
               </p>
             </div>
@@ -70,8 +86,8 @@
               </button>
               <button
                 type="button"
-                :disabled="isSubscribing"
-                class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors"
+                :disabled="isSubscribing || permissionState === 'denied'"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 :class="
                   isSubscribed
                     ? 'bg-gray-200 hover:bg-gray-300 text-gray-800'
@@ -225,7 +241,7 @@
             </div>
           </div>
 
-          <!-- Footer Link to Admin Dispatch Studio -->
+          <!-- Footer Navigation (never links to /admin for regular users) -->
           <div class="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-xs">
             <NuxtLink
               to="/account"
@@ -235,11 +251,21 @@
               Account Settings
             </NuxtLink>
             <NuxtLink
-              to="/admin/push-notifications"
+              v-if="isAdminRoute"
+              to="/admin/campaigns"
               class="text-red-600 hover:text-red-700 font-bold inline-flex items-center gap-1"
               @click="isCenterOpen = false"
             >
-              <span>Push Dispatch Console</span>
+              <span>Campaigns Console</span>
+              <Icon name="lucide:arrow-up-right" class="h-3.5 w-3.5" />
+            </NuxtLink>
+            <NuxtLink
+              v-else
+              to="/newspapers"
+              class="text-primary-600 hover:text-primary-700 font-semibold inline-flex items-center gap-1"
+              @click="isCenterOpen = false"
+            >
+              <span>Today's Editions</span>
               <Icon name="lucide:arrow-up-right" class="h-3.5 w-3.5" />
             </NuxtLink>
           </div>
@@ -250,19 +276,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import Icon from '~/components/reports/Icon.vue';
 import { PUSH_TOPIC_DEFINITIONS, trackPushInteractionApi } from '~/services/pushNotifications';
 import { usePushNotifications } from '~/composables/usePushNotifications';
 import type { PushNotificationInboxItem } from '~/models';
 
+const route = useRoute();
 const router = useRouter();
+const isAdminRoute = computed(() => route.path.startsWith('/admin'));
 const activeTab = ref<'inbox' | 'preferences'>('inbox');
 
 const {
   inbox,
   unreadCount,
   isCenterOpen,
+  permissionState,
   isSubscribed,
   isSubscribing,
   sseConnected,

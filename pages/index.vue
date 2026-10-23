@@ -7,10 +7,10 @@
       <div class="absolute top-[80%] left-[20%] w-[50%] h-[50%] rounded-full bg-red-50/50 blur-3xl opacity-60 animate-pulse" style="animation-delay: 4s;"></div>
     </div>
 
-    <!-- Subtle Index-Page Opt-In Strip (always accessible on `/` until user subscribes) -->
+    <!-- Subtle Index-Page Opt-In Strip (only shown when notifications are undecided & unsubscribed) -->
     <ClientOnly>
       <div
-        v-if="!isSubscribed"
+        v-if="!isSubscribed && permissionState === 'default'"
         class="relative z-20 bg-slate-900 text-white border-b border-slate-800"
       >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3">
@@ -29,9 +29,10 @@
               @click="handleAllowFromStrip"
               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary-600 hover:bg-primary-700 text-white transition-colors cursor-pointer disabled:opacity-50"
             >
-              <span>{{ isSubscribing ? 'Enabling...' : 'Allow Notifications' }}</span>
+              <span>{{ isSubscribing ? 'Requesting Permission...' : 'Allow Notifications' }}</span>
             </button>
             <button
+              v-if="authStore.isAuthenticated"
               type="button"
               @click="isCenterOpen = true"
               class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
@@ -58,9 +59,12 @@
 <script setup lang="ts">
 import { usePushNotifications } from '~/composables/usePushNotifications';
 import { useNotificationStore } from '~/stores/notification';
+import { useBasicAuthStore } from '~/stores/basic-user-auth';
 
+const authStore = useBasicAuthStore();
 const notificationStore = useNotificationStore();
-const { isSubscribed, isSubscribing, isCenterOpen, enableBrowserPush } = usePushNotifications();
+const { permissionState, isSubscribed, isSubscribing, isCenterOpen, enableBrowserPush } =
+  usePushNotifications();
 
 async function handleAllowFromStrip() {
   const res = await enableBrowserPush();

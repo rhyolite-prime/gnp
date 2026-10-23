@@ -16,18 +16,33 @@
         :class="
           isSubscribed
             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-            : 'bg-gray-100 text-gray-600'
+            : permissionState === 'denied'
+              ? 'bg-red-50 text-red-700 border border-red-200'
+              : 'bg-gray-100 text-gray-600'
         "
       >
-        {{ isSubscribed ? 'Active on This Browser' : 'Paused' }}
+        {{
+          isSubscribed
+            ? 'Active on This Browser'
+            : permissionState === 'denied'
+              ? 'Blocked in Browser'
+              : 'Paused'
+        }}
       </span>
     </div>
+
+    <p
+      v-if="permissionState === 'denied'"
+      class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3.5 py-2.5"
+    >
+      Notifications are currently disallowed in your browser settings. Allow notifications via the lock/tune icon in your browser address bar, then reload this page.
+    </p>
 
     <div class="flex flex-wrap items-center gap-2.5 p-3.5 rounded-xl bg-gray-50 border border-gray-200">
       <button
         type="button"
-        :disabled="isSubscribing"
-        class="px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+        :disabled="isSubscribing || permissionState === 'denied'"
+        class="px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         :class="
           isSubscribed
             ? 'bg-white border border-gray-300 text-gray-800 hover:bg-gray-100'
@@ -39,6 +54,7 @@
       </button>
 
       <button
+        v-if="isSubscribed"
         type="button"
         class="px-3.5 py-2 rounded-lg text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-colors cursor-pointer inline-flex items-center gap-1.5"
         @click="triggerLiveTestNotification()"
@@ -75,6 +91,7 @@ import { PUSH_TOPIC_DEFINITIONS } from '~/services/pushNotifications';
 import { usePushNotifications } from '~/composables/usePushNotifications';
 
 const {
+  permissionState,
   isSubscribed,
   isSubscribing,
   subscribedTopics,

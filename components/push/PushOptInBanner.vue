@@ -30,7 +30,7 @@
               </h3>
               <p class="text-xs sm:text-sm text-gray-600 mt-1 leading-relaxed">
                 Stay ahead with instant breaking news alerts, 5:30 AM
-                <strong>Daily Graphic</strong> edition drops, and important account updates.
+                <strong>Daily Graphic</strong> edition drops, and important updates.
               </p>
             </div>
 
@@ -44,13 +44,6 @@
             </button>
           </div>
 
-          <p
-            v-if="permissionState === 'denied'"
-            class="mt-2.5 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5"
-          >
-            In-app notifications work immediately. To also enable OS popups, allow notifications from the lock/tune icon in your browser address bar.
-          </p>
-
           <div class="mt-4 flex flex-wrap items-center justify-end gap-2.5">
             <button
               type="button"
@@ -61,6 +54,7 @@
             </button>
 
             <button
+              v-if="authStore.isAuthenticated"
               type="button"
               class="px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
               @click="openTopicSettings"
@@ -75,15 +69,7 @@
               @click="handleAcceptNotifications"
             >
               <Icon name="lucide:bell" class="h-4 w-4" />
-              <span>
-                {{
-                  isSubscribing
-                    ? 'Enabling...'
-                    : permissionState === 'denied'
-                      ? 'Accept In-App Alerts'
-                      : 'Allow Notifications'
-                }}
-              </span>
+              <span>{{ isSubscribing ? 'Requesting Permission...' : 'Allow Notifications' }}</span>
             </button>
           </div>
         </div>
@@ -97,9 +83,11 @@ import { ref, computed, watch, onMounted } from 'vue';
 import Icon from '~/components/reports/Icon.vue';
 import { usePushNotifications } from '~/composables/usePushNotifications';
 import { useNotificationStore } from '~/stores/notification';
+import { useBasicAuthStore } from '~/stores/basic-user-auth';
 
 const SESSION_DISMISS_KEY = 'gnp_push_prompt_dismissed_session';
 const route = useRoute();
+const authStore = useBasicAuthStore();
 const notificationStore = useNotificationStore();
 const {
   permissionState,
@@ -128,7 +116,6 @@ watch(
   () => route.path,
   (nextPath) => {
     if (nextPath === '/' && !isSubscribed.value) {
-      // Surface prompt when arriving on the home/index page unless dismissed this session
       try {
         dismissedThisSession.value = sessionStorage.getItem(SESSION_DISMISS_KEY) === '1';
       } catch {
@@ -140,14 +127,16 @@ watch(
 
 const shouldShowPrompt = computed(() => {
   if (!hydrated.value || dismissedThisSession.value || isSubscribed.value) return false;
+  // Never show prompt if browser permission was explicitly disallowed or unsupported
+  if (permissionState.value !== 'default') return false;
   if (route.path.startsWith('/admin') || route.path.includes('/login')) return false;
   return true;
 });
 
 async function handleAcceptNotifications() {
   const res = await enableBrowserPush();
-  dismissedThisSession.value = true;
   if (res.ok) {
+    dismissedThisSession.value = true;
     notificationStore.addNotification(
       {
         notificationId: `welcome-optin-${Date.now()}`,
@@ -160,6 +149,9 @@ async function handleAcceptNotifications() {
       },
       { showToast: true }
     );
+  } else if (res.permission === 'denied') {
+    // User explicitly disallowed notifications in the browser prompt — dismiss quietly with zero enabled popup
+    dismissForSession();
   }
 }
 

@@ -123,6 +123,8 @@ async function handleToggleBrowserPush() {
     const res = await enablePushNotifications();
     if (res.ok) {
       $toast?.success?.('Browser subscribed to live Web Push & In-App notifications.');
+    } else if (res.message) {
+      $toast?.warning?.(res.message);
     }
   }
 }
@@ -130,8 +132,12 @@ async function handleToggleBrowserPush() {
 async function handleSendTest() {
   isSendingTest.value = true;
   try {
-    await sendLiveBrowserTestPush();
-    $toast?.success?.('Live test notification dispatched to your browser.');
+    const sent = await sendLiveBrowserTestPush();
+    if (sent) {
+      $toast?.success?.('Live test notification dispatched to your browser.');
+    } else {
+      $toast?.warning?.('Allow browser notifications first to receive a test push.');
+    }
   } finally {
     isSendingTest.value = false;
   }

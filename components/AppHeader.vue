@@ -83,20 +83,23 @@
             <MagnifyingGlassIcon class="h-6 w-6" />
           </button>
 
-          <button
-            type="button"
-            title="Notifications & Push Alerts"
-            class="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg border border-gray-200 transition-colors relative cursor-pointer"
-            @click="notificationStore.isCenterOpen = true"
-          >
-            <BellIcon class="h-6 w-6" />
-            <span
-              v-if="notificationStore.unreadCount > 0"
-              class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold"
+          <ClientOnly>
+            <button
+              v-if="authStore.isAuthenticated"
+              type="button"
+              title="Notifications & Push Alerts"
+              class="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg border border-gray-200 transition-colors relative cursor-pointer"
+              @click="notificationStore.isCenterOpen = true"
             >
-              {{ notificationStore.unreadCount }}
-            </span>
-          </button>
+              <BellIcon class="h-6 w-6" />
+              <span
+                v-if="notificationStore.unreadCount > 0"
+                class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold"
+              >
+                {{ notificationStore.unreadCount }}
+              </span>
+            </button>
+          </ClientOnly>
           
           <!-- user auth button here-->
            <div class="hidden md:flex items-center space-x-4">
@@ -297,6 +300,13 @@ watch(isSearchOpen, (isOpen) => {
     nextTick(() => {
       searchInput.value?.focus()
     })
+  }
+})
+
+// Close reader notification drawer automatically if user logs out
+watch(() => authStore.isAuthenticated, (loggedIn) => {
+  if (!loggedIn && !route.path.startsWith('/admin')) {
+    notificationStore.isCenterOpen = false
   }
 })
 
