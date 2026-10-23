@@ -773,3 +773,69 @@ export interface SubscriberNewspaperAccessPage {
     lowerBound: number;
     upperBound: number;
 }
+
+// ── Enterprise Subscribers (admin) ─────────────────────────────────────────────────────────────
+// Onboard & approve enterprise orgs, onboard their seats manually / via CSV, assign packages.
+// Mock-backed via ~/mocks/enterpriseSubscribers; contracts documented in services/enterpriseSubscribers.ts.
+
+export type EnterpriseAccountType = 'corporate' | 'institution' | 'government' | 'sme';
+export type EnterpriseStatus = 'pending' | 'active' | 'suspended' | 'rejected';
+
+/** Subscription package available to enterprise subscribers (`subscription_plans`). */
+export interface EnterprisePackage {
+    id: string;
+    name: string;
+    planType: 'standard' | 'premium' | 'corporate';
+    description: string;
+    pricing: string;
+    targetPublications: string[];
+    userQuota: number;
+    billingCycles: string[];
+}
+
+/** One enterprise organization row. */
+export interface EnterpriseSubscriber {
+    id: string;
+    organizationName: string;
+    contactName: string;
+    contactEmail: string;
+    contactPhone: string;
+    accountType: EnterpriseAccountType;
+    address: string;
+    region: string;
+    packageId: string | null;
+    packageName: string | null;
+    billingCycle: string | null;
+    subscriberQuota: number;
+    enrolledUsers: number;
+    status: EnterpriseStatus;
+    createdAt: string;
+    approvedAt: string | null;
+    approvedBy: string | null;
+    rejectionReason?: string;
+}
+
+/** One onboarded seat (user) under an enterprise. */
+export interface EnterpriseUserRow {
+    id: string;
+    enterpriseId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    source: 'manual' | 'csv';
+    status: 'active';
+    createdAt: string;
+}
+
+/** One parsed CSV row (with validation state) from the enterprise users import. */
+export interface EnterpriseCsvRow {
+    /** Source line number in the uploaded file (1-based, header aware). */
+    line: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    valid: boolean;
+    error: string;
+}
