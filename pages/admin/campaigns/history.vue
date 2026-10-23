@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-7xl mx-auto">
+  <div class="max-w-8xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
     <CampaignsSubNav
       title="Broadcast History"
       subtitle="Audit sent broadcasts, manage scheduled dispatches, and resume saved drafts across all channels."

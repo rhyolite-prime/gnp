@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-7xl mx-auto">
+  <div class="max-w-8xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
     <CampaignsSubNav
       title="Campaigns & Multi-Channel Messaging"
       subtitle="Unified analytics across Browser & In-App Notifications, Email newsletters, and SMS broadcasts."
