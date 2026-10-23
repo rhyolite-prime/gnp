@@ -20,127 +20,130 @@
       </div>
     </div>
 
-    <!-- Subscriber Picker & Profile -->
-    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl p-5 mb-8">
-      <div class="grid grid-cols-1 gap-y-5 lg:grid-cols-3 gap-x-6">
-        <!-- Searchable subscriber picker -->
-        <div class="lg:col-span-1">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Subscriber</label>
-          <div class="relative dropdown-container">
-            <div class="relative rounded-md shadow-sm">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </div>
-              <input
-                type="text"
-                v-model="subscriberQuery"
-                class="block w-full rounded-md border-0 py-1.5 pl-10 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
-                placeholder="Search by name, email or phone..."
-                @focus="showSubscriberDropdown = true"
-                @input="showSubscriberDropdown = true"
-              />
-            </div>
-
-            <!-- Dropdown -->
+    <!-- Subscriber Summary Hero -->
+    <div v-if="accessProfile" class="mb-8 overflow-hidden rounded-2xl shadow-md ring-1 ring-gray-900/10">
+      <!-- Identity band -->
+      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-primary-900 px-6 py-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
             <div
-              v-if="showSubscriberDropdown"
-              class="absolute z-40 mt-1 w-full max-h-64 overflow-y-auto bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 border border-gray-100"
+              class="h-16 w-16 rounded-2xl bg-white/10 ring-2 ring-white/25 flex items-center justify-center text-white text-2xl font-bold shadow-inner"
             >
-              <button
-                v-for="sub in subscriberOptions"
-                :key="sub.id"
-                type="button"
-                class="block w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 cursor-pointer"
-                :class="sub.id === selectedSubscriberId ? 'bg-primary-50' : ''"
-                @click.prevent="selectSubscriber(sub.id)"
-              >
-                <div class="font-medium text-gray-900">{{ sub.firstName }} {{ sub.lastName }}</div>
-                <div class="text-xs text-gray-500">
-                  {{ sub.email }}
-                  <span v-if="sub.subscription"> · {{ sub.subscription.planName }}</span>
-                  <span v-else> · Pay-as-you-go</span>
-                </div>
-              </button>
-
-              <div v-if="subscriberOptions.length === 0" class="px-4 py-3 text-sm text-gray-500">
-                No subscribers match "{{ subscriberQuery }}".
+              {{ profileInitials }}
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h2 class="text-2xl font-bold text-white tracking-tight">
+                  {{ accessProfile.firstName }} {{ accessProfile.lastName }}
+                </h2>
+                <span
+                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                  :class="
+                    accessProfile.isActive
+                      ? 'bg-emerald-400/20 text-emerald-100 ring-1 ring-emerald-300/40'
+                      : 'bg-red-400/20 text-red-100 ring-1 ring-red-300/40'
+                  "
+                >
+                  {{ accessProfile.isActive ? 'Active' : 'Inactive' }}
+                </span>
+                <span
+                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-white/10 text-white ring-1 ring-white/25"
+                >
+                  {{ accountTypeLabel(accessProfile) }}
+                </span>
               </div>
+              <p class="mt-1.5 text-sm text-white/70">
+                {{ accessProfile.email }}
+                <span v-if="accessProfile.phoneNumber"> · {{ accessProfile.phoneNumber }}</span>
+              </p>
             </div>
           </div>
-        </div>
 
-        <!-- Selected subscriber summary -->
-        <div v-if="accessProfile" class="lg:col-span-2">
-          <div class="h-full rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <div class="flex items-center gap-2">
-                  <h2 class="text-base font-bold text-gray-900">
-                    {{ accessProfile.firstName }} {{ accessProfile.lastName }}
-                  </h2>
-                  <span
-                    class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
-                    :class="
-                      accessProfile.isActive
-                        ? 'bg-green-50 text-green-700 ring-green-600/20'
-                        : 'bg-red-50 text-red-700 ring-red-600/20'
-                    "
-                  >
-                    {{ accessProfile.isActive ? 'Active' : 'Inactive' }}
-                  </span>
-                  <span
-                    class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
-                    :class="accountTypeBadgeClass(accessProfile)"
-                  >
-                    {{ accountTypeLabel(accessProfile) }}
-                  </span>
-                </div>
-                <p class="mt-1 text-xs text-gray-500">
-                  {{ accessProfile.email }}
-                  <span v-if="accessProfile.phoneNumber"> · {{ accessProfile.phoneNumber }}</span>
-                </p>
-              </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <NuxtLink
+              :to="`/admin/partners/${accessProfile.partnerId}/subscribers`"
+              v-if="accessProfile.partnerId"
+              class="text-xs font-semibold text-white/80 hover:text-white underline underline-offset-4"
+            >
+              View {{ accessProfile.partnerName }} seats →
+            </NuxtLink>
 
-              <NuxtLink
-                :to="`/admin/partners/${accessProfile.partnerId}/subscribers`"
-                v-if="accessProfile.partnerId"
-                class="text-xs font-semibold text-primary-600 hover:text-primary-500"
+            <!-- Subscriber switcher -->
+            <div class="flex items-center gap-2">
+              <label for="subscriber-switcher" class="text-xs font-medium text-white/60">Subscriber</label>
+              <select
+                id="subscriber-switcher"
+                :value="selectedSubscriberId"
+                class="rounded-lg border-0 bg-white/10 py-2 pl-3 pr-9 text-sm text-white ring-1 ring-inset ring-white/25 focus:ring-2 focus:ring-white/50 cursor-pointer [&>option]:text-gray-900 [&>option]:bg-white"
+                @change="onSubscriberChange(($event.target as HTMLSelectElement).value)"
               >
-                View {{ accessProfile.partnerName }} seats →
-              </NuxtLink>
+                <option v-for="sub in subscriberOptions" :key="sub.id" :value="sub.id">
+                  {{ sub.firstName }} {{ sub.lastName }}
+                </option>
+              </select>
             </div>
-
-            <dl class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">
-              <div>
-                <dt class="text-[11px] font-medium uppercase tracking-wide text-gray-500">Plan</dt>
-                <dd class="text-sm font-semibold text-gray-900">
-                  {{ accessProfile.subscription ? accessProfile.subscription.planName : 'No Plan' }}
-                </dd>
-              </div>
-              <div>
-                <dt class="text-[11px] font-medium uppercase tracking-wide text-gray-500">Billing</dt>
-                <dd class="text-sm text-gray-900">
-                  {{ accessProfile.subscription ? accessProfile.subscription.billingCycle : 'Pay-as-you-go' }}
-                </dd>
-              </div>
-              <div>
-                <dt class="text-[11px] font-medium uppercase tracking-wide text-gray-500">Access Window</dt>
-                <dd class="text-sm text-gray-900">
-                  <template v-if="accessProfile.subscription">
-                    {{ longDateFormat(accessProfile.subscription.startDate) }} —
-                    {{ longDateFormat(accessProfile.subscription.endDate) }}
-                  </template>
-                  <template v-else>—</template>
-                </dd>
-              </div>
-              <div>
-                <dt class="text-[11px] font-medium uppercase tracking-wide text-gray-500">Subscriber Since</dt>
-                <dd class="text-sm text-gray-900">{{ longDateFormat(accessProfile.createdAt) }}</dd>
-              </div>
-            </dl>
           </div>
         </div>
       </div>
+
+      <!-- Plan details strip -->
+      <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 bg-white">
+        <div class="px-6 py-5">
+          <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Subscription Package</dt>
+          <dd class="mt-1.5 text-lg font-bold text-gray-900 leading-tight">
+            {{ accessProfile.subscription ? accessProfile.subscription.planName : 'No Active Plan' }}
+          </dd>
+          <p class="mt-0.5 text-xs text-gray-500">
+            {{ accessProfile.subscription ? accessProfile.subscription.pricing : 'Pay-as-you-go reader' }}
+          </p>
+        </div>
+
+        <div class="px-6 py-5">
+          <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Billing Cycle</dt>
+          <dd class="mt-1.5 text-lg font-bold text-gray-900 capitalize leading-tight">
+            {{ accessProfile.subscription ? accessProfile.subscription.billingCycle : '—' }}
+          </dd>
+          <p class="mt-0.5 text-xs text-gray-500">
+            <template v-if="accessProfile.subscription">
+              {{ accessProfile.subscription.subscriptionPlanDescription }}
+            </template>
+            <template v-else>Single-copy &amp; promo access only</template>
+          </p>
+        </div>
+
+        <div class="px-6 py-5">
+          <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Access Window</dt>
+          <dd class="mt-1.5 text-sm font-semibold text-gray-900">
+            <template v-if="accessProfile.subscription">
+              {{ longDateFormat(accessProfile.subscription.startDate) }} —
+              {{ longDateFormat(accessProfile.subscription.endDate) }}
+            </template>
+            <template v-else>Unlimited</template>
+          </dd>
+          <div v-if="accessProfile.subscription" class="mt-2">
+            <div class="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all duration-500"
+                :class="windowProgressPct >= 100 ? 'bg-red-500' : windowProgressPct >= 85 ? 'bg-amber-500' : 'bg-primary-600'"
+                :style="{ width: Math.min(windowProgressPct, 100) + '%' }"
+              />
+            </div>
+            <p class="mt-1 text-[11px] text-gray-400">
+              {{ Math.min(Math.round(windowProgressPct), 100) }}% of access window elapsed
+            </p>
+          </div>
+        </div>
+
+        <div class="px-6 py-5">
+          <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Subscriber Since</dt>
+          <dd class="mt-1.5 text-lg font-bold text-gray-900 leading-tight">
+            {{ longDateFormat(accessProfile.createdAt) }}
+          </dd>
+          <p class="mt-0.5 text-xs text-gray-500">
+            Last active {{ longDateAndTimeFormat(accessProfile.lastActive) }}
+          </p>
+        </div>
+      </dl>
     </div>
 
     <!-- Summary Chips -->
@@ -471,19 +474,15 @@ useHead({
 const router = useRouter()
 const route = useRoute()
 
-// ─── Subscriber Picker ───────────────────────────────────────────────────────
-const subscriberQuery = ref('')
-const showSubscriberDropdown = ref(false)
+// ─── Subscriber Selection ────────────────────────────────────────────────────
 const selectedSubscriberId = ref('')
 const accessProfile = ref<SubscriberAccessProfile | null>(null)
 const accessSummary = ref<SubscriberAccessSummary | null>(null)
 
-const subscriberOptions = computed(() => searchSubscriberDirectory(subscriberQuery.value))
+const subscriberOptions = computed(() => searchSubscriberDirectory(''))
 
-const selectSubscriber = async (subscriberId: string) => {
+const onSubscriberChange = async (subscriberId: string) => {
   selectedSubscriberId.value = subscriberId
-  showSubscriberDropdown.value = false
-  subscriberQuery.value = ''
   filters.pageNo = 1
   const filteredQuery = filterQueryParams({ ...route.query, subscriberId, ...filters })
   router.replace({ name: route.name ?? '', query: filteredQuery })
@@ -496,12 +495,20 @@ const loadAccessProfile = () => {
   accessProfile.value = profile?.subscriber ?? null
 }
 
-// Close the picker dropdown on outside click
-const handleOutsideDropdownClick = (e: any) => {
-  if (!e.target.closest('.dropdown-container')) {
-    showSubscriberDropdown.value = false
-  }
-}
+const profileInitials = computed(() => {
+  if (!accessProfile.value) return ''
+  return `${accessProfile.value.firstName.charAt(0)}${accessProfile.value.lastName.charAt(0)}`.toUpperCase()
+})
+
+const windowProgressPct = computed(() => {
+  const sub = accessProfile.value?.subscription
+  if (!sub) return 0
+  const start = new Date(sub.startDate).getTime()
+  const end = new Date(sub.endDate).getTime()
+  const now = Date.now()
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0
+  return ((now - start) / (end - start)) * 100
+})
 
 // ─── Filters ─────────────────────────────────────────────────────────────────
 const showFilters = ref(false)
@@ -596,8 +603,6 @@ watch(() => filters.query, debouncedSearch)
 
 // ─── Init (restore subscriberId from query string, else first subscriber) ───
 onMounted(async () => {
-  document.addEventListener('click', handleOutsideDropdownClick)
-
   const querySubscriberId = String(route.query.subscriberId || '')
   const exists = querySubscriberId && searchSubscriberDirectory('').some((s) => s.id === querySubscriberId)
   selectedSubscriberId.value = exists ? querySubscriberId : (searchSubscriberDirectory('')[0]?.id ?? '')
@@ -614,21 +619,11 @@ onMounted(async () => {
   await fetchAccessRows()
 })
 
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleOutsideDropdownClick)
-})
-
 // ─── Badge & Format Helpers ──────────────────────────────────────────────────
 const accountTypeLabel = (sub: SubscriberAccessProfile) => {
   if (sub.accountType === 'partner') return 'Partner Seat'
   if (sub.accountType === 'affiliate') return 'Affiliate Referral'
   return 'Regular'
-}
-
-const accountTypeBadgeClass = (sub: SubscriberAccessProfile) => {
-  if (sub.accountType === 'partner') return 'bg-blue-50 text-blue-700 ring-blue-600/20'
-  if (sub.accountType === 'affiliate') return 'bg-green-50 text-green-700 ring-green-600/20'
-  return 'bg-gray-50 text-gray-700 ring-gray-600/20'
 }
 
 const accessTypeBadgeClass = (type: SubscriberAccessSource) => {
