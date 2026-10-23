@@ -186,7 +186,6 @@ import {
   MegaphoneIcon,
   RectangleGroupIcon,
   BuildingOfficeIcon,
-  BuildingOffice2Icon,
   Bars3Icon,
   BellIcon,
   UserGroupIcon,
@@ -216,7 +215,6 @@ const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon, permission: 'dashboard' },
   { name: 'Subscribers', href: '/admin/subscribers', icon: UserGroupIcon, permission: 'subscribers.manage' },
   { name: 'Accessible Newspapers', href: '/admin/accessible-newspapers', icon: NewspaperIcon, permission: 'subscribers.manage' },
-  { name: 'Enterprise Subscribers', href: '/admin/enterprises', icon: BuildingOffice2Icon, permission: 'subscribers.manage' },
   {
     name: 'Content',
     icon: DocumentTextIcon,
