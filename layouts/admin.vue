@@ -189,6 +189,7 @@ import {
   Bars3Icon,
   BellIcon,
   UserGroupIcon,
+  NewspaperIcon,
   TicketIcon,
   CurrencyDollarIcon,
   ArrowRightOnRectangleIcon,
@@ -213,6 +214,7 @@ const expandedMenus = ref<Record<string, boolean>>({
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon, permission: 'dashboard' },
   { name: 'Subscribers', href: '/admin/subscribers', icon: UserGroupIcon, permission: 'subscribers.manage' },
+  { name: 'Subscriber Newspapers', href: '/admin/subscriber-newspapers', icon: NewspaperIcon, permission: 'subscribers.manage' },
   {
     name: 'Content',
     icon: DocumentTextIcon,

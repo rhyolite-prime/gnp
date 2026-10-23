@@ -668,3 +668,108 @@ export interface PartnerApiRequestLog {
     responseBody?: unknown;
     createdAt: string;
 }
+
+// ── Subscriber Newspaper Access (admin) ────────────────────────────────────────────────────────
+// GET admin/subscribers/{subscriberId}/newspaper-access (mock-backed via ~/mocks/subscriberNewspapers)
+// Mirrors gnp-api tables: user_subscriptions.newspaper_entitlements, purchase_attempts,
+// GrantNewsPaperAccessDto grants, and free `newspapers` editions.
+
+/** How a subscriber gained access to one newspaper edition. */
+export type SubscriberAccessSource =
+    | 'plan_entitlement'
+    | 'single_copy_purchase'
+    | 'promo_grant'
+    | 'free_access';
+
+/** Derived access state as of today: revoked | expired | expiring_soon | active */
+export type SubscriberAccessStatus = 'active' | 'expiring_soon' | 'expired' | 'revoked';
+
+/** One row of the "newspapers a subscriber can access" list (access record + edition). */
+export interface SubscriberNewspaperAccessRow {
+    id: string;
+    subscriberId: string;
+    newspaperId: string;
+    accessType: SubscriberAccessSource;
+    accessTypeLabel: string;
+    /** Human-readable source (plan name, `Order PAY-…`, `Promo …`, or `Free edition`). */
+    grantedVia: string;
+    /** Backend reference: subscription identifier, purchase attempt reference, or promo code. */
+    sourceReference: string;
+    grantedAt: string;
+    /** Permanent copies (single-copy buys / free editions) have `null`. */
+    expiresAt: string | null;
+    revoked: boolean;
+    accessStatus: SubscriberAccessStatus;
+    newspaper: {
+        id: string;
+        title: string;
+        slug: string;
+        price: string;
+        isFree: boolean;
+        publicationId: string;
+        publicationName: string;
+        editionNumber: string;
+        isPopular: boolean;
+        fullDescription: string;
+        isPublished: boolean;
+        publishedDate: string;
+        createdAt: string;
+    };
+}
+
+/** Filter-aware summary chips for the access list. */
+export interface SubscriberAccessSummary {
+    total: number;
+    planEntitlement: number;
+    singleCopy: number;
+    promoGrant: number;
+    freeAccess: number;
+    active: number;
+    expiringSoon: number;
+    expired: number;
+    revoked: number;
+}
+
+/** Subscriber + plan snapshot shown at the top of the Subscriber Newspapers page. */
+export interface SubscriberAccessProfile {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    country: string;
+    isActive: boolean;
+    accountType: 'regular' | 'partner' | 'affiliate';
+    partnerId: string | null;
+    partnerName: string | null;
+    lastActive: string;
+    createdAt: string;
+    subscription: {
+        subscriptionIdentifier: string;
+        subscriptionPlanId: string;
+        planName: string;
+        planType: string;
+        billingCycle: string;
+        subscriptionPlanDescription: string;
+        pricing: string;
+        targetPublications: string[];
+        newspaperEntitlements: string[];
+        isActive: boolean;
+        startDate: string;
+        endDate: string;
+        nextRenewalDate: string | null;
+    } | null;
+}
+
+/** Paginated `result` of GET admin/subscribers/{subscriberId}/newspaper-access. */
+export interface SubscriberNewspaperAccessPage {
+    subscriber: SubscriberAccessProfile | null;
+    summary: SubscriberAccessSummary | null;
+    data: SubscriberNewspaperAccessRow[];
+    pageNo: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+    lowerBound: number;
+    upperBound: number;
+}
