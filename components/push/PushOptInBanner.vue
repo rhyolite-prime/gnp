@@ -1,57 +1,89 @@
 <template>
   <Transition
     enter-active-class="transition ease-out duration-300"
-    enter-from-class="opacity-0 translate-y-4"
-    enter-to-class="opacity-100 translate-y-0"
+    enter-from-class="opacity-0 -translate-y-4 scale-95"
+    enter-to-class="opacity-100 translate-y-0 scale-100"
     leave-active-class="transition ease-in duration-150"
-    leave-from-class="opacity-100"
-    leave-to-class="opacity-0"
+    leave-from-class="opacity-100 scale-100"
+    leave-to-class="opacity-0 -translate-y-2 scale-95"
   >
     <div
-      v-if="shouldShowBanner"
-      class="fixed bottom-4 left-4 z-40 max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 sm:p-5"
+      v-if="shouldShowPrompt"
+      role="dialog"
+      aria-label="Allow Browser & In-App Notifications"
+      class="fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-1.5rem)] max-w-lg bg-white rounded-2xl shadow-2xl border border-gray-200 ring-1 ring-black/5 p-5"
     >
-      <div class="flex items-start gap-3.5">
-        <div class="h-10 w-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
-          <Icon name="lucide:bell-ring" class="h-5 w-5 text-red-600" />
+      <div class="flex items-start gap-4">
+        <div class="relative h-12 w-12 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+          <Icon name="lucide:bell-ring" class="h-6 w-6 text-primary-600" />
+          <span class="absolute -top-1 -right-1 flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-primary-600" />
+          </span>
         </div>
 
         <div class="flex-1 min-w-0">
           <div class="flex items-start justify-between gap-2">
-            <h4 class="text-sm font-extrabold text-gray-900">
-              Enable Instant Breaking News & Edition Alerts
-            </h4>
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-gray-900">
+                Allow Browser &amp; In-App Notifications?
+              </h3>
+              <p class="text-xs sm:text-sm text-gray-600 mt-1 leading-relaxed">
+                Stay ahead with instant breaking news alerts, 5:30 AM
+                <strong>Daily Graphic</strong> edition drops, and important account updates.
+              </p>
+            </div>
+
             <button
               type="button"
-              class="text-gray-400 hover:text-gray-600 p-0.5 cursor-pointer"
-              @click="dismissForWeek"
+              aria-label="Dismiss notification prompt"
+              class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0"
+              @click="dismissForSession"
             >
               <Icon name="lucide:x" class="h-4 w-4" />
             </button>
           </div>
 
-          <p class="text-xs text-gray-600 mt-1 leading-relaxed">
-            Get notified the moment major Ghana stories break and when the 5:30 AM
-            <strong>Daily Graphic</strong> digital edition drops.
+          <p
+            v-if="permissionState === 'denied'"
+            class="mt-2.5 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5"
+          >
+            In-app notifications work immediately. To also enable OS popups, allow notifications from the lock/tune icon in your browser address bar.
           </p>
 
-          <div class="mt-3.5 flex flex-wrap items-center gap-2">
+          <div class="mt-4 flex flex-wrap items-center justify-end gap-2.5">
             <button
               type="button"
-              :disabled="isSubscribing"
-              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-xs transition-colors cursor-pointer disabled:opacity-50"
-              @click="handleOptIn"
+              class="px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
+              @click="dismissForSession"
             >
-              <Icon name="lucide:bell" class="h-3.5 w-3.5" />
-              <span>{{ isSubscribing ? 'Activating...' : 'Allow Browser Alerts' }}</span>
+              Not Now
             </button>
 
             <button
               type="button"
-              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
-              @click="openPreferences"
+              class="px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
+              @click="openTopicSettings"
             >
-              <span>Customize Topics</span>
+              Customize Topics
+            </button>
+
+            <button
+              type="button"
+              :disabled="isSubscribing"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-white shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+              @click="handleAcceptNotifications"
+            >
+              <Icon name="lucide:bell" class="h-4 w-4" />
+              <span>
+                {{
+                  isSubscribing
+                    ? 'Enabling...'
+                    : permissionState === 'denied'
+                      ? 'Accept In-App Alerts'
+                      : 'Allow Notifications'
+                }}
+              </span>
             </button>
           </div>
         </div>
@@ -61,45 +93,84 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import Icon from '~/components/reports/Icon.vue';
 import { usePushNotifications } from '~/composables/usePushNotifications';
+import { useNotificationStore } from '~/stores/notification';
 
-const DISMISS_KEY = 'gnp_push_optin_dismissed_until';
+const SESSION_DISMISS_KEY = 'gnp_push_prompt_dismissed_session';
 const route = useRoute();
-const { isSubscribed, isSubscribing, isCenterOpen, enableBrowserPush } = usePushNotifications();
+const notificationStore = useNotificationStore();
+const {
+  permissionState,
+  isSubscribed,
+  isSubscribing,
+  isCenterOpen,
+  enableBrowserPush,
+} = usePushNotifications();
 
-const dismissed = ref(true);
+const hydrated = ref(false);
+const dismissedThisSession = ref(false);
 
 onMounted(() => {
   try {
-    const until = Number(localStorage.getItem(DISMISS_KEY) || '0');
-    dismissed.value = Date.now() < until;
+    localStorage.removeItem('gnp_push_optin_dismissed_until');
+    dismissedThisSession.value = sessionStorage.getItem(SESSION_DISMISS_KEY) === '1';
   } catch {
-    dismissed.value = false;
+    dismissedThisSession.value = false;
   }
+  setTimeout(() => {
+    hydrated.value = true;
+  }, 250);
 });
 
-const shouldShowBanner = computed(() => {
-  if (dismissed.value || isSubscribed.value) return false;
+watch(
+  () => route.path,
+  (nextPath) => {
+    if (nextPath === '/' && !isSubscribed.value) {
+      // Surface prompt when arriving on the home/index page unless dismissed this session
+      try {
+        dismissedThisSession.value = sessionStorage.getItem(SESSION_DISMISS_KEY) === '1';
+      } catch {
+        dismissedThisSession.value = false;
+      }
+    }
+  }
+);
+
+const shouldShowPrompt = computed(() => {
+  if (!hydrated.value || dismissedThisSession.value || isSubscribed.value) return false;
   if (route.path.startsWith('/admin') || route.path.includes('/login')) return false;
   return true;
 });
 
-async function handleOptIn() {
-  await enableBrowserPush();
-  dismissed.value = true;
+async function handleAcceptNotifications() {
+  const res = await enableBrowserPush();
+  dismissedThisSession.value = true;
+  if (res.ok) {
+    notificationStore.addNotification(
+      {
+        notificationId: `welcome-optin-${Date.now()}`,
+        subject: 'Notifications Enabled on Graphic NewsPlus',
+        messageBody: res.message,
+        category: 'platform_updates',
+        urgency: 'normal',
+        deepLink: '/newspapers',
+        timestamp: Date.now(),
+      },
+      { showToast: true }
+    );
+  }
 }
 
-function openPreferences() {
-  dismissed.value = true;
+function openTopicSettings() {
   isCenterOpen.value = true;
 }
 
-function dismissForWeek() {
-  dismissed.value = true;
+function dismissForSession() {
+  dismissedThisSession.value = true;
   try {
-    localStorage.setItem(DISMISS_KEY, String(Date.now() + 7 * 24 * 3600 * 1000));
+    sessionStorage.setItem(SESSION_DISMISS_KEY, '1');
   } catch {
     // Ignore storage error
   }

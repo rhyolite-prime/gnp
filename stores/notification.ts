@@ -8,7 +8,7 @@ import type {
 export type NotificationPayload = PushNotificationInboxItem;
 
 const STORAGE_INBOX_KEY = 'gnp_push_inbox_v1';
-const STORAGE_PREFS_KEY = 'gnp_push_prefs_v1';
+const STORAGE_PREFS_KEY = 'gnp_push_prefs_v2';
 
 const DEFAULT_TOPICS: PushTopicCategory[] = [
   'breaking_news',

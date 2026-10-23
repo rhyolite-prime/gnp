@@ -164,7 +164,23 @@ export function usePushNotifications() {
 
     store.hydrateFromLocalStorage();
     refreshPermissionState();
-    ensureServiceWorker();
+    ensureServiceWorker().then(async (reg) => {
+      // If user reset browser permissions back to 'default' in browser settings,
+      // re-arm the opt-in prompt automatically if no real PushSubscription exists.
+      if (
+        typeof Notification !== 'undefined' &&
+        Notification.permission === 'default' &&
+        store.isSubscribed &&
+        !store.isSimulatedSubscription
+      ) {
+        const sub = await reg?.pushManager?.getSubscription().catch(() => null);
+        if (!sub) {
+          isSubscribed.value = false;
+          activeEndpoint.value = '';
+          store.persistState();
+        }
+      }
+    });
 
     // 1. Service Worker postMessage bridge (Web Push arrival + notification click routing)
     if ('serviceWorker' in navigator) {
