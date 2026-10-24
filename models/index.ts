@@ -634,6 +634,74 @@ export interface ArchiveSearchResponse {
     targetUrl: string;
 }
 
+// ── Archived Newspapers & Pages browser (admin) ────────────────────────────────────────────────
+// GET admin/archives/decades + GET admin/archives/editions — mock-backed via ~/mocks/archivedNewspapers.
+// Two display modes: "Collections by Years" (decade cards) and "By Dates" (date groups + thumbnails).
+
+/** Per-year edition coverage inside a decade collection. */
+export interface ArchiveYearStat {
+    year: number;
+    editionCount: number;
+}
+
+/** One decade collection card ("1950's", "1960's", ...). */
+export interface ArchiveDecadeCollection {
+    id: string;
+    /** e.g. "1970's" */
+    label: string;
+    startYear: number;
+    endYear: number;
+    editionCount: number;
+    pageCount: number;
+    publicationsCovered: number;
+    description: string;
+    yearStats: ArchiveYearStat[];
+}
+
+/** One archived newspaper edition (with digitized page metadata). */
+export interface ArchivedNewspaperEdition {
+    id: string;
+    title: string;
+    slug: string;
+    publicationId: string;
+    publicationName: string;
+    editionNumber: string;
+    /** yyyy-MM-dd */
+    publicationDate: string;
+    pageCount: number;
+    digitizedPages: number;
+    ocrStatus: 'complete' | 'partial' | 'pending';
+    price: string;
+    isFree: boolean;
+    isPublished: boolean;
+    thumbnailId: string;
+    documentId: string;
+    storageService: string;
+    createdAt: string;
+    views: number;
+}
+
+/** One publication-date group in the "By Dates" mode. */
+export interface ArchiveDateGroup {
+    /** yyyy-MM-dd */
+    date: string;
+    /** e.g. "Saturday, 6 March 1957" */
+    label: string;
+    editionCount: number;
+    pageCount: number;
+    editions: ArchivedNewspaperEdition[];
+}
+
+/** Coverage chips shown above both display modes. */
+export interface ArchiveCoverageSummary {
+    decades: number;
+    editions: number;
+    pages: number;
+    publications: number;
+    ocrCompletePct: number;
+    dateSpan: string;
+}
+
 // ── Partner API request logs (admin) ──────────────────────────────────────────
 // GET admin/get-partner-api-request-logs
 // NOTE: item field names below are assumptions until confirmed against the API.
