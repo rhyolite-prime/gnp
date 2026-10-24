@@ -225,7 +225,7 @@ const navigation = [
       { name: 'Newspapers', href: '/admin/content-management/newspapers', permission: 'content.newspapers.view' },
       { name: 'Videos', href: '/admin/content-management/videos', permission: 'content.videos.view' },
       { name: 'Audios', href: '/admin/content-management/audios', permission: 'content.audios.view' },
-      { name: 'Ingestion Jobs', href: '/admin/content-management/ingestion-jobs' },
+      //{ name: 'Ingestion Jobs', href: '/admin/content-management/ingestion-jobs' },
     ],
   },
   {
@@ -236,7 +236,7 @@ const navigation = [
       { name: 'Overview', href: '/admin/archives/dashboard', permission: 'content.archives.dashboard.view' },
       { name: 'Newspapers', href: '/admin/archives/newspapers', permission: 'content.archives.newspapers.view' },
       { name: 'Enterprise Subscribers', href: '/admin/archives/institutions', permission: 'content.archives.enterprise_subscrbers.view' },
-      { name: 'Access Credits', href: '/admin/archives/access-credits', permission: 'content.archives.access_credits.configure' }
+      //{ name: 'Access Credits', href: '/admin/archives/access-credits', permission: 'content.archives.access_credits.configure' }
     ],
   },
   {
