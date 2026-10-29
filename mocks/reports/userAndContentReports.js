@@ -346,4 +346,80 @@ export const USER_AND_CONTENT_REPORTS_MOCK = {
       { title: 'Black Stars Tactical Breakdown Podcast', format: 'Podcast / Audio', playsOrReads: 11280, completionPct: 69.0, subscriberConversions: 41 },
     ],
   },
+
+  // 2.4 Subscriber Account Status -> POST /api/v1/reports/subscriber-account-status
+  // Source tables: users, user_subscriptions, subscription_lifecycle_events, payments
+  // `renewalsByWindow` powers the "renewed within the last X days" parameter (7/30/60/90).
+  subscriber_account_status: {
+    endpoint: '/api/v1/reports/subscriber-account-status',
+    summary: [
+      { key: 'activeAccounts', label: 'Active Subscription Accounts', value: 4218, format: 'number', changePct: 3.2 },
+      { key: 'expiredAccounts', label: 'Expired Subscription Accounts', value: 638, format: 'number', changePct: -5.4 },
+      { key: 'renewedWithinWindow', label: 'Renewed (Last 30 Days)', value: 512, format: 'number', changePct: 6.8 },
+      { key: 'renewalRatePct', label: 'Renewal Rate', value: 82.6, format: 'percent', changePct: 2.4 },
+    ],
+    renewalsByWindow: {
+      7: 128,
+      30: 512,
+      60: 968,
+      90: 1420,
+    },
+    charts: [
+      {
+        id: 'account_status_split',
+        title: 'Account & Subscription Split',
+        type: 'donut',
+        items: [
+          { name: 'Active Subscription', value: 4218 },
+          { name: 'Expired Subscription', value: 638 },
+          { name: 'Registered (No Subscription)', value: 2194 },
+          { name: 'Trial / Promo Access', value: 312 },
+        ],
+      },
+      {
+        id: 'renewals_within_window',
+        title: 'Renewals Within Lookback Windows',
+        type: 'horizontal_bar',
+        labels: ['Last 7 Days', 'Last 30 Days', 'Last 60 Days', 'Last 90 Days'],
+        series: [{ name: 'Subscriptions Renewed', data: [128, 512, 968, 1420] }],
+      },
+      {
+        id: 'active_vs_expired_trend',
+        title: 'Active vs Expired Accounts by Month',
+        type: 'bar_line',
+        span: 'full',
+        labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+        yAxisLabel: 'Accounts',
+        secondaryYAxisLabel: 'Renewal Rate %',
+        series: [
+          { name: 'Active', type: 'bar', data: [3820, 3912, 3996, 4078, 4152, 4218] },
+          { name: 'Expired', type: 'bar', data: [742, 716, 694, 672, 654, 638] },
+          { name: 'Renewal Rate', type: 'line', yAxisIndex: 1, data: [79.2, 79.8, 80.4, 81.1, 81.9, 82.6] },
+        ],
+      },
+    ],
+    columns: [
+      { key: 'account', label: 'Account' },
+      { key: 'email', label: 'Email' },
+      { key: 'plan', label: 'Plan' },
+      { key: 'status', label: 'Status', format: 'badge' },
+      { key: 'billingCycle', label: 'Billing' },
+      { key: 'startedOn', label: 'Started' },
+      { key: 'expiresOn', label: 'Expires' },
+      { key: 'lastRenewalOn', label: 'Last Renewal' },
+      { key: 'daysSinceRenewal', label: 'Days Since Renewal', align: 'right', format: 'number' },
+    ],
+    rows: [
+      { account: 'Ama Serwaa Mensah', email: 'ama.mensah@example.com.gh', plan: 'premium', status: 'active', billingCycle: 'Monthly', startedOn: '2026-09-28', expiresOn: '2026-10-28', lastRenewalOn: '2026-10-20', daysSinceRenewal: 3 },
+      { account: 'Kwame Boateng', email: 'kwame.boateng@example.com.gh', plan: 'standard', status: 'active', billingCycle: 'Monthly', startedOn: '2026-10-01', expiresOn: '2026-10-31', lastRenewalOn: '2026-10-12', daysSinceRenewal: 11 },
+      { account: 'Efua Nyarko', email: 'e.nyarko@glaghana.org', plan: 'corporate', status: 'active', billingCycle: 'Annual', startedOn: '2026-08-15', expiresOn: '2026-11-15', lastRenewalOn: '2026-09-30', daysSinceRenewal: 23 },
+      { account: 'Kofi Asante', email: 'kofi.asante@example.com.gh', plan: 'premium', status: 'expired', billingCycle: 'Quarterly', startedOn: '2026-07-01', expiresOn: '2026-08-31', lastRenewalOn: '2026-07-01', daysSinceRenewal: 114 },
+      { account: 'Akosua Adjei', email: 'akosua.adjei@example.com.gh', plan: 'standard', status: 'expired', billingCycle: 'Monthly', startedOn: '2026-08-22', expiresOn: '2026-09-22', lastRenewalOn: '2026-08-22', daysSinceRenewal: 62 },
+      { account: 'Yaw Ofori-Atta', email: 'y.ofori-att@mogep.gov.gh', plan: 'corporate', status: 'active', billingCycle: 'Annual', startedOn: '2025-11-01', expiresOn: '2026-10-30', lastRenewalOn: '2026-08-19', daysSinceRenewal: 65 },
+      { account: 'Abena Asare', email: 'abena.asare@glaghana.org', plan: 'standard', status: 'active', billingCycle: 'Monthly', startedOn: '2026-08-20', expiresOn: '2026-10-24', lastRenewalOn: '2026-10-19', daysSinceRenewal: 4 },
+      { account: 'Nii Lante Armah', email: 'n.armah@ecobank.com.gh', plan: 'premium', status: 'active', billingCycle: 'Annual', startedOn: '2025-10-15', expiresOn: '2026-10-14', lastRenewalOn: '2026-09-25', daysSinceRenewal: 28 },
+      { account: 'Selorm Agbeko', email: 's.agbeko@gij.edu.gh', plan: 'standard', status: 'expired', billingCycle: 'Monthly', startedOn: '2026-05-26', expiresOn: '2026-06-26', lastRenewalOn: '2026-05-26', daysSinceRenewal: 150 },
+      { account: 'Joyce Mensima', email: 'j.mensima@melcom.com.gh', plan: 'standard', status: 'active', billingCycle: 'Monthly', startedOn: '2026-06-11', expiresOn: '2026-11-11', lastRenewalOn: '2026-10-05', daysSinceRenewal: 18 },
+    ],
+  },
 };

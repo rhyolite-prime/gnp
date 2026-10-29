@@ -138,6 +138,17 @@
                   <option value="push">Push Notification</option>
                 </select>
               </div>
+
+              <!-- Renewal Window Dropdown (renewed within the last X days) -->
+              <div v-if="selectedReport.parameters.includes('renewalWindow')">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Renewal Lookback Window</label>
+                <select v-model="params.renewalWindow" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border bg-white">
+                  <option value="7">Last 7 Days</option>
+                  <option value="30">Last 30 Days</option>
+                  <option value="60">Last 60 Days</option>
+                  <option value="90">Last 90 Days</option>
+                </select>
+              </div>
             </div>
 
             <div v-else class="text-sm text-gray-500 italic p-4 bg-gray-50 rounded-lg border border-gray-100">
@@ -514,6 +525,7 @@ const params = reactive({
   plan: 'all',
   channel: 'all',
   partnerId: 'p-mtn-001',
+  renewalWindow: '30',
 });
 
 const selectedGroup = ref<ReportGroup | null>(null);
@@ -557,6 +569,7 @@ const resetParams = () => {
   params.plan = 'all';
   params.channel = 'all';
   params.partnerId = partnerList.value[0]?.id || 'p-mtn-001';
+  params.renewalWindow = '30';
   invoiceGenerated.value = false;
   reportGenerated.value = false;
   activeReportData.value = null;
@@ -578,13 +591,16 @@ const selectedPartnerDetails = computed(() => {
 const reportHandlers: Record<string, (p: typeof params) => Promise<any>> = {
   // 1. Revenue & Financial
   sales_revenue: (p) => generateSalesReport({ startDate: p.startDate, endDate: p.endDate, plan: p.plan !== 'all' ? p.plan : undefined }),
+  revenue_by_publication: (p) => generateRevenueByPublicationReport({ startDate: p.startDate, endDate: p.endDate, plan: p.plan !== 'all' ? p.plan : undefined }),
   payment_transactions: (p) => generatePaymentTransactionsReport({ startDate: p.startDate, endDate: p.endDate, status: p.status !== 'all' ? p.status : undefined }),
   partner_invoices: (p) => generatePartnerInvoice({ partnerId: p.partnerId, startDate: p.startDate, endDate: p.endDate }),
   subscription_renewals: (p) => generateSubscriptionRenewalsReport({ startDate: p.startDate, endDate: p.endDate }),
+  subscription_expiry_renewals: (p) => generateSubscriptionExpiryReport({ startDate: p.startDate, endDate: p.endDate, plan: p.plan !== 'all' ? p.plan : undefined }),
   single_copy_paywall_funnel: (p) => generateSingleCopyFunnelReport({ startDate: p.startDate, endDate: p.endDate }),
 
   // 2. User & Subscriber
   subscriber_demographics: (p) => generateSubscriberDemographicsReport({ status: p.status !== 'all' ? p.status : undefined, startDate: p.startDate, endDate: p.endDate }),
+  subscriber_account_status: (p) => generateSubscriberAccountStatusReport({ status: p.status !== 'all' ? p.status : undefined, plan: p.plan !== 'all' ? p.plan : undefined, renewalWindowDays: Number(p.renewalWindow) || 30 }),
   plan_distribution: (p) => generatePlanDistributionReport({ plan: p.plan !== 'all' ? p.plan : undefined }),
   subscriber_retention_cohorts: (p) => generateSubscriberRetentionReport({ startDate: p.startDate, endDate: p.endDate, plan: p.plan !== 'all' ? p.plan : undefined }),
 

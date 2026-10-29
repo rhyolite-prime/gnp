@@ -2,7 +2,7 @@
 
 > **Frontend Repository:** `rhyolite-prime/gnp` (`pages/admin/reports/index.vue`, `services/reports.ts`, `utils/reportChartOption.js`, `mocks/reports/*.js`)  
 > **Backend Repository:** `rhyolite-prime/gnp-api` (C++20 · Drogon HTTP Framework · PostgreSQL 16 + `pgvector` · Redis)  
-> **Scope:** All **27 Platform Reports across 8 Report Groups** + **3 Supporting Endpoints** (30 total endpoints)
+> **Scope:** All **30 Platform Reports across 8 Report Groups** + **3 Supporting Endpoints** (33 total endpoints)
 
 ---
 
@@ -17,8 +17,8 @@
 2. [Part II — Complete Request Parameters & Response Payload Contracts (All 30 Endpoints)](#part-ii--complete-request-parameters--response-payload-contracts-all-30-endpoints)
    - [2.1 Standard API Envelope & Common TypeScript / JSON Contracts](#21-standard-api-envelope--common-typescript--json-contracts)
    - [2.2 Exact Chart Object Schemas Consumed by Apache ECharts (`utils/reportChartOption.js`)](#22-exact-chart-object-schemas-consumed-by-apache-echarts-utilsreportchartoptionjs)
-   - [2.3 Group 1: Revenue & Financial Endpoints (5 Reports + Invoice Email Dispatch)](#23-group-1-revenue--financial-endpoints-5-reports--invoice-email-dispatch)
-   - [2.4 Group 2: User & Subscriber Endpoints (3 Reports)](#24-group-2-user--subscriber-endpoints-3-reports)
+   - [2.3 Group 1: Revenue & Financial Endpoints (7 Reports + Invoice Email Dispatch)](#23-group-1-revenue--financial-endpoints-7-reports--invoice-email-dispatch)
+   - [2.4 Group 2: User & Subscriber Endpoints (4 Reports)](#24-group-2-user--subscriber-endpoints-4-reports)
    - [2.5 Group 3: Content & Newspaper Endpoints (4 Reports)](#25-group-3-content--newspaper-endpoints-4-reports)
    - [2.6 Group 4: Commercial Partner B2B Endpoints (3 Reports + Partner Directory)](#26-group-4-commercial-partner-b2b-endpoints-3-reports--partner-directory)
    - [2.7 Group 5: Marketing & Campaigns Endpoints (5 Reports)](#27-group-5-marketing--campaigns-endpoints-5-reports)
@@ -34,7 +34,7 @@
 
 ## 1.1 Taxonomy of the 6 Different Report Archetypes
 
-Although `/admin/reports` renders all 27 reports through a unified, clean report viewer shell (`pages/admin/reports/index.vue`), the underlying backend SQL engines fall into **6 distinct engineering archetypes** with different query patterns, indexing needs, and caching strategies:
+Although `/admin/reports` renders all 30 reports through a unified, clean report viewer shell (`pages/admin/reports/index.vue`), the underlying backend SQL engines fall into **6 distinct engineering archetypes** with different query patterns, indexing needs, and caching strategies:
 
 | Archetype | Reports in This Archetype | Primary Visuals | Query Pattern & Backend Engineering Strategy |
 |---|---|---|---|
@@ -73,6 +73,7 @@ struct ReportFilterDto {
     std::optional<std::string> status;            // Normalized: omits "all" -> std::nullopt
     std::optional<std::string> plan;              // "standard" | "premium" | "corporate" (omits "all")
     std::optional<std::string> channel;           // "email" | "sms" | "push" (omits "all")
+    std::optional<int> renewalWindowDays;         // 7 | 30 | 60 | 90 (defaults to 30)
     int pageNo = 1;
     int pageSize = 100;
 
@@ -176,15 +177,15 @@ Because `services/reports.ts` encapsulates **every single report behind its own 
 | Phase | Deliverables | Reports Unlocked |
 |---|---|---|
 | **Phase 0 — Foundation & Bug Fixes (Days 1–2)** | Land `ReportFilterDto`, `ReportResponseBuilder`, fix all 5 existing `gnp-api` bugs, run `ALTER TABLE` statements on `payments`, `user_subscriptions`, `ingestion_jobs`, `commercial_partner_api_keys`. | Unblocks all downstream phases + fixes live Partner Invoice email & totals immediately. |
-| **Phase 1 — Zero-New-Table Core Reports (Days 3–6)** | Implement all reports powered purely by **already existing tables** (`payments`, `users`, `user_profiles`, `countries`, `user_subscriptions`, `subscription_plans`, `publications`, `newspapers`, `magazines`, `articles`, `ingestion_jobs`, `commercial_partners`, `commercial_partner_sub_accounts`, `commercial_partner_api_logs`, `commercial_partner_api_keys`, `coupons`, `coupon_redemptions`, `affiliate_payouts`, `puzzles`, `puzzle_attempts`, `admin_users`, `roles`). | **16 endpoints live immediately:** `sales_revenue`, `payment_transactions`, `partner_invoices`, `partner-invoice-email`, `subscriber_demographics`, `plan_distribution`, `newspaper_engagement`, `content_inventory`, `ingestion_jobs`, `partner_engagement`, `partner_quota`, `partner_api_usage`, `coupon_usage`, `affiliate_payout_reconciliation`, `games_engagement_retention`, `admin_roles`, `api_key_audit`. |
-| **Phase 2 — Lifecycle, Funnel & Attribution Tables (Days 7–10)** | Create & instrument `subscription_lifecycle_events`, `edition_sales_ledger`, `campaign_recipient_events`, `affiliate_referral_clicks` hooks inside `PaymentService`, `SubscriptionService`, `CampaignService`, `AffiliateService`. | **5 endpoints live:** `subscription_renewals`, `single_copy_paywall_funnel`, `subscriber_retention_cohorts`, `campaign_performance`, `affiliate_performance`. |
+| **Phase 1 — Zero-New-Table Core Reports (Days 3–6)** | Implement all reports powered purely by **already existing tables** (`payments`, `users`, `user_profiles`, `countries`, `user_subscriptions`, `subscription_plans`, `publications`, `newspapers`, `magazines`, `articles`, `ingestion_jobs`, `commercial_partners`, `commercial_partner_sub_accounts`, `commercial_partner_api_logs`, `commercial_partner_api_keys`, `coupons`, `coupon_redemptions`, `affiliate_payouts`, `puzzles`, `puzzle_attempts`, `admin_users`, `roles`). | **17 endpoints live immediately:** `sales_revenue`, `revenue_by_publication`, `payment_transactions`, `partner_invoices`, `partner-invoice-email`, `subscriber_demographics`, `plan_distribution`, `newspaper_engagement`, `content_inventory`, `ingestion_jobs`, `partner_engagement`, `partner_quota`, `partner_api_usage`, `coupon_usage`, `affiliate_payout_reconciliation`, `games_engagement_retention`, `admin_roles`, `api_key_audit`. |
+| **Phase 2 — Lifecycle, Funnel & Attribution Tables (Days 7–10)** | Create & instrument `subscription_lifecycle_events`, `edition_sales_ledger`, `campaign_recipient_events`, `affiliate_referral_clicks` hooks inside `PaymentService`, `SubscriptionService`, `CampaignService`, `AffiliateService`. | **7 endpoints live:** `subscription_renewals`, `subscription_expiry_renewals`, `subscriber_account_status`, `single_copy_paywall_funnel`, `subscriber_retention_cohorts`, `campaign_performance`, `affiliate_performance`. |
 | **Phase 3 — Push, Multimedia, Archives & Governance Tables (Days 11–14)** | Create & instrument `web_push_subscriptions`, `push_broadcasts`, `audios`, `media_playback_events`, `archive_search_and_rag_logs`, `institutional_archive_accounts`, `archive_credit_transactions`, `security_audit_logs`, `support_tickets`. | **7 endpoints live:** `push_notification_analytics` (+ Push Studio `/api/v1/push/*`), `multimedia_originals_performance`, `archive_rag_intelligence`, `institutional_archive_credits`, `security_audit_logs`, `support_tickets_sla`. |
 | **Phase 4 — Performance Hardening & Caching (Days 15–16)** | Enable composite indexes, Redis 120s query cache, and midnight cron writing to `daily_platform_kpi_snapshots`. | Sub-50ms p95 across 1-year date windows. |
 | **Phase 5 — Frontend Cutover (`services/reports.ts`, Day 17)** | Replace each `getMockReportData(...)` call in `services/reports.ts` with `const res = await apiPost('/reports/<slug>', dto); return res.result;` behind runtime flag or per-endpoint cutover. | **Zero changes needed in `pages/admin/reports/index.vue` or `utils/reportChartOption.js`!** |
 
 ---
 
-# Part II — Complete Request Parameters & Response Payload Contracts (All 30 Endpoints)
+# Part II — Complete Request Parameters & Response Payload Contracts (All 33 Endpoints)
 
 ## 2.1 Standard API Envelope & Common TypeScript / JSON Contracts
 
@@ -213,10 +214,11 @@ interface ReportFilterDto {
   plan?: string;            // "standard" | "premium" | "corporate" (omit or ignore if "all")
   channel?: string;         // "email" | "sms" | "push" (omit or ignore if "all")
   publicationId?: string;   // Optional publication UUID filter
+  renewalWindowDays?: number; // 7 | 30 | 60 | 90 (default 30) — "renewed within the last X days" lookback
 }
 ```
 
-### Standard Report `result` Payload Schema (Used by 26 of 27 Reports)
+### Standard Report `result` Payload Schema (Used by 29 of 30 Reports)
 ```ts
 interface StandardReportPayload {
   endpoint: string;                // Canonical API path, e.g. "/api/v1/reports/sales-revenue"
@@ -379,7 +381,7 @@ interface PartnerQuotaSummary {
 
 ---
 
-## 2.3 Group 1: Revenue & Financial Endpoints (5 Reports + Invoice Email Dispatch)
+## 2.3 Group 1: Revenue & Financial Endpoints (7 Reports + Invoice Email Dispatch)
 
 ### Endpoint 1.1 — Sales & Revenue Overview
 - **Method & URL:** `POST /api/v1/reports/sales-revenue`
@@ -596,7 +598,57 @@ interface PartnerQuotaSummary {
 
 ---
 
-## 2.4 Group 2: User & Subscriber Endpoints (3 Reports)
+### Endpoint 1.6 — Revenue by Publication *(New Suggested Report)*
+- **Method & URL:** `POST /api/v1/reports/revenue-by-publication`
+- **Frontend Caller:** `generateRevenueByPublicationReport(dto)`
+- **PostgreSQL Tables:** `edition_sales_ledger` *(new)*, `payments`, `publications`, `newspapers`, `user_subscriptions`
+- **Request Params:** `{ "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD", "plan": "standard" | "premium" | "corporate" }`
+- **Response `result` Payload:**
+  - `summary`: `totalRevenueGhs` (`currency`), `subscriptionRevenueGhs` (`currency`), `singleCopyRevenueGhs` (`currency`), `topPublicationSharePct` (`percent`)
+  - `charts`: `revenue_by_publication_bar` (`horizontal_bar`, `span: "full"` — ranked revenue per publication), `publication_revenue_trend` (`stacked_bar`, `span: "full"` — monthly revenue split, leading publications + others), `revenue_share_donut` (`donut` — revenue share by publication)
+  - `rows[]` schema:
+    ```json
+    {
+      "publication": "Daily Graphic",
+      "copiesSold": 18420,
+      "activeSubscriptions": 3980,
+      "subscriptionRevenue": 84200.0,
+      "singleCopyRevenue": 22670.0,
+      "totalRevenue": 106870.0,
+      "sharePct": 34.2,
+      "status": "Active"
+    }
+    ```
+
+---
+
+### Endpoint 1.7 — Subscription Expiry & Renewal History *(New Suggested Report)*
+- **Method & URL:** `POST /api/v1/reports/subscription-expiry-renewals`
+- **Frontend Caller:** `generateSubscriptionExpiryReport(dto)`
+- **PostgreSQL Tables:** `user_subscriptions`, `subscription_lifecycle_events` *(new)*, `subscription_plans`, `users`
+- **Request Params:** `{ "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD", "plan": "standard" | "premium" | "corporate" }`
+- **Response `result` Payload:**
+  - `summary`: `activeSubscriptions` (`number`), `expiringIn7Days` (`number`), `expiringIn30Days` (`number`), `renewedLast30Days` (`number`), `lapsedExpiries` (`number`)
+  - `charts`: `expiry_renewal_trend` (`bar_line`, `span: "full"` — Expiring + Renewed bars, `Renewal Rate` `line` on `secondaryYAxisLabel: "Renewal Rate %"`), `renewal_outcomes_donut` (`donut` — auto-renew / manual renewal / downgraded / cancelled / lapsed), `expiring_by_plan_bar` (`horizontal_bar`)
+  - `rows[]` schema (per-subscriber expiry + renewal history):
+    ```json
+    {
+      "subscriber": "Ama Serwaa Mensah",
+      "email": "ama.mensah@example.com.gh",
+      "plan": "premium",
+      "billingCycle": "Monthly",
+      "startedOn": "2026-09-28",
+      "expiresOn": "2026-10-28",
+      "daysLeft": 5,
+      "autoRenew": "Enabled",
+      "renewalStatus": "Pending Renewal",
+      "lastRenewalOn": "2026-09-28"
+    }
+    ```
+
+---
+
+## 2.4 Group 2: User & Subscriber Endpoints (4 Reports)
 
 ### Endpoint 2.1 — Subscriber Demographics & Status
 - **Method & URL:** `POST /api/v1/reports/subscriber-demographics`
@@ -659,6 +711,31 @@ interface PartnerQuotaSummary {
       "m1Pct": 86.0,
       "m3Pct": 74.0,
       "ltvGhs": 412.5
+    }
+    ```
+
+---
+
+### Endpoint 2.4 — Subscriber Account Status *(New Suggested Report)*
+- **Method & URL:** `POST /api/v1/reports/subscriber-account-status`
+- **Frontend Caller:** `generateSubscriberAccountStatusReport(dto)`
+- **PostgreSQL Tables:** `users`, `user_subscriptions`, `subscription_plans`, `payments`, `subscription_lifecycle_events` *(new)*
+- **Request Params:** `{ "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD", "status": "active" | "inactive" | "pending", "plan": "standard" | "premium" | "corporate", "renewalWindowDays": 7 | 30 | 60 | 90 }`
+- **Response `result` Payload:**
+  - `summary`: `activeAccounts` (`number`), `expiredAccounts` (`number`), `renewedWithinWindow` (`number` — label becomes "Renewed (Last {renewalWindowDays} Days)"), `renewalRatePct` (`percent`)
+  - `charts`: `account_status_split` (`donut` — active subscription / expired subscription / registered-no-subscription / trial), `renewals_within_window` (`horizontal_bar` — counts for 7/30/60/90-day lookbacks), `active_vs_expired_trend` (`bar_line`, `span: "full"` — active + expired bars + renewal-rate `line` on `secondaryYAxisLabel: "Renewal Rate %"`)
+  - `rows[]` schema:
+    ```json
+    {
+      "account": "Ama Serwaa Mensah",
+      "email": "ama.mensah@example.com.gh",
+      "plan": "premium",
+      "status": "active",
+      "billingCycle": "Monthly",
+      "startedOn": "2026-09-28",
+      "expiresOn": "2026-10-28",
+      "lastRenewalOn": "2026-10-20",
+      "daysSinceRenewal": 3
     }
     ```
 
@@ -1174,32 +1251,35 @@ Rendered directly inside `/admin/push-notifications` (`fetchPushDashboard()` in 
 | # | Group | Report ID | HTTP Method & Endpoint Path | Accepted Filter Params | Rollout Phase |
 |---|---|---|---|---|---|
 | 1 | Financial | `sales_revenue` | `POST /api/v1/reports/sales-revenue` | `startDate`, `endDate`, `plan` | Phase 1 |
-| 2 | Financial | `payment_transactions` | `POST /api/v1/reports/payment-transactions` | `startDate`, `endDate`, `status` | Phase 1 |
-| 3 | Financial | `partner_invoices` | `POST /api/v1/reports/partner-invoices` | `partnerId`*, `startDate`*, `endDate`*, `status` | Phase 1 |
-| 4 | Financial *(Action)* | `partner_invoice_email` | `POST /api/v1/reports/partner-invoice-email` | `partnerId`*, `startDate`*, `endDate`* | Phase 0 / 1 |
-| 5 | Financial | `subscription_renewals` | `POST /api/v1/reports/subscription-renewals` | `startDate`, `endDate` | Phase 2 |
-| 6 | Financial *(New)* | `single_copy_paywall_funnel` | `POST /api/v1/reports/single-copy-paywall-funnel` | `startDate`, `endDate` | Phase 2 |
-| 7 | Users | `subscriber_demographics` | `POST /api/v1/reports/subscriber-demographics` | `startDate`, `endDate`, `status` | Phase 1 |
-| 8 | Users | `plan_distribution` | `POST /api/v1/reports/plan-distribution` | `plan` | Phase 1 |
-| 9 | Users *(New)* | `subscriber_retention_cohorts` | `POST /api/v1/reports/subscriber-retention-cohorts` | `startDate`, `endDate`, `plan` | Phase 2 |
-| 10 | Content | `newspaper_engagement` | `POST /api/v1/reports/newspaper-engagement` | `startDate`, `endDate` | Phase 1 |
-| 11 | Content | `content_inventory` | `POST /api/v1/reports/content-inventory` | `status` | Phase 1 |
-| 12 | Content | `ingestion_jobs` | `POST /api/v1/reports/ingestion-jobs` | `startDate`, `endDate`, `status` | Phase 1 |
-| 13 | Content *(New)* | `multimedia_originals_performance` | `POST /api/v1/reports/multimedia-originals-performance` | `startDate`, `endDate` | Phase 3 |
-| 14 | Partners *(Lookup)* | `commercial_partners` | `GET /api/v1/commercial-partners` | `pageNo`, `pageSize` | Phase 1 (Existing) |
-| 15 | Partners | `partner_engagement` | `POST /api/v1/reports/partner-engagement` | `startDate`, `endDate` | Phase 1 |
-| 16 | Partners | `partner_quota` | `POST /api/v1/reports/partner-quota` | *(none)* | Phase 1 |
-| 17 | Partners | `partner_api_usage` | `POST /api/v1/reports/partner-api-usage` | `startDate`, `endDate` | Phase 1 |
-| 18 | Marketing | `campaign_performance` | `POST /api/v1/reports/campaign-performance` | `startDate`, `endDate`, `channel` | Phase 2 |
-| 19 | Marketing | `coupon_usage` | `POST /api/v1/reports/coupon-usage` | `startDate`, `endDate`, `status` | Phase 1 |
-| 20 | Marketing *(New)* | `affiliate_performance` | `POST /api/v1/reports/affiliate-performance` | `startDate`, `endDate` | Phase 2 |
-| 21 | Marketing *(New)* | `affiliate_payout_reconciliation` | `POST /api/v1/reports/affiliate-payout-reconciliation` | `startDate`, `endDate`, `status` | Phase 1 |
-| 22 | Marketing *(New)* | `push_notification_analytics` | `POST /api/v1/reports/push-notification-analytics` | `startDate`, `endDate` | Phase 3 |
-| 23 | Archives *(New)* | `archive_rag_intelligence` | `POST /api/v1/reports/archive-rag-intelligence` | `startDate`, `endDate` | Phase 3 |
-| 24 | Archives *(New)* | `institutional_archive_credits` | `POST /api/v1/reports/institutional-archive-credits` | `startDate`, `endDate`, `status` | Phase 3 |
-| 25 | Games *(New)* | `games_engagement_retention` | `POST /api/v1/reports/games-engagement-retention` | `startDate`, `endDate` | Phase 1 |
-| 26 | Admin | `admin_roles` | `POST /api/v1/reports/admin-roles` | *(none)* | Phase 1 |
-| 27 | Admin | `api_key_audit` | `POST /api/v1/reports/api-key-audit` | `status` | Phase 1 |
-| 28 | Admin *(New)* | `security_audit_logs` | `POST /api/v1/reports/security-audit-logs` | `startDate`, `endDate`, `status` | Phase 3 |
-| 29 | Admin *(New)* | `support_tickets_sla` | `POST /api/v1/reports/support-tickets-sla` | `startDate`, `endDate`, `status` | Phase 3 |
-| 30 | Push Studio | `push_dashboard` | `GET /api/v1/push/dashboard` | *(none)* | Phase 3 |
+| 2 | Financial *(New)* | `revenue_by_publication` | `POST /api/v1/reports/revenue-by-publication` | `startDate`, `endDate`, `plan` | Phase 1 |
+| 3 | Financial | `payment_transactions` | `POST /api/v1/reports/payment-transactions` | `startDate`, `endDate`, `status` | Phase 1 |
+| 4 | Financial | `partner_invoices` | `POST /api/v1/reports/partner-invoices` | `partnerId`*, `startDate`*, `endDate`*, `status` | Phase 1 |
+| 5 | Financial *(Action)* | `partner_invoice_email` | `POST /api/v1/reports/partner-invoice-email` | `partnerId`*, `startDate`*, `endDate`* | Phase 0 / 1 |
+| 6 | Financial | `subscription_renewals` | `POST /api/v1/reports/subscription-renewals` | `startDate`, `endDate` | Phase 2 |
+| 7 | Financial *(New)* | `subscription_expiry_renewals` | `POST /api/v1/reports/subscription-expiry-renewals` | `startDate`, `endDate`, `plan` | Phase 2 |
+| 8 | Financial *(New)* | `single_copy_paywall_funnel` | `POST /api/v1/reports/single-copy-paywall-funnel` | `startDate`, `endDate` | Phase 2 |
+| 9 | Users | `subscriber_demographics` | `POST /api/v1/reports/subscriber-demographics` | `startDate`, `endDate`, `status` | Phase 1 |
+| 10 | Users *(New)* | `subscriber_account_status` | `POST /api/v1/reports/subscriber-account-status` | `startDate`, `endDate`, `status`, `plan`, `renewalWindowDays` | Phase 2 |
+| 11 | Users | `plan_distribution` | `POST /api/v1/reports/plan-distribution` | `plan` | Phase 1 |
+| 12 | Users *(New)* | `subscriber_retention_cohorts` | `POST /api/v1/reports/subscriber-retention-cohorts` | `startDate`, `endDate`, `plan` | Phase 2 |
+| 13 | Content | `newspaper_engagement` | `POST /api/v1/reports/newspaper-engagement` | `startDate`, `endDate` | Phase 1 |
+| 14 | Content | `content_inventory` | `POST /api/v1/reports/content-inventory` | `status` | Phase 1 |
+| 15 | Content | `ingestion_jobs` | `POST /api/v1/reports/ingestion-jobs` | `startDate`, `endDate`, `status` | Phase 1 |
+| 16 | Content *(New)* | `multimedia_originals_performance` | `POST /api/v1/reports/multimedia-originals-performance` | `startDate`, `endDate` | Phase 3 |
+| 17 | Partners *(Lookup)* | `commercial_partners` | `GET /api/v1/commercial-partners` | `pageNo`, `pageSize` | Phase 1 (Existing) |
+| 18 | Partners | `partner_engagement` | `POST /api/v1/reports/partner-engagement` | `startDate`, `endDate` | Phase 1 |
+| 19 | Partners | `partner_quota` | `POST /api/v1/reports/partner-quota` | *(none)* | Phase 1 |
+| 20 | Partners | `partner_api_usage` | `POST /api/v1/reports/partner-api-usage` | `startDate`, `endDate` | Phase 1 |
+| 21 | Marketing | `campaign_performance` | `POST /api/v1/reports/campaign-performance` | `startDate`, `endDate`, `channel` | Phase 2 |
+| 22 | Marketing | `coupon_usage` | `POST /api/v1/reports/coupon-usage` | `startDate`, `endDate`, `status` | Phase 1 |
+| 23 | Marketing *(New)* | `affiliate_performance` | `POST /api/v1/reports/affiliate-performance` | `startDate`, `endDate` | Phase 2 |
+| 24 | Marketing *(New)* | `affiliate_payout_reconciliation` | `POST /api/v1/reports/affiliate-payout-reconciliation` | `startDate`, `endDate`, `status` | Phase 1 |
+| 25 | Marketing *(New)* | `push_notification_analytics` | `POST /api/v1/reports/push-notification-analytics` | `startDate`, `endDate` | Phase 3 |
+| 26 | Archives *(New)* | `archive_rag_intelligence` | `POST /api/v1/reports/archive-rag-intelligence` | `startDate`, `endDate` | Phase 3 |
+| 27 | Archives *(New)* | `institutional_archive_credits` | `POST /api/v1/reports/institutional-archive-credits` | `startDate`, `endDate`, `status` | Phase 3 |
+| 28 | Games *(New)* | `games_engagement_retention` | `POST /api/v1/reports/games-engagement-retention` | `startDate`, `endDate` | Phase 1 |
+| 29 | Admin | `admin_roles` | `POST /api/v1/reports/admin-roles` | *(none)* | Phase 1 |
+| 30 | Admin | `api_key_audit` | `POST /api/v1/reports/api-key-audit` | `status` | Phase 1 |
+| 31 | Admin *(New)* | `security_audit_logs` | `POST /api/v1/reports/security-audit-logs` | `startDate`, `endDate`, `status` | Phase 3 |
+| 32 | Admin *(New)* | `support_tickets_sla` | `POST /api/v1/reports/support-tickets-sla` | `startDate`, `endDate`, `status` | Phase 3 |
+| 33 | Push Studio | `push_dashboard` | `GET /api/v1/push/dashboard` | *(none)* | Phase 3 |

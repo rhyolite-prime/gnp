@@ -22,9 +22,11 @@ export const MOCK_REPORT_GROUPS = [
     description: 'Track sales, subscriptions, invoices, and overall platform revenue.',
     reports: [
       { id: 'sales_revenue', name: 'Sales & Revenue Overview', description: 'Breakdown of total revenue generated over time.', parameters: ['dateRange', 'plan'] },
+      { id: 'revenue_by_publication', name: 'Revenue by Publication', description: 'Revenue split across the six publications — subscriptions, single-copy, and archive credits.', parameters: ['dateRange', 'plan'] },
       { id: 'payment_transactions', name: 'Payment Transactions Log', description: 'Detailed log of all payments grouped by status.', parameters: ['dateRange', 'status'] },
       { id: 'partner_invoices', name: 'Partner Invoices', description: 'B2B/Commercial Partner financials and outstanding balances.', parameters: ['partner', 'dateRange', 'status'] },
       { id: 'subscription_renewals', name: 'Subscription Renewals & Churn', description: 'Analysis of active subscriptions and churn rates.', parameters: ['dateRange'] },
+      { id: 'subscription_expiry_renewals', name: 'Subscription Expiry & Renewal History', description: 'Subscriptions expiring or nearing expiry, with renewal history and outcomes.', parameters: ['dateRange', 'plan'] },
       { id: 'single_copy_paywall_funnel', name: 'Single-Copy Paywall Funnel', description: 'Edition paywall impressions, guest checkouts, and plan upsells.', parameters: ['dateRange'] },
     ],
   },
@@ -34,6 +36,7 @@ export const MOCK_REPORT_GROUPS = [
     description: 'Analyze user demographics, account statuses, and plan distributions.',
     reports: [
       { id: 'subscriber_demographics', name: 'Subscriber Demographics & Status', description: 'Summary of all registered users and their account states.', parameters: ['status', 'dateRange'] },
+      { id: 'subscriber_account_status', name: 'Subscriber Account Status', description: 'Active accounts, expired subscriptions, and renewals within the last X days.', parameters: ['status', 'plan', 'renewalWindow'] },
       { id: 'plan_distribution', name: 'Subscription Plan Distribution', description: 'Number of subscribers per plan type.', parameters: ['plan'] },
       { id: 'subscriber_retention_cohorts', name: 'Subscriber Retention Cohorts', description: 'Month-over-month retention cohorts and lifetime value.', parameters: ['dateRange', 'plan'] },
     ],
@@ -122,6 +125,21 @@ export function getMockReportData(reportIdOrSlug, params = {}) {
       ...selectedInvoice,
       charts: clone.charts,
     };
+  }
+
+  // Special handling for Subscriber Account Status report:
+  // the `renewalWindowDays` parameter (7 | 30 | 60 | 90) drives the
+  // "subscriptions renewed within the last X days" figure + its summary label.
+  if (resolvedId === 'subscriber_account_status') {
+    const requested = Number(params.renewalWindowDays);
+    const window = [7, 30, 60, 90].includes(requested) ? requested : 30;
+    const renewedCount = (clone.renewalsByWindow && clone.renewalsByWindow[window]) || 0;
+    const summaryEntry = (clone.summary || []).find((s) => s.key === 'renewedWithinWindow');
+    if (summaryEntry) {
+      summaryEntry.label = `Renewed (Last ${window} Days)`;
+      summaryEntry.value = renewedCount;
+    }
+    delete clone.renewalsByWindow;
   }
 
   // Apply clean row filtering on ordinary JS arrays when filter parameters are passed

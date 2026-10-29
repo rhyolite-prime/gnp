@@ -153,6 +153,14 @@ export const REPORT_GROUPS: ReportGroupDefinition[] = [
         endpoint: '/api/v1/reports/sales-revenue',
       },
       {
+        id: 'revenue_by_publication',
+        groupId: 'financial',
+        name: 'Revenue by Publication',
+        description: 'Revenue split across the six Graphic publications — subscription revenue, single-copy sales, and archive credits per publication.',
+        parameters: ['dateRange', 'plan'],
+        endpoint: '/api/v1/reports/revenue-by-publication',
+      },
+      {
         id: 'payment_transactions',
         groupId: 'financial',
         name: 'Payment Transactions Log',
@@ -175,6 +183,14 @@ export const REPORT_GROUPS: ReportGroupDefinition[] = [
         description: 'MRR movement waterfall (New, Renewal, Expansion, Contraction, Churned MRR), renewal success rates, and voluntary vs failed-payment churn.',
         parameters: ['dateRange', 'plan', 'granularity'],
         endpoint: '/api/v1/reports/subscription-renewals',
+      },
+      {
+        id: 'subscription_expiry_renewals',
+        groupId: 'financial',
+        name: 'Subscription Expiry & Renewal History',
+        description: 'Subscriptions expiring or nearing expiry (7/30-day buckets), renewal outcomes (auto-renew, manual, downgraded, cancelled, lapsed), and per-subscriber renewal history.',
+        parameters: ['dateRange', 'plan'],
+        endpoint: '/api/v1/reports/subscription-expiry-renewals',
       },
       {
         id: 'single_copy_paywall_funnel',
@@ -201,6 +217,14 @@ export const REPORT_GROUPS: ReportGroupDefinition[] = [
         description: 'Registration velocity, active/locked/unverified account states, Ghana vs Diaspora breakdown, and WebAuthn/Passkey vs OTP adoption.',
         parameters: ['status', 'dateRange', 'granularity'],
         endpoint: '/api/v1/reports/subscriber-demographics',
+      },
+      {
+        id: 'subscriber_account_status',
+        groupId: 'users',
+        name: 'Subscriber Account Status',
+        description: 'Active subscription accounts, expired subscription accounts, and subscriptions renewed within the last X days (renewalWindowDays: 7 | 30 | 60 | 90).',
+        parameters: ['status', 'plan', 'renewalWindow'],
+        endpoint: '/api/v1/reports/subscriber-account-status',
       },
       {
         id: 'plan_distribution',

@@ -8,6 +8,8 @@ export interface ReportFilterDto {
   status?: string;
   plan?: string;
   channel?: string;
+  /** Lookback window (days) for "renewed within the last X days" reports: 7 | 30 | 60 | 90. */
+  renewalWindowDays?: number;
 }
 
 /**
@@ -21,13 +23,16 @@ export const runReportById = async (reportId: string, dto: ReportFilterDto = {})
 
 // 1. Revenue & Financial
 export const generateSalesReport = async (dto: ReportFilterDto) => getMockReportData('sales_revenue', dto);
+export const generateRevenueByPublicationReport = async (dto: ReportFilterDto) => getMockReportData('revenue_by_publication', dto);
 export const generatePaymentTransactionsReport = async (dto: ReportFilterDto) => getMockReportData('payment_transactions', dto);
 export const generatePartnerInvoice = async (dto: ReportFilterDto) => getMockReportData('partner_invoices', dto);
 export const generateSubscriptionRenewalsReport = async (dto: ReportFilterDto) => getMockReportData('subscription_renewals', dto);
+export const generateSubscriptionExpiryReport = async (dto: ReportFilterDto) => getMockReportData('subscription_expiry_renewals', dto);
 export const generateSingleCopyFunnelReport = async (dto: ReportFilterDto) => getMockReportData('single_copy_paywall_funnel', dto);
 
 // 2. User & Subscriber
 export const generateSubscriberDemographicsReport = async (dto: ReportFilterDto) => getMockReportData('subscriber_demographics', dto);
+export const generateSubscriberAccountStatusReport = async (dto: ReportFilterDto) => getMockReportData('subscriber_account_status', dto);
 export const generatePlanDistributionReport = async (dto: ReportFilterDto) => getMockReportData('plan_distribution', dto);
 export const generateSubscriberRetentionReport = async (dto: ReportFilterDto) => getMockReportData('subscriber_retention_cohorts', dto);
 

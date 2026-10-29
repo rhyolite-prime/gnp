@@ -397,4 +397,143 @@ export const FINANCIAL_REPORTS_MOCK = {
       { publication: 'Junior Graphic — STEM Olympiad Edition', issueDate: '2026-10-16', previewReaders: 3120, copiesSold: 214, convRate: 6.9, revenueGhs: 1284.0 },
     ],
   },
+
+  // 1.6 Revenue by Publication -> POST /api/v1/reports/revenue-by-publication
+  // Source tables: edition_sales_ledger, payments, publications, newspapers, user_subscriptions
+  revenue_by_publication: {
+    endpoint: '/api/v1/reports/revenue-by-publication',
+    summary: [
+      { key: 'totalRevenueGhs', label: 'Total Revenue', value: 312480.0, format: 'currency', changePct: 18.4 },
+      { key: 'subscriptionRevenueGhs', label: 'Subscription Revenue', value: 198600.0, format: 'currency', changePct: 14.2 },
+      { key: 'singleCopyRevenueGhs', label: 'Single-Copy Revenue', value: 113880.0, format: 'currency', changePct: 22.8 },
+      { key: 'topPublicationSharePct', label: 'Top Publication Share', value: 34.2, format: 'percent', changePct: 1.9 },
+    ],
+    charts: [
+      {
+        id: 'revenue_by_publication_bar',
+        title: 'Revenue by Publication (GHS)',
+        type: 'horizontal_bar',
+        span: 'full',
+        labels: ['Daily Graphic', 'Graphic Business', 'The Mirror', 'Graphic Sports', 'Graphic Showbiz', 'Junior Graphic'],
+        series: [{ name: 'Revenue (GHS)', data: [106870, 62480, 48220, 36140, 31250, 27520] }],
+      },
+      {
+        id: 'publication_revenue_trend',
+        title: 'Monthly Revenue Split by Publication (Top 4 + Others)',
+        type: 'stacked_bar',
+        span: 'full',
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+        yAxisLabel: 'GHS',
+        series: [
+          { name: 'Daily Graphic', data: [8200, 8640, 9100, 9420, 9880, 10240, 10610, 11020, 11480, 18280] },
+          { name: 'Graphic Business', data: [4820, 5010, 5240, 5480, 5720, 5940, 6180, 6420, 6710, 6960] },
+          { name: 'The Mirror', data: [3680, 3820, 3960, 4100, 4240, 4380, 4520, 4680, 4840, 5000] },
+          { name: 'Other Publications', data: [7220, 7480, 7720, 7960, 8220, 8460, 8720, 8980, 9260, 9520] },
+        ],
+      },
+      {
+        id: 'revenue_share_donut',
+        title: 'Revenue Share by Publication',
+        type: 'donut',
+        items: [
+          { name: 'Daily Graphic', value: 106870 },
+          { name: 'Graphic Business', value: 62480 },
+          { name: 'The Mirror', value: 48220 },
+          { name: 'Graphic Sports', value: 36140 },
+          { name: 'Graphic Showbiz', value: 31250 },
+          { name: 'Junior Graphic', value: 27520 },
+        ],
+      },
+    ],
+    columns: [
+      { key: 'publication', label: 'Publication' },
+      { key: 'copiesSold', label: 'Copies Sold', align: 'right', format: 'number' },
+      { key: 'activeSubscriptions', label: 'Active Subscriptions', align: 'right', format: 'number' },
+      { key: 'subscriptionRevenue', label: 'Subscription (GHS)', align: 'right', format: 'currency' },
+      { key: 'singleCopyRevenue', label: 'Single-Copy (GHS)', align: 'right', format: 'currency' },
+      { key: 'totalRevenue', label: 'Total (GHS)', align: 'right', format: 'currency' },
+      { key: 'sharePct', label: 'Share', align: 'right', format: 'percent' },
+      { key: 'status', label: 'Status', format: 'badge' },
+    ],
+    rows: [
+      { publication: 'Daily Graphic', copiesSold: 18420, activeSubscriptions: 3980, subscriptionRevenue: 84200.0, singleCopyRevenue: 22670.0, totalRevenue: 106870.0, sharePct: 34.2, status: 'Active' },
+      { publication: 'Graphic Business', copiesSold: 9240, activeSubscriptions: 2310, subscriptionRevenue: 44180.0, singleCopyRevenue: 18300.0, totalRevenue: 62480.0, sharePct: 20.0, status: 'Active' },
+      { publication: 'The Mirror', copiesSold: 8120, activeSubscriptions: 1740, subscriptionRevenue: 28220.0, singleCopyRevenue: 20000.0, totalRevenue: 48220.0, sharePct: 15.4, status: 'Active' },
+      { publication: 'Graphic Sports', copiesSold: 6890, activeSubscriptions: 1220, subscriptionRevenue: 18640.0, singleCopyRevenue: 17500.0, totalRevenue: 36140.0, sharePct: 11.6, status: 'Active' },
+      { publication: 'Graphic Showbiz', copiesSold: 5940, activeSubscriptions: 980, subscriptionRevenue: 14120.0, singleCopyRevenue: 17130.0, totalRevenue: 31250.0, sharePct: 10.0, status: 'Active' },
+      { publication: 'Junior Graphic', copiesSold: 4210, activeSubscriptions: 860, subscriptionRevenue: 9240.0, singleCopyRevenue: 18280.0, totalRevenue: 27520.0, sharePct: 8.8, status: 'Active' },
+    ],
+  },
+
+  // 1.7 Subscription Expiry & Renewal History -> POST /api/v1/reports/subscription-expiry-renewals
+  // Source tables: user_subscriptions, subscription_lifecycle_events, subscription_plans, users
+  subscription_expiry_renewals: {
+    endpoint: '/api/v1/reports/subscription-expiry-renewals',
+    summary: [
+      { key: 'activeSubscriptions', label: 'Active Subscriptions', value: 4218, format: 'number', changePct: 3.2 },
+      { key: 'expiringIn7Days', label: 'Expiring in 7 Days', value: 186, format: 'number', changePct: -4.5 },
+      { key: 'expiringIn30Days', label: 'Expiring in 30 Days', value: 742, format: 'number', changePct: 2.1 },
+      { key: 'renewedLast30Days', label: 'Renewed (Last 30 Days)', value: 512, format: 'number', changePct: 6.8 },
+      { key: 'lapsedExpiries', label: 'Lapsed After Expiry (30d)', value: 89, format: 'number', changePct: -11.2 },
+    ],
+    charts: [
+      {
+        id: 'expiry_renewal_trend',
+        title: 'Expiring vs Renewed Subscriptions by Month',
+        type: 'bar_line',
+        span: 'full',
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+        yAxisLabel: 'Subscriptions',
+        secondaryYAxisLabel: 'Renewal Rate %',
+        series: [
+          { name: 'Expiring', type: 'bar', data: [610, 625, 640, 655, 668, 682, 695, 710, 726, 742] },
+          { name: 'Renewed', type: 'bar', data: [468, 482, 496, 505, 518, 524, 536, 548, 562, 574] },
+          { name: 'Renewal Rate', type: 'line', yAxisIndex: 1, data: [76.7, 77.1, 77.5, 77.1, 77.5, 76.8, 77.1, 77.2, 77.4, 77.4] },
+        ],
+      },
+      {
+        id: 'renewal_outcomes_donut',
+        title: 'Renewal Outcomes (Last 30 Days)',
+        type: 'donut',
+        items: [
+          { name: 'Renewed (Auto-Renew)', value: 312 },
+          { name: 'Renewed (Manual)', value: 200 },
+          { name: 'Downgraded', value: 38 },
+          { name: 'Cancelled', value: 62 },
+          { name: 'Lapsed (No Renewal)', value: 89 },
+        ],
+      },
+      {
+        id: 'expiring_by_plan_bar',
+        title: 'Expiring in 30 Days by Plan',
+        type: 'horizontal_bar',
+        labels: ['Premium All-Access', 'Standard Daily Bundle', 'Corporate Bulk Tier', 'Student / Promo'],
+        series: [{ name: 'Expiring Subscriptions', data: [318, 244, 126, 54] }],
+      },
+    ],
+    columns: [
+      { key: 'subscriber', label: 'Subscriber' },
+      { key: 'email', label: 'Email' },
+      { key: 'plan', label: 'Plan' },
+      { key: 'billingCycle', label: 'Billing' },
+      { key: 'startedOn', label: 'Started' },
+      { key: 'expiresOn', label: 'Expires' },
+      { key: 'daysLeft', label: 'Days Left', align: 'right', format: 'number' },
+      { key: 'autoRenew', label: 'Auto-Renew' },
+      { key: 'renewalStatus', label: 'Renewal Status', format: 'badge' },
+      { key: 'lastRenewalOn', label: 'Last Renewal' },
+    ],
+    rows: [
+      { subscriber: 'Ama Serwaa Mensah', email: 'ama.mensah@example.com.gh', plan: 'premium', billingCycle: 'Monthly', startedOn: '2026-09-28', expiresOn: '2026-10-28', daysLeft: 5, autoRenew: 'Enabled', renewalStatus: 'Pending Renewal', lastRenewalOn: '2026-09-28' },
+      { subscriber: 'Kwame Boateng', email: 'kwame.boateng@example.com.gh', plan: 'standard', billingCycle: 'Monthly', startedOn: '2026-10-01', expiresOn: '2026-10-31', daysLeft: 8, autoRenew: 'Enabled', renewalStatus: 'Active', lastRenewalOn: '2026-10-01' },
+      { subscriber: 'Efua Nyarko', email: 'e.nyarko@glaghana.org', plan: 'corporate', billingCycle: 'Annual', startedOn: '2026-08-15', expiresOn: '2026-11-15', daysLeft: 23, autoRenew: 'Enabled', renewalStatus: 'Active', lastRenewalOn: '2025-11-15' },
+      { subscriber: 'Kofi Asante', email: 'kofi.asante@example.com.gh', plan: 'premium', billingCycle: 'Quarterly', startedOn: '2026-07-01', expiresOn: '2026-08-31', daysLeft: -53, autoRenew: 'Disabled', renewalStatus: 'Expired', lastRenewalOn: '2026-07-01' },
+      { subscriber: 'Akosua Adjei', email: 'akosua.adjei@example.com.gh', plan: 'standard', billingCycle: 'Monthly', startedOn: '2026-09-22', expiresOn: '2026-10-22', daysLeft: -1, autoRenew: 'Disabled', renewalStatus: 'Pending Renewal', lastRenewalOn: '2026-09-22' },
+      { subscriber: 'Yaw Ofori-Atta', email: 'y.ofori-att@mogep.gov.gh', plan: 'corporate', billingCycle: 'Annual', startedOn: '2025-11-01', expiresOn: '2026-10-30', daysLeft: 7, autoRenew: 'Enabled', renewalStatus: 'Active', lastRenewalOn: '2025-11-01' },
+      { subscriber: 'Abena Asare', email: 'abena.asare@glaghana.org', plan: 'standard', billingCycle: 'Monthly', startedOn: '2026-08-20', expiresOn: '2026-10-24', daysLeft: 1, autoRenew: 'Disabled', renewalStatus: 'Pending Renewal', lastRenewalOn: '2026-09-20' },
+      { subscriber: 'Nii Lante Armah', email: 'n.armah@ecobank.com.gh', plan: 'premium', billingCycle: 'Annual', startedOn: '2025-10-15', expiresOn: '2026-10-14', daysLeft: -9, autoRenew: 'Disabled', renewalStatus: 'Cancelled', lastRenewalOn: '2025-10-15' },
+      { subscriber: 'Selorm Agbeko', email: 's.agbeko@gij.edu.gh', plan: 'standard', billingCycle: 'Monthly', startedOn: '2026-09-26', expiresOn: '2026-10-26', daysLeft: 3, autoRenew: 'Enabled', renewalStatus: 'Active', lastRenewalOn: '2026-09-26' },
+      { subscriber: 'Joyce Mensima', email: 'j.mensima@melcom.com.gh', plan: 'standard', billingCycle: 'Monthly', startedOn: '2026-06-11', expiresOn: '2026-09-11', daysLeft: -42, autoRenew: 'Disabled', renewalStatus: 'Expired', lastRenewalOn: '2026-06-11' },
+    ],
+  },
 };
