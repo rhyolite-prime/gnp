@@ -24,9 +24,9 @@ const DEFAULT_TOPICS: PushTopicCategory[] = [
 const SEED_INBOX_ITEMS: PushNotificationInboxItem[] = [
   {
     notificationId: 'BCAST-20261022-01',
-    subject: 'BREAKING: Bank of Ghana Holds Policy Rate Steady Following Inflation Review',
+    subject: 'Bank of Ghana holds policy rate steady',
     messageBody:
-      'Read Graphic Business’ full breakdown of MPC monetary policy implications for SMEs, Treasury bills, and the Cedi.',
+      'The MPC wrapped up its review this afternoon. Graphic Business breaks down what it means for the cedi, treasury bills and small businesses.',
     category: 'breaking_news',
     urgency: 'high',
     deepLink: '/newspapers',
@@ -35,9 +35,9 @@ const SEED_INBOX_ITEMS: PushNotificationInboxItem[] = [
   },
   {
     notificationId: 'BCAST-20261022-02',
-    subject: 'Thursday’s Daily Graphic Digital Edition (48 Pages) Is Ready',
+    subject: 'Thursday’s Daily Graphic is ready',
     messageBody:
-      'Flip through today’s front page, Parliament coverage, regional reports, and today’s newsroom Crossword.',
+      '48 pages this morning — the front page, Parliament, the regional round-up, and the crossword, of course.',
     category: 'morning_edition',
     urgency: 'normal',
     deepLink: '/newspapers',
@@ -46,9 +46,9 @@ const SEED_INBOX_ITEMS: PushNotificationInboxItem[] = [
   },
   {
     notificationId: 'BCAST-20261021-03',
-    subject: 'Platform Update: Offline Edition Caching & Instant Archive Citations Live',
+    subject: 'You can now read editions offline',
     messageBody:
-      'Download full PDFs for offline flight reading and export APA/MLA citations directly from 1950–2026 archives.',
+      'Download a full PDF before your flight and pick up where you left off. Citing archive stories got easier too.',
     category: 'platform_updates',
     urgency: 'normal',
     deepLink: '/archives',

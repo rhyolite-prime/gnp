@@ -87,7 +87,7 @@
             <button
               v-if="authStore.isAuthenticated"
               type="button"
-              title="Notifications & Push Alerts"
+              title="Notifications"
               class="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg border border-gray-200 transition-colors relative cursor-pointer"
               @click="notificationStore.isCenterOpen = true"
             >
