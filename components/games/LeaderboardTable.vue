@@ -1,9 +1,9 @@
 <template>
-  <div class="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+  <div class="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 shadow-sm">
     <!-- Header & Tabs -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-100">
       <div class="flex items-center gap-3">
-        <div class="p-3 bg-amber-50 text-amber-600 rounded-2xl">
+        <div class="p-3 bg-amber-50 text-amber-600 rounded-lg">
           <Trophy class="w-6 h-6" />
         </div>
         <div>
@@ -15,7 +15,7 @@
       </div>
 
       <!-- Main Board Tabs (Global vs Daily vs Rivals) -->
-      <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-2xl self-start md:self-auto">
+      <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg self-start md:self-auto">
         <button
           @click="activeBoard = 'global'"
           :class="activeBoard === 'global' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
@@ -72,9 +72,9 @@
     </div>
 
     <!-- Table Container -->
-    <div class="overflow-x-auto rounded-2xl border border-gray-100">
+    <div class="overflow-x-auto rounded-lg border border-gray-100">
       <table class="w-full text-left text-sm">
-        <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-bold tracking-wider border-b border-gray-100">
+        <thead class="bg-gray-50 text-gray-500 text-xs font-bold border-b border-gray-100">
           <tr>
             <th class="py-3 px-4 w-16 text-center">Rank</th>
             <th class="py-3 px-4">Reader</th>
@@ -115,7 +115,7 @@
               >
                 🥉
               </span>
-              <span v-else class="font-mono text-gray-500">
+              <span v-else class="text-gray-500">
                 #{{ entry.rank }}
               </span>
             </td>
@@ -123,7 +123,7 @@
             <!-- User Info -->
             <td class="py-3.5 px-4">
               <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center font-bold text-xs text-gray-700 uppercase">
+                <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-xs text-gray-700">
                   {{ entry.username?.substring(0, 2) || 'GR' }}
                 </div>
                 <div>
@@ -144,12 +144,12 @@
             </td>
 
             <!-- Points Column -->
-            <td class="py-3.5 px-4 text-right font-mono font-bold text-gray-900">
+            <td class="py-3.5 px-4 text-right font-bold text-gray-900">
               {{ entry.totalPoints.toLocaleString() }} pts
             </td>
 
             <!-- Games / Challenges Column -->
-            <td class="py-3.5 px-4 text-center font-mono text-gray-600">
+            <td class="py-3.5 px-4 text-center text-gray-600">
               {{ entry.challengesCompleted || entry.gamesPlayed || 0 }}
             </td>
 

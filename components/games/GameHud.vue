@@ -1,5 +1,5 @@
 <template>
-  <header class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 mb-6">
+  <header class="bg-white border border-gray-200 rounded-lg shadow-sm p-4 mb-6">
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <!-- Left: Title, Badges, Publication attribution -->
       <div class="flex items-start sm:items-center gap-3">
@@ -11,7 +11,7 @@
             <h1 class="text-xl font-bold text-gray-900 capitalize">{{ displayTitle }}</h1>
             <span
               :class="difficultyBadgeClass"
-              class="px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider"
+              class="px-2.5 py-0.5 rounded-full text-xs font-semibold"
             >
               {{ session.difficulty }}
             </span>
@@ -44,7 +44,7 @@
         <div class="flex items-center gap-2">
           <Clock class="w-4 h-4 text-gray-500" />
           <div>
-            <div class="text-base font-bold font-mono text-gray-800 leading-tight">
+            <div class="text-base font-bold text-gray-800 leading-tight">
               {{ formattedTime }}
             </div>
             <div class="text-[10px] text-gray-500">
@@ -62,7 +62,7 @@
             <div class="text-base font-bold text-gray-800 leading-tight">
               {{ session.mistakes }}
             </div>
-            <div class="text-[10px] text-gray-500">Mistakes (-3pts)</div>
+            <div class="text-[10px] text-gray-500">Mistakes (−3)</div>
           </div>
         </div>
 
@@ -90,7 +90,7 @@
           title="Get a hint (-5 points penalty)"
         >
           <Sparkles class="w-3.5 h-3.5" :class="{ 'animate-spin': hinting }" />
-          <span>Hint (-5pts)</span>
+          <span>Hint (−5)</span>
         </button>
 
         <!-- Check Answers (Non-finalizing) -->
@@ -101,7 +101,7 @@
           title="Check your current answers without finalizing"
         >
           <CheckCircle2 class="w-3.5 h-3.5 text-blue-600" />
-          <span>{{ checking ? 'Checking...' : 'Check' }}</span>
+          <span>{{ checking ? 'Checking…' : 'Check' }}</span>
         </button>
 
         <!-- Save & Exit -->
@@ -121,7 +121,7 @@
           class="px-4 py-2 text-xs font-semibold rounded-lg bg-primary-600 hover:bg-primary-700 text-white shadow-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1.5"
         >
           <Target class="w-3.5 h-3.5" />
-          <span>{{ submitting ? 'Scoring...' : 'Submit Puzzle' }}</span>
+          <span>{{ submitting ? 'Scoring…' : 'Submit' }}</span>
         </button>
 
         <!-- Abandon / Delete -->

@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col items-center max-w-5xl mx-auto w-full">
     <!-- Publication Source Intro Banner -->
-    <div class="w-full bg-gradient-to-r from-red-50 via-white to-blue-50 border border-red-200/60 rounded-2xl p-4 sm:p-5 mb-6 shadow-sm">
+    <div class="w-full bg-white border border-gray-200 rounded-lg p-4 sm:p-5 mb-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <div class="p-2.5 bg-primary-100 text-primary-700 rounded-xl">
@@ -9,9 +9,9 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="text-xs font-bold uppercase tracking-wider text-primary-700">Vocabulary Source:</span>
-              <span class="font-bold text-gray-900">{{ puzzle.source?.publicationName || 'Daily Graphic' }}</span>
-              <span class="text-xs text-gray-500">• {{ puzzle.words.length }} Words</span>
+              <span class="text-xs font-medium text-gray-500">From</span>
+              <span class="font-medium text-gray-900">{{ puzzle.source?.publicationName || 'Daily Graphic' }}</span>
+              <span class="text-xs text-gray-500">· {{ puzzle.words.length }} words</span>
             </div>
             <p class="text-xs text-gray-600 mt-0.5">
               Drag across letters or click start & end letters to select. Words may appear horizontally, vertically, or diagonally.
@@ -23,7 +23,7 @@
         <div class="flex items-center gap-2 self-start sm:self-center bg-white px-3 py-1.5 rounded-xl border border-gray-200 shadow-sm">
           <CheckCircle2 class="w-4 h-4 text-emerald-600" />
           <span class="text-xs font-bold text-gray-700">
-            {{ foundWords.length }} / {{ puzzle.words.length }} Found
+            {{ foundWords.length }} of {{ puzzle.words.length }} found
           </span>
         </div>
       </div>

@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col items-center max-w-3xl mx-auto w-full">
     <!-- Progress & Header -->
-    <div class="w-full bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 mb-6 shadow-sm">
+    <div class="w-full bg-white border border-gray-200 rounded-lg p-4 sm:p-5 mb-6 shadow-sm">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
           <HelpCircle class="w-5 h-5 text-primary-600" />
@@ -10,7 +10,7 @@
           </h2>
           <span
             :class="currentItem?.type === 'anagram' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'"
-            class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider"
+            class="px-2.5 py-0.5 rounded-full text-[11px] font-bold"
           >
             {{ currentItem?.type === 'anagram' ? 'Anagram' : 'Cloze' }}
           </span>
@@ -27,13 +27,7 @@
           v-for="(item, idx) in puzzle.items"
           :key="item.id"
           @click="currentIndex = idx"
-          :class="[
-            currentIndex === idx
-              ? 'bg-primary-600 text-white ring-2 ring-primary-300'
-              : isAnswered(item.id)
-              ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          ]"
+          :class="[ currentIndex === idx ? 'bg-primary-600 text-white ring-2 ring-primary-300' : isAnswered(item.id) ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' ]"
           class="w-8 h-8 rounded-xl font-bold text-xs flex items-center justify-center transition-all shrink-0"
         >
           {{ idx + 1 }}
@@ -42,7 +36,7 @@
     </div>
 
     <!-- Active Question Card -->
-    <div v-if="currentItem" class="w-full bg-white border border-gray-200 rounded-2xl p-6 shadow-md mb-6 transition-all">
+    <div v-if="currentItem" class="w-full bg-white border border-gray-200 rounded-lg p-6 shadow-md mb-6 transition-all">
       <!-- Source Metadata Tag -->
       <div class="flex items-center gap-2 text-xs text-gray-500 mb-4">
         <Newspaper class="w-4 h-4 text-primary-600" />
@@ -69,12 +63,12 @@
 
       <!-- Anagram Interactive Tiles (for Anagrams) -->
       <div v-if="currentItem.type === 'anagram' && scrambledLetters.length" class="mb-6">
-        <div class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Available Letters:</div>
+        <div class="text-xs font-bold text-gray-400 mb-2">Available Letters:</div>
         <div class="flex flex-wrap items-center gap-2">
           <span
             v-for="(ch, idx) in scrambledLetters"
             :key="`${ch}-${idx}`"
-            class="w-10 h-10 rounded-xl bg-purple-50 border border-purple-200 text-purple-800 font-mono font-bold text-lg flex items-center justify-center shadow-sm"
+            class="w-10 h-10 rounded-lg bg-gray-50 border border-gray-200 text-gray-800 font-mono font-bold text-lg flex items-center justify-center"
           >
             {{ ch }}
           </span>
@@ -83,17 +77,13 @@
 
       <!-- Multiple Choice Options (if available) -->
       <div v-if="currentItem.choices && currentItem.choices.length" class="space-y-2.5 mb-6">
-        <div class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Select Answer:</div>
+        <div class="text-xs font-bold text-gray-400 mb-1">Select Answer:</div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <button
             v-for="choice in currentItem.choices"
             :key="choice"
             @click="selectChoice(choice)"
-            :class="[
-              getCurrentAnswer(currentItem.id) === choice.toUpperCase()
-                ? 'bg-primary-600 text-white border-primary-600 ring-2 ring-primary-300'
-                : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100 hover:border-gray-300'
-            ]"
+            :class="[ getCurrentAnswer(currentItem.id) === choice.toUpperCase() ? 'bg-primary-600 text-white border-primary-600 ring-2 ring-primary-300' : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100 hover:border-gray-300' ]"
             class="p-3.5 rounded-xl border text-left font-mono font-bold text-sm sm:text-base transition-all flex items-center justify-between"
           >
             <span>{{ choice }}</span>
@@ -104,7 +94,7 @@
 
       <!-- Direct Text Input (fallback or hard mode) -->
       <div v-else class="mb-6">
-        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+        <label class="block text-xs font-bold text-gray-500 mb-2">
           Your Answer ({{ currentItem.length }} letters):
         </label>
         <div class="relative">
@@ -114,7 +104,7 @@
             @input="handleInput($event)"
             :maxlength="currentItem.length + 4"
             placeholder="TYPE ANSWER HERE..."
-            class="w-full px-4 py-3 rounded-xl border border-gray-300 font-mono font-bold text-lg tracking-widest uppercase focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            class="w-full px-4 py-3 rounded-xl border border-gray-300 font-mono font-bold text-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           />
           <button
             v-if="getCurrentAnswer(currentItem.id)"

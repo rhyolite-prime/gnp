@@ -1,9 +1,9 @@
 <template>
-  <div class="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+  <div class="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 shadow-sm">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-100">
       <div class="flex items-center gap-3.5">
-        <div class="p-3 bg-amber-100 text-amber-700 rounded-2xl">
+        <div class="p-3 bg-amber-100 text-amber-700 rounded-lg">
           <Award class="w-6 h-6" />
         </div>
         <div>
@@ -17,8 +17,8 @@
       <!-- Stats Summary + Check Badges Button -->
       <div class="flex items-center gap-3">
         <div class="bg-gray-50 border border-gray-200 px-3.5 py-1.5 rounded-xl text-right">
-          <div class="text-[10px] uppercase font-bold text-gray-400">Unlocked</div>
-          <div class="text-sm font-black text-gray-900">
+          <div class="text-[10px] font-bold text-gray-400">Unlocked</div>
+          <div class="text-sm font-semibold text-gray-900">
             {{ unlockedCount }} / {{ achievements.length }}
           </div>
         </div>
@@ -29,7 +29,7 @@
           class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 disabled:opacity-40"
         >
           <Sparkles class="w-4 h-4" :class="{ 'animate-spin': checking }" />
-          <span>{{ checking ? 'Checking...' : 'Check Badges' }}</span>
+          <span>{{ checking ? 'Checking…' : 'Check for new badges' }}</span>
         </button>
       </div>
     </div>
@@ -53,13 +53,13 @@
         v-for="ach in filteredAchievements"
         :key="ach.id"
         :class="ach.isUnlocked ? 'bg-amber-50/40 border-amber-200' : 'bg-gray-50/80 border-gray-200 opacity-70'"
-        class="border rounded-2xl p-4 transition-all flex flex-col justify-between"
+        class="border rounded-lg p-4 transition-all flex flex-col justify-between"
       >
         <div class="flex items-start gap-3.5 mb-3">
           <!-- Badge Icon -->
           <div
             :class="ach.isUnlocked ? 'bg-amber-100 text-amber-700 shadow-sm' : 'bg-gray-200 text-gray-400'"
-            class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+            class="w-12 h-12 rounded-lg flex items-center justify-center shrink-0"
           >
             <component :is="getAchievementIcon(ach)" class="w-6 h-6" />
           </div>
@@ -70,7 +70,7 @@
               <h3 class="font-bold text-gray-900 text-sm leading-snug">
                 {{ ach.name }}
               </h3>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-100 text-amber-800 shrink-0">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 shrink-0">
                 +{{ ach.bonusPoints }} pts
               </span>
             </div>
@@ -133,7 +133,7 @@ defineEmits<{
 const selectedCategory = ref('all');
 
 const categories = [
-  { id: 'all', label: 'All Badges' },
+  { id: 'all', label: 'All' },
   { id: 'unlocked', label: 'Unlocked' },
   { id: 'sudoku', label: 'Sudoku' },
   { id: 'crossword', label: 'Crossword' },

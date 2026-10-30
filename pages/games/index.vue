@@ -1,48 +1,22 @@
 <template>
   <div class="min-h-screen bg-gray-50/60 pb-20">
-    <!-- Top Hero Header -->
-    <div class="bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 text-white pt-10 pb-16 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
-      <div class="max-w-7xl mx-auto">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+    <!-- Header -->
+    <div class="bg-white border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
           <div>
-            <div class="flex items-center gap-2 mb-2">
-              <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-primary-600/30 text-primary-400 border border-primary-500/40">
-                Publication-Backed Puzzles
-              </span>
-              <span class="text-xs text-gray-400">• Graphic NewsPlus</span>
-            </div>
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white">
-              Newsroom Games & Puzzles
-            </h1>
-            <p class="text-sm sm:text-base text-gray-300 mt-2 max-w-2xl leading-relaxed">
-              Every clue, word, and theme is crafted directly from Daily Graphic, Showbiz, The Mirror, and Sports archives.
-              Solve puzzles, compete on leaderboards, and duel your fellow readers!
+            <p class="text-sm text-gray-500">Graphic NewsPlus · Puzzles</p>
+            <h1 class="text-3xl sm:text-4xl font-semibold text-gray-900 mt-1">The puzzle page</h1>
+            <p class="text-sm sm:text-base text-gray-600 mt-2 max-w-2xl leading-relaxed">
+              Crosswords, sudoku, word searches and riddles &mdash; all built from stories we&rsquo;ve
+              published. Solve today&rsquo;s set, keep your streak going, and see where you land on the table.
             </p>
           </div>
 
-          <!-- Quick Stats Pill (Points, Rank, Streak) -->
-          <div class="flex items-center gap-3 bg-gray-800/80 border border-gray-700/60 p-4 rounded-3xl shadow-xl backdrop-blur-md self-start lg:self-auto">
-            <div class="px-3 text-center">
-              <div class="text-[10px] uppercase font-bold text-gray-400">Total Points</div>
-              <div class="text-xl sm:text-2xl font-black font-mono text-amber-400">
-                {{ userStats?.totalPoints || 0 }}
-              </div>
-            </div>
-            <div class="h-8 w-px bg-gray-700"></div>
-            <div class="px-3 text-center">
-              <div class="text-[10px] uppercase font-bold text-gray-400">Rank</div>
-              <div class="text-xl sm:text-2xl font-black font-mono text-white">
-                #{{ userStats?.rank || 1 }}
-              </div>
-            </div>
-            <div class="h-8 w-px bg-gray-700"></div>
-            <div class="px-3 text-center">
-              <div class="text-[10px] uppercase font-bold text-gray-400">Streak</div>
-              <div class="text-xl sm:text-2xl font-black font-mono text-orange-400 flex items-center justify-center gap-1">
-                <Flame class="w-4 h-4 text-orange-500" />
-                <span>{{ userStats?.currentStreak || 0 }}d</span>
-              </div>
-            </div>
+          <div class="text-sm text-gray-600 space-y-1">
+            <p><span class="font-semibold text-gray-900">{{ userStats?.totalPoints || 0 }}</span> points</p>
+            <p><span class="font-semibold text-gray-900">#{{ userStats?.rank || '—' }}</span> on the all-time table</p>
+            <p><span class="font-semibold text-gray-900">{{ userStats?.currentStreak || 0 }} days</span> in a row</p>
           </div>
         </div>
       </div>
@@ -51,39 +25,31 @@
     <!-- Active In-Progress Puzzle Banner (if not actively in play arena) -->
     <div
       v-if="activeSession && !isPlaying"
-      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 mb-6"
+      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-6 pt-6"
     >
-      <div class="bg-gradient-to-r from-amber-500 via-primary-600 to-red-600 text-white p-4 sm:p-5 rounded-2xl shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <div class="p-2.5 bg-white/20 rounded-xl text-white">
-            <Play class="w-6 h-6 animate-pulse" />
-          </div>
-          <div>
-            <div class="text-xs uppercase font-extrabold tracking-wider text-amber-200">
-              Puzzle In Progress
-            </div>
-            <h2 class="text-lg font-bold">
-              {{ activeSession.summary || 'Unfinished puzzle session' }}
-            </h2>
-            <p class="text-xs text-white/80">
-              {{ activeSession.difficulty }} difficulty • {{ activeSession.mistakes }} mistakes • {{ activeSession.hintsRemaining }} hints left
-            </p>
-          </div>
+      <div class="bg-white border border-gray-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <p class="text-xs text-gray-500">Puzzle in progress</p>
+          <h2 class="text-base font-semibold text-gray-900 mt-0.5">
+            {{ activeSession.summary || 'Unfinished puzzle session' }}
+          </h2>
+          <p class="text-xs text-gray-500 mt-1">
+            {{ activeSession.difficulty }} · {{ activeSession.mistakes }} {{ activeSession.mistakes === 1 ? 'mistake' : 'mistakes' }} · {{ activeSession.hintsRemaining }} hints left
+          </p>
         </div>
 
         <div class="flex items-center gap-2">
           <button
             @click="resumePuzzle"
-            class="px-5 py-2.5 bg-white text-gray-900 rounded-xl font-bold text-xs hover:bg-gray-100 transition-all shadow-md active:scale-95"
+            class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            Resume Puzzle
+            Resume
           </button>
           <button
             @click="handleAbandonPuzzle"
-            class="p-2.5 bg-black/20 hover:bg-black/40 text-white rounded-xl text-xs transition-all"
-            title="Abandon puzzle"
+            class="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg text-sm transition-colors"
           >
-            <X class="w-4 h-4" />
+            Abandon
           </button>
         </div>
       </div>
@@ -151,16 +117,15 @@
       <!-- NAVIGATION TABS & DASHBOARD (when not in play arena) -->
       <div v-else>
         <!-- Nav Tabs -->
-        <nav aria-label="Game Sections" class="flex items-center gap-2 overflow-x-auto border-b border-gray-200 pb-4 mb-8">
+        <nav aria-label="Game Sections" class="flex items-center gap-6 overflow-x-auto border-b border-gray-200 mb-8">
           <button
             v-for="tab in navTabs"
             :key="tab.id"
             @click="currentTab = tab.id"
-            :class="currentTab === tab.id ? 'bg-primary-600 text-white shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'"
-            class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 shrink-0"
+            :class="currentTab === tab.id ? 'border-gray-900 text-gray-900 font-medium' : 'border-transparent text-gray-500 hover:text-gray-800'"
+            class="pt-1 pb-2.5 text-sm border-b-2 -mb-px whitespace-nowrap cursor-pointer"
           >
-            <component :is="tab.icon" class="w-4 h-4" />
-            <span>{{ tab.label }}</span>
+            {{ tab.label }}
           </button>
         </nav>
 
@@ -174,46 +139,37 @@
 
           <!-- Catalog Grid -->
           <div>
-            <div class="flex items-center justify-between mb-4">
-              <div>
-                <h2 class="text-xl font-bold text-gray-900">Choose a Game to Play</h2>
-                <p class="text-xs text-gray-500">All puzzles generated dynamically from stored newspaper pages.</p>
-              </div>
+            <div class="mb-5">
+              <h2 class="text-xl font-semibold text-gray-900">Pick a puzzle</h2>
+              <p class="text-sm text-gray-500 mt-1">Each one is built from a real edition — the board names the page it came from.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
               <div
                 v-for="cat in playableCategories"
                 :key="cat.gameType"
-                class="bg-white border border-gray-200 hover:border-primary-300 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
+                class="bg-white border border-gray-200 hover:border-gray-300 rounded-lg p-5 flex flex-col justify-between group transition-colors"
               >
                 <div>
-                  <div class="w-12 h-12 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <component :is="getGameIcon(cat.gameType)" class="w-6 h-6" />
+                  <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-semibold text-base text-gray-900">{{ cat.title }}</h3>
+                    <span class="text-xs text-gray-500">{{ cat.basePoints }} points</span>
                   </div>
 
-                  <div class="flex items-center justify-between mb-1">
-                    <h3 class="font-bold text-lg text-gray-900">{{ cat.title }}</h3>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600">
-                      Base: {{ cat.basePoints }} pts
-                    </span>
-                  </div>
-
-                  <p class="text-xs text-gray-600 leading-relaxed mb-4">
+                  <p class="text-sm text-gray-600 leading-relaxed">
                     {{ cat.description }}
                   </p>
 
-                  <div class="text-[11px] text-gray-400 bg-gray-50 rounded-xl p-3 mb-6">
+                  <p class="text-xs text-gray-400 leading-relaxed mt-2">
                     {{ cat.content }}
-                  </div>
+                  </p>
                 </div>
 
                 <button
                   @click="openGameLauncher(cat.gameType)"
-                  class="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95"
+                  class="mt-5 w-full py-2.5 px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors"
                 >
-                  <Play class="w-4 h-4" />
-                  <span>Play {{ cat.title }}</span>
+                  Play {{ cat.title }}
                 </button>
               </div>
             </div>
@@ -249,90 +205,74 @@
 
         <!-- TAB 4: MULTIPLAYER CHALLENGES -->
         <section v-else-if="currentTab === 'challenges'" class="space-y-6 animate-fade-in">
-          <div class="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+          <div class="bg-white border border-gray-200 rounded-lg p-6 sm:p-8">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-100">
-              <div class="flex items-center gap-3.5">
-                <div class="p-3 bg-purple-100 text-purple-700 rounded-2xl">
-                  <Swords class="w-6 h-6" />
-                </div>
-                <div>
-                  <h2 class="text-xl font-bold text-gray-900">Multiplayer Rivalry Duels</h2>
-                  <p class="text-xs text-gray-500 mt-0.5">
-                    Challenge other readers to solve identical publication-backed puzzles. Fastest accurate score wins!
-                  </p>
-                </div>
+              <div>
+                <h2 class="text-xl font-semibold text-gray-900">Duels</h2>
+                <p class="text-sm text-gray-500 mt-1">
+                  Challenge another reader to the same puzzle. Best score wins.
+                </p>
               </div>
 
               <button
                 @click="showMultiplayerModal = true"
-                class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-2 self-start sm:self-auto"
+                class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors self-start sm:self-auto"
               >
-                <Swords class="w-4 h-4" />
-                <span>Create New Duel</span>
+                Challenge someone
               </button>
             </div>
 
             <!-- List of Challenges -->
-            <div class="space-y-4">
+            <div class="divide-y divide-gray-100">
               <div
                 v-for="c in challengesList"
                 :key="c.challengeId"
-                class="bg-gray-50 border border-gray-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                class="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div>
-                  <div class="flex items-center gap-2">
-                    <span class="font-bold text-gray-900 text-sm">
-                      {{ c.challengerName }} vs {{ c.opponentName }}
-                    </span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-purple-100 text-purple-800">
-                      {{ c.gameType }}
-                    </span>
-                    <span class="text-[10px] font-bold uppercase text-gray-400">
-                      {{ c.difficulty }}
-                    </span>
-                  </div>
-                  <p class="text-xs text-gray-600 mt-1">
-                    {{ c.summary }}
+                  <p class="font-semibold text-gray-900 text-sm">
+                    {{ c.challengerName }} vs {{ c.opponentName }}
                   </p>
-                  <div class="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
-                    <Newspaper class="w-3 h-3 text-gray-400" />
-                    <span>{{ c.publication?.publicationName }}</span>
-                    <span>• p.{{ c.publication?.pageNumber }}</span>
-                  </div>
+                  <p class="text-xs text-gray-500 mt-1">
+                    {{ formatGameType(c.gameType) }} · {{ c.difficulty }} · {{ c.summary }}
+                  </p>
+                  <p class="text-xs text-gray-400 mt-1">
+                    {{ c.publication?.publicationName }}<template v-if="c.publication?.pageNumber"> · p.{{ c.publication?.pageNumber }}</template>
+                  </p>
                 </div>
 
                 <div class="flex items-center gap-2">
                   <template v-if="!c.youAreChallenger && c.status === 'active'">
                     <button
                       @click="handleAcceptChallenge(c.challengeId)"
-                      class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
+                      class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors"
                     >
-                      Accept Match
+                      Accept
                     </button>
                     <button
                       @click="handleDeclineChallenge(c.challengeId)"
-                      class="px-3 py-2 border border-gray-200 hover:bg-red-50 text-gray-600 hover:text-red-600 text-xs font-bold rounded-xl transition-all"
+                      class="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm rounded-lg transition-colors"
                     >
                       Decline
                     </button>
                   </template>
 
                   <template v-else-if="c.youAreChallenger && c.status === 'active'">
-                    <span class="text-xs text-purple-700 font-semibold px-3 py-1.5 bg-purple-50 rounded-xl border border-purple-200">
-                      Waiting for Opponent...
+                    <span class="text-sm text-gray-500">
+                      Waiting on {{ c.opponentName.split(' ')[0] }}
                     </span>
                   </template>
 
                   <template v-else>
-                    <span class="text-xs text-gray-500 font-medium capitalize">
+                    <span class="text-sm text-gray-500">
                       {{ c.status }}
                     </span>
                   </template>
                 </div>
               </div>
 
-              <div v-if="!challengesList.length" class="text-center py-12 text-gray-400 text-xs">
-                No active duels found. Click "Create New Duel" to challenge a reader!
+              <div v-if="!challengesList.length" class="py-12 text-center text-sm text-gray-500">
+                No duels yet. Challenge a reader from the leaderboard to get one going.
               </div>
             </div>
           </div>
@@ -355,42 +295,42 @@
         </section>
 
         <!-- TAB 6: SCORING RULES & GUIDE -->
-        <section v-else-if="currentTab === 'rules'" class="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6 animate-fade-in">
+        <section v-else-if="currentTab === 'rules'" class="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 space-y-6 animate-fade-in">
           <div>
-            <h2 class="text-xl font-bold text-gray-900">How Scoring & Points Work</h2>
-            <p class="text-xs text-gray-500 mt-0.5">
-              Graphic News Plus rewards puzzle precision, speed, consecutive play, and publication knowledge.
+            <h2 class="text-xl font-semibold text-gray-900">How scoring works</h2>
+            <p class="text-sm text-gray-500 mt-1">
+              Points reward accuracy first, then speed and staying power. A rough run can still score well; a fast wrong one won&rsquo;t.
             </p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="p-4 bg-gray-50 border border-gray-200 rounded-2xl">
-              <div class="text-xs font-bold uppercase tracking-wider text-primary-600 mb-1">Difficulty Multipliers</div>
-              <ul class="text-xs text-gray-700 space-y-1.5 mt-2">
-                <li>• <strong>Easy</strong>: 1× Multiplier (5 hints cap)</li>
-                <li>• <strong>Medium</strong>: 2× Multiplier (3 hints cap)</li>
-                <li>• <strong>Hard</strong>: 3× Multiplier (2 hints cap)</li>
-                <li>• <strong>Expert</strong>: 4× Multiplier (1 hint cap)</li>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 mb-2">Difficulty</h3>
+              <ul class="text-sm text-gray-600 space-y-1.5">
+                <li>Easy &mdash; 1&times; multiplier, 5 hints</li>
+                <li>Medium &mdash; 2&times; multiplier, 3 hints</li>
+                <li>Hard &mdash; 3&times; multiplier, 2 hints</li>
+                <li>Expert &mdash; 4&times; multiplier, 1 hint</li>
               </ul>
             </div>
 
-            <div class="p-4 bg-gray-50 border border-gray-200 rounded-2xl">
-              <div class="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-1">Bonus Rewards</div>
-              <ul class="text-xs text-gray-700 space-y-1.5 mt-2">
-                <li>• <strong>Perfect Solve</strong>: +100 pts × Multiplier (0 hints, 0 mistakes)</li>
-                <li>• <strong>Daily Challenge</strong>: +200 pts bonus for accurate solves</li>
-                <li>• <strong>Speed Bonus</strong>: Up to 50% extra for solves under target time</li>
-                <li>• <strong>Win Streak</strong>: +10 pts per consecutive day</li>
-                <li>• <strong>Rivalry Duel</strong>: +25 pts for winning a match</li>
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 mb-2">Bonuses</h3>
+              <ul class="text-sm text-gray-600 space-y-1.5">
+                <li>Perfect solve &mdash; up to 100 pts &times; multiplier</li>
+                <li>Daily challenge &mdash; +200 pts</li>
+                <li>Speed &mdash; up to 50% extra under the target time</li>
+                <li>Streak &mdash; +10 pts per consecutive day</li>
+                <li>Winning a duel &mdash; +25 pts</li>
               </ul>
             </div>
 
-            <div class="p-4 bg-gray-50 border border-gray-200 rounded-2xl">
-              <div class="text-xs font-bold uppercase tracking-wider text-rose-600 mb-1">Penalties</div>
-              <ul class="text-xs text-gray-700 space-y-1.5 mt-2">
-                <li>• <strong>Mistake Penalty</strong>: -3 pts per wrong cell or answer</li>
-                <li>• <strong>Hint Penalty</strong>: -5 pts per revealed hint</li>
-                <li>• Scores never drop below zero.</li>
+            <div>
+              <h3 class="text-sm font-semibold text-gray-900 mb-2">Penalties</h3>
+              <ul class="text-sm text-gray-600 space-y-1.5">
+                <li>Wrong cell or answer &mdash; &minus;3 pts each</li>
+                <li>Revealed hint &mdash; &minus;5 pts each</li>
+                <li>Scores never drop below zero.</li>
               </ul>
             </div>
           </div>
@@ -399,38 +339,31 @@
     </div>
 
     <!-- GAME LAUNCHER MODAL (Configurator for Difficulty & Publication Source) -->
-    <div v-if="showLauncherModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-      <div class="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 sm:p-8 my-8 border border-gray-100 animate-scale-in">
+    <div v-if="showLauncherModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4 overflow-y-auto">
+      <div class="relative bg-white rounded-lg shadow-2xl max-w-lg w-full p-6 sm:p-8 my-8">
         <button
           @click="showLauncherModal = false"
-          class="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+          class="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors"
         >
           <X class="w-5 h-5" />
         </button>
 
-        <div class="flex items-center gap-3.5 mb-6">
-          <div class="p-3 bg-primary-100 text-primary-700 rounded-2xl">
-            <component :is="getGameIcon(launcherGameType)" class="w-6 h-6" />
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 capitalize">Play {{ launcherGameType }}</h2>
-            <p class="text-xs text-gray-500">Configure your difficulty and source newspaper edition.</p>
-          </div>
-        </div>
+        <h2 class="text-xl font-semibold text-gray-900">Play {{ formatGameType(launcherGameType) }}</h2>
+        <p class="text-sm text-gray-500 mt-1 mb-6">Pick a difficulty and the edition to build the puzzle from.</p>
 
-        <div class="space-y-4">
+        <div class="space-y-5">
           <!-- Difficulty Choice -->
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
-              Select Difficulty
+            <label class="block text-sm font-medium text-gray-900 mb-2">
+              Difficulty
             </label>
             <div class="grid grid-cols-4 gap-2">
               <button
                 v-for="d in difficulties"
                 :key="d"
                 @click="launcherDifficulty = d"
-                :class="launcherDifficulty === d ? 'bg-primary-600 text-white shadow-sm' : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100'"
-                class="py-2.5 px-2 rounded-xl border text-xs font-bold capitalize transition-all text-center"
+                :class="launcherDifficulty === d ? 'border-primary-600 text-primary-700 bg-primary-50' : 'border-gray-200 text-gray-700 hover:bg-gray-50'"
+                class="py-2 px-2 rounded-lg border text-sm capitalize transition-colors text-center"
               >
                 {{ d }}
               </button>
@@ -439,20 +372,20 @@
 
           <!-- Publication Source Choice -->
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
-              Source Publication
+            <label class="block text-sm font-medium text-gray-900 mb-2">
+              Edition
             </label>
             <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
               <button
                 v-for="source in publicationSources"
                 :key="source.publicationId"
                 @click="launcherPublicationId = source.publicationId"
-                :class="launcherPublicationId === source.publicationId ? 'bg-primary-50 border-primary-500 ring-2 ring-primary-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300'"
-                class="w-full p-3 rounded-xl border text-left transition-all flex items-center justify-between"
+                :class="launcherPublicationId === source.publicationId ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'"
+                class="w-full p-3 rounded-lg border text-left transition-colors flex items-center justify-between"
               >
                 <div>
-                  <div class="font-bold text-gray-900 text-xs">{{ source.publicationName }}</div>
-                  <div class="text-[10px] text-gray-500">{{ source.newspaperTitle }}</div>
+                  <div class="font-medium text-gray-900 text-sm">{{ source.publicationName }}</div>
+                  <div class="text-xs text-gray-500">{{ source.newspaperTitle }}</div>
                 </div>
                 <Check v-if="launcherPublicationId === source.publicationId" class="w-4 h-4 text-primary-600" />
               </button>
@@ -463,10 +396,9 @@
           <button
             @click="handleStartGame"
             :disabled="startingGame"
-            class="w-full py-3.5 px-4 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-40"
+            class="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg text-sm transition-colors disabled:opacity-40"
           >
-            <Play class="w-4 h-4" />
-            <span>{{ startingGame ? 'Generating Publication Puzzle...' : 'Start Game' }}</span>
+            {{ startingGame ? 'Preparing your puzzle…' : 'Start game' }}
           </button>
         </div>
       </div>
@@ -525,19 +457,8 @@ import type {
 } from '~/models';
 
 import {
-  Grid,
-  Search,
-  FileText,
-  HelpCircle,
-  Trophy,
-  Award,
-  Flame,
-  Swords,
-  Calendar,
-  Play,
   X,
-  Check,
-  Newspaper
+  Check
 } from 'lucide-vue-next';
 
 import {
@@ -568,12 +489,12 @@ import {
 
 // Navigation tabs
 const navTabs = [
-  { id: 'catalog', label: 'Play Puzzles', icon: Grid },
-  { id: 'daily', label: 'Daily Challenge', icon: Calendar },
-  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
-  { id: 'challenges', label: 'Multiplayer Duels', icon: Swords },
-  { id: 'achievements', label: 'Badges & Stats', icon: Award },
-  { id: 'rules', label: 'Scoring Rules', icon: HelpCircle },
+  { id: 'catalog', label: 'Puzzles' },
+  { id: 'daily', label: 'Daily challenge' },
+  { id: 'leaderboard', label: 'Leaderboard' },
+  { id: 'challenges', label: 'Duels' },
+  { id: 'achievements', label: 'Your stats' },
+  { id: 'rules', label: 'Scoring' },
 ];
 
 const currentTab = ref('catalog');
@@ -633,8 +554,8 @@ const defaultCategories: GameCategory[] = [
     isActive: true,
     basePoints: 60,
     gameTypeCode: 1,
-    description: 'Fill a 9×9 grid with nine letters drawn from a word in a stored newspaper.',
-    content: 'Letter symbols and the theme word come directly from publication text.'
+    description: 'Fill the grid with the nine letters of a word from the paper — one letter per row, column and box.',
+    content: 'The letters and the quote on the board come from the edition the puzzle was built from.'
   },
   {
     gameType: 'word_search',
@@ -642,8 +563,8 @@ const defaultCategories: GameCategory[] = [
     isActive: true,
     basePoints: 50,
     gameTypeCode: 2,
-    description: 'Find words hidden in a grid. The word list is taken from newspaper pages.',
-    content: 'Answers and filler letters are drawn from the same sourced edition.'
+    description: 'Find the hidden words in the grid. They run across, down and diagonally — some even backwards.',
+    content: 'Every word is lifted from the same day’s stories, with a clue to help you along.'
   },
   {
     gameType: 'crossword',
@@ -651,8 +572,8 @@ const defaultCategories: GameCategory[] = [
     isActive: true,
     basePoints: 70,
     gameTypeCode: 3,
-    description: 'Solve clues written from sentences in published newspaper pages.',
-    content: 'Every answer is a word that appears in the sourced edition.'
+    description: 'Classic clues written from sentences that appeared in the paper that week.',
+    content: 'Each clue names the page it came from — the answers are all words we published.'
   },
   {
     gameType: 'riddle',
@@ -660,8 +581,8 @@ const defaultCategories: GameCategory[] = [
     isActive: true,
     basePoints: 40,
     gameTypeCode: 4,
-    description: 'Cloze and anagram questions written from publication sentences.',
-    content: 'Each prompt cites the newspaper it was taken from.'
+    description: 'Fill in the blank from a real sentence, or unscramble the letters of a newsroom word.',
+    content: 'Each question quotes the newspaper and page it was taken from.'
   }
 ];
 
@@ -682,11 +603,15 @@ const playableCategories = computed(() => {
   return categories.value.filter(c => c.gameType !== 'daily');
 });
 
-function getGameIcon(type: string) {
-  if (type === 'sudoku') return Grid;
-  if (type === 'word_search') return Search;
-  if (type === 'crossword') return FileText;
-  return HelpCircle;
+function formatGameType(type: string) {
+  const map: Record<string, string> = {
+    sudoku: 'Letter Sudoku',
+    word_search: 'Word Search',
+    crossword: 'Crossword',
+    riddle: 'Newsroom Riddles',
+    daily: 'Daily Challenge',
+  };
+  return map[type] || type;
 }
 
 // Timer controls

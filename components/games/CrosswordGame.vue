@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col items-center max-w-6xl mx-auto w-full">
     <!-- Active Clue Header Ribbon -->
-    <div class="w-full bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 mb-6 shadow-sm">
+    <div class="w-full bg-white border border-gray-200 rounded-lg p-4 sm:p-5 mb-6">
       <div class="flex items-start sm:items-center justify-between gap-4">
         <div class="flex items-start gap-3">
           <div class="p-2.5 bg-primary-100 text-primary-700 rounded-xl mt-0.5 sm:mt-0">
@@ -9,7 +9,7 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 bg-primary-600 text-white font-mono font-bold text-xs rounded uppercase">
+              <span class="text-xs font-medium text-primary-700">
                 {{ activeClue?.number || 1 }} {{ activeDirection }}
               </span>
               <span class="text-xs text-gray-500">({{ activeClue?.length || 0 }} letters)</span>

@@ -3,26 +3,26 @@
     <!-- Top Stats Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <!-- Total Points -->
-      <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+      <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
         <div class="flex items-center justify-between text-gray-500 mb-2">
-          <span class="text-xs uppercase font-bold tracking-wider">Total Points</span>
+          <span class="text-xs font-bold">Total Points</span>
           <Trophy class="w-5 h-5 text-amber-500" />
         </div>
-        <div class="text-2xl sm:text-3xl font-black font-mono text-gray-900">
+        <div class="text-2xl sm:text-3xl font-semibold text-gray-900">
           {{ stats?.totalPoints?.toLocaleString() || 0 }}
         </div>
         <div class="text-[11px] text-gray-400 mt-1">
-          {{ stats?.pointsToNextRank ? `${stats.pointsToNextRank} pts to next rank` : 'Keep playing to climb!' }}
+          {{ stats?.pointsToNextRank ? `${stats.pointsToNextRank} points to the next rank` : 'Keep playing to climb.' }}
         </div>
       </div>
 
       <!-- Current Rank -->
-      <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+      <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
         <div class="flex items-center justify-between text-gray-500 mb-2">
-          <span class="text-xs uppercase font-bold tracking-wider">Global Standing</span>
+          <span class="text-xs font-bold">Rank</span>
           <Medal class="w-5 h-5 text-primary-600" />
         </div>
-        <div class="text-2xl sm:text-3xl font-black font-mono text-gray-900">
+        <div class="text-2xl sm:text-3xl font-semibold text-gray-900">
           #{{ stats?.rank || 1 }}
         </div>
         <div class="text-[11px] text-gray-400 mt-1">
@@ -31,12 +31,12 @@
       </div>
 
       <!-- Win Rate -->
-      <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+      <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
         <div class="flex items-center justify-between text-gray-500 mb-2">
-          <span class="text-xs uppercase font-bold tracking-wider">Win Rate</span>
+          <span class="text-xs font-bold">Win Rate</span>
           <Target class="w-5 h-5 text-emerald-600" />
         </div>
-        <div class="text-2xl sm:text-3xl font-black font-mono text-gray-900">
+        <div class="text-2xl sm:text-3xl font-semibold text-gray-900">
           {{ Math.round((stats?.winRate || 0) * 100) }}%
         </div>
         <div class="text-[11px] text-gray-400 mt-1">
@@ -45,12 +45,12 @@
       </div>
 
       <!-- Daily Streak -->
-      <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+      <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
         <div class="flex items-center justify-between text-gray-500 mb-2">
-          <span class="text-xs uppercase font-bold tracking-wider">Win Streak</span>
+          <span class="text-xs font-bold">Streak</span>
           <Flame class="w-5 h-5 text-orange-500" />
         </div>
-        <div class="text-2xl sm:text-3xl font-black font-mono text-gray-900 flex items-center gap-1.5">
+        <div class="text-2xl sm:text-3xl font-semibold text-gray-900 flex items-center gap-1.5">
           <span>{{ stats?.currentStreak || 0 }}</span>
           <span class="text-xs font-normal text-gray-500">days</span>
         </div>
@@ -61,13 +61,13 @@
     </div>
 
     <!-- Breakdown by Game Type -->
-    <div class="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
-      <h3 class="font-bold text-gray-900 text-base mb-4">Performance by Game Type</h3>
+    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+      <h3 class="font-bold text-gray-900 text-base mb-4">By game</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div
           v-for="type in gameTypes"
           :key="type.key"
-          class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-center justify-between"
+          class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center justify-between"
         >
           <div class="flex items-center gap-3">
             <div class="p-2.5 bg-white rounded-xl text-gray-700 shadow-sm border border-gray-100">
@@ -81,7 +81,7 @@
             </div>
           </div>
           <div class="text-right">
-            <div class="font-mono font-bold text-gray-900 text-sm">
+            <div class="font-bold text-gray-900 text-sm">
               {{ stats?.byGameType?.[type.key]?.points || 0 }}
             </div>
             <div class="text-[10px] text-gray-400">pts</div>
@@ -91,10 +91,10 @@
     </div>
 
     <!-- Recent History Table -->
-    <div class="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
+    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h3 class="font-bold text-gray-900 text-base">Recent Game History</h3>
+          <h3 class="font-bold text-gray-900 text-base">Recent games</h3>
           <p class="text-xs text-gray-500">Your solved newspaper puzzles and scores</p>
         </div>
 
@@ -103,13 +103,13 @@
           class="px-3 py-1.5 rounded-xl border border-gray-200 hover:border-red-200 hover:bg-red-50 text-xs font-semibold text-gray-500 hover:text-red-600 transition-all flex items-center gap-1.5"
         >
           <RotateCcw class="w-3.5 h-3.5" />
-          <span>Reset Progress</span>
+          <span>Reset progress</span>
         </button>
       </div>
 
-      <div v-if="history && history.length" class="overflow-x-auto rounded-2xl border border-gray-100">
+      <div v-if="history && history.length" class="overflow-x-auto rounded-lg border border-gray-100">
         <table class="w-full text-left text-xs">
-          <thead class="bg-gray-50 text-gray-500 uppercase font-bold tracking-wider border-b border-gray-100">
+          <thead class="bg-gray-50 text-gray-500 font-bold border-b border-gray-100">
             <tr>
               <th class="py-3 px-4">Game</th>
               <th class="py-3 px-4">Publication</th>
@@ -129,17 +129,17 @@
                 {{ h.publication?.publicationName || 'Daily Graphic' }}
               </td>
               <td class="py-3 px-4 text-center">
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase" :class="getDifficultyClass(h.difficulty)">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" :class="getDifficultyClass(h.difficulty)">
                   {{ h.difficulty }}
                 </span>
               </td>
-              <td class="py-3 px-4 text-center font-mono text-gray-600">
+              <td class="py-3 px-4 text-center text-gray-600">
                 {{ formatSeconds(h.completionTimeSeconds) }}
               </td>
-              <td class="py-3 px-4 text-center font-mono text-gray-600">
+              <td class="py-3 px-4 text-center text-gray-600">
                 {{ h.mistakes || 0 }}
               </td>
-              <td class="py-3 px-4 text-right font-mono font-bold text-emerald-600">
+              <td class="py-3 px-4 text-right font-bold text-emerald-600">
                 +{{ h.totalPoints || 0 }} pts
               </td>
               <td class="py-3 px-4 text-right text-gray-400">
@@ -150,17 +150,17 @@
         </table>
       </div>
 
-      <div v-else class="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+      <div v-else class="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-200">
         <Clock class="w-8 h-8 text-gray-300 mx-auto mb-2" />
         <p class="text-sm font-semibold text-gray-600">No game history yet</p>
-        <p class="text-xs text-gray-400 mt-0.5">Solve your first puzzle to start recording your personal records!</p>
+        <p class="text-xs text-gray-400 mt-0.5">Solve your first puzzle and it’ll show up here.</p>
       </div>
     </div>
 
     <!-- Reset Progress Confirmation Modal -->
     <div v-if="showResetConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center">
-        <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-600 mx-auto flex items-center justify-center mb-4">
+      <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-2xl text-center">
+        <div class="w-12 h-12 rounded-lg bg-red-100 text-red-600 mx-auto flex items-center justify-center mb-4">
           <RotateCcw class="w-6 h-6" />
         </div>
         <h3 class="text-lg font-bold text-gray-900">Reset Game Progress?</h3>

@@ -1,14 +1,14 @@
 <template>
   <div class="flex flex-col items-center max-w-4xl mx-auto">
     <!-- Theme Word & Quote Banner -->
-    <div class="w-full bg-gradient-to-r from-red-50 via-white to-amber-50 border border-red-200/60 rounded-2xl p-4 sm:p-5 mb-6 shadow-sm">
+    <div class="w-full bg-white border border-gray-200 rounded-lg p-4 sm:p-5 mb-6">
       <div class="flex items-start gap-3">
         <div class="p-2 bg-primary-100 text-primary-700 rounded-xl mt-0.5">
           <BookOpen class="w-5 h-5" />
         </div>
         <div class="flex-1">
           <div class="flex flex-wrap items-center gap-2 mb-1">
-            <span class="text-xs font-bold uppercase tracking-wider text-primary-700">Publication Theme Word:</span>
+            <span class="text-xs font-medium text-gray-500">Theme word</span>
             <span class="px-2.5 py-0.5 bg-primary-600 text-white font-mono font-bold tracking-widest text-sm rounded-md shadow-sm">
               {{ puzzle.symbolWord }}
             </span>
@@ -88,7 +88,7 @@
         <!-- 9-Symbol Letter Keypad -->
         <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-xs font-bold uppercase tracking-wider text-gray-500">Letter Palette</span>
+            <span class="text-xs font-medium text-gray-500">Letters</span>
             <span class="text-xs text-gray-400">Click or type on keyboard</span>
           </div>
 
@@ -128,7 +128,7 @@
         <!-- Legend & Rules -->
         <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs text-gray-600 space-y-1">
           <div class="font-bold text-gray-800 mb-1 flex items-center gap-1">
-            <Info class="w-3.5 h-3.5 text-primary-600" /> Sudoku Rules
+            <Info class="w-3.5 h-3.5 text-gray-400" /> How it works
           </div>
           <div>• Each 3×3 box must contain all 9 publication letters.</div>
           <div>• Each row and column must contain no duplicate letters.</div>

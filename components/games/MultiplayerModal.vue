@@ -1,6 +1,6 @@
 <template>
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-    <div class="relative bg-white rounded-3xl shadow-2xl max-w-xl w-full p-6 sm:p-8 my-8 border border-gray-100 animate-scale-in">
+    <div class="relative bg-white rounded-lg shadow-2xl max-w-xl w-full p-6 sm:p-8 my-8 border border-gray-100 animate-scale-in">
       <!-- Close button -->
       <button
         @click="$emit('close')"
@@ -11,7 +11,7 @@
 
       <!-- Header -->
       <div class="flex items-center gap-3.5 mb-6">
-        <div class="p-3 bg-purple-100 text-purple-700 rounded-2xl">
+        <div class="p-3 bg-purple-100 text-purple-700 rounded-lg">
           <Swords class="w-7 h-7" />
         </div>
         <div>
@@ -47,7 +47,7 @@
       <div v-if="activeTab === 'create'" class="space-y-4">
         <!-- Opponent Selection -->
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
+          <label class="block text-xs font-bold text-gray-700 mb-2">
             Select Opponent
           </label>
           <div class="grid grid-cols-2 gap-2 mb-2">
@@ -67,7 +67,7 @@
 
         <!-- Game Type Selection -->
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
+          <label class="block text-xs font-bold text-gray-700 mb-2">
             Game Type
           </label>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -86,7 +86,7 @@
 
         <!-- Difficulty Selection -->
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
+          <label class="block text-xs font-bold text-gray-700 mb-2">
             Difficulty
           </label>
           <div class="grid grid-cols-4 gap-2">
@@ -104,13 +104,13 @@
         </div>
 
         <!-- Rules Info Banner -->
-        <div class="bg-purple-50/60 border border-purple-200 rounded-2xl p-3.5 text-xs text-purple-900 space-y-1">
+        <div class="bg-purple-50/60 border border-purple-200 rounded-lg p-3.5 text-xs text-purple-900 space-y-1">
           <div class="font-bold flex items-center gap-1">
-            <Sparkles class="w-3.5 h-3.5 text-purple-600" /> Rivalry Rules
+            <Sparkles class="w-3.5 h-3.5 text-purple-600" /> How duels work
           </div>
           <div>• Both players receive the exact same puzzle built from newspaper text.</div>
           <div>• The player with higher accuracy and faster completion time wins.</div>
-          <div>• Winner earns a <strong>+25 Rivalry Bonus</strong>!</div>
+          <div>— The winner gets <strong>+25 points</strong>.</div>
         </div>
 
         <!-- Send Challenge Button -->
@@ -129,7 +129,7 @@
         <div
           v-for="c in challenges"
           :key="c.challengeId"
-          class="border border-gray-200 rounded-2xl p-4 bg-gray-50 flex flex-col justify-between gap-3"
+          class="border border-gray-200 rounded-lg p-4 bg-gray-50 flex flex-col justify-between gap-3"
         >
           <div class="flex items-start justify-between">
             <div>
@@ -137,7 +137,7 @@
                 <span class="font-bold text-sm text-gray-900">
                   {{ c.challengerName }} vs {{ c.opponentName }}
                 </span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-purple-100 text-purple-800">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">
                   {{ c.gameType }}
                 </span>
               </div>
@@ -145,7 +145,7 @@
                 {{ c.summary }}
               </p>
             </div>
-            <span class="text-[10px] uppercase font-bold text-gray-400">
+            <span class="text-[10px] font-bold text-gray-400">
               {{ c.difficulty }}
             </span>
           </div>
