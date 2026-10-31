@@ -1,81 +1,78 @@
 <template>
-  <header class="bg-white border border-gray-200 rounded-lg shadow-sm p-4 mb-6">
+  <header class="bg-white border border-stone-200/80 rounded-2xl shadow-sm p-5 mb-6">
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <!-- Left: Title, Badges, Publication attribution -->
       <div class="flex items-start sm:items-center gap-3">
-        <div class="p-2.5 rounded-xl bg-primary-50 text-primary-600">
-          <component :is="gameIcon" class="w-6 h-6" />
+        <div class="w-11 h-11 rounded-full border border-stone-300 text-stone-700 flex items-center justify-center shrink-0">
+          <component :is="gameIcon" class="w-5 h-5" />
         </div>
         <div>
           <div class="flex flex-wrap items-center gap-2">
-            <h1 class="text-xl font-bold text-gray-900 capitalize">{{ displayTitle }}</h1>
-            <span
-              :class="difficultyBadgeClass"
-              class="px-2.5 py-0.5 rounded-full text-xs font-semibold"
-            >
+            <h1 class="font-display text-xl text-stone-900">{{ displayTitle }}</h1>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium text-stone-500 border border-stone-200 capitalize">
               {{ session.difficulty }}
             </span>
             <span
               v-if="session.daily"
-              class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 flex items-center gap-1"
+              class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1"
             >
               <Sparkles class="w-3 h-3 text-amber-600" /> Daily (+200 pts)
             </span>
             <span
               v-if="session.isMultiplayer"
-              class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 flex items-center gap-1"
+              class="px-2.5 py-0.5 rounded-full text-xs font-medium text-stone-600 border border-stone-200 flex items-center gap-1"
             >
-              <Swords class="w-3 h-3 text-purple-600" /> Rival Match
+              <Swords class="w-3 h-3 text-stone-500" /> Rival Match
             </span>
           </div>
 
-          <p class="text-xs text-gray-500 mt-0.5 flex items-center gap-1 flex-wrap">
-            <Newspaper class="w-3.5 h-3.5 text-gray-400" />
-            <span class="font-medium text-gray-700">{{ session.publication?.publicationName || 'Daily Graphic' }}</span>
-            <span v-if="session.publication?.pageNumber" class="text-gray-400">• Page {{ session.publication.pageNumber }}</span>
-            <span v-if="session.publication?.publicationDate" class="text-gray-400">• {{ session.publication.publicationDate }}</span>
+          <p class="text-xs text-stone-500 mt-1.5 flex items-center gap-1.5 flex-wrap">
+            <Newspaper class="w-3.5 h-3.5 text-stone-400" />
+            <span class="font-serif italic text-stone-600">{{ session.publication?.publicationName || 'Daily Graphic' }}</span>
+            <span v-if="session.publication?.pageNumber" class="text-stone-400">&middot; p.{{ session.publication.pageNumber }}</span>
+            <span v-if="session.publication?.publicationDate" class="text-stone-400">&middot; {{ session.publication.publicationDate }}</span>
           </p>
         </div>
       </div>
 
       <!-- Center: Metrics (Timer, Mistakes, Hints) -->
-      <div class="flex items-center justify-between sm:justify-center gap-4 sm:gap-6 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+      <div class="flex items-center justify-between sm:justify-center divide-x divide-stone-200 border-y border-stone-200 px-1 py-2">
         <!-- Live Timer -->
-        <div class="flex items-center gap-2">
-          <Clock class="w-4 h-4 text-gray-500" />
+        <div class="flex items-center gap-2.5 px-3">
+          <Clock class="w-4 h-4 text-stone-400" />
           <div>
-            <div class="text-base font-bold text-gray-800 leading-tight">
+            <div class="font-display text-lg text-stone-900 leading-tight tabular-nums">
               {{ formattedTime }}
             </div>
-            <div class="text-[10px] text-gray-500">
-              Target: {{ formattedTarget }}
+            <div class="text-[10px] text-stone-500 mt-0.5">
+              Target {{ formattedTarget }}
             </div>
           </div>
         </div>
 
-        <div class="h-6 w-px bg-gray-200"></div>
+        
 
         <!-- Mistakes Counter -->
-        <div class="flex items-center gap-2" title="-3 points per mistake">
-          <AlertCircle class="w-4 h-4 text-rose-500" />
+        <div class="flex items-center gap-2.5 px-3" title="3 points off per mistake">
+          <AlertCircle class="w-4 h-4 text-stone-400" />
           <div>
-            <div class="text-base font-bold text-gray-800 leading-tight">
+            <div class="font-display text-lg text-stone-900 leading-tight tabular-nums">
               {{ session.mistakes }}
             </div>
-            <div class="text-[10px] text-gray-500">Mistakes (−3)</div>
+            <div class="text-[10px] text-stone-500 mt-0.5">Mistakes (−3)</div>
           </div>
         </div>
 
-        <div class="h-6 w-px bg-gray-200"></div>
+        
 
         <!-- Hints Counter -->
-        <div class="flex items-center gap-2" title="-5 points per hint">
-          <HelpCircle class="w-4 h-4 text-amber-500" />
+        <div class="flex items-center gap-2.5 px-3" title="5 points off per hint">
+          <HelpCircle class="w-4 h-4 text-stone-400" />
           <div>
-            <div class="text-base font-bold text-gray-800 leading-tight">
+            <div class="font-display text-lg text-stone-900 leading-tight tabular-nums">
               {{ session.hintsRemaining }}
             </div>
-            <div class="text-[10px] text-gray-500">Hints Left</div>
+            <div class="text-[10px] text-stone-500 mt-0.5">Hints left</div>
           </div>
         </div>
       </div>
@@ -86,10 +83,10 @@
         <button
           @click="$emit('hint')"
           :disabled="hinting || session.hintsRemaining <= 0 || session.isComplete"
-          class="px-3 py-2 text-xs font-semibold rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1.5"
-          title="Get a hint (-5 points penalty)"
+          class="px-4 py-2 text-xs font-medium rounded-full border border-stone-200 text-stone-600 hover:border-stone-400 hover:text-stone-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+          title="Get a hint (5 points off)"
         >
-          <Sparkles class="w-3.5 h-3.5" :class="{ 'animate-spin': hinting }" />
+          <Sparkles class="w-3.5 h-3.5" />
           <span>Hint (−5)</span>
         </button>
 
@@ -97,20 +94,20 @@
         <button
           @click="$emit('check')"
           :disabled="checking || session.isComplete"
-          class="px-3 py-2 text-xs font-semibold rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1.5"
+          class="px-4 py-2 text-xs font-medium rounded-full border border-stone-200 text-stone-600 hover:border-stone-400 hover:text-stone-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
           title="Check your current answers without finalizing"
         >
-          <CheckCircle2 class="w-3.5 h-3.5 text-blue-600" />
+          <CheckCircle2 class="w-3.5 h-3.5 text-stone-400" />
           <span>{{ checking ? 'Checking…' : 'Check' }}</span>
         </button>
 
         <!-- Save & Exit -->
         <button
           @click="$emit('save')"
-          class="px-3 py-2 text-xs font-semibold rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-all flex items-center gap-1.5"
+          class="px-3 py-2 text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors flex items-center gap-1.5"
           title="Save your progress and return to the game catalog"
         >
-          <Bookmark class="w-3.5 h-3.5 text-gray-500" />
+          <Bookmark class="w-3.5 h-3.5" />
           <span>Save & Exit</span>
         </button>
 
@@ -118,7 +115,7 @@
         <button
           @click="$emit('submit')"
           :disabled="submitting || session.isComplete"
-          class="px-4 py-2 text-xs font-semibold rounded-lg bg-primary-600 hover:bg-primary-700 text-white shadow-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1.5"
+          class="px-5 py-2 text-xs font-medium rounded-full bg-stone-900 hover:bg-stone-800 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
         >
           <Target class="w-3.5 h-3.5" />
           <span>{{ submitting ? 'Scoring…' : 'Submit' }}</span>
@@ -127,7 +124,7 @@
         <!-- Abandon / Delete -->
         <button
           @click="$emit('abandon')"
-          class="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-all"
+          class="p-2 text-stone-400 hover:text-red-600 rounded-full transition-colors"
           title="Abandon this puzzle"
         >
           <RotateCcw class="w-4 h-4" />

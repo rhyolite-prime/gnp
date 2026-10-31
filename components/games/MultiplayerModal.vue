@@ -1,21 +1,19 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-    <div class="relative bg-white rounded-lg shadow-2xl max-w-xl w-full p-6 sm:p-8 my-8 border border-gray-100 animate-scale-in">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 overflow-y-auto">
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-xl w-full p-8 sm:p-10 my-8 animate-scale-in">
       <!-- Close button -->
       <button
         @click="$emit('close')"
-        class="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+        class="absolute top-5 right-5 p-1.5 text-stone-400 hover:text-stone-700 rounded-full hover:bg-stone-100 transition-colors"
       >
         <X class="w-5 h-5" />
       </button>
 
       <!-- Header -->
-      <div class="flex items-center gap-3.5 mb-6">
-        <div class="p-3 bg-purple-100 text-purple-700 rounded-lg">
-          <Swords class="w-7 h-7" />
-        </div>
+      <div class="mb-7">
         <div>
-          <h2 class="text-xl font-bold text-gray-900">Multiplayer Rivalries</h2>
+          <p class="text-[11px] font-medium uppercase tracking-[0.28em] text-primary-700">Head to head</p>
+          <h2 class="font-display text-3xl text-stone-900 mt-2 leading-tight">Challenge a reader</h2>
           <p class="text-xs text-gray-500 mt-0.5">
             Duel other readers on identical publication-backed puzzles.
           </p>
@@ -26,18 +24,18 @@
       <div class="flex items-center gap-2 border-b border-gray-100 pb-3 mb-6">
         <button
           @click="activeTab = 'create'"
-          :class="activeTab === 'create' ? 'bg-purple-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-          class="px-4 py-2 rounded-xl text-xs font-bold transition-all"
+          :class="activeTab === 'create' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'"
+          class="px-4 py-2 rounded-full text-xs font-medium transition-colors"
         >
           Send New Challenge
         </button>
         <button
           @click="activeTab = 'matches'"
-          :class="activeTab === 'matches' ? 'bg-purple-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-          class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+          :class="activeTab === 'matches' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'"
+          class="px-4 py-2 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5"
         >
           <span>Active Duels</span>
-          <span v-if="challenges && challenges.length" class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-white text-purple-800">
+          <span v-if="challenges && challenges.length" class="px-1.5 py-0.2 rounded-full text-[10px] bg-white text-stone-800">
             {{ challenges.length }}
           </span>
         </button>
@@ -47,7 +45,7 @@
       <div v-if="activeTab === 'create'" class="space-y-4">
         <!-- Opponent Selection -->
         <div>
-          <label class="block text-xs font-bold text-gray-700 mb-2">
+          <label class="block text-[11px] font-medium uppercase tracking-[0.22em] text-stone-500 mb-2.5">
             Select Opponent
           </label>
           <div class="grid grid-cols-2 gap-2 mb-2">
@@ -56,18 +54,18 @@
               :key="rival.userId"
               type="button"
               @click="selectedOpponent = rival.userId"
-              :class="selectedOpponent === rival.userId ? 'bg-purple-50 border-purple-500 ring-2 ring-purple-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300'"
-              class="p-3 rounded-xl border text-left transition-all"
+              :class="selectedOpponent === rival.userId ? 'border-stone-900 bg-stone-50' : 'border-stone-200 hover:border-stone-300'"
+              class="p-3.5 rounded-xl border text-left transition-colors"
             >
-              <div class="font-bold text-gray-900 text-xs">{{ rival.username }}</div>
-              <div class="text-[10px] text-gray-500">Rank #{{ rival.rank }} • {{ rival.totalPoints }} pts</div>
+              <div class="text-stone-900 text-sm">{{ rival.username }}</div>
+              <div class="text-xs text-stone-500 mt-0.5">Rank #{{ rival.rank }} &middot; {{ rival.totalPoints }} pts</div>
             </button>
           </div>
         </div>
 
         <!-- Game Type Selection -->
         <div>
-          <label class="block text-xs font-bold text-gray-700 mb-2">
+          <label class="block text-[11px] font-medium uppercase tracking-[0.22em] text-stone-500 mb-2.5">
             Game Type
           </label>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -76,8 +74,8 @@
               :key="gt.id"
               type="button"
               @click="selectedGameType = gt.id"
-              :class="selectedGameType === gt.id ? 'bg-primary-600 text-white shadow-sm' : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100'"
-              class="p-2.5 rounded-xl border text-xs font-bold transition-all text-center"
+              :class="selectedGameType === gt.id ? 'bg-stone-900 text-white border-stone-900' : 'border-stone-200 text-stone-600 hover:border-stone-400'"
+              class="p-2.5 rounded-full border text-xs font-medium transition-colors text-center"
             >
               {{ gt.label }}
             </button>
@@ -86,7 +84,7 @@
 
         <!-- Difficulty Selection -->
         <div>
-          <label class="block text-xs font-bold text-gray-700 mb-2">
+          <label class="block text-[11px] font-medium uppercase tracking-[0.22em] text-stone-500 mb-2.5">
             Difficulty
           </label>
           <div class="grid grid-cols-4 gap-2">
@@ -95,8 +93,8 @@
               :key="diff"
               type="button"
               @click="selectedDifficulty = diff"
-              :class="selectedDifficulty === diff ? 'bg-gray-900 text-white shadow-sm' : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100'"
-              class="p-2.5 rounded-xl border text-xs font-bold capitalize transition-all text-center"
+              :class="selectedDifficulty === diff ? 'bg-stone-900 text-white border-stone-900' : 'border-stone-200 text-stone-600 hover:border-stone-400'"
+              class="p-2.5 rounded-full border text-xs font-medium capitalize transition-colors text-center"
             >
               {{ diff }}
             </button>
@@ -104,9 +102,9 @@
         </div>
 
         <!-- Rules Info Banner -->
-        <div class="bg-purple-50/60 border border-purple-200 rounded-lg p-3.5 text-xs text-purple-900 space-y-1">
-          <div class="font-bold flex items-center gap-1">
-            <Sparkles class="w-3.5 h-3.5 text-purple-600" /> How duels work
+        <div class="bg-stone-50 border border-stone-200 rounded-xl p-4 text-xs text-stone-600 space-y-1.5">
+          <div class="text-stone-900">
+            How duels work
           </div>
           <div>• Both players receive the exact same puzzle built from newspaper text.</div>
           <div>• The player with higher accuracy and faster completion time wins.</div>
@@ -117,7 +115,7 @@
         <button
           @click="handleSendChallenge"
           :disabled="!selectedOpponent || sending"
-          class="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+          class="w-full py-3.5 px-4 bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-full text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Swords class="w-4 h-4" />
           <span>{{ sending ? 'Sending Challenge...' : 'Send Challenge Duel' }}</span>
@@ -129,15 +127,15 @@
         <div
           v-for="c in challenges"
           :key="c.challengeId"
-          class="border border-gray-200 rounded-lg p-4 bg-gray-50 flex flex-col justify-between gap-3"
+          class="border border-stone-200 rounded-xl p-4 bg-stone-50/70 flex flex-col justify-between gap-3"
         >
           <div class="flex items-start justify-between">
             <div>
               <div class="flex items-center gap-2">
-                <span class="font-bold text-sm text-gray-900">
+                <span class="text-sm text-stone-900">
                   {{ c.challengerName }} vs {{ c.opponentName }}
                 </span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] border border-stone-200 text-stone-600">
                   {{ c.gameType }}
                 </span>
               </div>
@@ -145,7 +143,7 @@
                 {{ c.summary }}
               </p>
             </div>
-            <span class="text-[10px] font-bold text-gray-400">
+            <span class="text-[10px] text-stone-400">
               {{ c.difficulty }}
             </span>
           </div>
@@ -155,21 +153,21 @@
             <template v-if="!c.youAreChallenger && c.status === 'active'">
               <button
                 @click="$emit('accept-challenge', c.challengeId)"
-                class="flex-1 py-2 px-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                class="flex-1 py-2.5 px-3 bg-stone-900 hover:bg-stone-800 text-white rounded-full text-xs font-medium transition-colors flex items-center justify-center gap-1.5"
               >
                 <Play class="w-3.5 h-3.5" /> Accept & Play Match
               </button>
               <button
                 @click="$emit('decline-challenge', c.challengeId)"
-                class="py-2 px-3 border border-gray-200 hover:bg-red-50 hover:text-red-600 rounded-xl text-xs font-bold text-gray-600 transition-all"
+                class="py-2.5 px-4 text-xs text-stone-500 hover:text-red-600 transition-colors"
               >
                 Decline
               </button>
             </template>
 
             <template v-else-if="c.youAreChallenger && c.status === 'active'">
-              <div class="text-xs text-purple-700 font-semibold flex items-center gap-1.5">
-                <Clock class="w-4 h-4 text-purple-500" />
+              <div class="text-xs text-stone-500 flex items-center gap-1.5">
+                <Clock class="w-4 h-4 text-stone-400" />
                 <span>Challenge sent to {{ c.opponentName }}. Waiting for response...</span>
               </div>
             </template>

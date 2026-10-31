@@ -1,79 +1,107 @@
 <template>
-  <div class="bg-white border border-gray-200 rounded-lg p-6 sm:p-8">
+  <div class="bg-stone-900 rounded-2xl p-7 sm:p-10 text-stone-100">
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-100">
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-7 border-b border-white/10">
       <div>
-        <p class="text-xs text-gray-500">Daily challenge · {{ dailyBoard?.date || todayDate }}</p>
-        <h2 class="text-xl sm:text-2xl font-semibold text-gray-900 mt-1">
-          Today&rsquo;s puzzles
-        </h2>
-        <p class="text-sm text-gray-600 mt-1">
-          Everyone gets the same four, built from today&rsquo;s editions. Worth 200 bonus points each.
+        <p class="text-[11px] font-medium uppercase tracking-[0.28em] text-stone-400">
+          {{ formattedDate }}
+        </p>
+        <h2 class="font-display text-3xl sm:text-4xl text-[#f5f0e8] mt-3 leading-tight">Today&rsquo;s puzzles</h2>
+        <p class="text-sm text-stone-400 mt-2.5 leading-relaxed max-w-lg">
+          Four puzzles, all from today&rsquo;s papers. Finish them before midnight and bank the streak bonus.
         </p>
       </div>
 
-      <div class="text-sm text-gray-600 self-start md:self-auto">
-        <p><span class="font-semibold text-gray-900">{{ dailyBoard?.completedCount || 0 }}</span> of {{ dailyBoard?.challenges?.length || 4 }} done</p>
+      <!-- Progress & Potential Bonus -->
+      <div class="flex items-center gap-8 self-start lg:self-auto">
+        <div>
+          <div class="font-display text-3xl text-[#f5f0e8] leading-none">{{ completedCount }} of {{ list.length }}</div>
+          <div class="text-[10px] font-medium uppercase tracking-[0.22em] text-stone-400 mt-2">Done</div>
+        </div>
+        <div>
+          <div class="font-display text-3xl text-amber-400 leading-none">+200</div>
+          <div class="text-[10px] font-medium uppercase tracking-[0.22em] text-stone-400 mt-2">Bonus points each</div>
+        </div>
       </div>
     </div>
 
-    <!-- Challenges -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+    <!-- Challenge Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-7">
       <div
-        v-for="item in dailyBoard?.challenges"
-        :key="item.id"
-        class="border border-gray-200 rounded-lg p-5 flex flex-col justify-between group hover:border-gray-300 transition-colors"
+        v-for="challenge in list"
+        :key="challenge.id"
+        class="border border-white/10 rounded-xl p-5 flex flex-col justify-between hover:border-white/25 transition-colors"
       >
         <div>
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-gray-900">{{ getTypeName(item.gameType) }}</span>
-            <span class="text-xs text-gray-500">{{ item.difficulty }}</span>
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="font-display text-lg text-[#f5f0e8] leading-snug">
+              {{ challenge.summary }}
+            </h3>
+            <span
+              v-if="challenge.completed"
+              class="text-xs text-amber-400 whitespace-nowrap pt-1"
+            >
+              Done
+            </span>
           </div>
 
-          <h3 class="text-sm text-gray-600 leading-snug">
-            {{ item.summary }}
-          </h3>
+          <p class="text-xs text-stone-400 mt-2">
+            {{ getTypeName(challenge.gameType) }} &middot; {{ challenge.difficulty }}
+          </p>
 
-          <p class="text-xs text-gray-400 mt-2">
-            {{ item.publication?.publicationName }}<template v-if="item.publication?.pageNumber"> · p.{{ item.publication.pageNumber }}</template>
+          <p class="text-xs text-stone-500 mt-2.5 leading-relaxed">
+            {{ challenge.publication?.publicationName }}<template v-if="challenge.publication?.pageNumber"> &middot; p.{{ challenge.publication?.pageNumber }}</template>
           </p>
         </div>
 
         <div class="mt-5">
-          <div v-if="item.completed" class="w-full py-2 px-3 text-emerald-700 text-sm text-center">
-            Done — +{{ item.bonusEarned ?? 200 }} points earned
-          </div>
           <button
-            v-else
-            @click="$emit('start-challenge', item.id, item.gameType)"
-            class="w-full py-2 px-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors"
+            v-if="!challenge.completed"
+            @click="$emit('start-challenge', challenge.id, challenge.gameType)"
+            class="w-full py-2 bg-white hover:bg-stone-100 text-stone-900 rounded-full text-xs font-medium transition-colors"
           >
             Play
           </button>
+          <div v-else class="text-xs text-stone-400 py-2 text-center">
+            +{{ challenge.bonusEarned ?? challenge.bonus ?? 200 }} pts banked
+          </div>
         </div>
+      </div>
+
+      <div v-if="!list.length" class="col-span-full text-center text-sm text-stone-500 py-8">
+        Today&rsquo;s set isn&rsquo;t out yet. Check back shortly.
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { DailyBoard, GameType } from '~/models';
+import { computed } from 'vue';
+import type { DailyBoard } from '~/models/games';
 
-defineProps<{
+const props = defineProps<{
   dailyBoard?: DailyBoard | null;
 }>();
 
 defineEmits<{
-  (e: 'start-challenge', challengeId: string, gameType: GameType): void;
+  'start-challenge': [challengeId: string, gameType: string];
 }>();
 
-const todayDate = computed(() => new Date().toISOString().split('T')[0]);
+const formattedDate = computed(() => {
+  const d = props.dailyBoard?.date ? new Date(props.dailyBoard.date) : new Date();
+  return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+});
 
-function getTypeName(type: string): string {
-  if (type === 'sudoku') return 'Letter Sudoku';
-  if (type === 'word_search') return 'Word Search';
-  if (type === 'crossword') return 'Crossword';
-  if (type === 'riddle') return 'Riddles';
-  return 'Challenge';
+const list = computed(() => props.dailyBoard?.challenges || []);
+const completedCount = computed(() => list.value.filter(c => c.completed).length);
+
+function getTypeName(type: string) {
+  const map: Record<string, string> = {
+    sudoku: 'Sudoku',
+    word_search: 'Word search',
+    crossword: 'Crossword',
+    riddle: 'Riddles',
+  };
+  return map[type] || type;
 }
 </script>

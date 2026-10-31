@@ -1,25 +1,25 @@
 <template>
   <div class="flex flex-col items-center max-w-4xl mx-auto">
     <!-- Theme Word & Quote Banner -->
-    <div class="w-full bg-white border border-gray-200 rounded-lg p-4 sm:p-5 mb-6">
+    <div class="w-full bg-white border border-stone-200 rounded-lg p-4 sm:p-5 mb-6">
       <div class="flex items-start gap-3">
         <div class="p-2 bg-primary-100 text-primary-700 rounded-xl mt-0.5">
           <BookOpen class="w-5 h-5" />
         </div>
         <div class="flex-1">
           <div class="flex flex-wrap items-center gap-2 mb-1">
-            <span class="text-xs font-medium text-gray-500">Theme word</span>
-            <span class="px-2.5 py-0.5 bg-primary-600 text-white font-mono font-bold tracking-widest text-sm rounded-md shadow-sm">
+            <span class="text-xs font-medium text-stone-500">Theme word</span>
+            <span class="px-3 py-1 bg-primary-600 text-white font-display text-lg rounded-md shadow-sm">
               {{ puzzle.symbolWord }}
             </span>
-            <span class="text-xs text-gray-500">({{ symbols.length }} unique letters)</span>
+            <span class="text-xs text-stone-500">({{ symbols.length }} unique letters)</span>
           </div>
-          <blockquote class="text-sm italic text-gray-700 border-l-2 border-primary-300 pl-3 py-0.5">
+          <blockquote class="text-sm italic text-stone-700 border-l-2 border-primary-300 pl-3 py-0.5">
             "{{ puzzle.anchorQuote }}"
           </blockquote>
-          <p class="text-xs text-gray-500 mt-1">
+          <p class="text-xs text-stone-500 mt-1">
             Fill every row, column, and 3×3 box with the letters:
-            <strong class="font-mono text-gray-800">{{ symbols.join(', ') }}</strong>.
+            <strong class="font-mono text-stone-800">{{ symbols.join(', ') }}</strong>.
           </p>
         </div>
       </div>
@@ -29,12 +29,12 @@
     <div class="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8 w-full">
       <!-- 9x9 Grid -->
       <div
-        class="relative bg-gray-900 p-2 sm:p-3 rounded-2xl shadow-xl select-none focus:outline-none"
+        class="relative bg-stone-900 p-2 sm:p-3 rounded-2xl shadow-xl select-none focus:outline-none"
         tabindex="0"
         @keydown="handleKeyDown"
         ref="gridRef"
       >
-        <div class="grid grid-cols-9 gap-[1px] sm:gap-[2px] bg-gray-400 p-[1px] sm:p-[2px] rounded-xl overflow-hidden border-2 border-gray-800">
+        <div class="grid grid-cols-9 gap-[1px] sm:gap-[2px] bg-stone-400 p-[1px] sm:p-[2px] rounded-xl overflow-hidden border-2 border-stone-800">
           <template v-for="(row, r) in grid" :key="`row-${r}`">
             <div
               v-for="(val, c) in row"
@@ -46,7 +46,7 @@
               <!-- Cell Letter Value -->
               <span v-if="val" :class="getLetterClasses(r, c)">{{ val }}</span>
               <!-- Notes in cell if any -->
-              <div v-else-if="notes[`${r}-${c}`]?.size" class="grid grid-cols-3 gap-0 text-[8px] text-gray-400 leading-none">
+              <div v-else-if="notes[`${r}-${c}`]?.size" class="grid grid-cols-3 gap-0 text-[8px] text-stone-400 leading-none">
                 <span v-for="sym in symbols.slice(0, 9)" :key="sym" class="w-2.5 h-2.5 flex items-center justify-center">
                   {{ notes[`${r}-${c}`]?.has(sym) ? sym : '' }}
                 </span>
@@ -65,19 +65,19 @@
       <!-- Controls & Letter Keypad Sidebar -->
       <div class="flex flex-col gap-4 w-full max-w-sm">
         <!-- Mode Toggles (Normal vs Pencil Notes) -->
-        <div class="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-2 shadow-sm">
-          <div class="text-xs font-semibold text-gray-600 px-2">Input Mode:</div>
+        <div class="flex items-center justify-between bg-white border border-stone-200 rounded-xl p-2 shadow-sm">
+          <div class="text-xs font-semibold text-stone-600 px-2">Input Mode:</div>
           <div class="flex items-center gap-1">
             <button
               @click="pencilMode = false"
-              :class="!pencilMode ? 'bg-primary-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+              :class="!pencilMode ? 'bg-primary-600 text-white shadow-sm' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'"
               class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
             >
               <PenLine class="w-3.5 h-3.5" /> Letter
             </button>
             <button
               @click="pencilMode = true"
-              :class="pencilMode ? 'bg-amber-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+              :class="pencilMode ? 'bg-amber-600 text-white shadow-sm' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'"
               class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
             >
               <Edit3 class="w-3.5 h-3.5" /> Pencil Notes
@@ -86,10 +86,10 @@
         </div>
 
         <!-- 9-Symbol Letter Keypad -->
-        <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        <div class="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-xs font-medium text-gray-500">Letters</span>
-            <span class="text-xs text-gray-400">Click or type on keyboard</span>
+            <span class="text-xs font-medium text-stone-500">Letters</span>
+            <span class="text-xs text-stone-400">Click or type on keyboard</span>
           </div>
 
           <div class="grid grid-cols-3 gap-2.5">
@@ -98,10 +98,10 @@
               :key="sym"
               @click="inputSymbol(sym)"
               :disabled="selectedRow === null || isGiven(selectedRow, selectedCol!)"
-              class="h-12 rounded-xl border border-gray-200 bg-gray-50 hover:bg-primary-50 hover:border-primary-300 hover:text-primary-600 font-mono font-bold text-lg text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm flex flex-col items-center justify-center relative active:scale-95"
+              class="h-12 rounded-xl border border-stone-200 bg-stone-50 hover:bg-primary-50 hover:border-primary-300 hover:text-primary-600 font-mono font-bold text-lg text-stone-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm flex flex-col items-center justify-center relative active:scale-95"
             >
               <span>{{ sym }}</span>
-              <span class="text-[9px] font-sans font-normal text-gray-400">
+              <span class="text-[9px] font-sans font-normal text-stone-400">
                 {{ getSymbolCount(sym) }}/9
               </span>
             </button>
@@ -112,27 +112,27 @@
             <button
               @click="clearSelected"
               :disabled="selectedRow === null || isGiven(selectedRow, selectedCol!)"
-              class="py-2 px-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-xs font-bold text-gray-700 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              class="py-2 px-3 rounded-xl border border-stone-200 bg-stone-50 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-xs font-bold text-stone-700 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Eraser class="w-4 h-4" /> Erase Cell
             </button>
             <button
               @click="clearAllNotes"
-              class="py-2 px-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-xs font-bold text-gray-700 transition-all flex items-center justify-center gap-1.5"
+              class="py-2 px-3 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 text-xs font-bold text-stone-700 transition-all flex items-center justify-center gap-1.5"
             >
-              <Trash2 class="w-4 h-4 text-gray-400" /> Clear Notes
+              <Trash2 class="w-4 h-4 text-stone-400" /> Clear Notes
             </button>
           </div>
         </div>
 
         <!-- Legend & Rules -->
-        <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs text-gray-600 space-y-1">
-          <div class="font-bold text-gray-800 mb-1 flex items-center gap-1">
-            <Info class="w-3.5 h-3.5 text-gray-400" /> How it works
+        <div class="bg-stone-50 border border-stone-200 rounded-xl p-3 text-xs text-stone-600 space-y-1">
+          <div class="font-bold text-stone-800 mb-1 flex items-center gap-1">
+            <Info class="w-3.5 h-3.5 text-stone-400" /> How it works
           </div>
           <div>• Each 3×3 box must contain all 9 publication letters.</div>
           <div>• Each row and column must contain no duplicate letters.</div>
-          <div>• Locked cells <span class="font-bold text-gray-900">(dark)</span> are the given clues.</div>
+          <div>• Locked cells <span class="font-bold text-stone-900">(dark)</span> are the given clues.</div>
         </div>
       </div>
     </div>
@@ -298,8 +298,8 @@ function getCellClasses(r: number, c: number) {
   const wrong = isWrongCell(r, c);
 
   // Borders for 3x3 boxes
-  const borderRight = c === 2 || c === 5 ? 'border-r-2 border-r-gray-800' : '';
-  const borderBottom = r === 2 || r === 5 ? 'border-b-2 border-b-gray-800' : '';
+  const borderRight = c === 2 || c === 5 ? 'border-r-2 border-r-stone-800' : '';
+  const borderBottom = r === 2 || r === 5 ? 'border-b-2 border-b-stone-800' : '';
 
   if (isSelected) {
     return `bg-primary-500 text-white ring-2 ring-primary-400 z-10 ${borderRight} ${borderBottom}`;
@@ -311,12 +311,12 @@ function getCellClasses(r: number, c: number) {
     return `bg-amber-100 text-amber-900 ${borderRight} ${borderBottom}`;
   }
   if (isSameRowOrCol || isSameBox) {
-    return `bg-blue-50/70 text-gray-800 ${borderRight} ${borderBottom}`;
+    return `bg-blue-50/70 text-stone-800 ${borderRight} ${borderBottom}`;
   }
   if (given) {
-    return `bg-gray-100 text-gray-900 ${borderRight} ${borderBottom}`;
+    return `bg-stone-100 text-stone-900 ${borderRight} ${borderBottom}`;
   }
-  return `bg-white text-primary-700 hover:bg-gray-50 ${borderRight} ${borderBottom}`;
+  return `bg-white text-primary-700 hover:bg-stone-50 ${borderRight} ${borderBottom}`;
 }
 
 function getLetterClasses(r: number, c: number) {
@@ -324,7 +324,7 @@ function getLetterClasses(r: number, c: number) {
     return 'text-white font-extrabold';
   }
   if (isGiven(r, c)) {
-    return 'text-gray-900 font-extrabold';
+    return 'text-stone-900 font-extrabold';
   }
   if (isRevealedHint(r, c)) {
     return 'text-amber-600 font-extrabold';

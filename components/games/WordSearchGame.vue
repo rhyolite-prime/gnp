@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col items-center max-w-5xl mx-auto w-full">
     <!-- Publication Source Intro Banner -->
-    <div class="w-full bg-white border border-gray-200 rounded-lg p-4 sm:p-5 mb-6">
+    <div class="w-full bg-white border border-stone-200 rounded-lg p-4 sm:p-5 mb-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <div class="p-2.5 bg-primary-100 text-primary-700 rounded-xl">
@@ -9,20 +9,20 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="text-xs font-medium text-gray-500">From</span>
-              <span class="font-medium text-gray-900">{{ puzzle.source?.publicationName || 'Daily Graphic' }}</span>
-              <span class="text-xs text-gray-500">· {{ puzzle.words.length }} words</span>
+              <span class="text-xs font-medium text-stone-500">From</span>
+              <span class="font-medium text-stone-900">{{ puzzle.source?.publicationName || 'Daily Graphic' }}</span>
+              <span class="text-xs text-stone-500">· {{ puzzle.words.length }} words</span>
             </div>
-            <p class="text-xs text-gray-600 mt-0.5">
+            <p class="text-xs text-stone-600 mt-0.5">
               Drag across letters or click start & end letters to select. Words may appear horizontally, vertically, or diagonally.
             </p>
           </div>
         </div>
 
         <!-- Progress Counter Pill -->
-        <div class="flex items-center gap-2 self-start sm:self-center bg-white px-3 py-1.5 rounded-xl border border-gray-200 shadow-sm">
+        <div class="flex items-center gap-2 self-start sm:self-center bg-white px-3 py-1.5 rounded-xl border border-stone-200 shadow-sm">
           <CheckCircle2 class="w-4 h-4 text-emerald-600" />
-          <span class="text-xs font-bold text-gray-700">
+          <span class="text-xs font-bold text-stone-700">
             {{ foundWords.length }} of {{ puzzle.words.length }} found
           </span>
         </div>
@@ -33,12 +33,12 @@
     <div class="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8 w-full">
       <!-- Grid Board -->
       <div
-        class="relative bg-gray-900 p-2 sm:p-3 rounded-2xl shadow-xl select-none"
+        class="relative bg-stone-900 p-2 sm:p-3 rounded-2xl shadow-xl select-none"
         @mouseup="handleEndSelection"
         @mouseleave="handleCancelSelection"
       >
         <div
-          class="grid gap-1 sm:gap-1.5 bg-gray-800 p-2 rounded-xl"
+          class="grid gap-1 sm:gap-1.5 bg-stone-800 p-2 rounded-xl"
           :style="{ gridTemplateColumns: `repeat(${puzzle.size}, minmax(0, 1fr))` }"
         >
           <template v-for="(row, r) in puzzle.grid" :key="`r-${r}`">
@@ -59,13 +59,13 @@
 
       <!-- Target Words List & Clues -->
       <div class="flex flex-col gap-4 w-full max-w-md">
-        <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-          <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
+        <div class="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-3 border-b border-stone-100 pb-2">
             <div class="flex items-center gap-1.5">
               <FileText class="w-4 h-4 text-primary-600" />
-              <span class="text-xs font-bold uppercase tracking-wider text-gray-700">Words to Discover</span>
+              <span class="text-sm text-stone-900">Words to find</span>
             </div>
-            <span class="text-xs text-gray-400">{{ foundWords.length }} of {{ puzzle.words.length }} found</span>
+            <span class="text-xs text-stone-400">{{ foundWords.length }} of {{ puzzle.words.length }} found</span>
           </div>
 
           <!-- Words List -->
@@ -73,13 +73,13 @@
             <div
               v-for="item in puzzle.words"
               :key="item.word"
-              :class="isWordFound(item.word) ? 'bg-emerald-50/70 border-emerald-200' : 'bg-gray-50 border-gray-200 hover:border-gray-300'"
+              :class="isWordFound(item.word) ? 'bg-emerald-50/70 border-emerald-200' : 'bg-stone-50 border-stone-200 hover:border-stone-300'"
               class="border rounded-xl p-3 transition-all"
             >
               <div class="flex items-center justify-between">
                 <span
-                  :class="isWordFound(item.word) ? 'line-through text-emerald-800 font-bold' : 'text-gray-900 font-bold'"
-                  class="font-mono text-sm tracking-wider"
+                  :class="isWordFound(item.word) ? 'line-through text-stone-400' : 'text-stone-900'"
+                  class="text-sm tracking-wide"
                 >
                   {{ item.word }}
                 </span>
@@ -89,13 +89,13 @@
                 >
                   <Check class="w-3 h-3" /> Found
                 </span>
-                <span v-else class="text-[10px] font-mono text-gray-400">
+                <span v-else class="text-[10px] text-stone-400">
                   {{ item.length }} letters
                 </span>
               </div>
 
               <!-- Publication clue snippet -->
-              <p class="text-xs text-gray-500 mt-1 italic">
+              <p class="text-xs text-stone-500 mt-1 italic">
                 {{ item.clue }}
               </p>
             </div>
@@ -122,14 +122,14 @@ const emit = defineEmits<{
 
 // Palette of colors for discovered words
 const wordColors = [
-  'bg-emerald-500 text-white',
-  'bg-blue-500 text-white',
-  'bg-purple-500 text-white',
-  'bg-amber-500 text-white',
-  'bg-rose-500 text-white',
-  'bg-teal-500 text-white',
-  'bg-indigo-500 text-white',
-  'bg-cyan-500 text-white',
+  'bg-stone-800 text-white',
+  'bg-amber-600 text-white',
+  'bg-stone-600 text-white',
+  'bg-primary-600 text-white',
+  'bg-amber-700 text-white',
+  'bg-stone-700 text-white',
+  'bg-primary-700 text-white',
+  'bg-amber-800 text-white',
 ];
 
 // Found words list
@@ -332,7 +332,7 @@ function getCellClasses(r: number, c: number) {
 
   // Check if two-click start cell
   if (twoClickStart.value && twoClickStart.value.r === r && twoClickStart.value.c === c) {
-    return 'bg-amber-500 text-white font-extrabold ring-2 ring-amber-300 animate-pulse';
+    return 'bg-amber-500 text-white font-semibold ring-2 ring-amber-300';
   }
 
   // Check if part of any found word
@@ -347,7 +347,7 @@ function getCellClasses(r: number, c: number) {
     }
   }
 
-  return 'bg-gray-800 text-gray-200 hover:bg-gray-700';
+  return 'bg-stone-800 text-stone-200 hover:bg-stone-700';
 }
 
 watch(
