@@ -1,39 +1,35 @@
 <template>
-  <div class="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 shadow-sm">
+  <div class="bg-white rounded-2xl border border-stone-200/80 p-7 sm:p-10 shadow-sm">
     <!-- Header & Tabs -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-100">
-      <div class="flex items-center gap-3">
-        <div class="p-3 bg-amber-50 text-amber-600 rounded-lg">
-          <Trophy class="w-6 h-6" />
-        </div>
-        <div>
-          <h2 class="text-xl font-bold text-gray-900">Leaderboard & Rivalries</h2>
-          <p class="text-xs text-gray-500 mt-0.5">
-            Ranked by points earned from publication puzzles. Challenge any player to a duel!
-          </p>
-        </div>
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-stone-100">
+      <div>
+        <p class="text-[11px] font-medium uppercase tracking-[0.28em] text-stone-500">The standings</p>
+        <h2 class="font-display text-2xl sm:text-3xl text-stone-900 mt-2">Leaderboard &amp; rivalries</h2>
+        <p class="text-sm text-stone-600 mt-1.5">
+          Ranked by points earned from publication puzzles. Challenge any reader to a duel.
+        </p>
       </div>
 
       <!-- Main Board Tabs (Global vs Daily vs Rivals) -->
-      <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg self-start md:self-auto">
+      <div class="flex items-center gap-1 border border-stone-200 p-1 rounded-full self-start md:self-auto">
         <button
           @click="activeBoard = 'global'"
-          :class="activeBoard === 'global' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
-          class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all"
+          :class="activeBoard === 'global' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:text-stone-900'"
+          class="px-4 py-1.5 rounded-full text-xs font-medium transition-colors"
         >
           Global Board
         </button>
         <button
           @click="activeBoard = 'daily'"
-          :class="activeBoard === 'daily' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
-          class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all"
+          :class="activeBoard === 'daily' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:text-stone-900'"
+          class="px-4 py-1.5 rounded-full text-xs font-medium transition-colors"
         >
           Daily Board
         </button>
         <button
           @click="activeBoard = 'rivals'"
-          :class="activeBoard === 'rivals' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
-          class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all"
+          :class="activeBoard === 'rivals' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:text-stone-900'"
+          class="px-4 py-1.5 rounded-full text-xs font-medium transition-colors"
         >
           Rivals
         </button>
@@ -44,13 +40,13 @@
     <div v-if="activeBoard === 'global'" class="flex flex-wrap items-center justify-between gap-3 mb-6">
       <!-- Period Pills -->
       <div class="flex items-center gap-1.5">
-        <span class="text-xs font-semibold text-gray-500 mr-1">Timeframe:</span>
+        <span class="text-[11px] font-medium uppercase tracking-[0.22em] text-stone-500 mr-2">Timeframe</span>
         <button
           v-for="p in periods"
           :key="p.id"
           @click="changePeriod(p.id)"
-          :class="selectedPeriod === p.id ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-          class="px-3 py-1 rounded-lg text-xs font-semibold transition-all"
+          :class="selectedPeriod === p.id ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'"
+          class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors"
         >
           {{ p.label }}
         </button>
@@ -58,13 +54,13 @@
 
       <!-- Game Type Pills -->
       <div class="flex items-center gap-1.5">
-        <span class="text-xs font-semibold text-gray-500 mr-1">Game:</span>
+        <span class="text-[11px] font-medium uppercase tracking-[0.22em] text-stone-500 mr-2">Game</span>
         <button
           v-for="g in gameTypes"
           :key="g.id"
           @click="changeGameType(g.id)"
-          :class="selectedGameType === g.id ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-          class="px-3 py-1 rounded-lg text-xs font-semibold transition-all"
+          :class="selectedGameType === g.id ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'"
+          class="px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors"
         >
           {{ g.label }}
         </button>
@@ -72,9 +68,9 @@
     </div>
 
     <!-- Table Container -->
-    <div class="overflow-x-auto rounded-lg border border-gray-100">
+    <div class="overflow-x-auto rounded-xl border border-stone-200/80">
       <table class="w-full text-left text-sm">
-        <thead class="bg-gray-50 text-gray-500 text-xs font-bold border-b border-gray-100">
+        <thead class="bg-stone-50 text-stone-500 text-[11px] font-medium uppercase tracking-[0.14em] border-b border-stone-200">
           <tr>
             <th class="py-3 px-4 w-16 text-center">Rank</th>
             <th class="py-3 px-4">Reader</th>
@@ -85,71 +81,55 @@
             <th class="py-3 px-4 text-right">Actions</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
+        <tbody class="divide-y divide-stone-100">
           <tr
             v-for="entry in currentData"
             :key="entry.userId"
-            :class="isMe(entry.userId) ? 'bg-primary-50/60 font-semibold' : 'hover:bg-gray-50/70'"
+            :class="isMe(entry.userId) ? 'bg-[#faf6ee]' : 'hover:bg-stone-50/70'"
             class="transition-colors"
           >
             <!-- Rank Column with Medals -->
-            <td class="py-3.5 px-4 text-center font-bold">
-              <span
-                v-if="entry.rank === 1"
-                class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-100 text-amber-700 shadow-sm"
-                title="1st Place Gold"
-              >
-                🥇
-              </span>
-              <span
-                v-else-if="entry.rank === 2"
-                class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-200 text-slate-700 shadow-sm"
-                title="2nd Place Silver"
-              >
-                🥈
-              </span>
-              <span
-                v-else-if="entry.rank === 3"
-                class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-800/10 text-amber-900 shadow-sm"
-                title="3rd Place Bronze"
-              >
-                🥉
-              </span>
-              <span v-else class="text-gray-500">
-                #{{ entry.rank }}
+            <td class="py-4 px-4 text-center">
+              <span class="inline-flex items-center gap-1.5">
+                <span
+                  v-if="entry.rank <= 3"
+                  class="w-1.5 h-1.5 rounded-full"
+                  :class="entry.rank === 1 ? 'bg-amber-500' : entry.rank === 2 ? 'bg-stone-400' : 'bg-amber-700'"
+                ></span>
+                <span class="font-display text-lg text-stone-900">{{ entry.rank }}</span>
               </span>
             </td>
 
             <!-- User Info -->
             <td class="py-3.5 px-4">
               <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-xs text-gray-700">
+                <div class="w-8 h-8 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-xs text-stone-600">
                   {{ entry.username?.substring(0, 2) || 'GR' }}
                 </div>
                 <div>
-                  <div class="font-bold text-gray-900 flex items-center gap-1.5">
+                  <div class="text-stone-900 flex items-center gap-2">
                     <span>{{ entry.username }}</span>
                     <span
                       v-if="isMe(entry.userId)"
-                      class="px-2 py-0.2 rounded-full text-[10px] font-bold bg-primary-100 text-primary-800"
+                      class="text-[10px] text-primary-700 border border-primary-200 rounded-full px-2 py-px"
                     >
                       You
                     </span>
                   </div>
-                  <span v-if="entry.firstFinish" class="text-[10px] text-gray-400">
-                    Finished: {{ formatTime(entry.firstFinish) }}
+                  <span v-if="entry.firstFinish" class="text-[11px] text-stone-400">
+                    First finish {{ formatTime(entry.firstFinish) }}
                   </span>
                 </div>
               </div>
             </td>
 
             <!-- Points Column -->
-            <td class="py-3.5 px-4 text-right font-bold text-gray-900">
-              {{ entry.totalPoints.toLocaleString() }} pts
+            <td class="py-4 px-4 text-right font-display text-lg text-stone-900">
+              {{ entry.totalPoints.toLocaleString() }}
             </td>
 
             <!-- Games / Challenges Column -->
-            <td class="py-3.5 px-4 text-center text-gray-600">
+            <td class="py-4 px-4 text-center text-stone-500">
               {{ entry.challengesCompleted || entry.gamesPlayed || 0 }}
             </td>
 
@@ -158,7 +138,7 @@
               <button
                 v-if="!isMe(entry.userId)"
                 @click="$emit('challenge-user', entry.userId, entry.username)"
-                class="px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold transition-all inline-flex items-center gap-1"
+                class="px-4 py-1.5 rounded-full border border-stone-200 hover:border-stone-400 text-stone-600 hover:text-stone-900 text-xs font-medium transition-colors inline-flex items-center gap-1.5"
                 title="Send a 1-on-1 publication puzzle duel"
               >
                 <Swords class="w-3.5 h-3.5" />

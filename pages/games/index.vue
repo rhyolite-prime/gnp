@@ -1,22 +1,46 @@
 <template>
-  <div class="min-h-screen bg-gray-50/60 pb-20">
-    <!-- Header -->
-    <div class="bg-white border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
-        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-          <div>
-            <p class="text-sm text-gray-500">Graphic NewsPlus · Puzzles</p>
-            <h1 class="text-3xl sm:text-4xl font-semibold text-gray-900 mt-1">The puzzle page</h1>
-            <p class="text-sm sm:text-base text-gray-600 mt-2 max-w-2xl leading-relaxed">
-              Crosswords, sudoku, word searches and riddles &mdash; all built from stories we&rsquo;ve
-              published. Solve today&rsquo;s set, keep your streak going, and see where you land on the table.
-            </p>
-          </div>
+  <div class="min-h-screen bg-[#f7f4ef] pb-24">
+    <!-- Masthead -->
+    <div class="bg-[#f7f4ef]">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="border-t-[3px] border-stone-900 pt-[3px]">
+          <div class="border-t border-stone-300">
+            <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-10 pt-10 pb-10">
+              <div>
+                <p class="text-[11px] font-medium uppercase tracking-[0.28em] text-primary-700">
+                  Graphic NewsPlus &middot; Games
+                </p>
+                <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl text-stone-900 mt-4 leading-[0.95] tracking-tight">
+                  The Puzzle Desk
+                </h1>
+                <p class="text-base sm:text-lg text-stone-600 mt-5 max-w-xl leading-relaxed">
+                  Crosswords, sudoku, word searches and riddles &mdash; every one built from
+                  stories we&rsquo;ve published.
+                </p>
+              </div>
 
-          <div class="text-sm text-gray-600 space-y-1">
-            <p><span class="font-semibold text-gray-900">{{ userStats?.totalPoints || 0 }}</span> points</p>
-            <p><span class="font-semibold text-gray-900">#{{ userStats?.rank || '—' }}</span> on the all-time table</p>
-            <p><span class="font-semibold text-gray-900">{{ userStats?.currentStreak || 0 }} days</span> in a row</p>
+              <!-- Reader record -->
+              <div class="flex items-stretch divide-x divide-stone-300 border-y border-stone-300 self-start lg:self-auto">
+                <div class="pr-8 sm:pr-10 py-4">
+                  <div class="font-display text-3xl sm:text-4xl text-stone-900 leading-none">
+                    {{ (userStats?.totalPoints || 0).toLocaleString() }}
+                  </div>
+                  <div class="text-[10px] font-medium uppercase tracking-[0.22em] text-stone-500 mt-2">Points</div>
+                </div>
+                <div class="px-8 sm:px-10 py-4">
+                  <div class="font-display text-3xl sm:text-4xl text-stone-900 leading-none">
+                    {{ userStats?.rank ? '#' + userStats.rank : '—' }}
+                  </div>
+                  <div class="text-[10px] font-medium uppercase tracking-[0.22em] text-stone-500 mt-2">Rank</div>
+                </div>
+                <div class="pl-8 sm:pl-10 py-4">
+                  <div class="font-display text-3xl sm:text-4xl text-stone-900 leading-none">
+                    {{ userStats?.currentStreak || 0 }}
+                  </div>
+                  <div class="text-[10px] font-medium uppercase tracking-[0.22em] text-stone-500 mt-2">Day streak</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -25,29 +49,29 @@
     <!-- Active In-Progress Puzzle Banner (if not actively in play arena) -->
     <div
       v-if="activeSession && !isPlaying"
-      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-6 pt-6"
+      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8"
     >
-      <div class="bg-white border border-gray-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="bg-white rounded-2xl border border-stone-200/80 shadow-sm p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5 border-l-[3px] border-l-primary-600">
         <div>
-          <p class="text-xs text-gray-500">Puzzle in progress</p>
-          <h2 class="text-base font-semibold text-gray-900 mt-0.5">
+          <p class="text-[11px] font-medium uppercase tracking-[0.22em] text-primary-700">In progress</p>
+          <h2 class="font-display text-xl sm:text-2xl text-stone-900 mt-1.5 leading-snug">
             {{ activeSession.summary || 'Unfinished puzzle session' }}
           </h2>
-          <p class="text-xs text-gray-500 mt-1">
-            {{ activeSession.difficulty }} · {{ activeSession.mistakes }} {{ activeSession.mistakes === 1 ? 'mistake' : 'mistakes' }} · {{ activeSession.hintsRemaining }} hints left
+          <p class="text-sm text-stone-500 mt-1.5">
+            {{ formatGameType(activeSession.gameType) }} &middot; {{ activeSession.difficulty }} &middot; {{ activeSession.mistakes }} {{ activeSession.mistakes === 1 ? 'mistake' : 'mistakes' }} &middot; {{ activeSession.hintsRemaining }} hints left
           </p>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3">
           <button
             @click="resumePuzzle"
-            class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors"
+            class="px-6 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-full text-sm font-medium transition-colors"
           >
             Resume
           </button>
           <button
             @click="handleAbandonPuzzle"
-            class="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg text-sm transition-colors"
+            class="px-5 py-2.5 text-stone-500 hover:text-stone-900 text-sm transition-colors"
           >
             Abandon
           </button>
@@ -73,7 +97,7 @@
         />
 
         <!-- Active Puzzle Game Component -->
-        <div class="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+        <div class="bg-white rounded-2xl border border-stone-200/80 p-6 sm:p-10 shadow-sm">
           <!-- Sudoku -->
           <SudokuGame
             v-if="activeSession.gameType === 'sudoku'"
@@ -117,13 +141,13 @@
       <!-- NAVIGATION TABS & DASHBOARD (when not in play arena) -->
       <div v-else>
         <!-- Nav Tabs -->
-        <nav aria-label="Game Sections" class="flex items-center gap-6 overflow-x-auto border-b border-gray-200 mb-8">
+        <nav aria-label="Game Sections" class="flex items-center gap-8 overflow-x-auto border-b border-stone-300 mb-10">
           <button
             v-for="tab in navTabs"
             :key="tab.id"
             @click="currentTab = tab.id"
-            :class="currentTab === tab.id ? 'border-gray-900 text-gray-900 font-medium' : 'border-transparent text-gray-500 hover:text-gray-800'"
-            class="pt-1 pb-2.5 text-sm border-b-2 -mb-px whitespace-nowrap cursor-pointer"
+            :class="currentTab === tab.id ? 'border-primary-700 text-stone-900' : 'border-transparent text-stone-500 hover:text-stone-800'"
+            class="pb-3 text-sm border-b-2 -mb-px whitespace-nowrap cursor-pointer transition-colors"
           >
             {{ tab.label }}
           </button>
@@ -139,38 +163,45 @@
 
           <!-- Catalog Grid -->
           <div>
-            <div class="mb-5">
-              <h2 class="text-xl font-semibold text-gray-900">Pick a puzzle</h2>
-              <p class="text-sm text-gray-500 mt-1">Each one is built from a real edition — the board names the page it came from.</p>
+            <div class="mb-7">
+              <p class="text-[11px] font-medium uppercase tracking-[0.28em] text-stone-500">The games</p>
+              <h2 class="font-display text-3xl sm:text-4xl text-stone-900 mt-2">Pick a puzzle</h2>
+              <p class="text-base text-stone-600 mt-2 max-w-2xl leading-relaxed">
+                Each board is built from a real edition &mdash; the page it came from is named as you play.
+              </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div
                 v-for="cat in playableCategories"
                 :key="cat.gameType"
-                class="bg-white border border-gray-200 hover:border-gray-300 rounded-lg p-5 flex flex-col justify-between group transition-colors"
+                class="bg-white rounded-2xl border border-stone-200/80 p-7 flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               >
                 <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-semibold text-base text-gray-900">{{ cat.title }}</h3>
-                    <span class="text-xs text-gray-500">{{ cat.basePoints }} points</span>
+                  <div class="w-12 h-12 rounded-full border border-stone-300 flex items-center justify-center text-stone-700">
+                    <component :is="getGameIcon(cat.gameType)" class="w-5 h-5" />
                   </div>
 
-                  <p class="text-sm text-gray-600 leading-relaxed">
+                  <h3 class="font-display text-2xl text-stone-900 mt-5 leading-tight">{{ cat.title }}</h3>
+
+                  <p class="text-sm text-stone-600 leading-relaxed mt-3">
                     {{ cat.description }}
                   </p>
 
-                  <p class="text-xs text-gray-400 leading-relaxed mt-2">
+                  <p class="font-serif italic text-[13px] text-stone-400 leading-relaxed mt-3">
                     {{ cat.content }}
                   </p>
                 </div>
 
-                <button
-                  @click="openGameLauncher(cat.gameType)"
-                  class="mt-5 w-full py-2.5 px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  Play {{ cat.title }}
-                </button>
+                <div class="mt-7 pt-5 border-t border-stone-100 flex items-center justify-between">
+                  <span class="text-xs text-stone-400">{{ cat.basePoints }} points</span>
+                  <button
+                    @click="openGameLauncher(cat.gameType)"
+                    class="px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-full text-sm font-medium transition-colors"
+                  >
+                    Play
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -204,75 +235,79 @@
         </section>
 
         <!-- TAB 4: MULTIPLAYER CHALLENGES -->
-        <section v-else-if="currentTab === 'challenges'" class="space-y-6 animate-fade-in">
-          <div class="bg-white border border-gray-200 rounded-lg p-6 sm:p-8">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-100">
+        <section v-else-if="currentTab === 'challenges'" class="animate-fade-in">
+          <div class="bg-white rounded-2xl border border-stone-200/80 p-7 sm:p-10">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-5 pb-7 border-b border-stone-200">
               <div>
-                <h2 class="text-xl font-semibold text-gray-900">Duels</h2>
-                <p class="text-sm text-gray-500 mt-1">
-                  Challenge another reader to the same puzzle. Best score wins.
+                <p class="text-[11px] font-medium uppercase tracking-[0.28em] text-stone-500">Head to head</p>
+                <h2 class="font-display text-3xl text-stone-900 mt-2">Duels</h2>
+                <p class="text-sm text-stone-600 mt-2 max-w-md leading-relaxed">
+                  Challenge another reader to the same puzzle. The better score takes it.
                 </p>
               </div>
 
               <button
                 @click="showMultiplayerModal = true"
-                class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors self-start sm:self-auto"
+                class="px-6 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-full text-sm font-medium transition-colors self-start sm:self-auto"
               >
                 Challenge someone
               </button>
             </div>
 
             <!-- List of Challenges -->
-            <div class="divide-y divide-gray-100">
+            <div class="divide-y divide-stone-100">
               <div
                 v-for="c in challengesList"
                 :key="c.challengeId"
-                class="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                class="py-6 first:pt-7 last:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-5"
               >
                 <div>
-                  <p class="font-semibold text-gray-900 text-sm">
-                    {{ c.challengerName }} vs {{ c.opponentName }}
+                  <p class="font-display text-xl text-stone-900 leading-tight">
+                    {{ c.challengerName }}
+                    <span class="font-serif italic text-stone-400 text-base">vs</span>
+                    {{ c.opponentName }}
                   </p>
-                  <p class="text-xs text-gray-500 mt-1">
-                    {{ formatGameType(c.gameType) }} · {{ c.difficulty }} · {{ c.summary }}
+                  <p class="text-sm text-stone-600 mt-1.5">
+                    {{ c.summary }}
                   </p>
-                  <p class="text-xs text-gray-400 mt-1">
-                    {{ c.publication?.publicationName }}<template v-if="c.publication?.pageNumber"> · p.{{ c.publication?.pageNumber }}</template>
+                  <p class="text-xs text-stone-400 mt-1.5">
+                    {{ formatGameType(c.gameType) }} &middot; {{ c.difficulty }} &middot; {{ c.publication?.publicationName }}<template v-if="c.publication?.pageNumber"> &middot; p.{{ c.publication?.pageNumber }}</template>
                   </p>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-3">
                   <template v-if="!c.youAreChallenger && c.status === 'active'">
                     <button
                       @click="handleAcceptChallenge(c.challengeId)"
-                      class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors"
+                      class="px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-full transition-colors"
                     >
                       Accept
                     </button>
                     <button
                       @click="handleDeclineChallenge(c.challengeId)"
-                      class="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm rounded-lg transition-colors"
+                      class="px-5 py-2.5 text-stone-500 hover:text-stone-900 text-sm transition-colors"
                     >
                       Decline
                     </button>
                   </template>
 
                   <template v-else-if="c.youAreChallenger && c.status === 'active'">
-                    <span class="text-sm text-gray-500">
+                    <span class="text-sm text-stone-500">
                       Waiting on {{ c.opponentName.split(' ')[0] }}
                     </span>
                   </template>
 
                   <template v-else>
-                    <span class="text-sm text-gray-500">
+                    <span class="text-sm text-stone-400">
                       {{ c.status }}
                     </span>
                   </template>
                 </div>
               </div>
 
-              <div v-if="!challengesList.length" class="py-12 text-center text-sm text-gray-500">
-                No duels yet. Challenge a reader from the leaderboard to get one going.
+              <div v-if="!challengesList.length" class="py-14 text-center">
+                <p class="font-display text-xl text-stone-900">No duels yet</p>
+                <p class="text-sm text-stone-500 mt-2">Challenge a reader from the leaderboard to get one going.</p>
               </div>
             </div>
           </div>
@@ -295,42 +330,43 @@
         </section>
 
         <!-- TAB 6: SCORING RULES & GUIDE -->
-        <section v-else-if="currentTab === 'rules'" class="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 space-y-6 animate-fade-in">
-          <div>
-            <h2 class="text-xl font-semibold text-gray-900">How scoring works</h2>
-            <p class="text-sm text-gray-500 mt-1">
-              Points reward accuracy first, then speed and staying power. A rough run can still score well; a fast wrong one won&rsquo;t.
+        <section v-else-if="currentTab === 'rules'" class="bg-white rounded-2xl border border-stone-200/80 p-7 sm:p-10 animate-fade-in">
+          <div class="pb-7 border-b border-stone-200">
+            <p class="text-[11px] font-medium uppercase tracking-[0.28em] text-stone-500">The fine print</p>
+            <h2 class="font-display text-3xl text-stone-900 mt-2">How scoring works</h2>
+            <p class="text-base text-stone-600 mt-2 max-w-2xl leading-relaxed">
+              Points reward accuracy first, then speed and staying power. A careful solve always beats a fast wrong one.
             </p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-10 pt-8">
             <div>
-              <h3 class="text-sm font-semibold text-gray-900 mb-2">Difficulty</h3>
-              <ul class="text-sm text-gray-600 space-y-1.5">
-                <li>Easy &mdash; 1&times; multiplier, 5 hints</li>
-                <li>Medium &mdash; 2&times; multiplier, 3 hints</li>
-                <li>Hard &mdash; 3&times; multiplier, 2 hints</li>
-                <li>Expert &mdash; 4&times; multiplier, 1 hint</li>
+              <h3 class="font-display text-xl text-stone-900 mb-4">Difficulty</h3>
+              <ul class="text-sm text-stone-600 space-y-2.5">
+                <li class="flex justify-between gap-4 pb-2.5 border-b border-stone-100"><span>Easy</span><span class="text-stone-400">1&times; &middot; 5 hints</span></li>
+                <li class="flex justify-between gap-4 pb-2.5 border-b border-stone-100"><span>Medium</span><span class="text-stone-400">2&times; &middot; 3 hints</span></li>
+                <li class="flex justify-between gap-4 pb-2.5 border-b border-stone-100"><span>Hard</span><span class="text-stone-400">3&times; &middot; 2 hints</span></li>
+                <li class="flex justify-between gap-4"><span>Expert</span><span class="text-stone-400">4&times; &middot; 1 hint</span></li>
               </ul>
             </div>
 
             <div>
-              <h3 class="text-sm font-semibold text-gray-900 mb-2">Bonuses</h3>
-              <ul class="text-sm text-gray-600 space-y-1.5">
-                <li>Perfect solve &mdash; up to 100 pts &times; multiplier</li>
-                <li>Daily challenge &mdash; +200 pts</li>
-                <li>Speed &mdash; up to 50% extra under the target time</li>
-                <li>Streak &mdash; +10 pts per consecutive day</li>
-                <li>Winning a duel &mdash; +25 pts</li>
+              <h3 class="font-display text-xl text-stone-900 mb-4">Bonuses</h3>
+              <ul class="text-sm text-stone-600 space-y-2.5">
+                <li class="flex justify-between gap-4 pb-2.5 border-b border-stone-100"><span>Perfect solve</span><span class="text-stone-400">up to 100 pts &times; multiplier</span></li>
+                <li class="flex justify-between gap-4 pb-2.5 border-b border-stone-100"><span>Daily challenge</span><span class="text-stone-400">+200 pts</span></li>
+                <li class="flex justify-between gap-4 pb-2.5 border-b border-stone-100"><span>Speed</span><span class="text-stone-400">up to +50%</span></li>
+                <li class="flex justify-between gap-4 pb-2.5 border-b border-stone-100"><span>Streak</span><span class="text-stone-400">+10 pts per day</span></li>
+                <li class="flex justify-between gap-4"><span>Winning a duel</span><span class="text-stone-400">+25 pts</span></li>
               </ul>
             </div>
 
             <div>
-              <h3 class="text-sm font-semibold text-gray-900 mb-2">Penalties</h3>
-              <ul class="text-sm text-gray-600 space-y-1.5">
-                <li>Wrong cell or answer &mdash; &minus;3 pts each</li>
-                <li>Revealed hint &mdash; &minus;5 pts each</li>
-                <li>Scores never drop below zero.</li>
+              <h3 class="font-display text-xl text-stone-900 mb-4">Penalties</h3>
+              <ul class="text-sm text-stone-600 space-y-2.5">
+                <li class="flex justify-between gap-4 pb-2.5 border-b border-stone-100"><span>Wrong cell or answer</span><span class="text-stone-400">&minus;3 pts each</span></li>
+                <li class="flex justify-between gap-4 pb-2.5 border-b border-stone-100"><span>Revealed hint</span><span class="text-stone-400">&minus;5 pts each</span></li>
+                <li class="text-stone-400 italic font-serif">Scores never drop below zero.</li>
               </ul>
             </div>
           </div>
@@ -339,22 +375,23 @@
     </div>
 
     <!-- GAME LAUNCHER MODAL (Configurator for Difficulty & Publication Source) -->
-    <div v-if="showLauncherModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4 overflow-y-auto">
-      <div class="relative bg-white rounded-lg shadow-2xl max-w-lg w-full p-6 sm:p-8 my-8">
+    <div v-if="showLauncherModal" class="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 overflow-y-auto">
+      <div class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 sm:p-10 my-8">
         <button
           @click="showLauncherModal = false"
-          class="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors"
+          class="absolute top-5 right-5 p-1.5 text-stone-400 hover:text-stone-700 rounded-full hover:bg-stone-100 transition-colors"
         >
           <X class="w-5 h-5" />
         </button>
 
-        <h2 class="text-xl font-semibold text-gray-900">Play {{ formatGameType(launcherGameType) }}</h2>
-        <p class="text-sm text-gray-500 mt-1 mb-6">Pick a difficulty and the edition to build the puzzle from.</p>
+        <p class="text-[11px] font-medium uppercase tracking-[0.28em] text-primary-700">New game</p>
+        <h2 class="font-display text-3xl text-stone-900 mt-2 leading-tight">{{ formatGameType(launcherGameType) }}</h2>
+        <p class="text-sm text-stone-500 mt-2">Choose a difficulty and the edition to build your puzzle from.</p>
 
-        <div class="space-y-5">
+        <div class="space-y-7 mt-8">
           <!-- Difficulty Choice -->
           <div>
-            <label class="block text-sm font-medium text-gray-900 mb-2">
+            <label class="block text-[11px] font-medium uppercase tracking-[0.22em] text-stone-500 mb-3">
               Difficulty
             </label>
             <div class="grid grid-cols-4 gap-2">
@@ -362,8 +399,8 @@
                 v-for="d in difficulties"
                 :key="d"
                 @click="launcherDifficulty = d"
-                :class="launcherDifficulty === d ? 'border-primary-600 text-primary-700 bg-primary-50' : 'border-gray-200 text-gray-700 hover:bg-gray-50'"
-                class="py-2 px-2 rounded-lg border text-sm capitalize transition-colors text-center"
+                :class="launcherDifficulty === d ? 'bg-stone-900 text-white border-stone-900' : 'border-stone-200 text-stone-600 hover:border-stone-400'"
+                class="py-2.5 rounded-full border text-sm capitalize transition-colors text-center"
               >
                 {{ d }}
               </button>
@@ -372,22 +409,22 @@
 
           <!-- Publication Source Choice -->
           <div>
-            <label class="block text-sm font-medium text-gray-900 mb-2">
+            <label class="block text-[11px] font-medium uppercase tracking-[0.22em] text-stone-500 mb-3">
               Edition
             </label>
-            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+            <div class="space-y-2 max-h-52 overflow-y-auto pr-1">
               <button
                 v-for="source in publicationSources"
                 :key="source.publicationId"
                 @click="launcherPublicationId = source.publicationId"
-                :class="launcherPublicationId === source.publicationId ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'"
-                class="w-full p-3 rounded-lg border text-left transition-colors flex items-center justify-between"
+                :class="launcherPublicationId === source.publicationId ? 'border-stone-900 bg-stone-50' : 'border-stone-200 hover:border-stone-300'"
+                class="w-full p-4 rounded-xl border text-left transition-colors flex items-center justify-between"
               >
                 <div>
-                  <div class="font-medium text-gray-900 text-sm">{{ source.publicationName }}</div>
-                  <div class="text-xs text-gray-500">{{ source.newspaperTitle }}</div>
+                  <div class="font-medium text-stone-900 text-sm">{{ source.publicationName }}</div>
+                  <div class="text-xs text-stone-500 mt-0.5">{{ source.newspaperTitle }}</div>
                 </div>
-                <Check v-if="launcherPublicationId === source.publicationId" class="w-4 h-4 text-primary-600" />
+                <Check v-if="launcherPublicationId === source.publicationId" class="w-4 h-4 text-stone-900" />
               </button>
             </div>
           </div>
@@ -396,7 +433,7 @@
           <button
             @click="handleStartGame"
             :disabled="startingGame"
-            class="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg text-sm transition-colors disabled:opacity-40"
+            class="w-full py-3.5 px-4 bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-full text-sm transition-colors disabled:opacity-40"
           >
             {{ startingGame ? 'Preparing your puzzle…' : 'Start game' }}
           </button>
@@ -458,7 +495,11 @@ import type {
 
 import {
   X,
-  Check
+  Check,
+  Grid,
+  Search,
+  FileText,
+  HelpCircle
 } from 'lucide-vue-next';
 
 import {
@@ -612,6 +653,13 @@ function formatGameType(type: string) {
     daily: 'Daily Challenge',
   };
   return map[type] || type;
+}
+
+function getGameIcon(type: string) {
+  if (type === 'sudoku') return Grid;
+  if (type === 'word_search') return Search;
+  if (type === 'crossword') return FileText;
+  return HelpCircle;
 }
 
 // Timer controls

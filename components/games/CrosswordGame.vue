@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col items-center max-w-6xl mx-auto w-full">
     <!-- Active Clue Header Ribbon -->
-    <div class="w-full bg-white border border-gray-200 rounded-lg p-4 sm:p-5 mb-6">
+    <div class="w-full bg-white border border-stone-200 rounded-lg p-4 sm:p-5 mb-6">
       <div class="flex items-start sm:items-center justify-between gap-4">
         <div class="flex items-start gap-3">
           <div class="p-2.5 bg-primary-100 text-primary-700 rounded-xl mt-0.5 sm:mt-0">
@@ -12,9 +12,9 @@
               <span class="text-xs font-medium text-primary-700">
                 {{ activeClue?.number || 1 }} {{ activeDirection }}
               </span>
-              <span class="text-xs text-gray-500">({{ activeClue?.length || 0 }} letters)</span>
+              <span class="text-xs text-stone-500">({{ activeClue?.length || 0 }} letters)</span>
             </div>
-            <p class="text-sm font-medium text-gray-900 mt-1">
+            <p class="text-sm font-medium text-stone-900 mt-1">
               {{ activeClue?.clue || 'Select a cell on the grid to view its clue.' }}
             </p>
           </div>
@@ -22,9 +22,9 @@
 
         <button
           @click="toggleDirection"
-          class="shrink-0 px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-xs font-semibold text-gray-700 transition-all flex items-center gap-1.5"
+          class="shrink-0 px-3 py-1.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 text-xs font-semibold text-stone-700 transition-all flex items-center gap-1.5"
         >
-          <RotateCw class="w-3.5 h-3.5 text-gray-500" />
+          <RotateCw class="w-3.5 h-3.5 text-stone-500" />
           <span>Flip ({{ activeDirection === 'across' ? 'Down' : 'Across' }})</span>
         </button>
       </div>
@@ -34,13 +34,13 @@
     <div class="flex flex-col xl:flex-row items-center xl:items-start justify-center gap-8 w-full">
       <!-- Crossword Grid Board -->
       <div
-        class="relative bg-gray-900 p-2 sm:p-3 rounded-2xl shadow-xl select-none focus:outline-none"
+        class="relative bg-stone-900 p-2 sm:p-3 rounded-2xl shadow-xl select-none focus:outline-none"
         tabindex="0"
         @keydown="handleKeyDown"
         ref="gridContainerRef"
       >
         <div
-          class="grid gap-[1px] sm:gap-[2px] bg-gray-400 p-[1px] sm:p-[2px] rounded-xl overflow-hidden border-2 border-gray-800"
+          class="grid gap-[1px] sm:gap-[2px] bg-stone-400 p-[1px] sm:p-[2px] rounded-xl overflow-hidden border-2 border-stone-800"
           :style="{ gridTemplateColumns: `repeat(${puzzle.size}, minmax(0, 1fr))` }"
         >
           <template v-for="(row, r) in grid" :key="`row-${r}`">
@@ -48,7 +48,7 @@
               <!-- Black Block Cell -->
               <div
                 v-if="val === '#'"
-                class="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 bg-gray-900"
+                class="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 bg-stone-900"
               ></div>
 
               <!-- White Playable Cell -->
@@ -62,13 +62,13 @@
                 <span
                   v-if="puzzle.numbers?.[r]?.[c] > 0"
                   class="absolute top-0.5 left-1 text-[8px] sm:text-[9px] font-sans font-bold leading-none select-none"
-                  :class="isSelected(r, c) ? 'text-white/80' : 'text-gray-500'"
+                  :class="isSelected(r, c) ? 'text-white/80' : 'text-stone-500'"
                 >
                   {{ puzzle.numbers[r][c] }}
                 </span>
 
                 <!-- Entered Letter -->
-                <span :class="isSelected(r, c) ? 'text-white' : 'text-gray-900'">
+                <span :class="isSelected(r, c) ? 'text-white' : 'text-stone-900'">
                   {{ val }}
                 </span>
 
@@ -93,19 +93,19 @@
 
       <!-- Across & Down Clues Sidebar -->
       <div class="flex flex-col gap-4 w-full max-w-lg">
-        <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        <div class="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm">
           <!-- Clue Type Tabs -->
-          <div class="flex items-center gap-2 border-b border-gray-100 pb-3 mb-3">
+          <div class="flex items-center gap-2 border-b border-stone-100 pb-3 mb-3">
             <button
               @click="activeDirection = 'across'"
-              :class="activeDirection === 'across' ? 'bg-primary-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+              :class="activeDirection === 'across' ? 'bg-primary-600 text-white shadow-sm' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'"
               class="px-4 py-1.5 rounded-xl text-xs font-bold transition-all"
             >
               Across ({{ puzzle.clues.across.length }})
             </button>
             <button
               @click="activeDirection = 'down'"
-              :class="activeDirection === 'down' ? 'bg-primary-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+              :class="activeDirection === 'down' ? 'bg-primary-600 text-white shadow-sm' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'"
               class="px-4 py-1.5 rounded-xl text-xs font-bold transition-all"
             >
               Down ({{ puzzle.clues.down.length }})
@@ -119,21 +119,21 @@
               :key="`${activeDirection}-${clue.number}`"
               :id="`clue-${activeDirection}-${clue.number}`"
               @click="selectClue(clue)"
-              :class="isCurrentClue(clue) ? 'bg-primary-50 border-primary-300 ring-1 ring-primary-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300'"
+              :class="isCurrentClue(clue) ? 'bg-primary-50 border-primary-300 ring-1 ring-primary-300' : 'bg-stone-50 border-stone-200 hover:border-stone-300'"
               class="border rounded-xl p-3 cursor-pointer transition-all"
             >
               <div class="flex items-start gap-2.5">
                 <span
-                  :class="isCurrentClue(clue) ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700'"
+                  :class="isCurrentClue(clue) ? 'bg-primary-600 text-white' : 'bg-stone-200 text-stone-700'"
                   class="shrink-0 w-6 h-6 rounded-md font-mono font-bold text-xs flex items-center justify-center"
                 >
                   {{ clue.number }}
                 </span>
                 <div class="flex-1">
-                  <p class="text-xs sm:text-sm text-gray-800 leading-snug">
+                  <p class="text-xs sm:text-sm text-stone-800 leading-snug">
                     {{ clue.clue }}
                   </p>
-                  <span class="text-[10px] text-gray-400 mt-1 inline-block">
+                  <span class="text-[10px] text-stone-400 mt-1 inline-block">
                     {{ clue.length }} letters
                   </span>
                 </div>
@@ -143,8 +143,8 @@
         </div>
 
         <!-- Helpful Keyboard Shortcuts -->
-        <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs text-gray-500 space-y-1">
-          <div class="font-bold text-gray-700 flex items-center gap-1">
+        <div class="bg-stone-50 border border-stone-200 rounded-xl p-3 text-xs text-stone-500 space-y-1">
+          <div class="font-bold text-stone-700 flex items-center gap-1">
             <HelpCircle class="w-3.5 h-3.5 text-primary-600" /> Controls & Shortcuts
           </div>
           <div>• <strong>Spacebar</strong>: Toggle between Across & Down</div>
@@ -369,9 +369,9 @@ function getCellClasses(r: number, c: number) {
     return 'bg-rose-100 text-rose-800 border border-rose-400';
   }
   if (isPartOfActiveWord(r, c)) {
-    return 'bg-primary-50 text-gray-900 border border-primary-200';
+    return 'bg-primary-50 text-stone-900 border border-primary-200';
   }
-  return 'bg-white text-gray-900 hover:bg-gray-50';
+  return 'bg-white text-stone-900 hover:bg-stone-50';
 }
 
 watch(

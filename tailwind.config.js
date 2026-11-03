@@ -13,6 +13,7 @@ export default {
       fontFamily: {
         'sans': ['Sora', 'system-ui', 'sans-serif'],
         'serif': ['Georgia', 'serif'],
+        'display': ['Fraunces', 'Georgia', 'serif'],
       },
       colors: {
         primary: {
