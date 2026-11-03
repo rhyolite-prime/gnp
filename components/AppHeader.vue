@@ -70,7 +70,7 @@
           <NuxtLink :to="authStore.isAuthenticated ? '/affiliates/dashboard' : '/affiliates'" class="nav-link">Affiliates</NuxtLink>
           <NuxtLink :to="authStore.isAuthenticated ? '/partners/dashboard' : '/partners'" class="nav-link">Partners</NuxtLink>
           <NuxtLink to="/about" class="nav-link">About</NuxtLink>
-          <NuxtLink to="/games" class="nav-link">Games</NuxtLink>
+          <NuxtLink v-if="false" to="/games" class="nav-link">Games</NuxtLink>
         </nav>
 
         <!-- Search, Notifications & Sign In -->
@@ -227,7 +227,7 @@
           <NuxtLink :to="authStore.isAuthenticated ? '/affiliates/dashboard' : '/affiliates'" class="mobile-nav-link" @click="closeMobileMenu">Affiliates</NuxtLink>
           <NuxtLink :to="authStore.isAuthenticated ? '/partners/dashboard' : '/partners'" class="mobile-nav-link" @click="closeMobileMenu">Partners</NuxtLink>
           <NuxtLink to="/about" class="mobile-nav-link" @click="closeMobileMenu">About</NuxtLink>
-          <NuxtLink to="/games" class="mobile-nav-link" @click="closeMobileMenu">Games</NuxtLink>
+          <NuxtLink v-if="false" to="/games" class="mobile-nav-link" @click="closeMobileMenu">Games</NuxtLink>
 
           <div class="pt-4 border-t border-gray-100">
              <UserAuthButton :showSignInModal="() => { showSignInModal = true; closeMobileMenu(); }" />

@@ -60,7 +60,7 @@
                 <div class="mt-1">
                   <input 
                     id="phone" 
-                    v-model="form.phone" 
+                    v-model="form.phoneNo" 
                     type="tel" 
                     required 
                     class="block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors"
@@ -151,9 +151,10 @@ definePageMeta({
 
 const loading = ref(false)
 const form = reactive({
-  fullName: '',
+  firstName: '',
+  lastName: '',
   email: '',
-  phone: '',
+  phoneNo: '',
   password: '',
   confirmPassword: '',
   terms: false
@@ -167,18 +168,11 @@ const handleRegister = async () => {
   
   loading.value = true
   try {
-    // Note: createAffiliate currently uses 'admin/create-subscription-plan' in the codebase
-    // This probably needs to be a public endpoint in a real scenario
-    const success = await createAffiliate({
-      name: form.fullName,
-      email: form.email,
-      phone: form.phone,
-      website: form.website,
-      password: form.password
-    })
+
+    const success = await registerAffiliate(form);
     
     if (success) {
-      alert('Registration successful! Please login.')
+       // 
       useRouter().push('/affiliates/login')
     } else {
       alert('Registration failed. Please try again.')
