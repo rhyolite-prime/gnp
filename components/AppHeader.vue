@@ -73,14 +73,33 @@
           <NuxtLink to="/games" class="nav-link">Games</NuxtLink>
         </nav>
 
-        <!-- Search and Sign In -->
-        <div class="flex items-center space-x-4">
+        <!-- Search, Notifications & Sign In -->
+        <div class="flex items-center space-x-3">
           <button 
             @click="isSearchOpen = true"
-            class="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg border border-primary-400 transition-colors"
+            class="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg border border-primary-400 transition-colors cursor-pointer"
+            title="Search Graphic NewsPlus"
           >
             <MagnifyingGlassIcon class="h-6 w-6" />
           </button>
+
+          <ClientOnly>
+            <button
+              v-if="authStore.isAuthenticated"
+              type="button"
+              title="Notifications"
+              class="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg border border-gray-200 transition-colors relative cursor-pointer"
+              @click="notificationStore.isCenterOpen = true"
+            >
+              <BellIcon class="h-6 w-6" />
+              <span
+                v-if="notificationStore.unreadCount > 0"
+                class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold"
+              >
+                {{ notificationStore.unreadCount }}
+              </span>
+            </button>
+          </ClientOnly>
           
           <!-- user auth button here-->
            <div class="hidden md:flex items-center space-x-4">
@@ -239,13 +258,16 @@ import {
   RadioIcon,
   FilmIcon,
   BookOpenIcon,
-  SparklesIcon
+  SparklesIcon,
+  BellIcon
 } from '@heroicons/vue/24/outline'
 import { useBasicAuthStore } from '~/stores/basic-user-auth'
+import { useNotificationStore } from '~/stores/notification'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useBasicAuthStore()
+const notificationStore = useNotificationStore()
 const searchQuery = ref('')
 const showSignInModal = useState('showSignInModal', () => false);
 const isSearchOpen = ref(false)
@@ -278,6 +300,13 @@ watch(isSearchOpen, (isOpen) => {
     nextTick(() => {
       searchInput.value?.focus()
     })
+  }
+})
+
+// Close reader notification drawer automatically if user logs out
+watch(() => authStore.isAuthenticated, (loggedIn) => {
+  if (!loggedIn && !route.path.startsWith('/admin')) {
+    notificationStore.isCenterOpen = false
   }
 })
 

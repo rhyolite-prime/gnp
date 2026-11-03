@@ -241,6 +241,13 @@
                     </button>
 
                     <button
+                      class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                      @click.prevent="viewAccessibleNewspapers(sub)"
+                    >
+                      Assessible Newspapers
+                    </button>
+
+                    <button
                       class="block w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left"
                       @click.prevent="confirmRemoveSubscriber(sub)"
                     >
@@ -603,6 +610,12 @@ const handleResetPassword = async (subscriberId: string) => {
   } catch (error) {
     $toast.error('An error occurred while resetting subscriber password')
   }
+}
+
+// ─── View Assessible Newspapers ──────────────────────────────────────────────
+const viewAccessibleNewspapers = (sub: Subscriber) => {
+  closeDropdown()
+  router.push({ path: '/admin/accessible-newspapers', query: { subscriberId: sub.id } })
 }
 
 // ─── Delete Subscriber ───────────────────────────────────────────────────────

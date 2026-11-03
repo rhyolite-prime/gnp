@@ -562,6 +562,8 @@ export interface RenewalHistory {
 }
 
 export * from './games';
+export * from './reports';
+export * from './pushNotifications';
 
 
 
@@ -632,6 +634,74 @@ export interface ArchiveSearchResponse {
     targetUrl: string;
 }
 
+// ── Archived Newspapers & Pages browser (admin) ────────────────────────────────────────────────
+// GET admin/archives/decades + GET admin/archives/editions — mock-backed via ~/mocks/archivedNewspapers.
+// Two display modes: "Collections by Years" (decade cards) and "By Dates" (date groups + thumbnails).
+
+/** Per-year edition coverage inside a decade collection. */
+export interface ArchiveYearStat {
+    year: number;
+    editionCount: number;
+}
+
+/** One decade collection card ("1950's", "1960's", ...). */
+export interface ArchiveDecadeCollection {
+    id: string;
+    /** e.g. "1970's" */
+    label: string;
+    startYear: number;
+    endYear: number;
+    editionCount: number;
+    pageCount: number;
+    publicationsCovered: number;
+    description: string;
+    yearStats: ArchiveYearStat[];
+}
+
+/** One archived newspaper edition (with digitized page metadata). */
+export interface ArchivedNewspaperEdition {
+    id: string;
+    title: string;
+    slug: string;
+    publicationId: string;
+    publicationName: string;
+    editionNumber: string;
+    /** yyyy-MM-dd */
+    publicationDate: string;
+    pageCount: number;
+    digitizedPages: number;
+    ocrStatus: 'complete' | 'partial' | 'pending';
+    price: string;
+    isFree: boolean;
+    isPublished: boolean;
+    thumbnailId: string;
+    documentId: string;
+    storageService: string;
+    createdAt: string;
+    views: number;
+}
+
+/** One publication-date group in the "By Dates" mode. */
+export interface ArchiveDateGroup {
+    /** yyyy-MM-dd */
+    date: string;
+    /** e.g. "Saturday, 6 March 1957" */
+    label: string;
+    editionCount: number;
+    pageCount: number;
+    editions: ArchivedNewspaperEdition[];
+}
+
+/** Coverage chips shown above both display modes. */
+export interface ArchiveCoverageSummary {
+    decades: number;
+    editions: number;
+    pages: number;
+    publications: number;
+    ocrCompletePct: number;
+    dateSpan: string;
+}
+
 // ── Partner API request logs (admin) ──────────────────────────────────────────
 // GET admin/get-partner-api-request-logs
 // NOTE: item field names below are assumptions until confirmed against the API.
@@ -665,4 +735,175 @@ export interface PartnerApiRequestLog {
     requestBody?: unknown;
     responseBody?: unknown;
     createdAt: string;
+}
+
+// ── Subscriber Newspaper Access (admin) ────────────────────────────────────────────────────────
+// GET admin/subscribers/{subscriberId}/newspaper-access (mock-backed via ~/mocks/subscriberNewspapers)
+// Mirrors gnp-api tables: user_subscriptions.newspaper_entitlements, purchase_attempts,
+// GrantNewsPaperAccessDto grants, and free `newspapers` editions.
+
+/** How a subscriber gained access to one newspaper edition. */
+export type SubscriberAccessSource =
+    | 'plan_entitlement'
+    | 'single_copy_purchase'
+    | 'promo_grant'
+    | 'free_access';
+
+/** Derived access state as of today: revoked | expired | expiring_soon | active */
+export type SubscriberAccessStatus = 'active' | 'expiring_soon' | 'expired' | 'revoked';
+
+/** One row of the "newspapers a subscriber can access" list (access record + edition). */
+export interface SubscriberNewspaperAccessRow {
+    id: string;
+    subscriberId: string;
+    newspaperId: string;
+    accessType: SubscriberAccessSource;
+    accessTypeLabel: string;
+    /** Human-readable source (plan name, `Order PAY-…`, `Promo …`, or `Free edition`). */
+    grantedVia: string;
+    /** Backend reference: subscription identifier, purchase attempt reference, or promo code. */
+    sourceReference: string;
+    grantedAt: string;
+    /** Permanent copies (single-copy buys / free editions) have `null`. */
+    expiresAt: string | null;
+    revoked: boolean;
+    accessStatus: SubscriberAccessStatus;
+    newspaper: {
+        id: string;
+        title: string;
+        slug: string;
+        price: string;
+        isFree: boolean;
+        publicationId: string;
+        publicationName: string;
+        editionNumber: string;
+        isPopular: boolean;
+        fullDescription: string;
+        isPublished: boolean;
+        publishedDate: string;
+        createdAt: string;
+    };
+}
+
+/** Filter-aware summary chips for the access list. */
+export interface SubscriberAccessSummary {
+    total: number;
+    planEntitlement: number;
+    singleCopy: number;
+    promoGrant: number;
+    freeAccess: number;
+    active: number;
+    expiringSoon: number;
+    expired: number;
+    revoked: number;
+}
+
+/** Subscriber + plan snapshot shown at the top of the Subscriber Newspapers page. */
+export interface SubscriberAccessProfile {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    country: string;
+    isActive: boolean;
+    accountType: 'regular' | 'partner' | 'affiliate';
+    partnerId: string | null;
+    partnerName: string | null;
+    lastActive: string;
+    createdAt: string;
+    subscription: {
+        subscriptionIdentifier: string;
+        subscriptionPlanId: string;
+        planName: string;
+        planType: string;
+        billingCycle: string;
+        subscriptionPlanDescription: string;
+        pricing: string;
+        targetPublications: string[];
+        newspaperEntitlements: string[];
+        isActive: boolean;
+        startDate: string;
+        endDate: string;
+        nextRenewalDate: string | null;
+    } | null;
+}
+
+/** Paginated `result` of GET admin/subscribers/{subscriberId}/newspaper-access. */
+export interface SubscriberNewspaperAccessPage {
+    subscriber: SubscriberAccessProfile | null;
+    summary: SubscriberAccessSummary | null;
+    data: SubscriberNewspaperAccessRow[];
+    pageNo: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+    lowerBound: number;
+    upperBound: number;
+}
+
+// ── Enterprise Subscribers (admin) ─────────────────────────────────────────────────────────────
+// Onboard & approve enterprise orgs, onboard their seats manually / via CSV, assign packages.
+// Mock-backed via ~/mocks/enterpriseSubscribers; contracts documented in services/enterpriseSubscribers.ts.
+
+export type EnterpriseAccountType = 'corporate' | 'institution' | 'government' | 'sme';
+export type EnterpriseStatus = 'pending' | 'active' | 'suspended' | 'rejected';
+
+/** Subscription package available to enterprise subscribers (`subscription_plans`). */
+export interface EnterprisePackage {
+    id: string;
+    name: string;
+    planType: 'standard' | 'premium' | 'corporate';
+    description: string;
+    pricing: string;
+    targetPublications: string[];
+    userQuota: number;
+    billingCycles: string[];
+}
+
+/** One enterprise organization row. */
+export interface EnterpriseSubscriber {
+    id: string;
+    organizationName: string;
+    contactName: string;
+    contactEmail: string;
+    contactPhone: string;
+    accountType: EnterpriseAccountType;
+    address: string;
+    region: string;
+    packageId: string | null;
+    packageName: string | null;
+    billingCycle: string | null;
+    subscriberQuota: number;
+    enrolledUsers: number;
+    status: EnterpriseStatus;
+    createdAt: string;
+    approvedAt: string | null;
+    approvedBy: string | null;
+    rejectionReason?: string;
+}
+
+/** One onboarded seat (user) under an enterprise. */
+export interface EnterpriseUserRow {
+    id: string;
+    enterpriseId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    source: 'manual' | 'csv';
+    status: 'active';
+    createdAt: string;
+}
+
+/** One parsed CSV row (with validation state) from the enterprise users import. */
+export interface EnterpriseCsvRow {
+    /** Source line number in the uploaded file (1-based, header aware). */
+    line: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    valid: boolean;
+    error: string;
 }

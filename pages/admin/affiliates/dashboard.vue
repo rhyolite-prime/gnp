@@ -50,15 +50,13 @@
 
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      
       <!-- Left Column (2/3) -->
       <div class="lg:col-span-2 space-y-8">
-        
-        <!-- Commission Trends (Placeholder for Chart) -->
+        <!-- Commission Trends -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-lg font-semibold text-gray-900">Commission Trends</h2>
-             <select v-model="dateFilter" class="text-sm border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500">
+            <select v-model="dateFilter" class="text-sm border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500">
               <option value="7days">Last 7 Days</option>
               <option value="30days">Last 30 Days</option>
               <option value="month">This Month</option>
@@ -111,19 +109,17 @@
             </table>
           </div>
         </div>
-
       </div>
 
       <!-- Right Column (1/3) -->
       <div class="space-y-8">
-        
         <!-- Top Performing Affiliates -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Top Affiliates</h2>
           <div class="space-y-5">
             <div v-for="affiliate in topAffiliates" :key="affiliate.id" class="flex items-center justify-between">
               <div class="flex items-center">
-                <img :src="affiliate.avatar" class="h-10 w-10 rounded-full border border-gray-200" alt="">
+                <img :src="affiliate.avatar" class="h-10 w-10 rounded-full border border-gray-200" alt="" />
                 <div class="ml-3">
                   <p class="text-sm font-medium text-gray-900">{{ affiliate.name }}</p>
                   <p class="text-xs text-gray-500">{{ affiliate.referrals }} Referrals</p>
@@ -138,52 +134,43 @@
               </div>
             </div>
           </div>
-          <button class="w-full mt-6 py-2 text-sm text-primary-600 font-medium hover:bg-primary-50 rounded-lg transition-colors">
+          <NuxtLink to="/admin/affiliates" class="block w-full mt-6 py-2 text-center text-sm text-primary-600 font-medium hover:bg-primary-50 rounded-lg transition-colors">
             View Leaderboard
-          </button>
+          </NuxtLink>
         </div>
 
-        <!-- Traffic Sources -->
+        <!-- Traffic Sources (Apache ECharts) -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Traffic Sources</h2>
-          
-           <div class="relative h-48 w-48 mx-auto my-4">
-             <svg viewBox="0 0 100 100" class="h-full w-full transform -rotate-90">
-               <!-- Social Media (45%) -->
-               <circle cx="50" cy="50" r="40" fill="transparent" stroke="#8b5cf6" stroke-width="20" stroke-dasharray="113 251" /> 
-               <!-- Blogs (30%) -->
-               <circle cx="50" cy="50" r="40" fill="transparent" stroke="#3b82f6" stroke-width="20" stroke-dasharray="75 251" stroke-dashoffset="-113" />
-               <!-- Direct (15%) -->
-               <circle cx="50" cy="50" r="40" fill="transparent" stroke="#10b981" stroke-width="20" stroke-dasharray="38 251" stroke-dashoffset="-188" />
-               <!-- Other (10%) -->
-               <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f59e0b" stroke-width="20" stroke-dasharray="25 251" stroke-dashoffset="-226" />
-             </svg>
-             <div class="absolute inset-0 flex items-center justify-center">
-               <div class="text-center">
-                 <span class="block text-2xl font-bold text-gray-900">12.5k</span>
-                 <span class="text-xs text-gray-500">Visits</span>
-               </div>
-             </div>
-           </div>
 
-           <div class="space-y-3 mt-4">
-             <div class="flex items-center justify-between text-sm">
-               <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-purple-500 mr-2"></span>Social Media</div>
-               <span class="font-medium">45%</span>
-             </div>
-             <div class="flex items-center justify-between text-sm">
-               <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>Blogs & Content</div>
-               <span class="font-medium">30%</span>
-             </div>
-             <div class="flex items-center justify-between text-sm">
-               <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span>Direct Link</div>
-               <span class="font-medium">15%</span>
-             </div>
-             <div class="flex items-center justify-between text-sm">
-               <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>Others</div>
-               <span class="font-medium">10%</span>
-             </div>
-           </div>
+          <div class="relative h-48 w-48 mx-auto my-4">
+            <div ref="trafficChartContainer" class="h-full w-full"></div>
+            <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div class="text-center">
+                <span class="block text-2xl font-bold text-gray-900">12.5k</span>
+                <span class="text-xs text-gray-500">Visits</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-3 mt-4">
+            <div class="flex items-center justify-between text-sm">
+              <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-purple-500 mr-2"></span>Social Media</div>
+              <span class="font-medium">45%</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>Blogs & Content</div>
+              <span class="font-medium">30%</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span>Direct Link</div>
+              <span class="font-medium">15%</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>Others</div>
+              <span class="font-medium">10%</span>
+            </div>
+          </div>
         </div>
 
         <!-- Pending Payouts Action -->
@@ -202,87 +189,79 @@
             Process Payouts
           </NuxtLink>
         </div>
-
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
-import * as echarts from 'echarts'
-import { 
-  UsersIcon, 
-  CurrencyDollarIcon, 
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import * as echarts from 'echarts';
+import {
+  UsersIcon,
+  CurrencyDollarIcon,
   DocumentCheckIcon,
   BanknotesIcon,
-  ArrowTrendingUpIcon
-} from '@heroicons/vue/24/outline'
-import CountUp from 'vue-countup-v3'
+  ArrowTrendingUpIcon,
+} from '@heroicons/vue/24/outline';
+import CountUp from 'vue-countup-v3';
 
 definePageMeta({
   layout: 'admin',
-  middleware: ['admin-auth']
-})
+  middleware: ['admin-auth'],
+});
 
-const chartContainer = ref<HTMLElement | null>(null)
-let chart: echarts.ECharts | null = null
-const dateFilter = ref('7days')
+const chartContainer = ref<HTMLElement | null>(null);
+const trafficChartContainer = ref<HTMLElement | null>(null);
+let chart: echarts.ECharts | null = null;
+let trafficChart: echarts.ECharts | null = null;
+const dateFilter = ref('7days');
 
 const updateChartData = () => {
-  if (!chart) return
-  let data = []
-  let xAxisData = []
+  if (!chart) return;
+  let data: number[] = [];
+  let xAxisData: string[] = [];
   if (dateFilter.value === '7days') {
-    data = [40, 60, 45, 90, 75, 80, 55]
-    xAxisData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    data = [40, 60, 45, 90, 75, 80, 55];
+    xAxisData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   } else if (dateFilter.value === '30days') {
-    data = Array.from({ length: 30 }, () => Math.floor(Math.random() * 80) + 20)
-    xAxisData = Array.from({ length: 30 }, (_, i) => `${i + 1}`)
+    data = [38, 46, 52, 49, 64, 71, 68, 55, 62, 74, 83, 79, 66, 70, 88, 92, 85, 73, 69, 77, 84, 91, 86, 78, 72, 81, 89, 95, 87, 93];
+    xAxisData = Array.from({ length: 30 }, (_, i) => `${i + 1}`);
   } else {
-    data = [300, 400, 250, 450]
-    xAxisData = ['Week 1', 'Week 2', 'Week 3', 'Week 4']
+    data = [300, 400, 250, 450];
+    xAxisData = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
   }
   chart.setOption({
     xAxis: { data: xAxisData },
-    series: [{ data }]
-  })
-}
+    series: [{ data }],
+  });
+};
 
-watch(dateFilter, updateChartData)
+watch(dateFilter, updateChartData);
 
 onMounted(() => {
   if (chartContainer.value) {
-    chart = echarts.init(chartContainer.value)
-    const option = {
+    chart = echarts.init(chartContainer.value);
+    chart.setOption({
       tooltip: {
         trigger: 'axis',
         formatter: (params: any) => {
-          const p = params[0]
-          return `<div class="font-sans">
-            <div class="font-bold mb-1">${p.name}</div>
-            <div>Commissions: ₵${p.value * 10}</div>
-          </div>`
-        }
+          const p = params[0];
+          return `<div class="font-sans"><div class="font-bold mb-1">${p.name}</div><div>Commissions: ₵${p.value * 10}</div></div>`;
+        },
       },
-      grid: {
-        left: '0%',
-        right: '0%',
-        bottom: '0%',
-        top: '10%',
-        containLabel: true
-      },
+      grid: { left: '0%', right: '0%', bottom: '0%', top: '10%', containLabel: true },
       xAxis: {
         type: 'category',
         data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
         axisTick: { show: false },
         axisLine: { lineStyle: { color: '#f3f4f6' } },
-        axisLabel: { color: '#9ca3af', margin: 16 }
+        axisLabel: { color: '#9ca3af', margin: 16 },
       },
       yAxis: {
         type: 'value',
         splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } },
-        axisLabel: { color: '#9ca3af', formatter: '₵{value}' }
+        axisLabel: { color: '#9ca3af', formatter: '₵{value}' },
       },
       series: [
         {
@@ -290,92 +269,108 @@ onMounted(() => {
           type: 'line',
           smooth: true,
           symbolSize: 8,
-          itemStyle: {
-            color: '#f97316', // Primary 500
-          },
-          lineStyle: {
-            width: 3,
-            color: '#f97316'
-          },
+          itemStyle: { color: '#f97316' },
+          lineStyle: { width: 3, color: '#f97316' },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
               { offset: 0, color: 'rgba(249, 115, 22, 0.4)' },
-              { offset: 1, color: 'rgba(249, 115, 22, 0)' }
-            ])
+              { offset: 1, color: 'rgba(249, 115, 22, 0)' },
+            ]),
           },
-          data: [40, 60, 45, 90, 75, 80, 55]
-        }
-      ]
-    }
-    chart.setOption(option)
-    
-    updateChartData()
-    
-    const handleResize = () => {
-      chart?.resize()
-    }
-    window.addEventListener('resize', handleResize)
-    
-    onUnmounted(() => {
-      window.removeEventListener('resize', handleResize)
-      chart?.dispose()
-    })
+          data: [40, 60, 45, 90, 75, 80, 55],
+        },
+      ],
+    });
+    updateChartData();
   }
-})
 
-const today = new Date()
-const oneMonthAgo = new Date()
-oneMonthAgo.setMonth(today.getMonth() - 1)
+  if (trafficChartContainer.value) {
+    trafficChart = echarts.init(trafficChartContainer.value);
+    trafficChart.setOption({
+      tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+      series: [
+        {
+          type: 'pie',
+          radius: ['62%', '88%'],
+          label: { show: false },
+          labelLine: { show: false },
+          data: [
+            { value: 45, name: 'Social Media', itemStyle: { color: '#8b5cf6' } },
+            { value: 30, name: 'Blogs & Content', itemStyle: { color: '#3b82f6' } },
+            { value: 15, name: 'Direct Link', itemStyle: { color: '#10b981' } },
+            { value: 10, name: 'Others', itemStyle: { color: '#f59e0b' } },
+          ],
+        },
+      ],
+    });
+  }
 
-const dateFrom = ref(oneMonthAgo.toISOString().substring(0, 10))
-const dateTo = ref(today.toISOString().substring(0, 10))
+  const handleResize = () => {
+    chart?.resize();
+    trafficChart?.resize();
+  };
+  window.addEventListener('resize', handleResize);
+
+  onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
+    chart?.dispose();
+    trafficChart?.dispose();
+  });
+});
+
+const today = new Date();
+const oneMonthAgo = new Date();
+oneMonthAgo.setMonth(today.getMonth() - 1);
+
+const dateFrom = ref(oneMonthAgo.toISOString().substring(0, 10));
+const dateTo = ref(today.toISOString().substring(0, 10));
 
 const stats = [
-  { 
-    name: 'Total Affiliates', 
-    value: 156, 
-    change: '+12%', 
-    changeType: 'increase', 
+  {
+    name: 'Total Affiliates',
+    value: 156,
+    change: '+12%',
+    changeType: 'increase',
     icon: UsersIcon,
     bgColor: 'bg-blue-50',
     iconColor: 'text-blue-600',
     prefix: '',
-    suffix: ''
+    suffix: '',
   },
-  { 
-    name: 'Total Commission', 
-    value: 45200, 
-    change: '+8.2%', 
-    changeType: 'increase', 
+  {
+    name: 'Total Commission',
+    value: 45200,
+    change: '+8.2%',
+    changeType: 'increase',
     icon: CurrencyDollarIcon,
     bgColor: 'bg-green-50',
     iconColor: 'text-green-600',
     prefix: '₵',
-    suffix: ''
+    suffix: '',
   },
-  { 
-    name: 'Pending Applications', 
-    value: 8, 
-    change: '3 new', 
-    changeType: 'increase', 
+  {
+    name: 'Pending Applications',
+    value: 8,
+    change: '3 new',
+    changeType: 'increase',
     icon: DocumentCheckIcon,
     bgColor: 'bg-orange-50',
     iconColor: 'text-orange-600',
     prefix: '',
-    suffix: ''
+    suffix: '',
   },
-  { 
-    name: 'Pending Payouts', 
-    value: 4250, 
-    change: '-5%', 
-    changeType: 'decrease', 
+  {
+    name: 'Pending Payouts',
+    value: 4250,
+    change: '-5%',
+    changeType: 'decrease',
     icon: BanknotesIcon,
     bgColor: 'bg-purple-50',
     iconColor: 'text-purple-600',
     prefix: '₵',
-    suffix: ''
+    suffix: '',
   },
-]
+];
 
 const recentActivity = [
   { id: 1, name: 'John Doe', avatar: 'https://ui-avatars.com/api/?name=John+Doe', action: 'Earned Commission', amount: 120, date: '2 mins ago' },
@@ -383,12 +378,12 @@ const recentActivity = [
   { id: 3, name: 'Michael Brown', avatar: 'https://ui-avatars.com/api/?name=Michael+Brown', action: 'Payout Processed', amount: -450, date: '3 hours ago' },
   { id: 4, name: 'Emily White', avatar: 'https://ui-avatars.com/api/?name=Emily+White', action: 'Earned Commission', amount: 85, date: '5 hours ago' },
   { id: 5, name: 'David Wilson', avatar: 'https://ui-avatars.com/api/?name=David+Wilson', action: 'Application Approved', amount: 0, date: '1 day ago' },
-]
+];
 
 const topAffiliates = [
   { id: 1, name: 'Tech Review GH', avatar: 'https://ui-avatars.com/api/?name=Tech+Review', referrals: 450, earnings: 5200, growth: 15 },
   { id: 2, name: 'Ama Influencer', avatar: 'https://ui-avatars.com/api/?name=Ama+Influencer', referrals: 380, earnings: 4100, growth: 8 },
   { id: 3, name: 'Student Hub', avatar: 'https://ui-avatars.com/api/?name=Student+Hub', referrals: 210, earnings: 2800, growth: 12 },
   { id: 4, name: 'News Daily', avatar: 'https://ui-avatars.com/api/?name=News+Daily', referrals: 150, earnings: 1900, growth: 5 },
-]
+];
 </script>

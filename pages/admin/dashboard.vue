@@ -29,6 +29,7 @@
         </div>
       </div>
     </div>
+
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <div v-for="stat in stats" :key="stat.name" class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
@@ -49,10 +50,8 @@
 
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      
       <!-- Left Column (2/3) -->
       <div class="lg:col-span-2 space-y-8">
-        
         <!-- Financial Health -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div v-for="stat in financialStats" :key="stat.name" class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
@@ -71,7 +70,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div class="p-6 border-b border-gray-100 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900">Active Campaigns</h2>
-            <button class="text-sm text-primary-600 hover:text-primary-700 font-medium">Manage</button>
+            <NuxtLink to="/admin/campaigns" class="text-sm text-primary-600 hover:text-primary-700 font-medium">Manage</NuxtLink>
           </div>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -113,7 +112,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div class="p-6 border-b border-gray-100 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900">Recent Signups</h2>
-            <button class="text-sm text-primary-600 hover:text-primary-700 font-medium">View All</button>
+            <NuxtLink to="/admin/subscribers" class="text-sm text-primary-600 hover:text-primary-700 font-medium">View All</NuxtLink>
           </div>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -147,7 +146,7 @@
                     {{ user.date }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <a href="#" class="text-primary-600 hover:text-primary-900">Edit</a>
+                    <NuxtLink to="/admin/subscribers" class="text-primary-600 hover:text-primary-900">Edit</NuxtLink>
                   </td>
                 </tr>
               </tbody>
@@ -158,7 +157,6 @@
 
       <!-- Right Column (1/3) -->
       <div class="space-y-8">
-        
         <!-- Publication Performance -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Publication Performance</h2>
@@ -173,8 +171,8 @@
                 </span>
               </div>
               <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                <div 
-                  class="h-2.5 rounded-full transition-all duration-1000 ease-out" 
+                <div
+                  class="h-2.5 rounded-full transition-all duration-1000 ease-out"
                   :class="pub.color"
                   :style="{ width: `${pub.percentage}%` }"
                 ></div>
@@ -191,29 +189,29 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
           <div class="space-y-3">
-            <button class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
-              <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">Add New Article</span>
+            <NuxtLink to="/admin/content-management/newspapers" class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
+              <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">Add New Edition</span>
               <PlusIcon class="h-5 w-5 text-gray-400 group-hover:text-primary-500" />
-            </button>
-            <button class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
+            </NuxtLink>
+            <NuxtLink to="/admin/users" class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
               <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">Create User</span>
               <UserPlusIcon class="h-5 w-5 text-gray-400 group-hover:text-primary-500" />
-            </button>
-            <button class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
+            </NuxtLink>
+            <NuxtLink to="/admin/campaigns" class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
               <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">Create Campaign</span>
               <MegaphoneIcon class="h-5 w-5 text-gray-400 group-hover:text-primary-500" />
-            </button>
-            <button class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
-              <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">System Settings</span>
+            </NuxtLink>
+            <NuxtLink to="/admin/reports" class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all group">
+              <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">Platform Reports</span>
               <CogIcon class="h-5 w-5 text-gray-400 group-hover:text-primary-500" />
-            </button>
+            </NuxtLink>
           </div>
         </div>
 
         <!-- User Engagement -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">User Engagement</h2>
-          
+
           <!-- Geography -->
           <div class="mb-6">
             <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Top Locations</h3>
@@ -228,117 +226,133 @@
             </div>
           </div>
 
-          <!-- Device Usage -->
+          <!-- Device Usage (Apache ECharts) -->
           <div>
             <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Device Usage</h3>
             <div class="flex items-center justify-center space-x-4">
-              <!-- Simple CSS Donut Chart Representation -->
-               <div class="relative h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                 <svg viewBox="0 0 100 100" class="h-full w-full transform -rotate-90">
-                   <!-- Mobile (60%) -->
-                   <circle cx="50" cy="50" r="40" fill="transparent" stroke="#dc2626" stroke-width="20" stroke-dasharray="150 251" /> 
-                   <!-- Desktop (30%) -->
-                   <circle cx="50" cy="50" r="40" fill="transparent" stroke="#2563eb" stroke-width="20" stroke-dasharray="75 251" stroke-dashoffset="-150" />
-                   <!-- Tablet (10%) -->
-                   <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f59e0b" stroke-width="20" stroke-dasharray="25 251" stroke-dashoffset="-225" />
-                 </svg>
-               </div>
-               <div class="space-y-1 text-xs">
-                 <div class="flex items-center"><span class="w-2 h-2 rounded-full bg-primary-600 mr-2"></span>Mobile (60%)</div>
-                 <div class="flex items-center"><span class="w-2 h-2 rounded-full bg-blue-600 mr-2"></span>Desktop (30%)</div>
-                 <div class="flex items-center"><span class="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>Tablet (10%)</div>
-               </div>
+              <div ref="deviceChartRef" class="h-28 w-28 flex-shrink-0"></div>
+              <div class="space-y-1 text-xs">
+                <div class="flex items-center"><span class="w-2 h-2 rounded-full bg-primary-600 mr-2"></span>Mobile (60%)</div>
+                <div class="flex items-center"><span class="w-2 h-2 rounded-full bg-blue-600 mr-2"></span>Desktop (30%)</div>
+                <div class="flex items-center"><span class="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>Tablet (10%)</div>
+              </div>
             </div>
           </div>
         </div>
-
-        
-
-        
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { 
-  UsersIcon, 
-  CurrencyDollarIcon, 
-  NewspaperIcon, 
+import * as echarts from 'echarts';
+import {
+  UsersIcon,
+  CurrencyDollarIcon,
+  NewspaperIcon,
   EyeIcon,
   PlusIcon,
   UserPlusIcon,
   CogIcon,
-  MegaphoneIcon
-} from '@heroicons/vue/24/outline'
-import CountUp from 'vue-countup-v3'
-const { hasPermission } = usePermissions();
+  MegaphoneIcon,
+} from '@heroicons/vue/24/outline';
+import CountUp from 'vue-countup-v3';
 
+const today = new Date();
+const oneMonthAgo = new Date();
+oneMonthAgo.setMonth(today.getMonth() - 1);
 
-const today = new Date()
-const oneMonthAgo = new Date()
-oneMonthAgo.setMonth(today.getMonth() - 1)
-
-const dateFrom = ref(oneMonthAgo.toISOString().substring(0, 10))
-const dateTo = ref(today.toISOString().substring(0, 10))
+const dateFrom = ref(oneMonthAgo.toISOString().substring(0, 10));
+const dateTo = ref(today.toISOString().substring(0, 10));
 
 watch([dateFrom, dateTo], () => {
   if (dateFrom.value > dateTo.value) {
-    dateFrom.value = dateTo.value
+    dateFrom.value = dateTo.value;
   }
-})
+});
 
 definePageMeta({
   layout: 'admin',
-  middleware: ['admin-auth']
-})
+  middleware: ['admin-auth'],
+});
+
+const deviceChartRef = ref<HTMLElement | null>(null);
+let deviceChart: echarts.ECharts | null = null;
+
+onMounted(() => {
+  if (deviceChartRef.value) {
+    deviceChart = echarts.init(deviceChartRef.value);
+    deviceChart.setOption({
+      tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+      series: [
+        {
+          type: 'pie',
+          radius: ['52%', '86%'],
+          label: { show: false },
+          labelLine: { show: false },
+          data: [
+            { value: 60, name: 'Mobile', itemStyle: { color: '#dc2626' } },
+            { value: 30, name: 'Desktop', itemStyle: { color: '#2563eb' } },
+            { value: 10, name: 'Tablet', itemStyle: { color: '#f59e0b' } },
+          ],
+        },
+      ],
+    });
+    const onResize = () => deviceChart?.resize();
+    window.addEventListener('resize', onResize);
+    onUnmounted(() => {
+      window.removeEventListener('resize', onResize);
+      deviceChart?.dispose();
+    });
+  }
+});
 
 const stats = [
-  { 
-    name: 'Total Users', 
-    value: 12450, 
-    change: '+12%', 
-    changeType: 'increase', 
+  {
+    name: 'Total Users',
+    value: 12450,
+    change: '+12%',
+    changeType: 'increase',
     icon: UsersIcon,
     bgColor: 'bg-blue-50',
     iconColor: 'text-blue-600',
     prefix: '',
-    suffix: ''
+    suffix: '',
   },
-  { 
-    name: 'Revenue', 
-    value: 45200, 
-    change: '+8.2%', 
-    changeType: 'increase', 
+  {
+    name: 'Revenue',
+    value: 45200,
+    change: '+8.2%',
+    changeType: 'increase',
     icon: CurrencyDollarIcon,
     bgColor: 'bg-green-50',
     iconColor: 'text-green-600',
     prefix: '₵',
-    suffix: ''
+    suffix: '',
   },
-  { 
-    name: 'Active Subscriptions', 
-    value: 3840, 
-    change: '-2.1%', 
-    changeType: 'decrease', 
+  {
+    name: 'Active Subscriptions',
+    value: 3840,
+    change: '-2.1%',
+    changeType: 'decrease',
     icon: NewspaperIcon,
     bgColor: 'bg-purple-50',
     iconColor: 'text-purple-600',
     prefix: '',
-    suffix: ''
+    suffix: '',
   },
-  { 
-    name: 'Today\'s Views', 
-    value: 8540, 
-    change: '+24%', 
-    changeType: 'increase', 
+  {
+    name: "Today's Views",
+    value: 8540,
+    change: '+24%',
+    changeType: 'increase',
     icon: EyeIcon,
     bgColor: 'bg-orange-50',
     iconColor: 'text-orange-600',
     prefix: '',
-    suffix: ''
+    suffix: '',
   },
-]
+];
 
 const recentUsers = [
   {
@@ -346,94 +360,52 @@ const recentUsers = [
     email: 'kwame.m@example.com',
     status: 'Active',
     date: 'Dec 10, 2025',
-    avatar: 'https://ui-avatars.com/api/?name=Kwame+Mensah&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Kwame+Mensah&background=random',
   },
   {
     name: 'Abena Osei',
     email: 'abena.o@example.com',
     status: 'Pending',
     date: 'Dec 09, 2025',
-    avatar: 'https://ui-avatars.com/api/?name=Abena+Osei&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Abena+Osei&background=random',
   },
   {
     name: 'Kofi Boateng',
     email: 'kofi.b@example.com',
     status: 'Active',
     date: 'Dec 09, 2025',
-    avatar: 'https://ui-avatars.com/api/?name=Kofi+Boateng&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Kofi+Boateng&background=random',
   },
   {
     name: 'Ama Serwaa',
     email: 'ama.s@example.com',
     status: 'Active',
     date: 'Dec 08, 2025',
-    avatar: 'https://ui-avatars.com/api/?name=Ama+Serwaa&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Ama+Serwaa&background=random',
   },
   {
     name: 'Yaw Darko',
     email: 'yaw.d@example.com',
     status: 'Inactive',
     date: 'Dec 08, 2025',
-    avatar: 'https://ui-avatars.com/api/?name=Yaw+Darko&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Yaw+Darko&background=random',
   },
-]
+];
 
 const publicationStats = [
-  { 
-    name: 'Daily Graphic', 
-    sales: 1240, 
-    views: 5600, 
-    percentage: 85, 
-    trend: 12.5,
-    color: 'bg-red-600'
-  },
-  { 
-    name: 'The Mirror', 
-    sales: 850, 
-    views: 3200, 
-    percentage: 65, 
-    trend: 5.2,
-    color: 'bg-blue-500'
-  },
-  { 
-    name: 'Graphic Showbiz', 
-    sales: 720, 
-    views: 4100, 
-    percentage: 55, 
-    trend: -2.4,
-    color: 'bg-purple-500'
-  },
-  { 
-    name: 'Graphic Sports', 
-    sales: 680, 
-    views: 2900, 
-    percentage: 45, 
-    trend: 8.1,
-    color: 'bg-green-500'
-  },
-  { 
-    name: 'Graphic Business', 
-    sales: 540, 
-    views: 1800, 
-    percentage: 35, 
-    trend: 1.2,
-    color: 'bg-gray-600'
-  },
-  { 
-    name: 'Junior Graphic', 
-    sales: 490, 
-    views: 1500, 
-    percentage: 30, 
-    trend: 4.5,
-    color: 'bg-yellow-500'
-  }
-]
+  { name: 'Daily Graphic', sales: 1240, views: 5600, percentage: 85, trend: 12.5, color: 'bg-red-600' },
+  { name: 'The Mirror', sales: 850, views: 3200, percentage: 65, trend: 5.2, color: 'bg-blue-500' },
+  { name: 'Graphic Showbiz', sales: 720, views: 4100, percentage: 55, trend: -2.4, color: 'bg-purple-500' },
+  { name: 'Graphic Sports', sales: 680, views: 2900, percentage: 45, trend: 8.1, color: 'bg-green-500' },
+  { name: 'Graphic Business', sales: 540, views: 1800, percentage: 35, trend: 1.2, color: 'bg-gray-600' },
+  { name: 'Junior Graphic', sales: 490, views: 1500, percentage: 30, trend: 4.5, color: 'bg-yellow-500' },
+];
 
 const financialStats = [
   { name: 'Churn Rate', value: '2.4%', trend: -0.5, description: 'Subscribers lost this month' },
   { name: 'ARPU', value: '₵45.20', trend: 1.2, description: 'Avg. Revenue Per User' },
   { name: 'Guest Conversion', value: '18%', trend: 3.5, description: 'Guests becoming subscribers' },
-]
+];
 
 const userGeography = [
   { country: 'Ghana', percentage: 65, flag: '🇬🇭' },
@@ -441,11 +413,11 @@ const userGeography = [
   { country: 'United States', percentage: 12, flag: '🇺🇸' },
   { country: 'Germany', percentage: 5, flag: '🇩🇪' },
   { country: 'Others', percentage: 3, flag: '🌍' },
-]
+];
 
 const campaigns = [
   { name: 'Independence Day Promo', period: 'Mar 1 - Mar 10', roi: 320, vouchersRedeemed: 450, vouchersTotal: 500 },
   { name: 'Student Discount', period: 'Ongoing', roi: 180, vouchersRedeemed: 120, vouchersTotal: 1000 },
   { name: 'Easter Special', period: 'Apr 1 - Apr 15', roi: 250, vouchersRedeemed: 85, vouchersTotal: 200 },
-]
+];
 </script>

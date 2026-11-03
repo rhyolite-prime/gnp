@@ -137,10 +137,28 @@
           </h1>
         </div>
 
-        <div class="flex items-center space-x-4">
-          <!-- Notifications -->
-          <button class="p-2 text-gray-400 hover:text-gray-500 rounded-full hover:bg-gray-100 transition-colors relative">
-            <span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+        <div class="flex items-center space-x-3">
+          <NuxtLink
+            to="/admin/campaigns/new"
+            class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 text-red-700 hover:bg-red-100 border border-red-200/80 transition-colors"
+          >
+            <MegaphoneIcon class="h-4 w-4 text-red-600" />
+            <span>New Broadcast</span>
+          </NuxtLink>
+
+          <!-- Notifications Drawer Trigger -->
+          <button
+            type="button"
+            title="Open Notifications & Browser Push Settings"
+            class="p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100 transition-colors relative cursor-pointer"
+            @click="notificationStore.isCenterOpen = true"
+          >
+            <span
+              v-if="notificationStore.unreadCount > 0"
+              class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold ring-2 ring-white"
+            >
+              {{ notificationStore.unreadCount }}
+            </span>
             <BellIcon class="h-6 w-6" />
           </button>
         </div>
@@ -155,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { 
   HomeIcon, 
@@ -168,20 +186,24 @@ import {
   MegaphoneIcon,
   RectangleGroupIcon,
   BuildingOfficeIcon,
+  BuildingOffice2Icon,
   Bars3Icon,
   BellIcon,
   UserGroupIcon,
+  NewspaperIcon,
   TicketIcon,
   CurrencyDollarIcon,
   ArrowRightOnRectangleIcon,
   ChatBubbleLeftRightIcon
 } from '@heroicons/vue/24/outline'
 import { useAdminAuthStore } from '~/stores/admin-auth'
+import { useNotificationStore } from '~/stores/notification'
 import { usePermissions } from '~/composables/usePermissions'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAdminAuthStore()
+const notificationStore = useNotificationStore()
 const { hasPermission } = usePermissions()
 
 const isSidebarOpen = ref(false)
@@ -193,6 +215,8 @@ const expandedMenus = ref<Record<string, boolean>>({
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon, permission: 'dashboard' },
   { name: 'Subscribers', href: '/admin/subscribers', icon: UserGroupIcon, permission: 'subscribers.manage' },
+  { name: 'Accessible Newspapers', href: '/admin/accessible-newspapers', icon: NewspaperIcon, permission: 'subscribers.manage' },
+  { name: 'Enterprise Subscribers', href: '/admin/enterprises', icon: BuildingOffice2Icon, permission: 'subscribers.manage' },
   {
     name: 'Content',
     icon: DocumentTextIcon,
@@ -201,7 +225,7 @@ const navigation = [
       { name: 'Newspapers', href: '/admin/content-management/newspapers', permission: 'content.newspapers.view' },
       { name: 'Videos', href: '/admin/content-management/videos', permission: 'content.videos.view' },
       { name: 'Audios', href: '/admin/content-management/audios', permission: 'content.audios.view' },
-      { name: 'Ingestion Jobs', href: '/admin/content-management/ingestion-jobs' },
+      //{ name: 'Ingestion Jobs', href: '/admin/content-management/ingestion-jobs' },
     ],
   },
   {
@@ -212,7 +236,7 @@ const navigation = [
       { name: 'Overview', href: '/admin/archives/dashboard', permission: 'content.archives.dashboard.view' },
       { name: 'Newspapers', href: '/admin/archives/newspapers', permission: 'content.archives.newspapers.view' },
       { name: 'Enterprise Subscribers', href: '/admin/archives/institutions', permission: 'content.archives.enterprise_subscrbers.view' },
-      { name: 'Access Credits', href: '/admin/archives/access-credits', permission: 'content.archives.access_credits.configure' }
+      //{ name: 'Access Credits', href: '/admin/archives/access-credits', permission: 'content.archives.access_credits.configure' }
     ],
   },
   {
@@ -241,7 +265,16 @@ const navigation = [
   { name: 'Publications', href: '/admin/publications', icon: TicketIcon,  },
   { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon, permission: 'subscription_plans.manage' },
   { name: 'Payments', href: '/admin/payments', icon: BanknotesIcon, permission: 'payments.manage' },
-  { name: 'Campaigns', href: '/admin/campaigns', icon: MegaphoneIcon, permission: 'campaigns.manage' },
+  {
+    name: 'Campaigns',
+    icon: MegaphoneIcon,
+    permission: 'campaigns.manage',
+    children: [
+      { name: 'Overview & Analytics', href: '/admin/campaigns' },
+      { name: 'New Broadcast', href: '/admin/campaigns/new' },
+      { name: 'Broadcast History', href: '/admin/campaigns/history' },
+    ],
+  },
   { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon, permission: 'coupons.manage' },
   {
     name: 'Advert Management',
@@ -298,11 +331,16 @@ const pageTitle = computed(() => {
   return 'Dashboard'
 })
 
-navigation.forEach(item => {
-  if (item.children?.some(c => c.href === route.path)) {
-    expandedMenus.value[item.name] = true
-  }
-})
+const syncExpandedMenus = (path: string) => {
+  navigation.forEach(item => {
+    if (item.children?.some(c => c.href === path)) {
+      expandedMenus.value[item.name] = true
+    }
+  })
+}
+
+syncExpandedMenus(route.path)
+watch(() => route.path, syncExpandedMenus)
 
 const handleLogout = () => {
   // The store owns the admin session: it clears the reactive state, IndexedDB

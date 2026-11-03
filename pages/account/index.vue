@@ -312,6 +312,9 @@
             </div>
           </div>
 
+          <!-- Browser Push Notification Preferences -->
+          <SubscriberPushPreferencesCard />
+
           <!-- Change Password -->
           <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
