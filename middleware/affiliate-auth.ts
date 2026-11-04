@@ -14,14 +14,15 @@ export default defineNuxtRouteMiddleware((to, from) => {
     // Note: The store's initializeFromStorage handles this on the client-side,
     // but in middleware (which runs on both server and client), we ensure the token is set.
     affiliateAuthStore.accessToken = cookie.value
-    // If you have a method to fetch partner info from token, call it here.
+    affiliateAuthStore.isAuthenticated = true
+    // If you have a method to fetch affiliate info from token, call it here.
     // For now, we'll assume the token presence is enough to allow navigation.
     return
   }
 
-  // If no token and no cookie, redirect to partner login
+  // If no token and no cookie, redirect to affiliate login
   // Avoid infinite redirect loop if we're already on the login page
-  if (to.path !== '/partners/account/login') {
-    return navigateTo('/partners/account/login')
+  if (to.path !== '/affiliates/login') {
+    return navigateTo('/affiliates/login')
   }
 })
