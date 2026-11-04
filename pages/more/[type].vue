@@ -55,14 +55,7 @@
 
       <!-- Videos -->
       <template v-else>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <VideoCard
-            v-for="video in videos"
-            :key="video.id"
-            :video="video"
-            class="animate-slide-up"
-          />
-        </div>
+        <VideoCatalogue />
       </template>
     </div>
 
@@ -97,7 +90,6 @@
 <script setup lang="ts">
 import { getTopStories } from '~/services/newsPapers';
 import { mapTopStoryArticle, type TopStory } from '~/utils/topStories';
-import { latestVideos } from '~/utils/latestVideos';
 
 const PAGES = {
   stories: {
@@ -145,9 +137,6 @@ const isLoadingStories = ref(false);
 const hasLoadedStories = ref(false);
 const selectedStory = ref<TopStory | null>(null);
 const isModalOpen = ref(false);
-
-// Videos (static list shared with the landing section)
-const videos = latestVideos;
 
 const loadStories = async () => {
   if (hasLoadedStories.value || isLoadingStories.value) return;

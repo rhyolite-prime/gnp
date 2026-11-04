@@ -6,14 +6,7 @@
         <p class="text-xl text-gray-600">Watch the latest news and featured content</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        <VideoCard 
-          v-for="video in videos" 
-          :key="video.id"
-          :video="video"
-          class="animate-slide-up"
-        />
-      </div>
+      <VideoCatalogue preview />
 
       <div class="text-center mt-12">
         <NuxtLink
@@ -26,9 +19,3 @@
     </div>
   </section>
 </template>
-
-<script setup>
-import { latestVideos } from '~/utils/latestVideos'
-
-const videos = latestVideos
-</script>
