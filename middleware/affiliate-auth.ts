@@ -1,27 +1,22 @@
 import { useAffiliateAuthStore } from '~/stores/affiliate-auth'
 
-export default defineNuxtRouteMiddleware((to, from) => {
+export default defineNuxtRouteMiddleware((to) => {
   const affiliateAuthStore = useAffiliateAuthStore()
-  const cookie = useCookie('gnp-affiliate-user-identity')
 
-  // If we have a token in the store, we're good
-  if (affiliateAuthStore.accessToken) {
+  // The store restores the full session (token + profile) from cookies on both
+  // server and client, falling back to sessionStorage on the client. Re-run
+  // restoration as a safety net for stores created before the cookie existed
+  // (e.g. right after login in another tab) — never fabricate a token-only
+  // session, which is what previously left the account menu without a name.
+  if (!affiliateAuthStore.accessToken) {
+    affiliateAuthStore.initializeFromStorage()
+  }
+
+  if (affiliateAuthStore.isAuthenticated && affiliateAuthStore.accessToken) {
     return
   }
 
-  // If we have a cookie but no store token, try to restore
-  if (cookie.value) {
-    // Note: The store's initializeFromStorage handles this on the client-side,
-    // but in middleware (which runs on both server and client), we ensure the token is set.
-    affiliateAuthStore.accessToken = cookie.value
-    affiliateAuthStore.isAuthenticated = true
-    // If you have a method to fetch affiliate info from token, call it here.
-    // For now, we'll assume the token presence is enough to allow navigation.
-    return
-  }
-
-  // If no token and no cookie, redirect to affiliate login
-  // Avoid infinite redirect loop if we're already on the login page
+  // No session: send to login, unless we're already there (avoid a loop).
   if (to.path !== '/affiliates/login') {
     return navigateTo('/affiliates/login')
   }

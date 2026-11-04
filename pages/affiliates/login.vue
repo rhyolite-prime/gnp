@@ -118,8 +118,9 @@ const form = reactive({
 })
 
 const completeLogin = async (affiliate: AffiliateSigninResponseModel) => {
+  // setAffiliate persists the token, profile metadata and session storage in one
+  // place, so no separate cookie write is needed here.
   authStore.setAffiliate(affiliate)
-  authStore.gnpAffiliateUserIdentityCookie = affiliate.token
   await router.push('/affiliates/dashboard')
 }
 
