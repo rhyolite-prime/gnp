@@ -14,17 +14,14 @@ export async function getTopStories() {
     
    return response.result;
 }
-
-/** Public video catalogue, using the API's paginated result envelope. */
-export async function getVideos(query: { pageNo?: number; pageSize?: number } = {}) {
-    const response = await httpClient<BaseApiResponse<VideoPage>>('news-papers/get-all-videos', "", {
-        query: { pageNo: 1, pageSize: 10, ...query },
-    });
-    if (!response?.success || !response.result || !Array.isArray(response.result.data)) {
-        throw new Error(response?.message || 'Unable to load videos.');
-    }
-    return response.result;
+export async function getVideos() {
+ 
+    const response = await httpClient<BaseApiResponse<Video[]>>('news-papers/get-all-videos', "");
+    
+   return response.result;
 }
+
+
 
 /** Resolve deep links through the catalogue; no undocumented detail endpoint is assumed. */
 export async function getVideoById(id: string): Promise<Video | null> {
