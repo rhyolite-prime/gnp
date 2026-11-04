@@ -1,4 +1,4 @@
-import type { NewsPaper, Article, Video, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { NewsPaper, Article, Video, VideoPage, BaseApiResponse, BasePaginationModel } from "~/models";
 
  
 export async function getNewsPapers(query: object) {
@@ -15,12 +15,31 @@ export async function getTopStories() {
    return response.result;
 }
 
-export async function getVideos() {
- 
-    const response = await httpClient<BaseApiResponse<Video[]>>('news-papers/get-all-videos', "");
-    
-   return response.result;
+/** Public video catalogue, using the API's paginated result envelope. */
+export async function getVideos(query: { pageNo?: number; pageSize?: number } = {}) {
+    const response = await httpClient<BaseApiResponse<VideoPage>>('news-papers/get-all-videos', "", {
+        query: { pageNo: 1, pageSize: 10, ...query },
+    });
+    if (!response?.success || !response.result || !Array.isArray(response.result.data)) {
+        throw new Error(response?.message || 'Unable to load videos.');
+    }
+    return response.result;
 }
+
+/** Resolve deep links through the catalogue; no undocumented detail endpoint is assumed. */
+export async function getVideoById(id: string): Promise<Video | null> {
+    let pageNo = 1;
+    let totalPages = 1;
+    do {
+        const page = await getVideos({ pageNo, pageSize: 100 });
+        const video = page.data.find((item) => item.id === id);
+        if (video) return video;
+        totalPages = page.totalPages;
+        pageNo++;
+    } while (pageNo <= totalPages);
+    return null;
+}
+
 
 export async function getLatestNewsPapers(query: object) {
  

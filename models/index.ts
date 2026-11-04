@@ -209,6 +209,22 @@ export interface Video extends BaseEntityModel {
     views: number;
     description: string;
     durationInMins: number;
+    checksum?: string;
+    createdBy?: string;
+    downloads?: number;
+    fileName?: string;
+    fileSize?: number;
+    format?: string;
+    likes?: number;
+    metadata?: string | Record<string, unknown> | null;
+    modifiedAt?: string;
+    modifiedBy?: string;
+    status?: number;
+    tags?: string | string[] | null;
+}
+
+export interface VideoPage extends BasePaginationModel<Video[]> {
+    pageSize: number;
 }
 
 

@@ -1,35 +1,66 @@
-/** Shape consumed by VideoCard. */
-export interface LatestVideo {
-  id: number;
-  title: string;
-  description: string;
-  thumbnail: string;
+import type { Video } from '~/models';
+
+/** Accept normal API URLs as well as Markdown-wrapped URLs in imported data. */
+export function normalizeVideoUrl(value: string | null | undefined): string {
+  const raw = (value || '').trim();
+  const url = raw.match(/^\[[^\]]*\]\((https?:\/\/[^\s]+)\)$/)?.[1] || raw;
+  try {
+    const parsed = new URL(url);
+    return ['http:', 'https:'].includes(parsed.protocol) ? parsed.href : '';
+  } catch {
+    return '';
+  }
 }
 
-/** Shared video list for the landing "Latest Videos" section and the "Watch More Videos" page. */
-export const latestVideos: LatestVideo[] = [
-  {
-    id: 1,
-    title: 'The Ghanaian Trumpeter at Buckingham Palace',
-    description: 'Royal performance highlights Ghanaian musical talent...',
-    thumbnail: 'https://ext.same-assets.com/111305068/2385636436.png'
-  },
-  {
-    id: 2,
-    title: 'Security chiefs pledge loyalty to President',
-    description: 'Military and security leadership affirm commitment...',
-    thumbnail: 'https://ext.same-assets.com/111305068/3057553277.png'
-  },
-  {
-    id: 3,
-    title: 'Court to rule on NDC\'s objection',
-    description: 'Legal proceedings on mandamus application scheduled...',
-    thumbnail: 'https://ext.same-assets.com/111305068/1051578448.jpeg'
-  },
-  {
-    id: 4,
-    title: 'Democracy and Electoral Process',
-    description: 'Discussion on Ghana\'s democratic institutions...',
-    thumbnail: 'https://ext.same-assets.com/111305068/895135478.jpeg'
+export function parseVideoMetadata(value: Video['metadata']): Record<string, unknown> {
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
   }
-];
+}
+
+export function parseVideoTags(value: Video['tags']): string[] {
+  if (Array.isArray(value)) return value.filter((tag) => typeof tag === 'string' && tag.trim());
+  return (value || '').replace(/^\{|\}$/g, '').split(',')
+    .map((tag) => tag.trim().replace(/^"|"$/g, '')).filter(Boolean);
+}
+
+/** Never embed an arbitrary filePath: construct an allowlisted YouTube URL. */
+export function getYoutubeEmbedUrl(video: Video): string | null {
+  const metadataId = parseVideoMetadata(video.metadata).youtube_id;
+  let id = typeof metadataId === 'string' && /^[\w-]{11}$/.test(metadataId) ? metadataId : '';
+  if (!id) {
+    try {
+      const url = new URL(normalizeVideoUrl(video.filePath));
+      const host = url.hostname.toLowerCase();
+      if (host === 'youtu.be') id = url.pathname.split('/')[1] || '';
+      else if (['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtube-nocookie.com', 'www.youtube-nocookie.com'].includes(host)) {
+        id = url.searchParams.get('v') || (/^\/(embed|shorts|live)\//.test(url.pathname) ? url.pathname.split('/')[2] || '' : '');
+      }
+    } catch {
+      return null;
+    }
+  }
+  return /^[\w-]{11}$/.test(id) ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+}
+
+export function formatVideoCount(value: number | undefined): string {
+  return new Intl.NumberFormat('en').format(value ?? 0);
+}
+
+export function formatVideoFileSize(value: number | undefined): string {
+  if (!value || value < 0) return 'Not specified';
+  return `${new Intl.NumberFormat('en', { maximumFractionDigits: 1 }).format(value / 1024 / 1024)} MB`;
+}
+
+export function formatVideoDate(value: string | undefined): string {
+  // API timestamps do not specify a timezone. Preserve their calendar date.
+  const date = value?.slice(0, 10);
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return 'Not specified';
+  const parsed = new Date(`${date}T00:00:00Z`);
+  return Number.isNaN(parsed.getTime()) ? 'Not specified' : new Intl.DateTimeFormat('en', {
+    dateStyle: 'long', timeZone: 'UTC',
+  }).format(parsed);
+}
