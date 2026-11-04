@@ -126,19 +126,13 @@
                     <MenuItem v-slot="{ active }">
                       <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">View Profile</a>
                     </MenuItem>
-                    <MenuItem v-slot="{ active }">
-                      <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Edit Details</a>
-                    </MenuItem>
+                   
                      <MenuItem v-slot="{ active }">
                       <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Update Account Status</a>
                     </MenuItem>
 
                     <MenuItem v-slot="{ active }">
                       <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Reset Password</a>
-                    </MenuItem>
-
-                    <MenuItem v-slot="{ active }">
-                      <NuxtLink :to="`/admin/affiliates/${person.id}`" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">View Earnings</NuxtLink>
                     </MenuItem>
 
                     <MenuItem v-slot="{ active }">

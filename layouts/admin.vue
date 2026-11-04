@@ -258,6 +258,7 @@ const navigation = [
       { name: 'Applications', href: '/admin/affiliates/applications', permission: 'affiliates.applications.view' },
       { name: 'Commissions', href: '/admin/affiliates/commissions', permission: 'affiliates.commssions.view' },
       { name: 'Payouts', href: '/admin/affiliates/payouts', permission: 'affiliates.payouts.view' },
+      //{ name: 'Payouts Reconcilation', href: '/admin/affiliates/payouts-recon', permission: 'affiliates.payouts.reconciliation' },
       { name: 'Settings', href: '/admin/affiliates/settings', permission: 'affiliates.settings.view' },
     ],
   },

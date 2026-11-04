@@ -36,11 +36,11 @@
             </span>
           </td>
           <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">
-            <button @click="changeApplicantStatus(application.id, 16)" class="text-green-600 hover:text-green-900 font-medium">Approve</button>
+            <button @click="changeApplicantStatus(application.id, STATUS.APPROVED)" class="text-green-600 hover:text-green-900 font-medium">Approve</button>
             <span class="text-gray-300">|</span>
-            <button @click="changeApplicantStatus(application.id, 17)" class="text-red-600 hover:text-red-900 font-medium">Reject</button>
+            <button @click="changeApplicantStatus(application.id, STATUS.REJECTED)" class="text-red-600 hover:text-red-900 font-medium">Reject</button>
             <span class="text-gray-300">|</span>
-            <button @click="changeApplicantStatus(application.id, 2)" class="text-gray-600 hover:text-gray-900 font-medium">Archive</button>
+            <button @click="changeApplicantStatus(application.id, STATUS.ARCHIVED)" class="text-gray-600 hover:text-gray-900 font-medium">Archive</button>
             <span class="text-gray-300">|</span>
             <button @click="delApplication(application.id)" class="text-gray-600 hover:text-gray-900 font-medium">Delete</button>
           </td>
@@ -119,7 +119,7 @@ const onPageChange = async (pageNumber: number) => {
 
 const STATUS = {
   PENDING: 20,
-  APPROVED: 11,
+  APPROVED: 16,
   REJECTED: 17,
   ARCHIVED: 2,
 } as const

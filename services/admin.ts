@@ -613,6 +613,12 @@ export async function deleteAffiliate(id: string) {
     return response.success;
 }
 
+export async function resetAffiliatePassword(id: string) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/delete-affiliate', "");
+    return response.success;
+}
+
 export async function updateAffiliateAccountStatus(id: string, status:number) {
  
     const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/update-affiliate-status/${id}/${status}`, "");
