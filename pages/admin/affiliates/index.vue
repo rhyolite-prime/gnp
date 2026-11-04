@@ -95,7 +95,7 @@
             <div class="flex items-center">
                
               <div class="ml-4">
-                <div class="font-medium text-gray-900">{{ person.name }}</div>
+                <div class="font-medium text-gray-900">{{ person.firstName }} {{ person.lastName }}</div>
                 <div class="text-gray-500">{{ person.email }}</div>
               </div>
             </div>
@@ -108,7 +108,7 @@
               {{ getStatusLabel(person.status) }}
             </span>
           </td>
-          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ person.dateJoined }}</td>
+          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ longMonthDateFormat(person.dateJoined) }}</td>
           <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium"> GHS {{ person.totalEarnings }}</td>
           <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium"> GHS {{ person.walletBalance }}</td>
           <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
