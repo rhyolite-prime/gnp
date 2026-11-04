@@ -577,6 +577,14 @@ export async function assignSubscriptionToSubscriber(payload: object) {
 
 
 // affiliate
+
+export async function getAffiliateDashboardData(query: object) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<any>>('admin/get-affiliate-dashboard-data', "", { query });
+    return response.result;
+}
+
+
 export async function getAffiliates(query: object) {
  
     const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Affiliate[]>>>('admin/get-all-affiliates', "", { query });
@@ -609,13 +617,13 @@ export async function updateAffiliate(payload: object) {
 
 export async function deleteAffiliate(id: string) {
  
-    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/delete-affiliate', "", { method: "delete" });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-affiliate/${id}`, "", { method: "delete" });
     return response.success;
 }
 
 export async function resetAffiliatePassword(id: string) {
  
-    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/delete-affiliate', "");
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/reset-affiliate-password/${id}`, "");
     return response.success;
 }
 
