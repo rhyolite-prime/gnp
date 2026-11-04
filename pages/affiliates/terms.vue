@@ -1,526 +1,334 @@
 <template>
-  <div class="bg-gray-50 min-h-screen">
+  <div class="affiliate-terms min-h-screen bg-white text-gray-900">
+    <a href="#terms-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-4 focus:py-3 focus:shadow-lg">
+      Skip to the terms
+    </a>
 
-    <!-- Hero Header -->
-    <div class="bg-white border-b border-gray-100">
-      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="flex items-center gap-3 mb-6">
-          <NuxtLink
-            to="/affiliates"
-            class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors"
-          >
-            <ArrowLeftIcon class="h-4 w-4" />
-            Back to Affiliate Program
+    <!-- A compact introduction keeps the agreement, not a long contents list, first on mobile. -->
+    <section id="terms-top" class="scroll-mt-[56px] border-b border-stone-200/80 bg-[#faf9f6] sm:scroll-mt-[70px]" aria-labelledby="terms-heading">
+      <div class="mx-auto max-w-6xl px-5 py-7 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+        <div class="flex items-center justify-between gap-4">
+          <NuxtLink to="/affiliates" class="terms-no-print inline-flex min-h-[44px] items-center gap-2 rounded-md text-[13px] font-medium text-gray-600 hover:text-primary-700">
+            <ArrowLeftIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+            Affiliate program
           </NuxtLink>
+          <button type="button" class="terms-no-print inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 text-[13px] font-semibold text-gray-700 transition-colors hover:border-gray-400 hover:bg-stone-50 sm:px-4" @click="printPage">
+            <PrinterIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+            Print terms
+          </button>
         </div>
 
-        <div class="flex items-start gap-5">
-          <div class="h-14 w-14 bg-primary-100 rounded-2xl flex items-center justify-center flex-shrink-0">
-            <DocumentTextIcon class="h-7 w-7 text-primary-600" />
-          </div>
-          <div>
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-              Affiliate Program Terms &amp; Conditions
-            </h1>
-            <p class="mt-2 text-gray-500 text-lg">
-              Graphic NewsPlus (GNP) Affiliate Partnership Agreement
-            </p>
-            <div class="flex flex-wrap items-center gap-4 mt-4">
-              <span class="inline-flex items-center gap-1.5 text-xs font-medium bg-green-50 text-green-700 px-3 py-1 rounded-full border border-green-100">
-                <CheckCircleIcon class="h-3.5 w-3.5" />
-                Last Updated: August 2026
-              </span>
-              <span class="inline-flex items-center gap-1.5 text-xs font-medium bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-100">
-                <ClockIcon class="h-3.5 w-3.5" />
-                Effective Immediately Upon Registration
-              </span>
+        <div class="mt-5 max-w-3xl sm:mt-7">
+          <p class="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-primary-700 sm:text-xs">Graphic NewsPlus affiliate program</p>
+          <h1 id="terms-heading" class="font-display text-[2.25rem] font-medium leading-[1.12] tracking-[-0.025em] sm:text-5xl lg:text-[3.5rem]">
+            Affiliate terms &amp; conditions
+          </h1>
+          <p class="mt-4 text-[16px] leading-7 text-gray-600">Graphic NewsPlus (GNP) Affiliate Partnership Agreement</p>
+          <dl class="mt-6 flex flex-wrap gap-x-7 gap-y-4 text-[13px] leading-5">
+            <div>
+              <dt class="text-gray-500">Last updated</dt>
+              <dd class="mt-1 font-semibold text-gray-800">August 2026</dd>
             </div>
-          </div>
+            <div>
+              <dt class="text-gray-500">Effective</dt>
+              <dd class="mt-1 font-semibold text-gray-800">Immediately upon registration</dd>
+            </div>
+            <div>
+              <dt class="text-gray-500">Agreement</dt>
+              <dd class="mt-1 font-semibold text-gray-800">13 sections</dd>
+            </div>
+          </dl>
         </div>
+      </div>
+    </section>
+
+    <!-- Native details provide a keyboard-accessible contents menu without JavaScript. -->
+    <div class="terms-no-print sticky top-[56px] z-30 border-b border-stone-200 bg-white/95 backdrop-blur sm:top-[70px] lg:hidden">
+      <div class="mx-auto max-w-6xl px-5 sm:px-6">
+        <details ref="mobileContents" class="group relative">
+          <summary class="flex min-h-[56px] cursor-pointer list-none items-center gap-3 py-2">
+            <ListBulletIcon class="h-5 w-5 shrink-0 text-primary-600" aria-hidden="true" />
+            <span class="min-w-0 flex-1">
+              <span class="block text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-500">On this page</span>
+              <span class="mt-0.5 block truncate text-[13px] font-semibold text-gray-900">{{ activeSectionLabel }}</span>
+            </span>
+            <span class="shrink-0 text-[11px] tabular-nums text-gray-500">{{ String(activeSectionIndex + 1).padStart(2, '0') }} / 13</span>
+            <ChevronDownIcon class="h-4 w-4 shrink-0 text-gray-500 transition-transform group-open:rotate-180" aria-hidden="true" />
+          </summary>
+          <nav aria-label="Terms sections" class="absolute inset-x-0 top-full grid max-h-[60vh] gap-1 overflow-y-auto rounded-b-xl border border-stone-200 bg-white p-3 shadow-xl shadow-gray-900/10 sm:grid-cols-2">
+            <a v-for="(section, index) in sections" :key="section.id" :href="`#${section.id}`" :aria-current="activeSection === section.id ? 'location' : undefined" :class="['flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-[13px] leading-5 transition-colors', activeSection === section.id ? 'bg-primary-50 font-semibold text-primary-700' : 'text-gray-600 hover:bg-stone-50 hover:text-gray-900']" @click="selectSection(section.id)">
+              <span class="w-5 shrink-0 text-[11px] tabular-nums text-gray-600" aria-hidden="true">{{ String(index + 1).padStart(2, '0') }}</span>
+              {{ section.label }}
+            </a>
+          </nav>
+        </details>
       </div>
     </div>
 
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <div class="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-5 py-8 sm:px-6 sm:py-12 lg:grid-cols-12 lg:px-8">
+      <!-- Keep desktop navigation within the viewport, even on short laptop screens. -->
+      <aside class="terms-no-print hidden lg:col-span-3 lg:block" aria-label="Terms navigation">
+        <div ref="desktopContents" class="sticky top-[94px] max-h-[calc(100vh-118px)] overflow-y-auto pb-3 pr-2">
+          <h2 class="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500">On this page</h2>
+          <nav aria-label="Terms sections" class="relative space-y-1">
+            <a v-for="(section, index) in sections" :key="section.id" :href="`#${section.id}`" :aria-current="activeSection === section.id ? 'location' : undefined" :class="['flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-[13px] leading-5 transition-colors', activeSection === section.id ? 'bg-primary-50 font-semibold text-primary-700' : 'text-gray-600 hover:bg-stone-50 hover:text-gray-900']" @click="selectSection(section.id)">
+              <span class="w-5 shrink-0 text-[11px] tabular-nums text-gray-600" aria-hidden="true">{{ String(index + 1).padStart(2, '0') }}</span>
+              {{ section.label }}
+            </a>
+          </nav>
+          <div class="mt-6 border-t border-stone-200 pt-5">
+            <p class="mb-3 text-[12px] leading-5 text-gray-500">Ready when you are.</p>
+            <NuxtLink to="/affiliates/register" class="terms-button w-full bg-primary-600 text-white hover:bg-primary-700">
+              <UserPlusIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+              Join as Affiliate
+            </NuxtLink>
+          </div>
+        </div>
+      </aside>
 
-        <!-- Sticky Table of Contents -->
-        <aside class="lg:col-span-1">
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-6">
-            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">On This Page</h2>
-            <nav class="space-y-1">
-              <a
-                v-for="section in sections"
-                :key="section.id"
-                :href="`#${section.id}`"
-                :class="[
-                  'flex items-center gap-2 text-sm py-2 px-3 rounded-lg transition-all',
-                  activeSection === section.id
-                    ? 'bg-primary-50 text-primary-700 font-semibold'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                ]"
-                @click.prevent="scrollToSection(section.id)"
-              >
-                <span
-                  :class="[
-                    'h-1.5 w-1.5 rounded-full flex-shrink-0',
-                    activeSection === section.id ? 'bg-primary-500' : 'bg-gray-300'
-                  ]"
-                />
-                {{ section.label }}
-              </a>
-            </nav>
-
-            <div class="mt-6 pt-5 border-t border-gray-100">
-              <p class="text-xs text-gray-400 mb-3">Quick Actions</p>
-              <NuxtLink
-                to="/affiliates/register"
-                class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 transition-colors shadow-sm"
-              >
-                <UserPlusIcon class="h-4 w-4" />
-                Join as Affiliate
-              </NuxtLink>
-             
-            </div>
+      <article id="terms-content" tabindex="-1" class="min-w-0 lg:col-span-8 lg:col-start-5" aria-label="Affiliate program agreement">
+        <aside class="flex gap-3 rounded-xl border border-primary-100 bg-primary-50 p-5 sm:gap-4 sm:p-6" aria-labelledby="agreement-notice">
+          <InformationCircleIcon class="mt-0.5 h-5 w-5 shrink-0 text-primary-600" aria-hidden="true" />
+          <div>
+            <h2 id="agreement-notice" class="text-[16px] font-semibold text-gray-900">Before you register</h2>
+            <p class="mt-2 text-[14px] leading-7 text-gray-700">
+              By registering for and participating in the Graphic NewsPlus Affiliate Program, you agree to be legally bound by the following Terms and Conditions. Please read them carefully before proceeding. If you do not agree to these terms, do not register or participate in the program.
+            </p>
           </div>
         </aside>
 
-        <!-- Main Content -->
-        <main class="lg:col-span-3 space-y-6">
-
-          <!-- Notice Banner -->
-          <div class="bg-primary-600 text-white rounded-2xl p-6 shadow-sm">
-            <div class="flex gap-4">
-              <InformationCircleIcon class="h-6 w-6 flex-shrink-0 mt-0.5 text-primary-200" />
-              <div>
-                <p class="font-semibold text-base">Important Notice</p>
-                <p class="mt-1 text-primary-100 text-sm leading-relaxed">
-                  By registering for and participating in the Graphic NewsPlus Affiliate Program, you agree to be legally bound by the following Terms and Conditions. Please read them carefully before proceeding. If you do not agree to these terms, do not register or participate in the program.
-                </p>
-              </div>
-            </div>
+        <section v-for="(section, index) in sections" :id="section.id" :key="section.id" :aria-labelledby="`${section.id}-heading`" tabindex="-1" class="terms-section scroll-mt-[128px] border-b border-stone-200 py-8 sm:scroll-mt-[144px] sm:py-10 lg:scroll-mt-[94px]">
+          <div class="mb-5 flex items-start gap-3 sm:gap-4">
+            <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-stone-100 text-[12px] font-semibold tabular-nums text-primary-700" aria-hidden="true">{{ String(index + 1).padStart(2, '0') }}</span>
+            <h2 :id="`${section.id}-heading`" class="font-display text-[1.65rem] font-medium leading-[1.2] tracking-[-0.015em] text-gray-900 sm:text-3xl">{{ section.title }}</h2>
           </div>
 
-          <!-- Section 1: Eligibility -->
-          <div :id="sections[0].id" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-            <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3">
-              <div class="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center">
-                <UserGroupIcon class="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Section 1</span>
-                <h2 class="text-lg font-bold text-gray-900 leading-tight">Program Eligibility</h2>
-              </div>
-            </div>
-            <div class="px-6 py-5 space-y-4 text-gray-700 text-sm leading-relaxed">
+          <div class="terms-copy space-y-5 text-[16px] leading-[1.8] text-gray-700">
+            <template v-if="section.id === 'eligibility'">
               <p>To participate in the Graphic NewsPlus (GNP) Affiliate Program, you must meet all of the following eligibility requirements:</p>
-              <ul class="space-y-3">
-                <li v-for="item in eligibilityItems" :key="item" class="flex items-start gap-3">
-                  <CheckCircleIcon class="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                  <span>{{ item }}</span>
+              <ul class="terms-list">
+                <li v-for="item in eligibilityItems" :key="item">{{ item }}</li>
+              </ul>
+              <div class="terms-note border-amber-200 bg-amber-50 text-amber-900">
+                <ExclamationTriangleIcon class="h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
+                <p>GNP reserves the right to reject any affiliate application or revoke existing affiliate status at any time, at its sole discretion.</p>
+              </div>
+            </template>
+
+            <template v-else-if="section.id === 'commission'">
+              <p>Affiliates earn commissions on successful subscription purchases made by referred users via unique affiliate tracking links.</p>
+
+              <!-- Stacked rates avoid a cramped, sideways-scrolling table on phones. -->
+              <ul class="terms-rate-cards divide-y divide-stone-200 overflow-hidden rounded-xl border border-stone-200 sm:hidden" aria-label="Commission rates by subscription plan">
+                <li v-for="rate in commissionRates" :key="rate.plan" class="flex items-center justify-between gap-4 p-4">
+                  <div class="min-w-0">
+                    <p class="text-[15px] font-semibold text-gray-900">{{ rate.plan }}</p>
+                    <p class="mt-1 text-[13px] leading-5 text-gray-500">{{ rate.type }}</p>
+                  </div>
+                  <p class="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-[16px] font-semibold text-emerald-800">
+                    <span class="sr-only">Commission rate: </span>{{ rate.rate }}
+                  </p>
                 </li>
               </ul>
-              <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-                <ExclamationTriangleIcon class="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                <p class="text-amber-800 text-sm">GNP reserves the right to reject any affiliate application or revoke existing affiliate status at any time, at its sole discretion.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 2: Commission Structure -->
-          <div :id="sections[1].id" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-            <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3">
-              <div class="h-9 w-9 rounded-xl bg-green-50 flex items-center justify-center">
-                <CurrencyDollarIcon class="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Section 2</span>
-                <h2 class="text-lg font-bold text-gray-900 leading-tight">Commission Structure &amp; Rates</h2>
-              </div>
-            </div>
-            <div class="px-6 py-5 space-y-5 text-gray-700 text-sm leading-relaxed">
-              <p>Affiliates earn commissions on successful subscription purchases made by referred users via unique affiliate tracking links.</p>
-              <div class="rounded-xl border border-gray-200 overflow-hidden">
+              <div class="terms-rate-table hidden overflow-hidden rounded-xl border border-stone-200 sm:block">
                 <table class="w-full text-left">
-                  <thead class="bg-gray-50 border-b border-gray-200">
+                  <caption class="sr-only">Commission rates by subscription plan</caption>
+                  <thead class="border-b border-stone-200 bg-stone-50">
                     <tr>
-                      <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Subscription Plan</th>
-                      <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Commission Rate</th>
-                      <th class="px-4 py-3 text-xs font-bold text-gray-500 uppercase">Type</th>
+                      <th scope="col" class="px-4 py-3 text-[12px] font-semibold text-gray-600">Subscription Plan</th>
+                      <th scope="col" class="px-4 py-3 text-[12px] font-semibold text-gray-600">Commission Rate</th>
+                      <th scope="col" class="px-4 py-3 text-[12px] font-semibold text-gray-600">Type</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-gray-100">
-                    <tr v-for="rate in commissionRates" :key="rate.plan" class="hover:bg-gray-50 transition-colors">
-                      <td class="px-4 py-3 font-medium text-gray-900">{{ rate.plan }}</td>
-                      <td class="px-4 py-3">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">{{ rate.rate }}</span>
-                      </td>
-                      <td class="px-4 py-3 text-gray-600">{{ rate.type }}</td>
+                  <tbody class="divide-y divide-stone-100">
+                    <tr v-for="rate in commissionRates" :key="rate.plan">
+                      <th scope="row" class="px-4 py-3 text-[14px] font-semibold text-gray-900">{{ rate.plan }}</th>
+                      <td class="px-4 py-3"><span class="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-[13px] font-semibold text-emerald-800">{{ rate.rate }}</span></td>
+                      <td class="px-4 py-3 text-[13px] leading-6 text-gray-600">{{ rate.type }}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-              <div class="space-y-2">
-                <p class="font-semibold text-gray-900">Important Commission Rules:</p>
-                <ul class="space-y-2">
-                  <li v-for="rule in commissionRules" :key="rule" class="flex items-start gap-2.5">
-                    <div class="h-1.5 w-1.5 rounded-full bg-primary-500 flex-shrink-0 mt-2" />
-                    <span>{{ rule }}</span>
-                  </li>
+              <div>
+                <h3 class="mb-3 text-[15px] font-semibold text-gray-900">Important Commission Rules:</h3>
+                <ul class="terms-list">
+                  <li v-for="rule in commissionRules" :key="rule">{{ rule }}</li>
                 </ul>
               </div>
-            </div>
-          </div>
+            </template>
 
-          <!-- Section 3: Tracking & Attribution -->
-          <div :id="sections[2].id" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-            <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3">
-              <div class="h-9 w-9 rounded-xl bg-purple-50 flex items-center justify-center">
-                <CursorArrowRaysIcon class="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Section 3</span>
-                <h2 class="text-lg font-bold text-gray-900 leading-tight">Tracking &amp; Attribution</h2>
-              </div>
-            </div>
-            <div class="px-6 py-5 space-y-4 text-gray-700 text-sm leading-relaxed">
+            <template v-else-if="section.id === 'tracking'">
               <p>The GNP Affiliate Program uses a cookie-based tracking system to attribute referrals to affiliates accurately.</p>
-              <ul class="space-y-3">
-                <li v-for="item in trackingItems" :key="item" class="flex items-start gap-3">
-                  <CheckCircleIcon class="h-5 w-5 text-purple-400 flex-shrink-0 mt-0.5" />
-                  <span>{{ item }}</span>
-                </li>
+              <ul class="terms-list">
+                <li v-for="item in trackingItems" :key="item">{{ item }}</li>
               </ul>
-              <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
-                <InformationCircleIcon class="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <p class="text-blue-800 text-sm">GNP is not responsible for lost commissions due to cookie deletion, ad-blockers, browser privacy settings, or any technical failure outside GNP's control.</p>
+              <div class="terms-note border-blue-200 bg-blue-50 text-blue-900">
+                <InformationCircleIcon class="h-5 w-5 shrink-0 text-blue-600" aria-hidden="true" />
+                <p>GNP is not responsible for lost commissions due to cookie deletion, ad-blockers, browser privacy settings, or any technical failure outside GNP's control.</p>
               </div>
-            </div>
-          </div>
+            </template>
 
-          <!-- Section 4: Payout Policy -->
-          <div :id="sections[3].id" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-            <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3">
-              <div class="h-9 w-9 rounded-xl bg-emerald-50 flex items-center justify-center">
-                <BanknotesIcon class="h-5 w-5 text-emerald-600" />
-              </div>
-              <div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Section 4</span>
-                <h2 class="text-lg font-bold text-gray-900 leading-tight">Payout Policy</h2>
-              </div>
-            </div>
-            <div class="px-6 py-5 space-y-5 text-gray-700 text-sm leading-relaxed">
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div v-for="stat in payoutStats" :key="stat.label" class="bg-gray-50 rounded-xl p-4 text-center border border-gray-100">
-                  <div class="text-2xl font-extrabold text-gray-900">{{ stat.value }}</div>
-                  <div class="text-xs text-gray-500 mt-1">{{ stat.label }}</div>
+            <template v-else-if="section.id === 'payout'">
+              <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div v-for="stat in payoutStats" :key="stat.label" class="flex items-center justify-between gap-4 rounded-xl border border-stone-200 bg-stone-50 p-4 sm:flex-col sm:items-start sm:gap-2">
+                  <dt class="text-[13px] leading-5 text-gray-600 sm:order-2">{{ stat.label }}</dt>
+                  <dd class="shrink-0 text-xl font-semibold tracking-tight text-gray-900 sm:order-1">{{ stat.value }}</dd>
                 </div>
-              </div>
-              <ul class="space-y-3">
-                <li v-for="item in payoutItems" :key="item" class="flex items-start gap-3">
-                  <CheckCircleIcon class="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                  <span>{{ item }}</span>
-                </li>
+              </dl>
+              <ul class="terms-list">
+                <li v-for="item in payoutItems" :key="item">{{ item }}</li>
               </ul>
-              <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-                <ExclamationTriangleIcon class="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                <p class="text-amber-800 text-sm">GNP may withhold any payment if fraud, abuse, or a violation of these Terms is suspected until an investigation is complete.</p>
+              <div class="terms-note border-amber-200 bg-amber-50 text-amber-900">
+                <ExclamationTriangleIcon class="h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
+                <p>GNP may withhold any payment if fraud, abuse, or a violation of these Terms is suspected until an investigation is complete.</p>
               </div>
-            </div>
-          </div>
+            </template>
 
-          <!-- Section 5: Affiliate Obligations -->
-          <div :id="sections[4].id" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-            <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3">
-              <div class="h-9 w-9 rounded-xl bg-primary-50 flex items-center justify-center">
-                <ShieldCheckIcon class="h-5 w-5 text-primary-600" />
-              </div>
-              <div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Section 5</span>
-                <h2 class="text-lg font-bold text-gray-900 leading-tight">Affiliate Obligations &amp; Code of Conduct</h2>
-              </div>
-            </div>
-            <div class="px-6 py-5 space-y-5 text-gray-700 text-sm leading-relaxed">
+            <template v-else-if="section.id === 'obligations'">
               <p>As an affiliate, you agree to the following obligations:</p>
-              <div class="space-y-3">
-                <p class="font-semibold text-gray-900">You MUST:</p>
-                <ul class="space-y-2">
+              <div>
+                <h3 class="mb-3 text-[15px] font-semibold text-gray-900">You MUST:</h3>
+                <ul class="space-y-3">
                   <li v-for="item in obligationsMust" :key="item" class="flex items-start gap-3">
-                    <CheckCircleIcon class="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                    <CheckCircleIcon class="mt-1 h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true" />
                     <span>{{ item }}</span>
                   </li>
                 </ul>
               </div>
-              <div class="space-y-3">
-                <p class="font-semibold text-gray-900">You MUST NOT:</p>
-                <ul class="space-y-2">
+              <div class="border-t border-stone-200 pt-5">
+                <h3 class="mb-3 text-[15px] font-semibold text-gray-900">You MUST NOT:</h3>
+                <ul class="space-y-3">
                   <li v-for="item in obligationsMustNot" :key="item" class="flex items-start gap-3">
-                    <XCircleIcon class="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                    <XCircleIcon class="mt-1 h-5 w-5 shrink-0 text-primary-600" aria-hidden="true" />
                     <span>{{ item }}</span>
                   </li>
                 </ul>
               </div>
-            </div>
-          </div>
+            </template>
 
-          <!-- Section 6: Prohibited Activities -->
-          <div :id="sections[5].id" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-            <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3">
-              <div class="h-9 w-9 rounded-xl bg-red-50 flex items-center justify-center">
-                <NoSymbolIcon class="h-5 w-5 text-red-500" />
-              </div>
-              <div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Section 6</span>
-                <h2 class="text-lg font-bold text-gray-900 leading-tight">Prohibited Activities</h2>
-              </div>
-            </div>
-            <div class="px-6 py-5 space-y-4 text-gray-700 text-sm leading-relaxed">
+            <template v-else-if="section.id === 'prohibited'">
               <p>The following activities will result in immediate termination of your affiliate account and forfeiture of any pending commissions:</p>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div
-                  v-for="item in prohibitedActivities"
-                  :key="item.title"
-                  class="flex items-start gap-3 bg-red-50 border border-red-100 rounded-xl p-3"
-                >
-                  <XCircleIcon class="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p class="font-semibold text-red-900 text-sm">{{ item.title }}</p>
-                    <p class="text-red-700 text-xs mt-0.5">{{ item.description }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+              <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <li v-for="item in prohibitedActivities" :key="item.title" class="rounded-xl border border-primary-100 bg-primary-50/60 p-4">
+                  <h3 class="text-[15px] font-semibold text-gray-900">{{ item.title }}</h3>
+                  <p class="mt-1 text-[14px] leading-6 text-gray-600">{{ item.description }}</p>
+                </li>
+              </ul>
+            </template>
 
-          <!-- Section 7: Intellectual Property -->
-          <div :id="sections[6].id" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-            <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3">
-              <div class="h-9 w-9 rounded-xl bg-indigo-50 flex items-center justify-center">
-                <SparklesIcon class="h-5 w-5 text-indigo-600" />
-              </div>
-              <div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Section 7</span>
-                <h2 class="text-lg font-bold text-gray-900 leading-tight">Intellectual Property &amp; Brand Usage</h2>
-              </div>
-            </div>
-            <div class="px-6 py-5 space-y-4 text-gray-700 text-sm leading-relaxed">
+            <template v-else-if="section.id === 'ip'">
               <p>GNP grants you a limited, non-exclusive, non-transferable, revocable license to use approved GNP brand assets solely for the purpose of promoting the Affiliate Program.</p>
-              <ul class="space-y-3">
-                <li v-for="item in ipItems" :key="item" class="flex items-start gap-3">
-                  <CheckCircleIcon class="h-5 w-5 text-indigo-400 flex-shrink-0 mt-0.5" />
-                  <span>{{ item }}</span>
-                </li>
+              <ul class="terms-list">
+                <li v-for="item in ipItems" :key="item">{{ item }}</li>
               </ul>
-            </div>
-          </div>
+            </template>
 
-          <!-- Section 8: Termination -->
-          <div :id="sections[7].id" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-            <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3">
-              <div class="h-9 w-9 rounded-xl bg-orange-50 flex items-center justify-center">
-                <ExclamationCircleIcon class="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Section 8</span>
-                <h2 class="text-lg font-bold text-gray-900 leading-tight">Termination of Participation</h2>
-              </div>
-            </div>
-            <div class="px-6 py-5 space-y-4 text-gray-700 text-sm leading-relaxed">
+            <template v-else-if="section.id === 'termination'">
               <p>Either party may terminate participation in the Affiliate Program at any time.</p>
-              <ul class="space-y-3">
-                <li v-for="item in terminationItems" :key="item" class="flex items-start gap-3">
-                  <div class="h-1.5 w-1.5 rounded-full bg-orange-400 flex-shrink-0 mt-2" />
-                  <span>{{ item }}</span>
-                </li>
+              <ul class="terms-list">
+                <li v-for="item in terminationItems" :key="item">{{ item }}</li>
               </ul>
-            </div>
-          </div>
+            </template>
 
-          <!-- Section 9: Disclaimer & Liability -->
-          <div :id="sections[8].id" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-            <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3">
-              <div class="h-9 w-9 rounded-xl bg-gray-100 flex items-center justify-center">
-                <ScaleIcon class="h-5 w-5 text-gray-600" />
-              </div>
-              <div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Section 9</span>
-                <h2 class="text-lg font-bold text-gray-900 leading-tight">Disclaimer &amp; Limitation of Liability</h2>
-              </div>
-            </div>
-            <div class="px-6 py-5 space-y-4 text-gray-700 text-sm leading-relaxed">
+            <template v-else-if="section.id === 'disclaimer'">
               <p>The GNP Affiliate Program is provided on an "as is" and "as available" basis. GNP makes no warranties, express or implied, regarding the program.</p>
-              <ul class="space-y-3">
-                <li v-for="item in disclaimerItems" :key="item" class="flex items-start gap-3">
-                  <div class="h-1.5 w-1.5 rounded-full bg-gray-400 flex-shrink-0 mt-2" />
-                  <span>{{ item }}</span>
-                </li>
+              <ul class="terms-list">
+                <li v-for="item in disclaimerItems" :key="item">{{ item }}</li>
               </ul>
-            </div>
-          </div>
+            </template>
 
-          <!-- Section 10: Privacy -->
-          <div :id="sections[9].id" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-            <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3">
-              <div class="h-9 w-9 rounded-xl bg-teal-50 flex items-center justify-center">
-                <LockClosedIcon class="h-5 w-5 text-teal-600" />
-              </div>
-              <div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Section 10</span>
-                <h2 class="text-lg font-bold text-gray-900 leading-tight">Privacy &amp; Data Protection</h2>
-              </div>
-            </div>
-            <div class="px-6 py-5 space-y-4 text-gray-700 text-sm leading-relaxed">
+            <template v-else-if="section.id === 'privacy'">
               <p>GNP collects and processes your personal data to manage your affiliate account and pay commissions.</p>
-              <ul class="space-y-3">
-                <li v-for="item in privacyItems" :key="item" class="flex items-start gap-3">
-                  <CheckCircleIcon class="h-5 w-5 text-teal-400 flex-shrink-0 mt-0.5" />
-                  <span>{{ item }}</span>
-                </li>
+              <ul class="terms-list">
+                <li v-for="item in privacyItems" :key="item">{{ item }}</li>
               </ul>
-            </div>
-          </div>
+            </template>
 
-          <!-- Section 11: Governing Law -->
-          <div :id="sections[10].id" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-            <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3">
-              <div class="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center">
-                <BuildingLibraryIcon class="h-5 w-5 text-slate-600" />
-              </div>
-              <div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Section 11</span>
-                <h2 class="text-lg font-bold text-gray-900 leading-tight">Governing Law &amp; Dispute Resolution</h2>
-              </div>
-            </div>
-            <div class="px-6 py-5 space-y-4 text-gray-700 text-sm leading-relaxed">
+            <template v-else-if="section.id === 'governing-law'">
               <p>These Terms and Conditions shall be governed by and construed in accordance with the laws of the Republic of Ghana. Any disputes arising out of or in connection with these Terms shall be subject to the exclusive jurisdiction of the courts of Ghana.</p>
               <p>Before initiating any legal proceedings, both parties agree to make a good-faith effort to resolve any dispute through direct negotiation. If resolution is not achieved within 30 days, the matter may be referred to mediation.</p>
-            </div>
-          </div>
+            </template>
 
-          <!-- Section 12: Modifications -->
-          <div :id="sections[11].id" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-            <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3">
-              <div class="h-9 w-9 rounded-xl bg-sky-50 flex items-center justify-center">
-                <PencilSquareIcon class="h-5 w-5 text-sky-600" />
-              </div>
-              <div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Section 12</span>
-                <h2 class="text-lg font-bold text-gray-900 leading-tight">Modifications to These Terms</h2>
-              </div>
-            </div>
-            <div class="px-6 py-5 space-y-4 text-gray-700 text-sm leading-relaxed">
+            <template v-else-if="section.id === 'modifications'">
               <p>GNP reserves the right to modify, update, or amend these Terms and Conditions at any time without prior notice. The most current version will always be available on this page with the updated date.</p>
               <p>Your continued participation in the Affiliate Program after any changes constitutes your acceptance of the new Terms. We recommend reviewing this page periodically.</p>
-            </div>
-          </div>
+            </template>
 
-          <!-- Section 13: Contact -->
-          <div :id="sections[12].id" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-            <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3">
-              <div class="h-9 w-9 rounded-xl bg-primary-50 flex items-center justify-center">
-                <EnvelopeIcon class="h-5 w-5 text-primary-600" />
-              </div>
-              <div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Section 13</span>
-                <h2 class="text-lg font-bold text-gray-900 leading-tight">Contact Information</h2>
-              </div>
-            </div>
-            <div class="px-6 py-5 text-gray-700 text-sm leading-relaxed">
-              <p class="mb-4">For any questions regarding these Terms and Conditions or the Affiliate Program, please contact us:</p>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <a
-                  href="mailto:affiliates@graphicnewsplus.com"
-                  class="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-xl p-4 hover:border-primary-200 hover:bg-primary-50 transition-all group"
-                >
-                  <EnvelopeIcon class="h-5 w-5 text-gray-400 group-hover:text-primary-600 flex-shrink-0" />
-                  <div>
-                    <p class="font-medium text-gray-900 text-xs">Email Us</p>
-                    <p class="text-gray-500 text-xs mt-0.5">affiliates@graphicnewsplus.com</p>
-                  </div>
+            <template v-else-if="section.id === 'contact'">
+              <p>For any questions regarding these Terms and Conditions or the Affiliate Program, please contact us:</p>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <a href="mailto:affiliates@graphicnewsplus.com" class="terms-contact group sm:col-span-2">
+                  <EnvelopeIcon class="h-5 w-5 shrink-0 text-primary-600" aria-hidden="true" />
+                  <span class="min-w-0">
+                    <span class="block text-[13px] font-semibold text-gray-900">Email Us</span>
+                    <span class="block break-all text-[14px] leading-6 text-gray-600 group-hover:text-primary-700">affiliates@graphicnewsplus.com</span>
+                  </span>
                 </a>
-                <a
-                  href="tel:+233302213800"
-                  class="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-xl p-4 hover:border-primary-200 hover:bg-primary-50 transition-all group"
-                >
-                  <PhoneIcon class="h-5 w-5 text-gray-400 group-hover:text-primary-600 flex-shrink-0" />
-                  <div>
-                    <p class="font-medium text-gray-900 text-xs">Call Us</p>
-                    <p class="text-gray-500 text-xs mt-0.5">+233 30 221 3800</p>
-                  </div>
+                <a href="tel:+233302213800" class="terms-contact group">
+                  <PhoneIcon class="h-5 w-5 shrink-0 text-primary-600" aria-hidden="true" />
+                  <span class="min-w-0">
+                    <span class="block text-[13px] font-semibold text-gray-900">Call Us</span>
+                    <span class="block text-[14px] leading-6 text-gray-600 group-hover:text-primary-700">+233 30 221 3800</span>
+                  </span>
                 </a>
-                <div class="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-xl p-4">
-                  <MapPinIcon class="h-5 w-5 text-gray-400 flex-shrink-0" />
-                  <div>
-                    <p class="font-medium text-gray-900 text-xs">Headquarters</p>
-                    <p class="text-gray-500 text-xs mt-0.5">Graphic Road, Accra, Ghana</p>
-                  </div>
+                <div class="terms-contact">
+                  <MapPinIcon class="h-5 w-5 shrink-0 text-primary-600" aria-hidden="true" />
+                  <span class="min-w-0">
+                    <span class="block text-[13px] font-semibold text-gray-900">Headquarters</span>
+                    <span class="block text-[14px] leading-6 text-gray-600">Graphic Road, Accra, Ghana</span>
+                  </span>
                 </div>
               </div>
-            </div>
+            </template>
           </div>
+        </section>
 
-          <!-- Acceptance CTA -->
-          <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-center">
-            <div class="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <HandRaisedIcon class="h-6 w-6 text-white" />
-            </div>
-            <h3 class="text-white font-bold text-lg mb-2">Ready to Join?</h3>
-            <p class="text-gray-400 text-sm mb-6 max-w-md mx-auto">
-              By registering, you confirm you have read, understood, and agree to be bound by these Terms &amp; Conditions.
-            </p>
-            <div class="flex flex-col sm:flex-row gap-3 justify-center">
-              <NuxtLink
-                to="/affiliates/register"
-                class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors shadow-lg"
-              >
-                <UserPlusIcon class="h-5 w-5" />
-                Join as Affiliate
-              </NuxtLink>
-              <NuxtLink
-                to="/affiliates/login"
-                class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition-colors border border-white/20"
-              >
-                Already an Affiliate? Sign In
-              </NuxtLink>
-            </div>
+        <section class="terms-no-print mt-8 rounded-2xl bg-gray-900 p-6 sm:p-8" aria-labelledby="join-heading">
+          <p class="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary-300">The next step</p>
+          <h2 id="join-heading" class="font-display text-3xl font-medium text-white">Ready to Join?</h2>
+          <p class="mt-3 max-w-xl text-[14px] leading-7 text-gray-300">
+            By registering, you confirm you have read, understood, and agree to be bound by these Terms &amp; Conditions.
+          </p>
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+            <NuxtLink to="/affiliates/register" class="terms-button bg-white text-gray-900 hover:bg-primary-50">
+              <UserPlusIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+              Join as Affiliate
+            </NuxtLink>
+            <NuxtLink to="/affiliates/login" class="terms-button border border-gray-500 text-white hover:border-gray-300 hover:bg-white/10">
+              Already an Affiliate? Sign In
+              <ArrowRightIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+            </NuxtLink>
           </div>
-
-        </main>
-      </div>
+        </section>
+        <a href="#terms-top" class="terms-no-print mt-5 inline-flex min-h-[44px] items-center gap-2 rounded-md text-[13px] font-semibold text-gray-600 hover:text-primary-700">
+          <ArrowUpIcon class="h-4 w-4" aria-hidden="true" />
+          Back to top
+        </a>
+      </article>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import {
-  DocumentTextIcon,
   ArrowLeftIcon,
+  ArrowRightIcon,
+  ArrowUpIcon,
   CheckCircleIcon,
-  ClockIcon,
-  InformationCircleIcon,
-  ExclamationTriangleIcon,
-  ExclamationCircleIcon,
-  XCircleIcon,
-  UserGroupIcon,
-  CurrencyDollarIcon,
-  CursorArrowRaysIcon,
-  BanknotesIcon,
-  ShieldCheckIcon,
-  NoSymbolIcon,
-  SparklesIcon,
-  ScaleIcon,
-  LockClosedIcon,
-  BuildingLibraryIcon,
-  PencilSquareIcon,
+  ChevronDownIcon,
   EnvelopeIcon,
-  PhoneIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  ListBulletIcon,
   MapPinIcon,
-  HandRaisedIcon,
-  UserPlusIcon,
+  PhoneIcon,
   PrinterIcon,
+  UserPlusIcon,
+  XCircleIcon,
 } from '@heroicons/vue/24/outline'
 
 definePageMeta({
-  layout: 'default'
+  layout: 'default',
 })
 
 useSeoMeta({
@@ -528,54 +336,104 @@ useSeoMeta({
   description: 'Read the Graphic NewsPlus Affiliate Program Terms and Conditions before joining. Understand commission rates, payout policies, prohibited activities, and your obligations as a GNP affiliate partner.',
 })
 
-// --- Table of Contents ---
 const sections = [
-  { id: 'eligibility', label: 'Program Eligibility' },
-  { id: 'commission', label: 'Commission Structure' },
-  { id: 'tracking', label: 'Tracking & Attribution' },
-  { id: 'payout', label: 'Payout Policy' },
-  { id: 'obligations', label: 'Affiliate Obligations' },
-  { id: 'prohibited', label: 'Prohibited Activities' },
-  { id: 'ip', label: 'Intellectual Property' },
-  { id: 'termination', label: 'Termination' },
-  { id: 'disclaimer', label: 'Disclaimer & Liability' },
-  { id: 'privacy', label: 'Privacy & Data' },
-  { id: 'governing-law', label: 'Governing Law' },
-  { id: 'modifications', label: 'Modifications' },
-  { id: 'contact', label: 'Contact Information' },
+  { id: 'eligibility', label: 'Program Eligibility', title: 'Program Eligibility' },
+  { id: 'commission', label: 'Commission Structure', title: 'Commission Structure & Rates' },
+  { id: 'tracking', label: 'Tracking & Attribution', title: 'Tracking & Attribution' },
+  { id: 'payout', label: 'Payout Policy', title: 'Payout Policy' },
+  { id: 'obligations', label: 'Affiliate Obligations', title: 'Affiliate Obligations & Code of Conduct' },
+  { id: 'prohibited', label: 'Prohibited Activities', title: 'Prohibited Activities' },
+  { id: 'ip', label: 'Intellectual Property', title: 'Intellectual Property & Brand Usage' },
+  { id: 'termination', label: 'Termination', title: 'Termination of Participation' },
+  { id: 'disclaimer', label: 'Disclaimer & Liability', title: 'Disclaimer & Limitation of Liability' },
+  { id: 'privacy', label: 'Privacy & Data', title: 'Privacy & Data Protection' },
+  { id: 'governing-law', label: 'Governing Law', title: 'Governing Law & Dispute Resolution' },
+  { id: 'modifications', label: 'Modifications', title: 'Modifications to These Terms' },
+  { id: 'contact', label: 'Contact Information', title: 'Contact Information' },
 ]
 
 const activeSection = ref(sections[0].id)
+const activeSectionIndex = computed(() => sections.findIndex(section => section.id === activeSection.value))
+const activeSectionLabel = computed(() => sections[activeSectionIndex.value]?.label ?? sections[0].label)
+const mobileContents = ref<HTMLDetailsElement | null>(null)
+const desktopContents = ref<HTMLElement | null>(null)
+let scrollFrame = 0
 
-const scrollToSection = (id: string) => {
-  const el = document.getElementById(id)
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    activeSection.value = id
+const syncActiveSection = () => {
+  const readingOffset = window.innerWidth < 1024 ? 150 : 120
+  let current = sections[0].id
+  for (const section of sections) {
+    const element = document.getElementById(section.id)
+    if (element && element.getBoundingClientRect().top <= readingOffset) current = section.id
   }
+  if (window.scrollY > 0 && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+    current = sections[sections.length - 1].id
+  }
+  activeSection.value = current
+}
+
+const requestSectionSync = () => {
+  if (scrollFrame) return
+  scrollFrame = window.requestAnimationFrame(() => {
+    scrollFrame = 0
+    syncActiveSection()
+  })
+}
+
+const closeMobileContents = () => {
+  if (mobileContents.value) mobileContents.value.open = false
+}
+
+const selectSection = (id: string) => {
+  activeSection.value = id
+  closeMobileContents()
+  // Native anchor navigation preserves the URL, browser history, and no-JS fallback.
 }
 
 const printPage = () => {
+  closeMobileContents()
   window.print()
 }
 
-// Highlight active section in ToC based on scroll position
+const handleOutsideClick = (event: PointerEvent) => {
+  if (mobileContents.value?.open && !mobileContents.value.contains(event.target as Node)) closeMobileContents()
+}
+
+const handleEscape = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && mobileContents.value?.open) {
+    closeMobileContents()
+    mobileContents.value.querySelector('summary')?.focus()
+  }
+}
+
+// Keep the current desktop contents item visible without scrolling the document.
+watch(activeSection, async () => {
+  await nextTick()
+  const nav = desktopContents.value
+  const link = nav?.querySelector<HTMLElement>('nav [aria-current="location"]')
+  if (!nav || !link) return
+  const navRect = nav.getBoundingClientRect()
+  const linkRect = link.getBoundingClientRect()
+  if (linkRect.top < navRect.top) nav.scrollTop += linkRect.top - navRect.top - 8
+  else if (linkRect.bottom > navRect.bottom) nav.scrollTop += linkRect.bottom - navRect.bottom + 8
+})
+
 onMounted(() => {
-  const observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          activeSection.value = entry.target.id
-        }
-      }
-    },
-    { rootMargin: '-20% 0px -70% 0px', threshold: 0 }
-  )
-  sections.forEach(({ id }) => {
-    const el = document.getElementById(id)
-    if (el) observer.observe(el)
-  })
-  onUnmounted(() => observer.disconnect())
+  syncActiveSection()
+  window.addEventListener('scroll', requestSectionSync, { passive: true })
+  window.addEventListener('resize', requestSectionSync)
+  window.addEventListener('hashchange', requestSectionSync)
+  document.addEventListener('pointerdown', handleOutsideClick)
+  document.addEventListener('keydown', handleEscape)
+})
+
+onBeforeUnmount(() => {
+  window.cancelAnimationFrame(scrollFrame)
+  window.removeEventListener('scroll', requestSectionSync)
+  window.removeEventListener('resize', requestSectionSync)
+  window.removeEventListener('hashchange', requestSectionSync)
+  document.removeEventListener('pointerdown', handleOutsideClick)
+  document.removeEventListener('keydown', handleEscape)
 })
 
 // --- Page Content Data ---
@@ -688,3 +546,127 @@ const privacyItems = [
   'By participating in the Affiliate Program, you consent to GNP processing your data as described in GNP\'s Privacy Policy.',
 ]
 </script>
+
+<style scoped>
+.affiliate-terms summary::-webkit-details-marker {
+  display: none;
+}
+
+.terms-button {
+  @apply inline-flex min-h-[52px] items-center justify-center gap-2 rounded-lg px-5 py-3 text-center text-[14px] font-semibold leading-6 transition-colors;
+}
+
+.terms-list {
+  @apply list-disc space-y-3 pl-5 marker:text-primary-500;
+}
+
+.terms-note {
+  @apply flex items-start gap-3 rounded-xl border p-4 text-[14px] leading-7;
+}
+
+.terms-note svg {
+  margin-top: 4px;
+}
+
+.terms-contact {
+  @apply flex min-h-[76px] items-center gap-3 rounded-xl border border-stone-200 bg-stone-50 p-4 transition-colors;
+}
+
+a.terms-contact:hover {
+  @apply border-primary-200 bg-primary-50;
+}
+
+.affiliate-terms :is(a, button, summary):focus-visible {
+  outline: 3px solid #dc2626;
+  outline-offset: 3px;
+}
+
+.terms-section:focus,
+#terms-content:focus {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .affiliate-terms *,
+  .affiliate-terms *::before,
+  .affiliate-terms *::after {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+
+<style>
+@media (prefers-reduced-motion: reduce) {
+  html:has(.affiliate-terms) {
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  body:has(.affiliate-terms) header,
+  body:has(.affiliate-terms) footer,
+  body:has(.affiliate-terms) .terms-no-print {
+    display: none !important;
+  }
+
+  body:has(.affiliate-terms) .fixed {
+    display: none !important;
+  }
+
+  .affiliate-terms {
+    color: #111827;
+    background: white;
+    font-size: 11pt;
+  }
+
+  .affiliate-terms #terms-top {
+    background: white;
+  }
+
+  .affiliate-terms #terms-top > div,
+  .affiliate-terms > .grid {
+    max-width: none;
+    padding: 0;
+  }
+
+  .affiliate-terms > .grid {
+    display: block;
+  }
+
+  .affiliate-terms .terms-section {
+    padding: 18pt 0;
+    border-color: #d1d5db;
+  }
+
+  .affiliate-terms .terms-copy {
+    font-size: 10pt;
+    line-height: 1.6;
+  }
+
+  .affiliate-terms h2,
+  .affiliate-terms h3 {
+    break-after: avoid;
+  }
+
+  .affiliate-terms li,
+  .affiliate-terms tr,
+  .affiliate-terms .terms-note {
+    break-inside: avoid;
+  }
+
+  .affiliate-terms .terms-rate-cards {
+    display: none !important;
+  }
+
+  .affiliate-terms .terms-rate-table {
+    display: block !important;
+  }
+
+  .affiliate-terms aside[aria-labelledby="agreement-notice"] {
+    margin-bottom: 12pt;
+    background: white;
+    border-color: #d1d5db;
+  }
+}
+</style>
