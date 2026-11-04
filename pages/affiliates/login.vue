@@ -109,13 +109,7 @@ const authStore = useAffiliateAuthStore()
 const router = useRouter()
 const pendingAuth = ref<AffiliateSigninResponseModel | null>(null)
 const otp = ref('')
-const identityCookie = useCookie<string | null>('gnp-affiliate-user-identity', {
-  maxAge: 60 * 60 * 24 * 30,
-  secure: true,
-  httpOnly: false,
-  priority: 'medium',
-  sameSite: 'strict'
-})
+
 
 const form = reactive({
   email: '',
@@ -125,7 +119,7 @@ const form = reactive({
 
 const completeLogin = async (affiliate: AffiliateSigninResponseModel) => {
   authStore.setAffiliate(affiliate)
-  identityCookie.value = affiliate.token
+  authStore.gnpAffiliateUserIdentityCookie = affiliate.token
   await router.push('/affiliates/dashboard')
 }
 

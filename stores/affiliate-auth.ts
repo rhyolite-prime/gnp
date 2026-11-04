@@ -6,10 +6,10 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
     const isAuthenticated = ref(false);
     const accessToken = ref<string | null>(null);
 
-    const gnpAffiliateUserIdentityCookie = useCookie('gnp-affiliate-user-identity');
+    const gnpAffiliateUserIdentityCookie = useCookie<string | null>('gnp-affiliate-user-identity', { maxAge: 60 * 60 * 24 * 30, secure: true, sameSite: 'strict', priority: 'medium' });
     /**
-     * Sets the partner authentication data and persists it to storage
-     * @param affiliateInfo The sign-in response data for the partner
+     * Sets the affiliate authentication data and persists it to storage
+     * @param affiliateInfo The sign-in response data for the affiliate
      */
     function setAffiliate(affiliateInfo: AffiliateSigninResponseModel | null) {
         affiliateUser.value = affiliateInfo;
@@ -28,9 +28,9 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
     }
 
     /**
-     * Clears the partner authentication session
+     * Clears the affiliate authentication session
      */
-    function clearPartner() {
+    function clearAffiliate() {
         affiliateUser.value = null;
         isAuthenticated.value = false;
         accessToken.value = null;
@@ -40,7 +40,7 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
     }
 
     /**
-     * Restores the partner session from storage
+     * Restores the affiliate session from storage
      */
     function initializeFromStorage() {
         try {
@@ -64,11 +64,12 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
     }
 
     return {
+        gnpAffiliateUserIdentityCookie,
         affiliateUser,
         isAuthenticated,
         accessToken,
         setAffiliate,
-        clearPartner,
+        clearAffiliate,
         initializeFromStorage
     };
 });
