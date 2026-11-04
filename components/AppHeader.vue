@@ -196,13 +196,13 @@
           <NuxtLink to="/newspapers" class="mobile-nav-link" @click="closeMobileMenu">Newspapers</NuxtLink>
           <!-- <a href="#magazines" class="mobile-nav-link" @click="closeMobileMenu">Magazines</a> -->
           <NuxtLink to="/archives" class="mobile-nav-link" @click="closeMobileMenu">Archives</NuxtLink>
-          <NuxtLink to="/research-ai" class="mobile-nav-link !text-primary-600 font-bold flex items-center justify-between" @click="closeMobileMenu">
+          <!-- <NuxtLink to="/research-ai" class="mobile-nav-link !text-primary-600 font-bold flex items-center justify-between" @click="closeMobileMenu">
             <div class="flex items-center gap-2">
               <SparklesIcon class="w-5 h-5 text-primary-600" />
               <span>AI Research Studio</span>
             </div>
             <span class="bg-primary-100 text-primary-700 text-xs px-2 py-0.5 rounded-full font-bold">RAG</span>
-          </NuxtLink>
+          </NuxtLink> -->
           
           <!-- Mobile Originals Accordion -->
            <!-- <div>

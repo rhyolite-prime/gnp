@@ -43,11 +43,11 @@
 
         <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm" aria-labelledby="success-heading">
           <h2 id="success-heading" class="text-lg font-bold text-gray-900">Referral Success Rate</h2>
-          <p class="mt-4 text-3xl font-bold text-gray-900">65% <span class="text-sm font-medium text-gray-500">conversion</span></p>
-          <div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-100" aria-hidden="true"><div class="h-full w-[65%] rounded-full bg-primary-600"></div></div>
+          <p class="mt-4 text-3xl font-bold text-gray-900">0% <span class="text-sm font-medium text-gray-500">conversion</span></p>
+          <div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-100" aria-hidden="true"><div class="h-full w-[0%] rounded-full bg-primary-600"></div></div>
           <dl class="mt-6 space-y-3 text-sm">
-            <div class="flex justify-between"><dt class="text-gray-500">Total Referrals</dt><dd class="font-semibold text-gray-900">156</dd></div>
-            <div class="flex justify-between"><dt class="text-gray-500">Paid Referrals</dt><dd class="font-semibold text-gray-900">102</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Total Referrals</dt><dd class="font-semibold text-gray-900">0</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Paid Referrals</dt><dd class="font-semibold text-gray-900">0</dd></div>
           </dl>
           <p class="mt-4 text-xs text-gray-500">Example statistics</p>
         </section>

@@ -50,8 +50,8 @@
       <NewspapersSection />
       <TopStoriesSection />
       <VideosSection />
-      <MagazinesSection />
-      <TopicsSection />
+      <!-- <MagazinesSection /> -->
+      <!-- <TopicsSection /> -->
     </div>
   </div>
 </template>

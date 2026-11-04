@@ -18,10 +18,7 @@
           <LinkIcon class="h-5 w-5 mr-2" />
           Generate Link
         </NuxtLink>
-        <button class="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition shadow-sm font-medium">
-          <ArrowDownTrayIcon class="h-5 w-5 mr-2" />
-          Export Data
-        </button>
+         
       </div>
     </div>
 

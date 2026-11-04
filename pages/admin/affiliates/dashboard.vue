@@ -56,11 +56,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-lg font-semibold text-gray-900">Commission Trends</h2>
-            <select v-model="dateFilter" class="text-sm border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500">
-              <option value="7days">Last 7 Days</option>
-              <option value="30days">Last 30 Days</option>
-              <option value="month">This Month</option>
-            </select>
+            
           </div>
           <div ref="chartContainer" class="h-72 w-full mt-4"></div>
         </div>
@@ -139,53 +135,20 @@
           </NuxtLink>
         </div>
 
-        <!-- Traffic Sources (Apache ECharts) -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Traffic Sources</h2>
-
-          <div class="relative h-48 w-48 mx-auto my-4">
-            <div ref="trafficChartContainer" class="h-full w-full"></div>
-            <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div class="text-center">
-                <span class="block text-2xl font-bold text-gray-900">12.5k</span>
-                <span class="text-xs text-gray-500">Visits</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-3 mt-4">
-            <div class="flex items-center justify-between text-sm">
-              <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-purple-500 mr-2"></span>Social Media</div>
-              <span class="font-medium">45%</span>
-            </div>
-            <div class="flex items-center justify-between text-sm">
-              <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>Blogs & Content</div>
-              <span class="font-medium">30%</span>
-            </div>
-            <div class="flex items-center justify-between text-sm">
-              <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span>Direct Link</div>
-              <span class="font-medium">15%</span>
-            </div>
-            <div class="flex items-center justify-between text-sm">
-              <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>Others</div>
-              <span class="font-medium">10%</span>
-            </div>
-          </div>
-        </div>
 
         <!-- Pending Payouts Action -->
         <div class="bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl shadow-lg p-6 text-white">
           <div class="flex items-start justify-between">
             <div>
               <p class="text-primary-100 text-sm font-medium mb-1">Pending Payouts</p>
-              <h3 class="text-3xl font-bold">₵4,250.00</h3>
+              <h3 class="text-3xl font-bold">GHS 0.00</h3>
             </div>
             <div class="p-2 bg-white/20 rounded-lg">
               <BanknotesIcon class="h-6 w-6 text-white" />
             </div>
           </div>
-          <p class="text-primary-100 text-xs mt-2 mb-6">12 affiliates requesting payout</p>
-          <NuxtLink to="/admin/affiliates/payouts" class="block w-full text-center bg-white text-primary-700 py-2.5 rounded-lg text-sm font-semibold hover:bg-primary-50 transition-colors">
+          <p v-if="false" class="text-primary-100 text-xs mt-2 mb-6">from 12 affiliates</p>
+          <NuxtLink v-if="false" to="/admin/affiliates/payouts" class="block w-full text-center bg-white text-primary-700 py-2.5 rounded-lg text-sm font-semibold hover:bg-primary-50 transition-colors">
             Process Payouts
           </NuxtLink>
         </div>
@@ -284,26 +247,7 @@ onMounted(() => {
     updateChartData();
   }
 
-  if (trafficChartContainer.value) {
-    trafficChart = echarts.init(trafficChartContainer.value);
-    trafficChart.setOption({
-      tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
-      series: [
-        {
-          type: 'pie',
-          radius: ['62%', '88%'],
-          label: { show: false },
-          labelLine: { show: false },
-          data: [
-            { value: 45, name: 'Social Media', itemStyle: { color: '#8b5cf6' } },
-            { value: 30, name: 'Blogs & Content', itemStyle: { color: '#3b82f6' } },
-            { value: 15, name: 'Direct Link', itemStyle: { color: '#10b981' } },
-            { value: 10, name: 'Others', itemStyle: { color: '#f59e0b' } },
-          ],
-        },
-      ],
-    });
-  }
+ 
 
   const handleResize = () => {
     chart?.resize();

@@ -591,6 +591,12 @@ export async function getAffiliates(query: object) {
     return response.result;
 }
 
+export async function getAffiliateDetail(query: object) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<Affiliate>>('admin/get-affiliate-details', "", { query });
+    return response.result;
+}
+
 /**
  * Resolve a single affiliate from the paginated admin list.
  *
