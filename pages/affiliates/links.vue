@@ -182,6 +182,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { affiliateTrackedLinks } from '~/mocks/affiliates/portal'
 
 definePageMeta({
   layout: 'default',
@@ -206,9 +207,5 @@ const copyLink = () => {
   alert('Link copied to clipboard!')
 }
 
-const trackedLinks = ref([
-  { id: 1, target: 'Home Page', url: 'https://graphicnewsplus.com/?ref=aff_2938', clicks: 8420, conversions: 85, lastUsed: '2 mins ago' },
-  { id: 2, target: 'Daily Graphic', url: 'https://graphicnewsplus.com/daily-graphic?ref=aff_2938', clicks: 3150, conversions: 42, lastUsed: '1 hour ago' },
-  { id: 3, target: 'Graphic Showbiz', url: 'https://graphicnewsplus.com/showbiz?ref=aff_2938', clicks: 880, conversions: 29, lastUsed: 'Yesterday' },
-])
+const trackedLinks = ref(affiliateTrackedLinks)
 </script>

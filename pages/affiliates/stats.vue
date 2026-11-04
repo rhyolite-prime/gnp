@@ -97,39 +97,15 @@
 </template>
 
 <script setup lang="ts">
-import { ComputerDesktopIcon, DevicePhoneMobileIcon, DeviceTabletIcon } from '@heroicons/vue/24/outline'
+import {
+  affiliateStatsBreakdown as statsBreakdown,
+  affiliateTrafficSources as trafficSources,
+  affiliateDevices as devices,
+  affiliateDailyStats as dailyStats,
+} from '~/mocks/affiliates/portal'
 
 definePageMeta({
   layout: 'default',
   middleware: ['affiliate-auth']
 })
-
-const statsBreakdown = [
-  { label: 'Total Clicks', value: '42,910', trend: 14.2 },
-  { label: 'Conversions', value: '1,562', trend: 8.5 },
-  { label: 'Engagement', value: '28.4%', trend: -2.1 },
-  { label: 'EPC (Avg)', value: '₵1.05', trend: 4.8 },
-]
-
-const trafficSources = [
-  { name: 'X / Twitter', percentage: 42, barColor: 'bg-blue-500' },
-  { name: 'Facebook', percentage: 28, barColor: 'bg-blue-700' },
-  { name: 'Direct Links', percentage: 15, barColor: 'bg-green-500' },
-  { name: 'Instagram', percentage: 10, barColor: 'bg-pink-500' },
-  { name: 'Others', percentage: 5, barColor: 'bg-gray-400' },
-]
-
-const devices = [
-  { name: 'Mobile', icon: DevicePhoneMobileIcon, percentage: 74, bgColor: 'bg-primary-50', iconColor: 'text-primary-600' },
-  { name: 'Desktop', icon: ComputerDesktopIcon, percentage: 21, bgColor: 'bg-blue-50', iconColor: 'text-blue-600' },
-  { name: 'Tablet', icon: DeviceTabletIcon, percentage: 5, bgColor: 'bg-purple-50', iconColor: 'text-purple-600' },
-]
-
-const dailyStats = [
-  { date: 'Feb 17, 2026', clicks: 1240, visitors: 1102, conversions: 45, rate: 3.6, earnings: 450 },
-  { date: 'Feb 16, 2026', clicks: 980, visitors: 856, conversions: 28, rate: 2.8, earnings: 280 },
-  { date: 'Feb 15, 2026', clicks: 1450, visitors: 1320, conversions: 52, rate: 3.5, earnings: 520 },
-  { date: 'Feb 14, 2026', clicks: 1100, visitors: 980, conversions: 38, rate: 3.4, earnings: 380 },
-  { date: 'Feb 13, 2026', clicks: 750, visitors: 680, conversions: 21, rate: 2.8, earnings: 210 },
-]
 </script>

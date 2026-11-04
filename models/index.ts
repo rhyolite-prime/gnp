@@ -185,7 +185,8 @@ export interface NewsPaperIngestionResponse {
     id: string;
 }
 
-export interface Affiliate { 
+export interface Affiliate {
+    id: string;
     firstName: string;
     lastName: string;
     email: string;
