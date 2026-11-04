@@ -82,6 +82,7 @@
 
 <script setup lang="ts">
 import { BanknotesIcon, CreditCardIcon, DevicePhoneMobileIcon } from '@heroicons/vue/24/outline'
+import { affiliatePayouts } from '~/mocks/affiliates/portal'
 
 definePageMeta({
   layout: 'default',
@@ -93,10 +94,5 @@ const getIcon = (method: string) => {
   return CreditCardIcon
 }
 
-const payouts = ref([
-  { id: 'PAY-8921', method: 'Mobile Money (MTN)', amount: 450.00, status: 'Paid', date: 'Feb 12, 2026' },
-  { id: 'PAY-7742', method: 'Bank Transfer', amount: 120.00, status: 'Paid', date: 'Feb 05, 2026' },
-  { id: 'PAY-6531', method: 'Mobile Money (Telecel)', amount: 840.00, status: 'Paid', date: 'Jan 28, 2026' },
-  { id: 'PAY-5520', method: 'Mobile Money (MTN)', amount: 300.00, status: 'Paid', date: 'Jan 10, 2026' },
-])
+const payouts = ref(affiliatePayouts)
 </script>

@@ -591,6 +591,32 @@ export async function getAffiliates(query: object) {
     return response.result;
 }
 
+/**
+ * Resolve a single affiliate from the paginated admin list.
+ *
+ * The backend currently exposes `admin/get-all-affiliates` but no dedicated
+ * `get-affiliate-details` endpoint, so we page through the list until the
+ * requested record is found. Swap this for a detail endpoint when one exists.
+ */
+export async function getAffiliateById(id: string): Promise<Affiliate | null> {
+    const pageSize = 100;
+    let pageNo = 1;
+    let totalPages = 1;
+
+    do {
+        const result = await getAffiliates({ pageNo, pageSize });
+        const match = (result.data ?? []).find(
+            (affiliate) => String(affiliate.id ?? affiliate.affiliateId) === String(id),
+        );
+        if (match) return match;
+
+        totalPages = result.totalPages || 1;
+        pageNo += 1;
+    } while (pageNo <= totalPages);
+
+    return null;
+}
+
 export async function getAffiliateApplicants(query: object) {
  
     const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<object[]>>>('admin/get-affiliate-applicants', "", { query });

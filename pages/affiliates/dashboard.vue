@@ -165,6 +165,13 @@ import {
   LinkIcon,
   ArrowDownTrayIcon
 } from '@heroicons/vue/24/outline'
+import {
+  getAffiliateDashboardStats,
+  getAffiliateDashboardChart,
+  getAffiliateDashboardPayouts,
+  getAffiliateDashboardCommissions,
+  type AffiliatePeriod,
+} from '~/mocks/affiliates/portal'
 
 definePageMeta({
   layout: 'default',
@@ -174,22 +181,11 @@ definePageMeta({
 
 const chartContainer = ref<HTMLElement | null>(null)
 let chart: echarts.ECharts | null = null
-const dateFilter = ref('7days')
+const dateFilter = ref<AffiliatePeriod>('7days')
 
 const updateChartData = () => {
   if (!chart) return
-  let data = []
-  let xAxisData = []
-  if (dateFilter.value === '7days') {
-    data = [40, 60, 45, 90, 75, 80, 55]
-    xAxisData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-  } else if (dateFilter.value === '30days') {
-    data = Array.from({ length: 30 }, () => Math.floor(Math.random() * 80) + 20)
-    xAxisData = Array.from({ length: 30 }, (_, i) => `${i + 1}`)
-  } else {
-    data = [300, 400, 250, 450]
-    xAxisData = ['Week 1', 'Week 2', 'Week 3', 'Week 4']
-  }
+  const { data, xAxisData } = getAffiliateDashboardChart(dateFilter.value)
   chart.setOption({
     xAxis: { data: xAxisData },
     series: [{ data }]

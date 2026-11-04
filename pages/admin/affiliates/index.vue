@@ -124,7 +124,7 @@
                 <MenuItems class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                   <div class="py-1">
                     <MenuItem v-slot="{ active }">
-                      <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">View Profile</a>
+                      <NuxtLink :to="`/admin/affiliates/${person.id}/profile`" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">View Profile</NuxtLink>
                     </MenuItem>
                    
                      <MenuItem v-slot="{ active }">
