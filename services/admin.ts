@@ -667,7 +667,7 @@ export async function updateAffiliateAccountStatus(id: string, status:number) {
 
 //videos
 
-export async function getVideos(query: object) {
+export async function getAllVideos(query: object) {
  
     const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Video[]>>>('admin/get-all-videos', "", { query });
     return response.result;

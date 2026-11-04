@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { getVideos } from '~/services/newsPapers';
+ 
 
 const props = withDefaults(defineProps<{ preview?: boolean }>(), { preview: false });
 const pageNo = ref(1);
