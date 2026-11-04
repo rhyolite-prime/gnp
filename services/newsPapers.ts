@@ -17,32 +17,42 @@ export async function getTopStories() {
 
 export async function getVideos(query: object) {
  
-    const response = await httpClient<BaseApiResponse<Video[]>>('news-papers/get-all-videos', "", { query });
-    
-   return response.result;
+    const response = await httpClient<BaseApiResponse<VideoPage>>('news-papers/get-all-videos', "", { query });
+
+    const page = response?.result;
+
+    if (!response || response.success === false || !page || !Array.isArray(page.data)) {
+        throw new Error(response?.message || 'Unable to load videos');
+    }
+
+   return page;
 }
 
-export async function getVideoDetails(id: string) {
- 
-    const response = await httpClient<BaseApiResponse<Video>>(`news-papers/get-video-details/${id}`, "");
-    
-   return response.result;
-}
+/**
+ * Looks up a single video for the details page. The dedicated endpoint is the
+ * source of truth, so deep links no longer page through the whole catalogue.
+ * Returns null when the video does not exist; real API failures still throw.
+ */
+export async function getVideoDetails(id: string): Promise<Video | null> {
+    const videoId = (id ?? '').trim();
 
+    // An id from the route can be empty (e.g. /videos/); never call the API with it.
+    if (!videoId) return null;
 
+    try {
+        const response = await httpClient<BaseApiResponse<Video>>(
+            `news-papers/get-video-details/${encodeURIComponent(videoId)}`, "");
 
-/** Resolve deep links through the catalogue; no undocumented detail endpoint is assumed. */
-export async function getVideoById(id: string): Promise<Video | null> {
-    let pageNo = 1;
-    let totalPages = 1;
-    do {
-        const page = await getVideos({ pageNo, pageSize: 100 });
-        const video = page.data.find((item) => item.id === id);
-        if (video) return video;
-        totalPages = page.totalPages;
-        pageNo++;
-    } while (pageNo <= totalPages);
-    return null;
+        if (!response || response.success === false) return null;
+
+        // Guard against a 2xx envelope that carries no actual video payload.
+        return response.result?.id ? response.result : null;
+    } catch (error: any) {
+        // A deleted/unknown video is "not found", not a failure to load the page.
+        const status = error?.statusCode ?? error?.status ?? error?.response?.status;
+        if (status === 404) return null;
+        throw error;
+    }
 }
 
 

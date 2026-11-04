@@ -5,7 +5,7 @@ import {
   normalizeVideoUrl, parseVideoMetadata, parseVideoTags, getYoutubeEmbedUrl,
   formatVideoCount, formatVideoDate, formatVideoFileSize,
 } from '../utils/latestVideos.ts';
-import { getVideos, getVideoById } from '../services/newsPapers.ts';
+import { getVideos, getVideoDetails } from '../services/newsPapers.ts';
 
 const video = {
   id: '43a84878-9445-4e88-aeae-2428d48d622a',
@@ -71,7 +71,7 @@ test('formats video statistics, file size, and API dates', () => {
   assert.equal(formatVideoDate('broken'), 'Not specified');
 });
 
-test('catalogue service consumes result.data and sends pagination parameters', async () => {
+test('catalogue service consumes the paginated result and sends pagination parameters', async () => {
   globalThis.httpClient = async (path, baseURL, options) => {
     assert.equal(path, 'news-papers/get-all-videos');
     assert.deepEqual(options.query, { pageNo: 2, pageSize: 4 });
@@ -83,26 +83,51 @@ test('catalogue service consumes result.data and sends pagination parameters', a
 });
 
 test('catalogue service reports failed or malformed responses', async () => {
-  for (const result of [{ success: false, message: 'Unavailable' }, { success: true, result: [video] }, null]) {
+  for (const result of [
+    { success: false, message: 'Unavailable' },
+    { success: true, result: [video] },
+    { success: true, result: { data: null } },
+    null,
+  ]) {
     globalThis.httpClient = async () => result;
     await assert.rejects(getVideos());
   }
 });
 
-test('detail deep links resolve videos beyond the first catalogue page', async () => {
-  const pages = [];
-  globalThis.httpClient = async (_path, _baseURL, { query }) => {
-    pages.push(query.pageNo);
-    return response(query.pageNo === 2 ? [video] : [], query.pageNo, 2);
+test('detail lookup calls the dedicated video details endpoint with the route id', async () => {
+  const calls = [];
+  globalThis.httpClient = async (path) => {
+    calls.push(path);
+    return { success: true, error: null, message: '', result: video };
   };
-  assert.deepEqual(await getVideoById(video.id), video);
-  assert.deepEqual(pages, [1, 2]);
-  pages.length = 0;
-  assert.equal(await getVideoById('missing'), null);
-  assert.deepEqual(pages, [1, 2]);
+  assert.deepEqual(await getVideoDetails(video.id), video);
+  assert.deepEqual(calls, [`news-papers/get-video-details/${video.id}`]);
+});
+
+test('detail lookup treats a missing video as not found without throwing', async () => {
+  globalThis.httpClient = async (path) => {
+    const error = new Error('Not Found');
+    error.statusCode = 404;
+    throw error;
+  };
+  assert.equal(await getVideoDetails(video.id), null);
+
+  // Empty ids never reach the API.
+  let called = false;
+  globalThis.httpClient = async () => { called = true; return null; };
+  assert.equal(await getVideoDetails(''), null);
+  assert.equal(await getVideoDetails(undefined), null);
+  assert.equal(called, false);
+});
+
+test('detail lookup reports an unsuccessful or empty envelope as not found', async () => {
+  for (const result of [{ success: false, message: 'Gone' }, { success: true, result: null }, null]) {
+    globalThis.httpClient = async () => result;
+    assert.equal(await getVideoDetails(video.id), null);
+  }
 });
 
 test('detail lookup preserves API errors rather than treating them as missing videos', async () => {
   globalThis.httpClient = async () => { throw new Error('Network error'); };
-  await assert.rejects(getVideoById(video.id), /Network error/);
+  await assert.rejects(getVideoDetails(video.id), /Network error/);
 });
