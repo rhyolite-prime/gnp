@@ -55,8 +55,7 @@ import { getLatestNewsPapers } from '~/services/newsPapers';
 import type { NewsPaper } from '~/models';
 
 definePageMeta({
-  layout: false,
-  middleware: ['affiliate-auth']
+  layout: false
 })
 
 const route = useRoute();

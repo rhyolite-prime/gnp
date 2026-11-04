@@ -102,11 +102,11 @@
             </button>
           </ClientOnly>
           
+          <ClientOnly><AffiliateUserMenu v-if="isAffiliateSignedIn" /></ClientOnly>
+
           <!-- user auth button here-->
            <div class="hidden xl:flex items-center space-x-4">
               <ClientOnly>
-                <NuxtLink v-if="isAffiliateSignedIn" to="/affiliates/dashboard" class="text-sm font-medium text-primary-700 hover:text-primary-800">Affiliate Dashboard</NuxtLink>
-                <button v-if="isAffiliateSignedIn" type="button" class="text-sm font-medium text-gray-600 hover:text-primary-700" @click="signOutAffiliate">Sign out affiliate</button>
                 <NuxtLink v-if="isPartnerSignedIn" to="/partners/dashboard" class="text-sm font-medium text-primary-700 hover:text-primary-800">Partner Dashboard</NuxtLink>
                 <UserAuthButton v-if="authStore.isAuthenticated || (!isAffiliateSignedIn && !isPartnerSignedIn)" :showSignInModal="() => showSignInModal = true" />
               </ClientOnly>
@@ -244,8 +244,6 @@
           <div class="pt-4 border-t border-gray-100">
              <ClientOnly>
                <div class="flex flex-col items-start gap-4">
-                 <NuxtLink v-if="isAffiliateSignedIn" to="/affiliates/dashboard" class="text-sm font-medium text-primary-700" @click="closeMobileMenu">Affiliate Dashboard</NuxtLink>
-                 <button v-if="isAffiliateSignedIn" type="button" class="text-sm font-medium text-gray-700" @click="signOutAffiliate">Sign out affiliate</button>
                  <NuxtLink v-if="isPartnerSignedIn" to="/partners/dashboard" class="text-sm font-medium text-primary-700" @click="closeMobileMenu">Partner Dashboard</NuxtLink>
                  <UserAuthButton v-if="authStore.isAuthenticated || (!isAffiliateSignedIn && !isPartnerSignedIn)" :showSignInModal="() => { showSignInModal = true; closeMobileMenu(); }" />
                </div>
@@ -307,12 +305,6 @@ const closeSearch = () => {
 
 const closeMobileMenu = () => {
   isMobileMenuOpen.value = false
-}
-
-const signOutAffiliate = async () => {
-  affiliateAuthStore.clearAffiliate()
-  closeMobileMenu()
-  await navigateTo('/affiliates/login')
 }
 
 const handleSearch = () => {
