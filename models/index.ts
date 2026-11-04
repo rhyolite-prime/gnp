@@ -200,6 +200,20 @@ export interface Affiliate {
     createdAt: string;
 }
 
+export interface Video extends BaseEntityModel {
+    
+    filePath: string;
+    id: string;
+    thumbnailUrl: string;
+    title: string;
+    views: number;
+    description: string;
+    durationInMins: number;
+}
+
+
+
+
 export interface NewsPaper {
     documentId: string;
     editionNumber: string;

@@ -1,4 +1,4 @@
-import type { NewsPaper, Article, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { NewsPaper, Article, Video, BaseApiResponse, BasePaginationModel } from "~/models";
 
  
 export async function getNewsPapers(query: object) {
@@ -11,6 +11,13 @@ export async function getNewsPapers(query: object) {
 export async function getTopStories() {
  
     const response = await httpClient<BaseApiResponse<Article[]>>('news-papers/get-top-stories', "");
+    
+   return response.result;
+}
+
+export async function getVideos() {
+ 
+    const response = await httpClient<BaseApiResponse<Video[]>>('news-papers/get-all-videos', "");
     
    return response.result;
 }

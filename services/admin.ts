@@ -1,4 +1,4 @@
-import type { NewsPaper, Affiliate, Publication, Payment, CommercialPartner, AdminUser,UserGroup, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice, PartnerApiRequestLog, PartnerApiRequestLogQuery } from "~/models";
+import type { NewsPaper, Affiliate, Video, Publication, Payment, CommercialPartner, AdminUser,UserGroup, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice, PartnerApiRequestLog, PartnerApiRequestLogQuery } from "~/models";
 
 //publication setups
 
@@ -662,5 +662,38 @@ export async function resetAffiliatePassword(id: string) {
 export async function updateAffiliateAccountStatus(id: string, status:number) {
  
     const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/update-affiliate-status/${id}/${status}`, "");
+    return response.success;
+}
+
+//videos
+
+export async function getVideos(query: object) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Video[]>>>('admin/get-all-videos', "", { query });
+    return response.result;
+}
+
+
+export async function createVideo(payload: object) {
+    
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/create-video', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function updateVideo(payload: object, id: string) {
+    
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/update-video/${id}`, "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function deleteVideo(userId: string) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-video/${userId}`, "", { method: "delete", });
     return response.success;
 }
