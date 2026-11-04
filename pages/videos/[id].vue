@@ -76,10 +76,10 @@
 
 <script setup lang="ts">
 import { useBasicAuthStore } from '~/stores/basic-user-auth';
-import { getVideoById } from '~/services/newsPapers';
+import { getVideoDetails } from '~/services/newsPapers';
 import {
-  getYoutubeEmbedUrl, parseVideoMetadata, parseVideoTags,
-  formatVideoCount, formatVideoDate, formatVideoFileSize,
+  getYoutubeEmbedUrl, parseVideoTags,
+  formatVideoCount, formatVideoDate,
 } from '~/utils/latestVideos';
 
 const route = useRoute();
@@ -87,15 +87,15 @@ const authStore = useBasicAuthStore();
 const showSignInModal = useState<boolean>('showSignInModal', () => false);
 const mounted = ref(false);
 const canWatch = computed(() => mounted.value && authStore.isAuthenticated);
+const videoId = computed(() => String(route.params.id ?? ''));
 const { data: video, status, error, refresh } = await useAsyncData(
-  () => `public-video-${String(route.params.id)}`,
-  () => getVideoById(String(route.params.id)),
+  () => `public-video-${videoId.value}`,
+  () => getVideoDetails(videoId.value),
   { server: false },
 );
 
 const embedUrl = computed(() => video.value ? getYoutubeEmbedUrl(video.value) : null);
 const tags = computed(() => parseVideoTags(video.value?.tags));
-const metadata = computed(() => parseVideoMetadata(video.value?.metadata));
 const details = computed(() => video.value ? [
   { label: 'Published', value: formatVideoDate(video.value.createdAt) },
   { label: 'Format', value: video.value.format?.toUpperCase() || 'Not specified' },
@@ -103,7 +103,7 @@ const details = computed(() => video.value ? [
 ] : []);
 
 onMounted(() => { mounted.value = true; });
-watch([mounted, () => authStore.isAuthenticated, () => route.params.id], ([ready, authenticated]) => {
+watch([mounted, () => authStore.isAuthenticated, videoId], ([ready, authenticated]) => {
   if (ready && !authenticated) showSignInModal.value = true;
 });
 
