@@ -55,6 +55,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: 'Graphic NewsPlus - Digital News Platform',
+      htmlAttrs: { lang: 'en' },
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
