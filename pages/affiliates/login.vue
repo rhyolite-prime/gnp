@@ -8,7 +8,7 @@
             <p class="mt-2 text-gray-600">Enter your credentials to access your dashboard</p>
           </div>
 
-          <form @submit.prevent="handleLogin" class="space-y-6">
+          <form v-if="!pendingAuth" @submit.prevent="handleLogin" class="space-y-6">
             <div>
               <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
               <div class="mt-1">
@@ -69,6 +69,19 @@
             </div>
           </form>
 
+          <form v-else @submit.prevent="handleOtpSubmit" class="space-y-6">
+            <div>
+              <label for="otp" class="block text-sm font-medium text-gray-700">Verification code</label>
+              <input id="otp" v-model="otp" type="text" inputmode="numeric" autocomplete="one-time-code" required
+                class="mt-1 block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                placeholder="Enter your verification code" />
+            </div>
+            <button type="submit" :disabled="loading" class="w-full rounded-xl bg-primary-600 px-4 py-4 text-lg font-medium text-white hover:bg-primary-700 disabled:opacity-50">
+              {{ loading ? 'Verifying...' : 'Verify' }}
+            </button>
+            <button type="button" class="w-full text-sm text-primary-600 hover:text-primary-700" @click="pendingAuth = null; otp = ''">Back to login</button>
+          </form>
+
           <div class="mt-10 text-center">
             <p class="text-sm text-gray-600">
               New to our affiliate program? 
@@ -83,7 +96,8 @@
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import { signIn } from '~/services/auth'
+import { affiliateSignIn, validateOtp } from '~/services/auth'
+import type { AffiliateSigninResponseModel } from '~/models'
 import { useAffiliateAuthStore } from '~/stores/affiliate-auth'
 
 definePageMeta({
@@ -93,6 +107,9 @@ definePageMeta({
 const loading = ref(false)
 const authStore = useAffiliateAuthStore()
 const router = useRouter()
+const pendingAuth = ref<AffiliateSigninResponseModel | null>(null)
+const otp = ref('')
+
 
 const form = reactive({
   email: '',
@@ -100,37 +117,52 @@ const form = reactive({
   remember: false
 })
 
+const completeLogin = async (affiliate: AffiliateSigninResponseModel) => {
+  authStore.setAffiliate(affiliate)
+  authStore.gnpAffiliateUserIdentityCookie = affiliate.token
+  await router.push('/affiliates/dashboard')
+}
+
 const handleLogin = async () => {
   loading.value = true
   try {
-    const response = await signIn({ 
-      usernameOrEmail: form.email, 
-      password: form.password 
+    const response = await affiliateSignIn({
+      usernameOrEmail: form.email,
+      password: form.password
     })
-    
-    if (response && response.success && response.result?.token) {
-      const gnpAffiliateUserIdentityCookie = useCookie("gnp-affiliate-user-identity", {
-        maxAge: 60 * 60 * 24 * 30,
-        secure: true,
-        httpOnly: false,
-        priority: "medium",
-        sameSite: "strict"
-      });
-      
-      gnpAffiliateUserIdentityCookie.value = response.result.token;
-      authStore.setAccessToken(response.result.token);
-      
-      router.push('/affiliates/dashboard')
+
+    if (response?.requiresTwoFactorAuth) {
+      pendingAuth.value = response
+    } else if (response?.token) {
+      await completeLogin(response)
     } else {
-      alert(response?.message || 'Invalid credentials')
+      alert('Invalid credentials')
     }
   } catch (error: any) {
     console.error('Login error:', error)
-    if (error.data && error.data.message) {
-      alert(error.data.message)
+    alert(error?.data?.message || 'An error occurred during login.')
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleOtpSubmit = async () => {
+  if (!pendingAuth.value) return
+  loading.value = true
+  try {
+    const response = await validateOtp({
+      email: form.email,
+      otp: otp.value,
+      requestId: pendingAuth.value.requestId
+    }) as { isValid?: boolean; token?: string } | null
+    const token = response?.token || (response?.isValid ? pendingAuth.value.token : '')
+    if (token && (response?.isValid || response?.token)) {
+      await completeLogin({ ...pendingAuth.value, token })
     } else {
-      alert('An error occurred during login.')
+      alert('Invalid verification code or missing authentication token.')
     }
+  } catch (error: any) {
+    alert(error?.data?.message || 'Unable to verify the code. Please try again.')
   } finally {
     loading.value = false
   }

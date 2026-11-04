@@ -5,7 +5,7 @@ export const usePartnerAuthStore = defineStore('partnerAuth', () => {
     const partner = ref<PartnerSigninResponseModel | null>(null);
     const isAuthenticated = ref(false);
     const accessToken = ref<string | null>(null);
-    const gnpPartnerUserIdentityCookie = useCookie('gnp-partner-user-identity');
+    const gnpPartnerUserIdentityCookie = useCookie<string | null>('gnp-partner-user-identity', { maxAge: 60 * 60 * 24 * 30, secure: true, sameSite: 'strict', priority: 'medium' });
     /**
      * Sets the partner authentication data and persists it to storage
      * @param partnerInfo The sign-in response data for the partner
@@ -63,6 +63,7 @@ export const usePartnerAuthStore = defineStore('partnerAuth', () => {
     }
 
     return {
+        gnpPartnerUserIdentityCookie,
         partner,
         isAuthenticated,
         accessToken,

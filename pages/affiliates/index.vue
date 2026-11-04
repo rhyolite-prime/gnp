@@ -4,10 +4,6 @@
     <section class="affiliate-hero relative overflow-hidden border-b border-stone-200/80" aria-labelledby="affiliate-heading">
       <div class="mx-auto grid max-w-6xl items-center gap-10 px-5 py-10 sm:px-6 sm:py-16 lg:grid-cols-12 lg:gap-12 lg:px-8 lg:py-20">
         <div class="relative z-10 min-w-0 lg:col-span-7">
-          <p class="mb-5 flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-primary-700 sm:text-xs">
-            <span class="h-2 w-2 shrink-0 rounded-full bg-primary-600" aria-hidden="true" />
-            The Graphic NewsPlus affiliate program
-          </p>
 
           <h1 id="affiliate-heading" class="font-display text-[2.65rem] font-medium leading-[1.08] tracking-[-0.035em] sm:text-6xl lg:text-[4.5rem]">
             Share the news.<br />
@@ -232,6 +228,7 @@ import { useAffiliateAuthStore } from '~/stores/affiliate-auth'
 
 definePageMeta({
   layout: 'default',
+  middleware: ['affiliate-auth'],
 })
 
 useHead({

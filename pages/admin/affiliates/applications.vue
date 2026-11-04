@@ -36,7 +36,7 @@
             </span>
           </td>
           <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">
-            <button @click="changeApplicantStatus(application.id, 11)" class="text-green-600 hover:text-green-900 font-medium">Approve</button>
+            <button @click="changeApplicantStatus(application.id, 16)" class="text-green-600 hover:text-green-900 font-medium">Approve</button>
             <span class="text-gray-300">|</span>
             <button @click="changeApplicantStatus(application.id, 17)" class="text-red-600 hover:text-red-900 font-medium">Reject</button>
             <span class="text-gray-300">|</span>

@@ -12,10 +12,7 @@
             <ArrowLeftIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
             Affiliate program
           </NuxtLink>
-          <button type="button" class="terms-no-print inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 text-[13px] font-semibold text-gray-700 transition-colors hover:border-gray-400 hover:bg-stone-50 sm:px-4" @click="printPage">
-            <PrinterIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-            Print terms
-          </button>
+           
         </div>
 
         <div class="mt-5 max-w-3xl sm:mt-7">

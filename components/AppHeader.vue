@@ -67,8 +67,8 @@
 
            
           <NuxtLink to="/pricing" class="nav-link">Pricing</NuxtLink>
-          <NuxtLink :to="authStore.isAuthenticated ? '/affiliates/dashboard' : '/affiliates'" class="nav-link">Affiliates</NuxtLink>
-          <NuxtLink :to="authStore.isAuthenticated ? '/partners/dashboard' : '/partners'" class="nav-link">Partners</NuxtLink>
+          <NuxtLink :to="isAffiliateSignedIn ? '/affiliates/dashboard' : '/affiliates' " class="nav-link">Affiliates</NuxtLink>
+          <NuxtLink :to="isPartnerSignedIn ? '/partners/dashboard' : '/partners' " class="nav-link">Partners</NuxtLink>
           <NuxtLink to="/about" class="nav-link">About</NuxtLink>
           <NuxtLink v-if="false" to="/games" class="nav-link">Games</NuxtLink>
         </nav>
@@ -102,9 +102,14 @@
             </button>
           </ClientOnly>
           
+          <ClientOnly><AffiliateUserMenu v-if="isAffiliateSignedIn" /></ClientOnly>
+
           <!-- user auth button here-->
            <div class="hidden xl:flex items-center space-x-4">
-              <UserAuthButton :showSignInModal="() => showSignInModal = true" />
+              <ClientOnly>
+                <NuxtLink v-if="isPartnerSignedIn" to="/partners/dashboard" class="text-sm font-medium text-primary-700 hover:text-primary-800">Partner Dashboard</NuxtLink>
+                <UserAuthButton v-if="authStore.isAuthenticated || (!isAffiliateSignedIn && !isPartnerSignedIn)" :showSignInModal="() => showSignInModal = true" />
+              </ClientOnly>
            </div>
 
            <!-- Mobile Menu Button -->
@@ -231,13 +236,18 @@
 
           <NuxtLink to="/pricing" class="mobile-nav-link" @click="closeMobileMenu">Pricing</NuxtLink>
           
-          <NuxtLink :to="authStore.isAuthenticated ? '/affiliates/dashboard' : '/affiliates'" class="mobile-nav-link" @click="closeMobileMenu">Affiliates</NuxtLink>
-          <NuxtLink :to="authStore.isAuthenticated ? '/partners/dashboard' : '/partners'" class="mobile-nav-link" @click="closeMobileMenu">Partners</NuxtLink>
+          <NuxtLink :to="isAffiliateSignedIn ? '/affiliates/dashboard' : '/affiliates' " class="mobile-nav-link" @click="closeMobileMenu">Affiliates</NuxtLink>
+          <NuxtLink :to="isPartnerSignedIn ? '/partners/dashboard' : '/partners' " class="mobile-nav-link" @click="closeMobileMenu">Partners</NuxtLink>
           <NuxtLink to="/about" class="mobile-nav-link" @click="closeMobileMenu">About</NuxtLink>
           <NuxtLink v-if="false" to="/games" class="mobile-nav-link" @click="closeMobileMenu">Games</NuxtLink>
 
           <div class="pt-4 border-t border-gray-100">
-             <UserAuthButton :showSignInModal="() => { showSignInModal = true; closeMobileMenu(); }" />
+             <ClientOnly>
+               <div class="flex flex-col items-start gap-4">
+                 <NuxtLink v-if="isPartnerSignedIn" to="/partners/dashboard" class="text-sm font-medium text-primary-700" @click="closeMobileMenu">Partner Dashboard</NuxtLink>
+                 <UserAuthButton v-if="authStore.isAuthenticated || (!isAffiliateSignedIn && !isPartnerSignedIn)" :showSignInModal="() => { showSignInModal = true; closeMobileMenu(); }" />
+               </div>
+             </ClientOnly>
           </div>
         </nav>
       </div>
@@ -269,11 +279,17 @@ import {
   BellIcon
 } from '@heroicons/vue/24/outline'
 import { useBasicAuthStore } from '~/stores/basic-user-auth'
+import { useAffiliateAuthStore } from '~/stores/affiliate-auth'
+import { usePartnerAuthStore } from '~/stores/partner-auth'
 import { useNotificationStore } from '~/stores/notification'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useBasicAuthStore()
+const affiliateAuthStore = useAffiliateAuthStore()
+const partnerAuthStore = usePartnerAuthStore()
+const isAffiliateSignedIn = computed(() => !!(affiliateAuthStore.accessToken || affiliateAuthStore.gnpAffiliateUserIdentityCookie))
+const isPartnerSignedIn = computed(() => !!(partnerAuthStore.accessToken || partnerAuthStore.gnpPartnerUserIdentityCookie))
 const notificationStore = useNotificationStore()
 const searchQuery = ref('')
 const showSignInModal = useState('showSignInModal', () => false);

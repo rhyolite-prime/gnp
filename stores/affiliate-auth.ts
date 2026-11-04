@@ -5,11 +5,13 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
     const affiliateUser = ref<AffiliateSigninResponseModel | null>(null);
     const isAuthenticated = ref(false);
     const accessToken = ref<string | null>(null);
+    // The complete login response (including affiliateNo) is persisted in affiliateAuth.
+    const affiliateNo = computed(() => affiliateUser.value?.affiliateNo || null);
 
-    const gnpAffiliateUserIdentityCookie = useCookie('gnp-affiliate-user-identity');
+    const gnpAffiliateUserIdentityCookie = useCookie<string | null>('gnp-affiliate-user-identity', { maxAge: 60 * 60 * 24 * 30, secure: true, sameSite: 'strict', priority: 'medium' });
     /**
-     * Sets the partner authentication data and persists it to storage
-     * @param affiliateInfo The sign-in response data for the partner
+     * Sets the affiliate authentication data and persists it to storage
+     * @param affiliateInfo The sign-in response data for the affiliate
      */
     function setAffiliate(affiliateInfo: AffiliateSigninResponseModel | null) {
         affiliateUser.value = affiliateInfo;
@@ -28,9 +30,9 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
     }
 
     /**
-     * Clears the partner authentication session
+     * Clears the affiliate authentication session
      */
-    function clearPartner() {
+    function clearAffiliate() {
         affiliateUser.value = null;
         isAuthenticated.value = false;
         accessToken.value = null;
@@ -40,11 +42,11 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
     }
 
     /**
-     * Restores the partner session from storage
+     * Restores the affiliate session from storage
      */
     function initializeFromStorage() {
         try {
-            const storedAuth = sessionStorage.getItem('partnerAuth');
+            const storedAuth = sessionStorage.getItem('affiliateAuth');
             if (storedAuth) {
                 const parsedAuth = JSON.parse(storedAuth);
                 affiliateUser.value = parsedAuth.affiliate;
@@ -52,9 +54,9 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
                 accessToken.value = parsedAuth.accessToken;
             }
         } catch (e) {
-            console.error('Failed to restore partner auth from storage:', e);
+            console.error('Failed to restore affiliate auth from storage:', e);
             // Clear storage if it's corrupted
-            sessionStorage.removeItem('partnerAuth');
+            sessionStorage.removeItem('affiliateAuth');
         }
     }
 
@@ -64,11 +66,13 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
     }
 
     return {
+        gnpAffiliateUserIdentityCookie,
         affiliateUser,
+        affiliateNo,
         isAuthenticated,
         accessToken,
         setAffiliate,
-        clearPartner,
+        clearAffiliate,
         initializeFromStorage
     };
 });

@@ -110,6 +110,7 @@ export interface PartnerSigninResponseModel {
 }
 
 export interface AffiliateSigninResponseModel {
+    affiliateNo: string;
     affiliateEmail: string;
     token: string;
     affiliateName: string;
