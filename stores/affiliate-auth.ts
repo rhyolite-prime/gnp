@@ -5,6 +5,8 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
     const affiliateUser = ref<AffiliateSigninResponseModel | null>(null);
     const isAuthenticated = ref(false);
     const accessToken = ref<string | null>(null);
+    // The complete login response (including affiliateNo) is persisted in affiliateAuth.
+    const affiliateNo = computed(() => affiliateUser.value?.affiliateNo || null);
 
     const gnpAffiliateUserIdentityCookie = useCookie<string | null>('gnp-affiliate-user-identity', { maxAge: 60 * 60 * 24 * 30, secure: true, sameSite: 'strict', priority: 'medium' });
     /**
@@ -66,6 +68,7 @@ export const useAffiliateAuthStore = defineStore('affiliateAuth', () => {
     return {
         gnpAffiliateUserIdentityCookie,
         affiliateUser,
+        affiliateNo,
         isAuthenticated,
         accessToken,
         setAffiliate,

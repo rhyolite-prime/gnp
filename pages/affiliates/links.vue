@@ -1,214 +1,84 @@
 <template>
-  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900">Affiliate Links</h1>
-      <p class="text-gray-600 mt-1">Generate and manage your tracking links for various publications.</p>
+      <NuxtLink to="/affiliates/dashboard" class="text-sm font-medium text-primary-700 hover:text-primary-800">← Back to dashboard</NuxtLink>
+      <h1 class="mt-3 text-3xl font-bold tracking-tight text-gray-900">Affiliate Links</h1>
+      <p class="mt-2 text-gray-600">Add the latest newspapers to your website with your affiliate widget.</p>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Link Generator -->
-      <div class="lg:col-span-2 space-y-8">
-        <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-          <h2 class="text-xl font-bold text-gray-900 mb-6">Generate New Link</h2>
-          <div class="space-y-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Target Publication / Page
-              </label>
-              <select class="block w-full px-4 py-3 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500">
-                <option>General Home Page</option>
-                <option>Daily Graphic</option>
-                <option>The Mirror</option>
-                <option>Graphic Showbiz</option>
-                <option>Junior Graphic</option>
-                <option>Graphic Business</option>
-                <option>Graphic Sports</option>
-              </select>
-            </div>
+    <div class="grid gap-6 lg:grid-cols-3 lg:items-start">
+      <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8 lg:col-span-2" aria-labelledby="widget-heading">
+        <h2 id="widget-heading" class="text-xl font-bold text-gray-900">Embed Widget</h2>
+        <p class="mt-2 text-sm leading-6 text-gray-600">Choose a layout, then copy and paste the code into your website.</p>
 
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Campaign Name (Optional)
-              </label>
-              <input 
-                type="text"
-                class="block w-full px-4 py-3 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500"
-                placeholder="e.g. Facebook Summer Campaign"
-              />
-            </div>
-
-            <div class="pt-4">
-              <button class="w-full py-4 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition shadow-md font-bold text-lg">
-                Generate Tracking Link
-              </button>
-            </div>
-          </div>
-
-
-          <!-- Generated Link result (example) -->
-          <div class="mt-10 p-6 bg-primary-50 rounded-2xl border border-primary-100">
-            <label class="block text-xs font-bold text-primary-700 uppercase tracking-wider mb-2">Your Affiliate Link</label>
-            <div class="flex gap-3">
-              <input 
-                readonly 
-                value="http://localhost:3009/affiliates/test_id?type=grid"
-                class="flex-1 bg-white px-4 py-3 rounded-lg border-primary-200 text-gray-700 font-medium"
-              />
-              <button @click="copyLink" class="px-6 py-3 bg-white text-primary-600 border border-primary-200 rounded-lg hover:bg-primary-100 transition font-bold">
-                Copy
-              </button>
-            </div>
-          </div>
+        <div class="mt-7">
+          <label for="widget-type" class="block text-sm font-semibold text-gray-800">Widget layout</label>
+          <select id="widget-type" v-model="widgetType" class="mt-2 block w-full rounded-lg border-gray-300 py-2.5 text-sm focus:border-primary-500 focus:ring-primary-500 sm:max-w-sm">
+            <option value="carousel">Carousel</option>
+            <option value="grid">Grid</option>
+          </select>
+          <p class="mt-2 text-sm text-gray-500">{{ widgetType === 'carousel' ? 'A compact, horizontal carousel of newspapers.' : 'A full-width grid of the latest newspapers.' }}</p>
         </div>
 
-        <!-- Widget Generator -->
-        <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-          <h2 class="text-xl font-bold text-gray-900 mb-6">Generate Embed Widget</h2>
-          <div class="space-y-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Widget Type</label>
-              <select v-model="widgetType" class="block w-full px-4 py-3 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500">
-                <option value="carousel">Small Card (Carousel)</option>
-                <option value="grid">Banner (Grid)</option>
-              </select>
-              <p class="text-xs text-gray-500 mt-2">
-                <span v-if="widgetType === 'carousel'">Displays a compact, horizontal scrolling carousel with arrows.</span>
-                <span v-else>Displays a full-width grid of the latest newspapers.</span>
-              </p>
-            </div>
-          </div>
-
-          <!-- Generated Widget Code -->
-          <div class="mt-10 p-6 bg-primary-50 rounded-2xl border border-primary-100">
-            <label class="block text-xs font-bold text-primary-700 uppercase tracking-wider mb-2">Your Embed Code</label>
-            <div class="flex flex-col gap-3">
-              <textarea
-                readonly
-                :value="generatedWidgetCode"
-                rows="3"
-                class="w-full bg-white px-4 py-3 rounded-lg border-primary-200 text-gray-700 font-mono text-sm resize-none"
-              ></textarea>
-              <button @click="copyWidgetCode" class="self-end px-6 py-3 bg-white text-primary-600 border border-primary-200 rounded-lg hover:bg-primary-100 transition font-bold">
-                Copy Code
-              </button>
-            </div>
+        <div class="mt-8 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
+          <label for="embed-code" class="block text-sm font-semibold text-gray-800">Your embed code</label>
+          <textarea id="embed-code" readonly :value="generatedWidgetCode" rows="4" class="mt-3 w-full resize-none rounded-lg border-gray-300 bg-white p-3 font-mono text-sm text-gray-700 focus:border-primary-500 focus:ring-primary-500" />
+          <p v-if="!affiliateNo" class="mt-3 text-sm text-amber-700" role="status">Your affiliate number is unavailable. Please sign out and sign in again to generate your code.</p>
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <button type="button" :disabled="!generatedWidgetCode" class="rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50" @click="copyWidgetCode">Copy code</button>
+            <p v-if="copyMessage" role="status" class="text-sm text-gray-600">{{ copyMessage }}</p>
           </div>
         </div>
+      </section>
 
-        <!-- My Links Table -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="p-6 border-b border-gray-100 flex items-center justify-between">
-            <h2 class="text-xl font-bold text-gray-900">My Tracked Links</h2>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left">
-              <thead class="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Target</th>
-                  <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Clicks</th>
-                  <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Conversions</th>
-                  <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Last Used</th>
-                  <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100">
-                <tr v-for="link in trackedLinks" :key="link.id" class="hover:bg-gray-50 transition">
-                  <td class="px-6 py-4">
-                    <div class="text-sm font-bold text-gray-900">{{ link.target }}</div>
-                    <div class="text-xs text-gray-400 truncate max-w-[200px]">{{ link.url }}</div>
-                  </td>
-                  <td class="px-6 py-4 text-sm text-gray-900 font-medium">{{ link.clicks }}</td>
-                  <td class="px-6 py-4 text-sm text-gray-900 font-medium">{{ link.conversions }}</td>
-                  <td class="px-6 py-4 text-sm text-gray-500">{{ link.lastUsed }}</td>
-                  <td class="px-6 py-4">
-                    <button class="text-primary-600 hover:text-primary-700 font-bold text-sm">Copy</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tips & Stats Sidebar -->
-      <div class="space-y-8">
-        <div class="bg-gradient-to-br from-gray-900 to-gray-800 p-8 rounded-3xl text-white shadow-xl">
-          <h3 class="text-xl font-bold mb-4">Pro Tips</h3>
-          <ul class="space-y-4 text-gray-300 text-sm">
-            <li class="flex items-start">
-              <div class="h-5 w-5 bg-primary-500 rounded flex-shrink-0 mt-0.5 mr-3 flex items-center justify-center text-xs font-bold text-white">1</div>
-              Share links on your blog or social media to maximize reach.
-            </li>
-            <li class="flex items-start">
-              <div class="h-5 w-5 bg-primary-500 rounded flex-shrink-0 mt-0.5 mr-3 flex items-center justify-center text-xs font-bold text-white">2</div>
-              Use specific publication links if you have a niche audience.
-            </li>
-            <li class="flex items-start">
-              <div class="h-5 w-5 bg-primary-500 rounded flex-shrink-0 mt-0.5 mr-3 flex items-center justify-center text-xs font-bold text-white">3</div>
-              Tracking campaigns helps you identify which platforms perform best.
-            </li>
+      <aside class="space-y-6">
+        <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm" aria-labelledby="tips-heading">
+          <h2 id="tips-heading" class="text-lg font-bold text-gray-900">Pro Tips</h2>
+          <ul class="mt-4 list-disc space-y-3 pl-5 text-sm leading-6 text-gray-600">
+            <li>Place your widget where readers can easily find it.</li>
+            <li>Choose the layout that best fits your website.</li>
+            <li>Keep your content fresh to encourage repeat visits.</li>
           </ul>
-        </div>
+        </section>
 
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-          <h3 class="text-lg font-bold text-gray-900 mb-6 text-center">Referral Success Rate</h3>
-          <div class="relative h-48 w-48 mx-auto">
-             <svg viewBox="0 0 100 100" class="h-full w-full transform -rotate-90">
-               <circle cx="50" cy="50" r="40" fill="transparent" stroke="#f3f4f6" stroke-width="12" />
-               <circle cx="50" cy="50" r="40" fill="transparent" stroke="#ea580c" stroke-width="12" stroke-dasharray="163 251" />
-             </svg>
-             <div class="absolute inset-0 flex items-center justify-center flex-col">
-               <span class="text-3xl font-black text-gray-900">65%</span>
-               <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Conversion</span>
-             </div>
-          </div>
-          <div class="mt-8 space-y-3">
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-500">Total Referrals</span>
-              <span class="font-bold">156</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-500">Paid Referrals</span>
-              <span class="font-bold">102</span>
-            </div>
-          </div>
-        </div>
-      </div>
+        <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm" aria-labelledby="success-heading">
+          <h2 id="success-heading" class="text-lg font-bold text-gray-900">Referral Success Rate</h2>
+          <p class="mt-4 text-3xl font-bold text-gray-900">65% <span class="text-sm font-medium text-gray-500">conversion</span></p>
+          <div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-100" aria-hidden="true"><div class="h-full w-[65%] rounded-full bg-primary-600"></div></div>
+          <dl class="mt-6 space-y-3 text-sm">
+            <div class="flex justify-between"><dt class="text-gray-500">Total Referrals</dt><dd class="font-semibold text-gray-900">156</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Paid Referrals</dt><dd class="font-semibold text-gray-900">102</dd></div>
+          </dl>
+          <p class="mt-4 text-xs text-gray-500">Example statistics</p>
+        </section>
+      </aside>
     </div>
-    </div>
- 
-  
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { useAffiliateAuthStore } from '~/stores/affiliate-auth'
 
-definePageMeta({
-  layout: 'default',
-  middleware: ['affiliate-auth']
-})
+definePageMeta({ layout: 'default', middleware: ['affiliate-auth'] })
 
-const widgetType = ref('carousel')
-const affiliateId = ref('8ueyrt') // Using the mock ID from the request
-
-const widgetHeight = computed(() => widgetType.value === 'carousel' ? '500px' : '800px')
+const authStore = useAffiliateAuthStore()
+const widgetType = ref<'carousel' | 'grid'>('carousel')
+const affiliateNo = computed(() => authStore.affiliateNo?.trim() || '')
 const generatedWidgetCode = computed(() => {
-  return `<iframe src="https://new.graphicnewsplus.com/affiliates/${affiliateId.value}?type=${widgetType.value}" width="100%" height="${widgetHeight.value}" frameborder="0" allowfullscreen></iframe>`
+  if (!affiliateNo.value) return ''
+  const height = widgetType.value === 'carousel' ? '500px' : '800px'
+  return `<iframe src="https://new.graphicnewsplus.com/affiliates/${encodeURIComponent(affiliateNo.value)}?type=${widgetType.value}" width="100%" height="${height}" frameborder="0" allowfullscreen></iframe>`
 })
+const copyMessage = ref('')
+watch([widgetType, affiliateNo], () => { copyMessage.value = '' })
 
-const copyWidgetCode = () => {
-  navigator.clipboard.writeText(generatedWidgetCode.value)
-  alert('Widget code copied to clipboard!')
+const copyWidgetCode = async () => {
+  if (!generatedWidgetCode.value) return
+  try {
+    await navigator.clipboard.writeText(generatedWidgetCode.value)
+    copyMessage.value = 'Code copied to clipboard.'
+  } catch {
+    copyMessage.value = 'Could not copy automatically. Select the code above and copy it manually.'
+  }
 }
-
-const copyLink = () => {
-  // Mock copy
-  alert('Link copied to clipboard!')
-}
-
-const trackedLinks = ref([
-  { id: 1, target: 'Home Page', url: 'https://graphicnewsplus.com/?ref=aff_2938', clicks: 8420, conversions: 85, lastUsed: '2 mins ago' },
-  { id: 2, target: 'Daily Graphic', url: 'https://graphicnewsplus.com/daily-graphic?ref=aff_2938', clicks: 3150, conversions: 42, lastUsed: '1 hour ago' },
-  { id: 3, target: 'Graphic Showbiz', url: 'https://graphicnewsplus.com/showbiz?ref=aff_2938', clicks: 880, conversions: 29, lastUsed: 'Yesterday' },
-])
 </script>
