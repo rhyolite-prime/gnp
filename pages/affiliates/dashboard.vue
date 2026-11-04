@@ -75,8 +75,41 @@
       </div>
     </div>
 
-    <!-- Recent Referrals/Commissions Table -->
+    <!-- Daily Performance Table -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="p-6 border-b border-gray-100">
+        <h2 class="text-xl font-bold text-gray-900">Daily Breakdown</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left font-sans">
+          <thead class="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Date</th>
+              <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Clicks</th>
+              <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Unique Visitors</th>
+              <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Conversions</th>
+              <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Conv. Rate</th>
+              <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Earnings</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr v-for="day in dailyStats" :key="day.date" class="hover:bg-gray-50 transition">
+              <td class="px-6 py-4 text-sm font-bold text-gray-900">{{ day.date }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600 font-medium">{{ day.clicks }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600 font-medium">{{ day.visitors }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600 font-medium">{{ day.conversions }}</td>
+              <td class="px-6 py-4">
+                <span class="text-xs font-bold px-2 py-1 bg-primary-100 text-primary-700 rounded-lg">{{ day.rate }}%</span>
+              </td>
+              <td class="px-6 py-4 text-sm font-black text-gray-900">₵{{ day.earnings }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recent Referrals/Commissions Table -->
+    <div class="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="p-6 border-b border-gray-100 flex items-center justify-between">
         <h2 class="text-xl font-bold text-gray-900">Recent Commissions</h2>
         <NuxtLink to="/affiliates/commissions" class="text-sm font-medium text-primary-600 hover:text-primary-700">See All Details</NuxtLink>
@@ -124,6 +157,7 @@
 
 import * as echarts from 'echarts'
 import { 
+  CheckCircleIcon,
   CurrencyDollarIcon, 
   UsersIcon, 
   CursorArrowRaysIcon, 
@@ -240,26 +274,34 @@ const quickStats = computed(() => {
   if (dateFilter.value === '7days') {
     return [
       { label: 'Total Revenue', value: '4,520', growth: 12.5, prefix: '₵', icon: CurrencyDollarIcon, bgColor: 'bg-green-50', iconColor: 'text-green-600' },
-      { label: 'Commissions', value: '1,240', growth: 8.2, prefix: '₵', icon: BanknotesIcon, bgColor: 'bg-primary-50', iconColor: 'text-primary-600' },
+      { label: 'Conversions', value: '1,562', growth: 8.5, prefix: '', icon: CheckCircleIcon, bgColor: 'bg-primary-50', iconColor: 'text-primary-600' },
       { label: 'Total Clicks', value: '12,450', growth: -2.4, prefix: '', icon: CursorArrowRaysIcon, bgColor: 'bg-blue-50', iconColor: 'text-blue-600' },
       { label: 'Referrals', value: '156', growth: 15.1, prefix: '', icon: UsersIcon, bgColor: 'bg-purple-50', iconColor: 'text-purple-600' },
     ]
   } else if (dateFilter.value === '30days') {
     return [
       { label: 'Total Revenue', value: '18,500', growth: 5.5, prefix: '₵', icon: CurrencyDollarIcon, bgColor: 'bg-green-50', iconColor: 'text-green-600' },
-      { label: 'Commissions', value: '5,100', growth: 4.2, prefix: '₵', icon: BanknotesIcon, bgColor: 'bg-primary-50', iconColor: 'text-primary-600' },
+      { label: 'Conversions', value: '1,562', growth: 8.5, prefix: '', icon: CheckCircleIcon, bgColor: 'bg-primary-50', iconColor: 'text-primary-600' },
       { label: 'Total Clicks', value: '52,100', growth: 1.4, prefix: '', icon: CursorArrowRaysIcon, bgColor: 'bg-blue-50', iconColor: 'text-blue-600' },
       { label: 'Referrals', value: '620', growth: 8.1, prefix: '', icon: UsersIcon, bgColor: 'bg-purple-50', iconColor: 'text-purple-600' },
     ]
   } else {
     return [
       { label: 'Total Revenue', value: '14,200', growth: -1.5, prefix: '₵', icon: CurrencyDollarIcon, bgColor: 'bg-green-50', iconColor: 'text-green-600' },
-      { label: 'Commissions', value: '4,000', growth: -2.2, prefix: '₵', icon: BanknotesIcon, bgColor: 'bg-primary-50', iconColor: 'text-primary-600' },
+      { label: 'Conversions', value: '1,562', growth: 8.5, prefix: '', icon: CheckCircleIcon, bgColor: 'bg-primary-50', iconColor: 'text-primary-600' },
       { label: 'Total Clicks', value: '38,000', growth: -5.4, prefix: '', icon: CursorArrowRaysIcon, bgColor: 'bg-blue-50', iconColor: 'text-blue-600' },
       { label: 'Referrals', value: '450', growth: -3.1, prefix: '', icon: UsersIcon, bgColor: 'bg-purple-50', iconColor: 'text-purple-600' },
     ]
   }
 })
+
+const dailyStats = [
+  { date: 'Feb 17, 2026', clicks: 1240, visitors: 1102, conversions: 45, rate: 3.6, earnings: 450 },
+  { date: 'Feb 16, 2026', clicks: 980, visitors: 856, conversions: 28, rate: 2.8, earnings: 280 },
+  { date: 'Feb 15, 2026', clicks: 1450, visitors: 1320, conversions: 52, rate: 3.5, earnings: 520 },
+  { date: 'Feb 14, 2026', clicks: 1100, visitors: 980, conversions: 38, rate: 3.4, earnings: 380 },
+  { date: 'Feb 13, 2026', clicks: 750, visitors: 680, conversions: 21, rate: 2.8, earnings: 210 },
+]
 
 const recentPayouts = computed(() => {
   if (dateFilter.value === '7days') {

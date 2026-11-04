@@ -228,6 +228,7 @@ import { useAffiliateAuthStore } from '~/stores/affiliate-auth'
 
 definePageMeta({
   layout: 'default',
+  middleware: ['affiliate-auth'],
 })
 
 useHead({
