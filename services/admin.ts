@@ -1,4 +1,4 @@
-import type { NewsPaper, Publication, Payment, CommercialPartner, AdminUser,UserGroup, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice, PartnerApiRequestLog, PartnerApiRequestLogQuery } from "~/models";
+import type { NewsPaper, Affiliate, Publication, Payment, CommercialPartner, AdminUser,UserGroup, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice, PartnerApiRequestLog, PartnerApiRequestLogQuery } from "~/models";
 
 //publication setups
 
@@ -579,7 +579,7 @@ export async function assignSubscriptionToSubscriber(payload: object) {
 // affiliate
 export async function getAffiliates(query: object) {
  
-    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<object[]>>>('admin/get-all-subscription-plans', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Affiliate[]>>>('admin/get-all-affiliates', "", { query });
     return response.result;
 }
 
@@ -607,14 +607,14 @@ export async function updateAffiliate(payload: object) {
   return response.success;
 }
 
-export async function deleteAffiliate(query: object) {
+export async function deleteAffiliate(id: string) {
  
-    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/delete-affiliate', "", { query, method: "delete", });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/delete-affiliate', "", { method: "delete" });
     return response.success;
 }
 
 export async function updateAffiliateAccountStatus(id: string, status:number) {
  
-    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-affiliate/${id}/${status}`, "");
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/update-affiliate-status/${id}/${status}`, "");
     return response.success;
 }

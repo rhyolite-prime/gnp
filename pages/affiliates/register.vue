@@ -69,37 +69,7 @@
                 </div>
               </div>
 
-          
-
-              <!-- Password -->
-              <div class="sm:col-span-1">
-                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                <div class="mt-1">
-                  <input 
-                    id="password" 
-                    v-model="form.password" 
-                    type="password" 
-                    required 
-                    class="block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors"
-                    placeholder="••••••••"
-                  />
-                </div>
-              </div>
-
-              <!-- Confirm Password -->
-              <div class="sm:col-span-1">
-                <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                <div class="mt-1">
-                  <input 
-                    id="confirmPassword" 
-                    v-model="form.confirmPassword" 
-                    type="password" 
-                    required 
-                    class="block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors"
-                    placeholder="••••••••"
-                  />
-                </div>
-              </div>
+           
             </div>
 
             <div class="flex items-center">
@@ -155,16 +125,12 @@ const form = reactive({
   lastName: '',
   email: '',
   phoneNo: '',
-  password: '',
-  confirmPassword: '',
   terms: false
 })
 
 const handleRegister = async () => {
-  if (form.password !== form.confirmPassword) {
-    alert('Passwords do not match')
-    return
-  }
+
+  //use vuelidate to handle validation of all fields
   
   loading.value = true
   try {

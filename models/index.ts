@@ -185,6 +185,19 @@ export interface NewsPaperIngestionResponse {
     id: string;
 }
 
+export interface Affiliate { 
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNo: string;
+    status: string;
+    dateJoined: string;
+    totalEarnings: number;
+    walletBalance: number;
+    affiliateId: string;
+    createdAt: string;
+}
+
 export interface NewsPaper {
     documentId: string;
     editionNumber: string;
