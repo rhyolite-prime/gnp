@@ -14,9 +14,17 @@ export async function getTopStories() {
     
    return response.result;
 }
-export async function getVideos() {
+
+export async function getVideos(query: object) {
  
-    const response = await httpClient<BaseApiResponse<Video[]>>('news-papers/get-all-videos', "");
+    const response = await httpClient<BaseApiResponse<Video[]>>('news-papers/get-all-videos', "", { query });
+    
+   return response.result;
+}
+
+export async function getVideoDetails(id: string) {
+ 
+    const response = await httpClient<BaseApiResponse<Video>>(`news-papers/get-video-details/${id}`, "");
     
    return response.result;
 }

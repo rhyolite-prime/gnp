@@ -98,14 +98,8 @@ const tags = computed(() => parseVideoTags(video.value?.tags));
 const metadata = computed(() => parseVideoMetadata(video.value?.metadata));
 const details = computed(() => video.value ? [
   { label: 'Published', value: formatVideoDate(video.value.createdAt) },
-  { label: 'Updated', value: formatVideoDate(video.value.modifiedAt) },
-  { label: 'File name', value: video.value.fileName || 'Not specified' },
   { label: 'Format', value: video.value.format?.toUpperCase() || 'Not specified' },
-  { label: 'File size', value: formatVideoFileSize(video.value.fileSize) },
-  ...Object.entries(metadata.value).map(([key, value]) => ({
-    label: key.replace(/_/g, ' ').replace(/^./, (letter) => letter.toUpperCase()),
-    value: typeof value === 'object' ? JSON.stringify(value) : String(value ?? 'Not specified'),
-  })),
+   
 ] : []);
 
 onMounted(() => { mounted.value = true; });
