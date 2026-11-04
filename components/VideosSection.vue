@@ -16,39 +16,19 @@
       </div>
 
       <div class="text-center mt-12">
-        <button class="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+        <NuxtLink
+          to="/more/videos"
+          class="inline-block bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+        >
           Watch More Videos
-        </button>
+        </NuxtLink>
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
-const videos = [
-  {
-    id: 1,
-    title: 'The Ghanaian Trumpeter at Buckingham Palace',
-    description: 'Royal performance highlights Ghanaian musical talent...',
-    thumbnail: 'https://ext.same-assets.com/111305068/2385636436.png'
-  },
-  {
-    id: 2,
-    title: 'Security chiefs pledge loyalty to President',
-    description: 'Military and security leadership affirm commitment...',
-    thumbnail: 'https://ext.same-assets.com/111305068/3057553277.png'
-  },
-  {
-    id: 3,
-    title: 'Court to rule on NDC\'s objection',
-    description: 'Legal proceedings on mandamus application scheduled...',
-    thumbnail: 'https://ext.same-assets.com/111305068/1051578448.jpeg'
-  },
-  {
-    id: 4,
-    title: 'Democracy and Electoral Process',
-    description: 'Discussion on Ghana\'s democratic institutions...',
-    thumbnail: 'https://ext.same-assets.com/111305068/895135478.jpeg'
-  }
-]
+import { latestVideos } from '~/utils/latestVideos'
+
+const videos = latestVideos
 </script>

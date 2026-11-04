@@ -25,7 +25,7 @@
       </div>
 
       <div v-if="stories.length > 0" class="text-center mt-12">
-        <button class="btn-primary">Read More Stories</button>
+        <NuxtLink to="/more/stories" class="btn-primary inline-block">Read More Stories</NuxtLink>
       </div>
     </div>
 
@@ -60,6 +60,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getTopStories } from '~/services/newsPapers'
+import { mapTopStoryArticle } from '~/utils/topStories'
 
 const stories = ref([])
 const isLoading = ref(true)
@@ -88,30 +89,7 @@ onMounted(async () => {
 
     if (response && response.data.length > 0) {
 
-      stories.value = response.data.map(article => {
-        const plainText = article.attributes.text ? article.attributes.text.replace(/<[^>]*>?/gm, '') : ''
-        const excerpt = plainText.length > 100 ? plainText.substring(0, 100) + '...' : plainText
-        
-        let image = article.attributes.images?.image_intro || article.attributes.images?.image_fulltext || null
-
-        // Try to get category from relationships if possible, fallback to 'News'
-        let categoryName = 'News'
-        if (article.relationships?.category?.data?.id) {
-          categoryName = 'Category ' + article.relationships.category.data.id // Fallback if no mapping is available
-        }
-
-        return {
-          id: article.id,
-          title: article.attributes.title,
-          category: 'News', // Or use categoryName if we had actual names
-          categoryColor: 'blue',
-          excerpt: excerpt,
-          image: image,
-          content: article.attributes.text,
-          isFeatured: article.attributes.featured === 1,
-          isVideo: false // Assuming no video field is mapped for now
-        }
-      })
+      stories.value = response.data.map(mapTopStoryArticle)
     }
   } catch (error) {
     console.error('Failed to fetch top stories:', error)
