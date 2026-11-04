@@ -69,19 +69,22 @@
     <button type="submit" class="inline-flex w-full sm:w-auto items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
       Search
     </button>
+    <button type="button" class="inline-flex w-full sm:w-auto items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" @click="resetFilters">
+      Reset
+    </button>
   </form>
 
   <!-- Table -->
-  <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-hidden">
+  <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
     <table class="min-w-full divide-y divide-gray-300">
-      <thead class="bg-gray-50">
+      <thead class="[&_th]:bg-gray-50">
         <tr>
-          <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Affiliate</th>
+          <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 sm:rounded-tl-xl">Affiliate</th>
           <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
           <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date Joined</th>
           <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Total Earnings</th>
           <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Wallet Balance</th>
-          <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+          <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6 sm:rounded-tr-xl">
             <span class="sr-only">Actions</span>
           </th>
         </tr>
@@ -219,21 +222,44 @@ const isEditing = ref(false);
 
 
 const onPageChange = async (pageNumber: number) => {
-
-	filters.pageNo = pageNumber;
-	const filteredQuery = filterQueryParams({ ...route.query, ...filters });
-
-	router.replace({ name: route.name ?? '', query: filteredQuery });
-  await getPaginatedAffiliates();
+  if (filters.pageNo === pageNumber) {
+    await getPaginatedAffiliates()
+  } else {
+    filters.pageNo = pageNumber
+  }
 }
 
-const getPaginatedAffiliates = async () => {
+const resetFilters = () => {
+  filters.query = ''
+  filters.status = -1
+  filters.sortBy = 'newest'
+  filters.pageNo = 1
+}
 
+watch(
+  () => [filters.query, filters.status, filters.sortBy, filters.pageNo, filters.pageSize] as const,
+  ([query, status, sortBy, , pageSize], [oldQuery, oldStatus, oldSortBy, , oldPageSize]) => {
+    if ((query !== oldQuery || status !== oldStatus || sortBy !== oldSortBy || pageSize !== oldPageSize) && filters.pageNo !== 1) {
+      filters.pageNo = 1
+      return
+    }
+
+    const filteredQuery = filterQueryParams({ ...route.query, ...filters })
+    router.replace({ name: route.name ?? '', query: filteredQuery })
+    getPaginatedAffiliates()
+  }
+)
+
+let latestRequest = 0
+
+const getPaginatedAffiliates = async () => {
+    const requestId = ++latestRequest
     isShimmerLoading.value = true;
 
     try {
 
-        let result = await getAffiliates(filters);
+        let result = await getAffiliates({ ...filters });
+        if (requestId !== latestRequest) return
 
         affiliateList.value = result.data;
 
@@ -243,9 +269,9 @@ const getPaginatedAffiliates = async () => {
         paginationParams.upperBound = result.upperBound;
 
     } catch (error) {
-        $toast.error('Unable to fetch affiliate applications!');
+        if (requestId === latestRequest) $toast.error('Unable to fetch affiliate applications!');
     } finally {
-        isShimmerLoading.value = false;
+        if (requestId === latestRequest) isShimmerLoading.value = false;
     }
 
 }
