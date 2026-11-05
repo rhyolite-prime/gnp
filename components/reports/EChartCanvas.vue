@@ -12,9 +12,12 @@ const props = withDefaults(
   defineProps<{
     option: Record<string, any>;
     height?: number;
+    /** `svg` keeps charts vector-sharp when printed or saved as PDF. */
+    renderer?: 'canvas' | 'svg';
   }>(),
   {
     height: 270,
+    renderer: 'canvas',
   }
 );
 
@@ -55,7 +58,7 @@ async function initChart() {
     chartInstance.dispose();
   }
 
-  chartInstance = echartsLib.init(chartEl.value, undefined, { renderer: 'canvas' });
+  chartInstance = echartsLib.init(chartEl.value, undefined, { renderer: props.renderer });
   chartInstance.setOption(buildSafeOption(props.option), true);
 
   resizeObserver = new ResizeObserver(() => {
