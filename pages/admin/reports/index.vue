@@ -246,7 +246,7 @@
                     </div>
                     <p class="text-sm text-gray-500">Graphic Communications Group Ltd.</p>
                     <p class="text-sm text-gray-500">Graphic Road, Accra, Ghana</p>
-                    <p class="text-sm text-gray-500">billing@graphic.com.gh</p>
+                    <p class="text-sm text-gray-500">franklin.sowah@graphic.com.gh</p>
                   </div>
 
                   <div class="text-right">
@@ -319,10 +319,7 @@
                       <span class="text-base font-bold text-gray-900">Total Due</span>
                       <span class="text-xl font-bold text-primary-600">GHS {{ formatMoney(invoiceData.totalDue) }}</span>
                     </div>
-                    <div class="flex justify-between text-xs text-gray-500 px-4">
-                      <span>Outstanding Balance (pre-tax)</span>
-                      <span class="font-medium text-gray-700">GHS {{ formatMoney(invoiceData.outstandingBalance) }}</span>
-                    </div>
+                     
                   </div>
                 </div>
 
