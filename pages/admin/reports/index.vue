@@ -321,7 +321,7 @@
                   <p class="font-medium text-gray-700 mb-1">Payment Instructions:</p>
                   <p>Please make payment to Graphic Communications Group Ltd. via Bank Transfer.</p>
                   <p>Bank: Guarantee Trust Bank (GT Bank)<br />Account No: 3201001382531</p>
-                  <p class="mt-4 text-xs">If you have any questions concerning this invoice, please contact franklin.sowah@graphic.com.gh.</p>
+                  <!-- <p class="mt-4 text-xs">If you have any questions concerning this invoice, please contact franklin.sowah@graphic.com.gh.</p> -->
                 </div>
               </div>
             </div>
