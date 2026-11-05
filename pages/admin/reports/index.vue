@@ -184,12 +184,12 @@
 
               <button
                 v-if="selectedReport.id === 'partner_invoices'"
-                @click="handleDownloadPDF"
+                @click="handleSavePDF"
                 :disabled="!invoiceGenerated"
                 class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <DocumentArrowDownIcon class="w-4 h-4 mr-2 text-gray-500" />
-                Download PDF
+                Save as PDF
               </button>
 
               <button
@@ -233,112 +233,29 @@
                 </div>
               </div>
 
-              <!-- Printable Invoice Content -->
-              <div class="p-8 sm:p-12 print:p-0">
-                <!-- Invoice Header -->
-                <div class="flex justify-between items-start mb-12">
-                  <div>
-                    <div class="flex items-center space-x-2 mb-4">
-                      <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-600 to-primary-700 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary-500/20">
-                        G
-                      </div>
-                      <span class="text-2xl font-bold text-gray-900 tracking-tight">NewsPlus<span class="text-primary-600">.</span></span>
-                    </div>
-                    <p class="text-sm text-gray-500">Graphic Communications Group Ltd.</p>
-                    <p class="text-sm text-gray-500">Graphic Road, Accra, Ghana</p>
-                    <p class="text-sm text-gray-500">franklin.sowah@graphic.com.gh</p>
-                  </div>
-
-                  <div class="text-right">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-2">INVOICE</h2>
-                    <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Invoice No:</span> {{ invoiceData.invoiceNo }}</p>
-                    <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Date:</span> {{ invoiceData.date }}</p>
-                    <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Due Date:</span> {{ invoiceData.dueDate }}</p>
-                  </div>
-                </div>
-
-                <!-- Billed To -->
-                <div class="mb-12 grid grid-cols-1 sm:grid-cols-2 gap-8">
-                  <div>
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Billed To</h3>
-                    <p class="text-base font-semibold text-gray-900">{{ invoiceData.billedTo?.name || invoiceData.partnerName }}</p>
-                    <p v-if="invoiceData.partnerAddress || selectedPartnerDetails?.address" class="text-sm text-gray-500 whitespace-pre-line">{{ invoiceData.partnerAddress || selectedPartnerDetails?.address }}</p>
-                    <p class="text-sm text-gray-500">{{ invoiceData.billedTo?.email || invoiceData.partnerEmail }}</p>
-                  </div>
-                  <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Billing Period</h3>
-                    <p class="text-sm font-medium text-gray-900">{{ invoiceData.billingPeriod }}</p>
-                  </div>
-                </div>
-
-                <!-- Invoice Items -->
-                <div class="mb-10 overflow-x-auto">
-                  <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                      <tr>
-                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                        <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Qty / Imps</th>
-                        <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price (₵)</th>
-                        <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount (₵)</th>
-                      </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                      <tr v-for="(item, index) in invoiceData.items" :key="`${item.description}-${index}`" class="hover:bg-gray-50 transition-colors">
-                        <td class="px-4 py-4 whitespace-nowrap">
-                          <div class="text-sm font-medium text-gray-900">{{ item.description }}</div>
-                          <div class="text-xs text-gray-500">{{ item.details }}</div>
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-700">{{ Number(item.quantity).toLocaleString() }}</td>
-                        <td class="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-700">{{ formatMoney(item.unitPrice) }}</td>
-                        <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">{{ formatMoney(item.amount) }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                <!-- Totals -->
-                <div class="flex justify-end">
-                  <div class="w-full max-w-sm space-y-3">
-                    <div class="flex justify-between text-sm text-gray-600 px-4">
-                      <span>Subtotal</span>
-                      <span class="font-medium text-gray-900">GHS {{ formatMoney(invoiceData.subtotal) }}</span>
-                    </div>
-                    <div class="flex justify-between text-sm text-gray-600 px-4">
-                      <span>VAT ({{ invoiceData.taxPolicy?.vatPercent ?? 15 }}%)</span>
-                      <span class="font-medium text-gray-900">GHS {{ formatMoney(invoiceData.vat) }}</span>
-                    </div>
-                    <div class="flex justify-between text-sm text-gray-600 px-4">
-                      <span>NHIL + GETFL ({{ invoiceData.taxPolicy?.getflNhilPercent ?? 5 }}%)</span>
-                      <span class="font-medium text-gray-900">GHS {{ formatMoney(invoiceData.getflNhil) }}</span>
-                    </div>
-                    <div v-if="invoiceData.discount" class="flex justify-between text-sm text-gray-600 px-4">
-                      <span>Discount</span>
-                      <span class="font-medium text-red-600">- GHS {{ formatMoney(invoiceData.discount) }}</span>
-                    </div>
-                    <div class="pt-3 border-t border-gray-200 flex justify-between px-4">
-                      <span class="text-base font-bold text-gray-900">Total Due</span>
-                      <span class="text-xl font-bold text-primary-600">GHS {{ formatMoney(invoiceData.totalDue) }}</span>
-                    </div>
-                     
-                  </div>
-                </div>
-
-                <!-- Partner Invoice ECharts Overview (shown only when "Include charts" is enabled) -->
-                <div v-if="includeCharts && invoiceData.charts?.length" class="mt-12 pt-8 border-t border-gray-100 grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div v-for="chart in invoiceData.charts" :key="chart.id">
-                    <h3 class="text-base font-medium text-gray-900 mb-4">{{ chart.title }}</h3>
-                    <EChartCanvas :option="buildEChartOptionFromPlainData(chart)" :height="250" />
-                  </div>
-                </div>
-
-                <!-- Footer Notes -->
-                <div class="mt-16 pt-8 border-t border-gray-100 text-sm text-gray-500">
-                  <p class="font-medium text-gray-700 mb-1">Payment Instructions:</p>
-                  <p>Please make payment to Graphic Communications Group Ltd. via Bank Transfer.</p>
-                  <p>Bank: Guarantee Trust Bank (GT Bank)<br />Account No: 3201001382531</p>
-                  <!-- <p class="mt-4 text-xs">If you have any questions concerning this invoice, please contact franklin.sowah@graphic.com.gh.</p> -->
-                </div>
+              <!-- Printable Invoice Content (same component as the print copy below) -->
+              <div class="p-8 sm:p-12 overflow-x-auto">
+                <PartnerInvoiceSheet
+                  :invoice="invoiceData"
+                  mode="preview"
+                  :include-charts="includeCharts"
+                  :fallback-address="selectedPartnerDetails?.address || ''"
+                />
               </div>
+
+              <!-- Print copy: teleported to <body>, shown only when printing / saving as PDF -->
+              <ClientOnly>
+                <Teleport to="body">
+                  <div class="invoice-print-host">
+                    <PartnerInvoiceSheet
+                      :invoice="invoiceData"
+                      mode="print"
+                      :include-charts="includeCharts"
+                      :fallback-address="selectedPartnerDetails?.address || ''"
+                    />
+                  </div>
+                </Teleport>
+              </ClientOnly>
             </div>
 
             <!-- Standard Generated Report View (All Reports with Apache ECharts + Summary Metrics + Data Table) -->
@@ -495,6 +412,7 @@ import EChartCanvas from '~/components/reports/EChartCanvas.vue';
 import { MOCK_REPORT_GROUPS, MOCK_PARTNERS_LIST } from '~/mocks/reports/index.js';
 import { buildEChartOptionFromPlainData } from '~/utils/reportChartOption.js';
 import type { PartnerInvoiceReport } from '~/models/reports';
+import PartnerInvoiceSheet from '~/components/reports/PartnerInvoiceSheet.vue';
 
 const { $toast } = useNuxtApp();
 
@@ -739,39 +657,35 @@ const downloadReport = async () => {
   $toast?.success?.(`Exported ${selectedReport.value.name} as CSV.`);
 };
 
-const handlePrint = () => {
+const DEFAULT_DOC_TITLE = 'Graphic News Plus';
+
+/**
+ * Opens the browser print dialog. For partner invoices the print copy is an exact
+ * A4 sheet, so "Save as PDF" in the dialog produces the same layout as the preview.
+ * The document title is set to the invoice number so the default PDF filename matches it.
+ */
+const printWithTitle = (title: string) => {
+  const previousTitle = document.title;
+  document.title = title;
+  const restore = () => {
+    document.title = previousTitle || DEFAULT_DOC_TITLE;
+    window.removeEventListener('afterprint', restore);
+  };
+  window.addEventListener('afterprint', restore);
   window.print();
 };
 
-const handleDownloadPDF = async () => {
-  if (!invoiceData.value) return;
-  const { jsPDF } = await import('jspdf');
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.text(`INVOICE #${generatedInvoiceId.value}`, 14, 20);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  const inv = invoiceData.value;
-  doc.text(`Date: ${inv.date}    Due: ${inv.dueDate}`, 14, 26);
-  doc.text(`Billed To: ${inv.billedTo?.name || inv.partnerName}`, 14, 32);
-  doc.text(`Billing Period: ${inv.billingPeriod}`, 14, 38);
-
-  let y = 50;
-  for (const item of inv.items || []) {
-    doc.text(`${item.description} (${item.quantity} x GHS ${formatMoney(item.unitPrice)})`, 14, y);
-    doc.text(`GHS ${formatMoney(item.amount)}`, 160, y);
-    y += 8;
+const handlePrint = () => {
+  if (selectedReport.value?.id === 'partner_invoices' && invoiceData.value) {
+    printWithTitle(invoiceData.value.invoiceNo);
+    return;
   }
-  y += 6;
-  doc.text(`Subtotal: GHS ${formatMoney(inv.subtotal)}`, 14, y);
-  doc.text(`VAT: GHS ${formatMoney(inv.vat)}`, 14, y + 6);
-  doc.text(`NHIL + GETFL: GHS ${formatMoney(inv.getflNhil)}`, 14, y + 12);
-  y += 18;
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Total Due: GHS ${formatMoney(inv.totalDue)}`, 14, y);
-  doc.save(`${inv.invoiceNo}.pdf`);
-  $toast?.success?.('PDF downloaded');
+  window.print();
+};
+
+const handleSavePDF = () => {
+  if (!invoiceData.value) return;
+  printWithTitle(invoiceData.value.invoiceNo);
 };
 
 const handleEmail = async () => {
@@ -818,6 +732,50 @@ onMounted(async () => {
   }
   .print\:bg-transparent {
     background-color: transparent !important;
+  }
+}
+</style>
+
+<style>
+/* Global print pipeline for partner invoices (teleported print host lives directly under <body>). */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+/* On screen the print copy is laid out at its real A4 width but kept out of view. */
+.invoice-print-host {
+  position: absolute;
+  top: 0;
+  left: -10000px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide the whole app shell (admin layout, sidebar, report controls). */
+  body > *:not(.invoice-print-host) {
+    display: none !important;
+  }
+
+  .invoice-print-host {
+    position: static;
+    left: auto;
+    top: auto;
+    visibility: visible;
+    display: block;
+  }
+
+  .invoice-print-host .avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
 </style>
