@@ -87,10 +87,7 @@
           <span class="text-base font-bold text-gray-900">Total Due</span>
           <span class="text-xl font-bold text-primary-600">GHS {{ formatMoney(invoice.totalDue) }}</span>
         </div>
-        <div class="flex justify-between text-xs text-gray-500 px-4">
-          <span>Outstanding Balance (pre-tax)</span>
-          <span class="font-medium text-gray-700">GHS {{ formatMoney(invoice.outstandingBalance) }}</span>
-        </div>
+         
       </div>
     </div>
 
