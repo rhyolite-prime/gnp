@@ -320,8 +320,8 @@
                 <div class="mt-16 pt-8 border-t border-gray-100 text-sm text-gray-500">
                   <p class="font-medium text-gray-700 mb-1">Payment Instructions:</p>
                   <p>Please make payment to Graphic Communications Group Ltd. via Bank Transfer.</p>
-                  <p>Bank: Ghana Commercial Bank (GCB)<br />Account No: 3201001382531<br />Branch: High Street</p>
-                  <p class="mt-4 text-xs">If you have any questions concerning this invoice, please contact billing@graphic.com.gh.</p>
+                  <p>Bank: Guarantee Trust Bank (GT Bank)<br />Account No: 3201001382531</p>
+                  <p class="mt-4 text-xs">If you have any questions concerning this invoice, please contact franklin.sowah@graphic.com.gh.</p>
                 </div>
               </div>
             </div>
