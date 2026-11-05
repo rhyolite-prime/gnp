@@ -71,16 +71,7 @@ const PARTNER_INVOICE_CHARTS_PLATFORM = [
       { name: 'VAT + GETFund/NHIL (20%)', data: [10310.0, 6501.0, 6036.0, 2755.0, 2560.0] },
     ],
   },
-  {
-    id: 'invoice_collection_status',
-    title: 'Receivables Aging Breakdown',
-    type: 'donut',
-    items: [
-      { name: 'Paid on Time', value: 112008.5 },
-      { name: 'Current (Due < 14d)', value: 36216.0 },
-      { name: 'Overdue (15–30d)', value: 15904.75 },
-    ],
-  },
+
 ];
 
 /** Builds a partner-invoice `result` from a compact definition, deriving the schema totals. */
@@ -99,7 +90,15 @@ function buildPartnerInvoiceResult({ invoiceNo, partnerId, partnerName, partnerA
   return {
     billedTo: { email: partnerEmail, name: partnerName },
     billingPeriod: '2026-09-23 - 2026-10-22',
-    charts: PARTNER_INVOICE_CHARTS_PLATFORM,
+    charts: [
+      ...PARTNER_INVOICE_CHARTS_PLATFORM,
+      {
+        id: 'invoice_collection_status',
+        title: 'Invoice Line Items (GHS, pre-tax)',
+        type: 'donut',
+        items: lineItems.map(({ description, amount }) => ({ name: description, value: amount })),
+      },
+    ],
     date: '22/10/2026',
     discount,
     dueDate: '05/11/2026',
@@ -141,12 +140,10 @@ const MTN_PARTNER_INVOICE_RESULT = {
     {
       id: 'invoice_collection_status',
       items: [
-        { name: 'Paid on Time', value: 0 },
-        { name: 'Current (Due < 14d)', value: 0 },
-        { name: 'Overdue (15–30d)', value: 4974 },
-        { name: 'Overdue (30d+)', value: 2260057.3 },
+        { name: 'New subscriptions', value: 14904 },
+        { name: 'Renewed subscriptions', value: 10434 },
       ],
-      title: 'Receivables Aging Breakdown',
+      title: 'New vs Renewed Subscription Invoices (GHS, pre-tax)',
       type: 'donut',
     },
   ],

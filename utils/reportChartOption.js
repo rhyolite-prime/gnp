@@ -1,4 +1,4 @@
-// Converts plain JavaScript chart data objects from `mocks/reports/*.js`
+// Converts report API chart data objects
 // into interactive Apache ECharts options (`echarts`).
 
 const PALETTE = ['#DC2626', '#2563EB', '#F97316', '#10B981', '#8B5CF6', '#F59E0B'];
@@ -19,11 +19,12 @@ export function buildEChartOptionFromPlainData(chart) {
           radius: ['42%', '70%'],
           center: ['50%', '45%'],
           avoidLabelOverlap: true,
+          stillShowZeroSum: false,
           itemStyle: { borderRadius: 5, borderColor: '#fff', borderWidth: 2 },
           label: { show: false, position: 'center' },
           emphasis: { label: { show: true, fontSize: 13, fontWeight: 'bold' } },
           labelLine: { show: false },
-          data: chart.items || [],
+          data: Array.isArray(chart.items) ? chart.items.map(({ name, value }) => ({ name, value })) : [],
         },
       ],
     };
