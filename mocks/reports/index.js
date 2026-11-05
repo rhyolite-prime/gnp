@@ -119,12 +119,7 @@ export function getMockReportData(reportIdOrSlug, params = {}) {
   // Special handling for Partner Invoice report
   if (resolvedId === 'partner_invoices') {
     const partnerId = params.partnerId || 'p-mtn-001';
-    const selectedInvoice =
-      clone.invoicesByPartner[partnerId] || clone.invoicesByPartner['p-mtn-001'];
-    return {
-      ...selectedInvoice,
-      charts: clone.charts,
-    };
+    return clone.invoicesByPartner[partnerId] || clone.invoicesByPartner['p-mtn-001'];
   }
 
   // Special handling for Subscriber Account Status report:

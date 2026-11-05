@@ -155,6 +155,22 @@
               Please select a report type to view available parameters.
             </div>
 
+            <!-- Report Options -->
+            <div v-if="selectedReport?.id === 'partner_invoices'" class="space-y-3 pt-4 border-t border-gray-200">
+              <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Report Options</h3>
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input
+                  v-model="includeCharts"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
+                <span>
+                  <span class="block text-sm font-medium text-gray-700">Include charts</span>
+                  <span class="block text-xs text-gray-500">Show the billing comparison and receivables charts in the report and print view.</span>
+                </span>
+              </label>
+            </div>
+
             <!-- Actions -->
             <div class="mt-6 flex flex-col gap-3" v-if="selectedReport">
               <button
@@ -198,7 +214,7 @@
                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     Report Generated
                   </span>
-                  <span class="text-sm text-gray-500">Previewing Invoice #{{ generatedInvoiceId }}</span>
+                  <span class="text-sm text-gray-500">Previewing Invoice #{{ invoiceData.invoiceNo }}</span>
                 </div>
 
                 <div class="flex space-x-3">
@@ -235,9 +251,9 @@
 
                   <div class="text-right">
                     <h2 class="text-3xl font-bold text-gray-900 mb-2">INVOICE</h2>
-                    <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Invoice No:</span> {{ generatedInvoiceId }}</p>
-                    <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Date:</span> {{ new Date().toLocaleDateString() }}</p>
-                    <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Due Date:</span> {{ new Date(new Date().setDate(new Date().getDate() + 14)).toLocaleDateString() }}</p>
+                    <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Invoice No:</span> {{ invoiceData.invoiceNo }}</p>
+                    <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Date:</span> {{ invoiceData.date }}</p>
+                    <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Due Date:</span> {{ invoiceData.dueDate }}</p>
                   </div>
                 </div>
 
@@ -245,15 +261,13 @@
                 <div class="mb-12 grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div>
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Billed To</h3>
-                    <p class="text-base font-semibold text-gray-900">{{ selectedPartnerDetails?.name || invoiceData.partnerName }}</p>
-                    <p class="text-sm text-gray-500 whitespace-pre-line">{{ selectedPartnerDetails?.address || invoiceData.partnerAddress }}</p>
-                    <p class="text-sm text-gray-500">{{ selectedPartnerDetails?.email || invoiceData.partnerEmail }}</p>
+                    <p class="text-base font-semibold text-gray-900">{{ invoiceData.billedTo?.name || invoiceData.partnerName }}</p>
+                    <p v-if="invoiceData.partnerAddress || selectedPartnerDetails?.address" class="text-sm text-gray-500 whitespace-pre-line">{{ invoiceData.partnerAddress || selectedPartnerDetails?.address }}</p>
+                    <p class="text-sm text-gray-500">{{ invoiceData.billedTo?.email || invoiceData.partnerEmail }}</p>
                   </div>
                   <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Billing Period</h3>
-                    <p class="text-sm font-medium text-gray-900">
-                      {{ new Date(params.startDate).toLocaleDateString() }} - {{ new Date(params.endDate).toLocaleDateString() }}
-                    </p>
+                    <p class="text-sm font-medium text-gray-900">{{ invoiceData.billingPeriod }}</p>
                   </div>
                 </div>
 
@@ -269,14 +283,14 @@
                       </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                      <tr v-for="(item, index) in invoiceData.items" :key="index" class="hover:bg-gray-50 transition-colors">
+                      <tr v-for="(item, index) in invoiceData.items" :key="`${item.description}-${index}`" class="hover:bg-gray-50 transition-colors">
                         <td class="px-4 py-4 whitespace-nowrap">
                           <div class="text-sm font-medium text-gray-900">{{ item.description }}</div>
                           <div class="text-xs text-gray-500">{{ item.details }}</div>
                         </td>
                         <td class="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-700">{{ Number(item.quantity).toLocaleString() }}</td>
                         <td class="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-700">{{ formatMoney(item.unitPrice) }}</td>
-                        <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">{{ formatMoney(item.quantity * item.unitPrice) }}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">{{ formatMoney(item.amount) }}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -290,26 +304,30 @@
                       <span class="font-medium text-gray-900">GHS {{ formatMoney(invoiceData.subtotal) }}</span>
                     </div>
                     <div class="flex justify-between text-sm text-gray-600 px-4">
-                      <span>VAT (15%)</span>
+                      <span>VAT ({{ invoiceData.taxPolicy?.vatPercent ?? 15 }}%)</span>
                       <span class="font-medium text-gray-900">GHS {{ formatMoney(invoiceData.vat) }}</span>
                     </div>
                     <div class="flex justify-between text-sm text-gray-600 px-4">
-                      <span>NHIL + GETFL (5%)</span>
+                      <span>NHIL + GETFL ({{ invoiceData.taxPolicy?.getflNhilPercent ?? 5 }}%)</span>
                       <span class="font-medium text-gray-900">GHS {{ formatMoney(invoiceData.getflNhil) }}</span>
                     </div>
-                    <div class="flex justify-between text-sm text-gray-600 px-4">
+                    <div v-if="invoiceData.discount" class="flex justify-between text-sm text-gray-600 px-4">
                       <span>Discount</span>
-                      <span class="font-medium text-red-600">GHS {{ formatMoney(invoiceData.discount) }}</span>
+                      <span class="font-medium text-red-600">- GHS {{ formatMoney(invoiceData.discount) }}</span>
                     </div>
                     <div class="pt-3 border-t border-gray-200 flex justify-between px-4">
                       <span class="text-base font-bold text-gray-900">Total Due</span>
                       <span class="text-xl font-bold text-primary-600">GHS {{ formatMoney(invoiceData.totalDue) }}</span>
                     </div>
+                    <div class="flex justify-between text-xs text-gray-500 px-4">
+                      <span>Outstanding Balance (pre-tax)</span>
+                      <span class="font-medium text-gray-700">GHS {{ formatMoney(invoiceData.outstandingBalance) }}</span>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Partner Invoice ECharts Overview (Hidden when printing invoice) -->
-                <div v-if="invoiceData.charts?.length" class="mt-12 pt-8 border-t border-gray-100 grid grid-cols-1 lg:grid-cols-2 gap-8 print:hidden">
+                <!-- Partner Invoice ECharts Overview (shown only when "Include charts" is enabled) -->
+                <div v-if="includeCharts && invoiceData.charts?.length" class="mt-12 pt-8 border-t border-gray-100 grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <div v-for="chart in invoiceData.charts" :key="chart.id">
                     <h3 class="text-base font-medium text-gray-900 mb-4">{{ chart.title }}</h3>
                     <EChartCanvas :option="buildEChartOptionFromPlainData(chart)" :height="250" />
@@ -479,6 +497,7 @@ import {
 import EChartCanvas from '~/components/reports/EChartCanvas.vue';
 import { MOCK_REPORT_GROUPS, MOCK_PARTNERS_LIST } from '~/mocks/reports/index.js';
 import { buildEChartOptionFromPlainData } from '~/utils/reportChartOption.js';
+import type { PartnerInvoiceReport } from '~/models/reports';
 
 const { $toast } = useNuxtApp();
 
@@ -532,7 +551,8 @@ const selectedGroup = ref<ReportGroup | null>(null);
 const selectedReport = ref<ReportParameter | null>(null);
 const invoiceGenerated = ref(false);
 const generatedInvoiceId = ref('');
-const invoiceData = ref<any>(null);
+const invoiceData = ref<PartnerInvoiceReport | null>(null);
+const includeCharts = ref(true);
 const reportGenerated = ref(false);
 const activeReportData = ref<any>(null);
 const isSendingInvoice = ref(false);
@@ -593,7 +613,7 @@ const reportHandlers: Record<string, (p: typeof params) => Promise<any>> = {
   sales_revenue: (p) => generateSalesReport({ startDate: p.startDate, endDate: p.endDate, plan: p.plan !== 'all' ? p.plan : undefined }),
   revenue_by_publication: (p) => generateRevenueByPublicationReport({ startDate: p.startDate, endDate: p.endDate, plan: p.plan !== 'all' ? p.plan : undefined }),
   payment_transactions: (p) => generatePaymentTransactionsReport({ startDate: p.startDate, endDate: p.endDate, status: p.status !== 'all' ? p.status : undefined }),
-  partner_invoices: (p) => generatePartnerInvoice({ partnerId: p.partnerId, startDate: p.startDate, endDate: p.endDate }),
+  partner_invoices: (p) => generatePartnerInvoice({ partnerId: p.partnerId, startDate: p.startDate, endDate: p.endDate, includeCharts: includeCharts.value }),
   subscription_renewals: (p) => generateSubscriptionRenewalsReport({ startDate: p.startDate, endDate: p.endDate }),
   subscription_expiry_renewals: (p) => generateSubscriptionExpiryReport({ startDate: p.startDate, endDate: p.endDate, plan: p.plan !== 'all' ? p.plan : undefined }),
   single_copy_paywall_funnel: (p) => generateSingleCopyFunnelReport({ startDate: p.startDate, endDate: p.endDate }),
@@ -651,7 +671,7 @@ const generateReport = async () => {
     const data = await handler(params);
     if (reportId === 'partner_invoices') {
       invoiceData.value = data;
-      generatedInvoiceId.value = data?.invoiceNo;
+      generatedInvoiceId.value = data?.invoiceNo ?? '';
       invoiceGenerated.value = true;
     } else {
       activeReportData.value = data;
@@ -735,19 +755,25 @@ const handleDownloadPDF = async () => {
   doc.text(`INVOICE #${generatedInvoiceId.value}`, 14, 20);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  doc.text(`Billed To: ${selectedPartnerDetails.value?.name || invoiceData.value.partnerName}`, 14, 29);
-  doc.text(`Billing Period: ${params.startDate} to ${params.endDate}`, 14, 35);
+  const inv = invoiceData.value;
+  doc.text(`Date: ${inv.date}    Due: ${inv.dueDate}`, 14, 26);
+  doc.text(`Billed To: ${inv.billedTo?.name || inv.partnerName}`, 14, 32);
+  doc.text(`Billing Period: ${inv.billingPeriod}`, 14, 38);
 
-  let y = 48;
-  for (const item of invoiceData.value.items || []) {
+  let y = 50;
+  for (const item of inv.items || []) {
     doc.text(`${item.description} (${item.quantity} x GHS ${formatMoney(item.unitPrice)})`, 14, y);
-    doc.text(`GHS ${formatMoney(item.quantity * item.unitPrice)}`, 160, y);
+    doc.text(`GHS ${formatMoney(item.amount)}`, 160, y);
     y += 8;
   }
   y += 6;
+  doc.text(`Subtotal: GHS ${formatMoney(inv.subtotal)}`, 14, y);
+  doc.text(`VAT: GHS ${formatMoney(inv.vat)}`, 14, y + 6);
+  doc.text(`NHIL + GETFL: GHS ${formatMoney(inv.getflNhil)}`, 14, y + 12);
+  y += 18;
   doc.setFont('helvetica', 'bold');
-  doc.text(`Total Due: GHS ${formatMoney(invoiceData.value.totalDue)}`, 14, y);
-  doc.save(`${generatedInvoiceId.value}.pdf`);
+  doc.text(`Total Due: GHS ${formatMoney(inv.totalDue)}`, 14, y);
+  doc.save(`${inv.invoiceNo}.pdf`);
   $toast?.success?.('PDF downloaded');
 };
 
