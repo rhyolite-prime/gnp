@@ -210,3 +210,73 @@ export interface ExistingApiFinding {
   detail: string;
   recommendedFix: string;
 }
+
+/**
+ * Response `result` of `GET|POST /api/v1/reports/partner-invoice` (report id `partner_invoices`).
+ * Dates are pre-formatted by the backend (`DD/MM/YYYY`); totals are authoritative — the UI must not recompute them.
+ */
+export interface PartnerInvoiceReportLineItem {
+  amount: number;
+  description: string;
+  details: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface PartnerInvoiceReportSeries {
+  name: string;
+  data: number[];
+}
+
+export interface PartnerInvoiceReportChartItem {
+  name: string;
+  value: number;
+}
+
+export type PartnerInvoiceReportChart =
+  | {
+      id: string;
+      title: string;
+      type: 'stacked_bar';
+      labels: string[];
+      yAxisLabel?: string;
+      series: PartnerInvoiceReportSeries[];
+    }
+  | {
+      id: string;
+      title: string;
+      type: 'donut';
+      items: PartnerInvoiceReportChartItem[];
+    };
+
+export interface PartnerInvoiceReportTaxPolicy {
+  vatPercent: number;
+  getflNhilPercent: number;
+  discountPercent: number;
+  note: string;
+}
+
+export interface PartnerInvoiceReport {
+  invoiceNo: string;
+  date: string;
+  dueDate: string;
+  billingPeriod: string;
+  partnerId: string;
+  partnerName: string;
+  partnerAddress: string;
+  partnerEmail: string;
+  billedTo: {
+    name: string;
+    email: string;
+  };
+  items: PartnerInvoiceReportLineItem[];
+  subtotal: number;
+  vat: number;
+  getflNhil: number;
+  discount: number;
+  totalDue: number;
+  outstandingBalance: number;
+  totalBalance: number;
+  taxPolicy: PartnerInvoiceReportTaxPolicy;
+  charts: PartnerInvoiceReportChart[];
+}

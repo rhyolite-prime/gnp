@@ -49,6 +49,146 @@ export const MOCK_PARTNERS_LIST = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Partner invoice (partner-invoice endpoint) helpers
+// ---------------------------------------------------------------------------
+const PARTNER_INVOICE_TAX_POLICY = {
+  vatPercent: 15,
+  getflNhilPercent: 5,
+  discountPercent: 0,
+  note: 'Tax is a report preview; no discount is applied. Stored invoices and balances are pre-tax.',
+};
+
+const PARTNER_INVOICE_CHARTS_PLATFORM = [
+  {
+    id: 'partner_billing_comparison',
+    title: 'Partner Invoice Totals (Net vs Statutory Taxes)',
+    type: 'stacked_bar',
+    labels: ['MTN Ghana', 'Univ. of Ghana', 'GCB Bank', 'Bank of Ghana', 'GNAT'],
+    yAxisLabel: 'GHS',
+    series: [
+      { name: 'Net Subtotal', data: [48972.5, 30879.75, 30180.0, 13775.0, 12160.0] },
+      { name: 'VAT + GETFund/NHIL (20%)', data: [10310.0, 6501.0, 6036.0, 2755.0, 2560.0] },
+    ],
+  },
+  {
+    id: 'invoice_collection_status',
+    title: 'Receivables Aging Breakdown',
+    type: 'donut',
+    items: [
+      { name: 'Paid on Time', value: 112008.5 },
+      { name: 'Current (Due < 14d)', value: 36216.0 },
+      { name: 'Overdue (15–30d)', value: 15904.75 },
+    ],
+  },
+];
+
+/** Builds a partner-invoice `result` from a compact definition, deriving the schema totals. */
+function buildPartnerInvoiceResult({ invoiceNo, partnerId, partnerName, partnerAddress, partnerEmail, items, discount }) {
+  const lineItems = items.map((it) => ({
+    description: it.description,
+    details: it.details,
+    quantity: it.quantity,
+    unitPrice: it.unitPrice,
+    amount: Math.round(it.quantity * it.unitPrice * 100) / 100,
+  }));
+  const subtotal = Math.round(lineItems.reduce((sum, it) => sum + it.amount, 0) * 100) / 100;
+  const vat = Math.round(subtotal * 0.15 * 100) / 100;
+  const getflNhil = Math.round(subtotal * 0.05 * 100) / 100;
+  const totalDue = Math.round((subtotal + vat + getflNhil - discount) * 100) / 100;
+  return {
+    billedTo: { email: partnerEmail, name: partnerName },
+    billingPeriod: '2026-09-23 - 2026-10-22',
+    charts: PARTNER_INVOICE_CHARTS_PLATFORM,
+    date: '22/10/2026',
+    discount,
+    dueDate: '05/11/2026',
+    getflNhil,
+    invoiceNo,
+    items: lineItems,
+    outstandingBalance: subtotal - discount,
+    partnerAddress,
+    partnerEmail,
+    partnerId,
+    partnerName,
+    subtotal,
+    taxPolicy: { ...PARTNER_INVOICE_TAX_POLICY, discountPercent: subtotal ? Math.round((discount / subtotal) * 10000) / 100 : 0 },
+    totalBalance: subtotal - discount,
+    totalDue,
+    vat,
+  };
+}
+
+/** Exact `result` payload returned by GET/POST /api/v1/reports/partner-invoice for MTN Ghana. */
+const MTN_PARTNER_INVOICE_RESULT = {
+  billedTo: {
+    email: 'Rodney.Dosoo@mtn.com',
+    name: 'MTN Ghana',
+  },
+  billingPeriod: '2026-06-15 - 2026-11-03',
+  charts: [
+    {
+      id: 'partner_billing_comparison',
+      labels: ['Ghana National Association of Teaachers', 'MTN Ghana'],
+      series: [
+        { data: [2239693.3, 25338], name: 'Net Subtotal' },
+        { data: [447938.67, 5067.6], name: 'VAT + GETFund/NHIL (20%)' },
+      ],
+      title: 'Partner Invoice Totals (Net vs Statutory Taxes)',
+      type: 'stacked_bar',
+      yAxisLabel: 'GHS',
+    },
+    {
+      id: 'invoice_collection_status',
+      items: [
+        { name: 'Paid on Time', value: 0 },
+        { name: 'Current (Due < 14d)', value: 0 },
+        { name: 'Overdue (15–30d)', value: 4974 },
+        { name: 'Overdue (30d+)', value: 2260057.3 },
+      ],
+      title: 'Receivables Aging Breakdown',
+      type: 'donut',
+    },
+  ],
+  date: '05/11/2026',
+  discount: 0,
+  dueDate: '19/11/2026',
+  getflNhil: 1266.9,
+  invoiceNo: 'INV-GNP-2026-0163',
+  items: [
+    {
+      amount: 14904,
+      description: 'New subscriptions',
+      details: 'Billed seat-months (weighted average rate)',
+      quantity: 2484,
+      unitPrice: 6,
+    },
+    {
+      amount: 10434,
+      description: 'Renewed subscriptions',
+      details: 'Billed seat-months (weighted average rate)',
+      quantity: 1739,
+      unitPrice: 6,
+    },
+  ],
+  outstandingBalance: 25338,
+  partnerAddress: '',
+  partnerEmail: 'Rodney.Dosoo@mtn.com',
+  partnerId: '5731e4cd-8226-43b8-81c4-cb436fa0a007',
+  partnerName: 'MTN Ghana',
+  subtotal: 25338,
+  taxPolicy: {
+    discountPercent: 0,
+    getflNhilPercent: 5,
+    note: 'Tax is a report preview; no discount is applied. Stored invoices and balances are pre-tax.',
+    vatPercent: 15,
+  },
+  totalBalance: 25338,
+  totalDue: 30405.6,
+  vat: 3800.7,
+};
+
+
 export const FINANCIAL_REPORTS_MOCK = {
   // 1.1 Sales & Revenue Overview -> POST /api/v1/reports/sales-revenue
   // Source tables: payments, user_subscriptions, subscription_plans, commercial_partners, edition_sales_ledger (suggested)
@@ -177,29 +317,16 @@ export const FINANCIAL_REPORTS_MOCK = {
     ],
   },
 
-  // 1.3 Partner Invoices -> POST /api/v1/reports/partner-invoices
-  // Note: Fixes statutory tax formula bug in CommercialPartnerService.cc:3679 (totalDue = subtotal + vat + getflNhil - discount)
+  // 1.3 Partner Invoices -> GET/POST /api/v1/reports/partner-invoice
+  // Response contract: `result` of the partner-invoice endpoint (see PartnerInvoiceReport in models/reports.ts).
+  // Note: totalDue = subtotal + vat(15%) + getflNhil(5%) - discount. Balances are pre-tax.
   partner_invoices: {
-    endpoint: '/api/v1/reports/partner-invoices',
+    endpoint: '/api/v1/reports/partner-invoice',
     invoicesByPartner: {
-      'p-mtn-001': {
-        invoiceNo: 'INV-GNP-2026-1042',
-        partnerId: 'p-mtn-001',
-        partnerName: 'MTN Ghana PLC',
-        partnerAddress: 'MTN House, Independence Avenue, West Ridge\nAccra, Ghana',
-        partnerEmail: 'corporate.billing@mtn.com.gh',
-        items: [
-          { description: 'Corporate Digital Newsstand Seats — Daily Graphic & Graphic Business', details: '3,692 active employee seats × monthly enterprise rate', quantity: 3692, unitPrice: 12.5 },
-          { description: 'Executive Weekend Bundle — The Mirror & Graphic Sports', details: 'Executive leadership allocation', quantity: 450, unitPrice: 8.0 },
-          { description: 'Partner Content Syndication API Overages', details: 'Verified feed calls above 100k monthly tier', quantity: 120, unitPrice: 15.0 },
-        ],
-        subtotal: 51550.0,
-        vat: 7732.5,
-        getflNhil: 2577.5,
-        discount: 2577.5,
-        totalDue: 59282.5,
-      },
-      'p-gcb-002': {
+      // MTN Ghana — exact response payload from the partner-invoice endpoint.
+      'p-mtn-001': MTN_PARTNER_INVOICE_RESULT,
+      '5731e4cd-8226-43b8-81c4-cb436fa0a007': MTN_PARTNER_INVOICE_RESULT,
+      'p-gcb-002': buildPartnerInvoiceResult({
         invoiceNo: 'INV-GNP-2026-1043',
         partnerId: 'p-gcb-002',
         partnerName: 'GCB Bank PLC',
@@ -209,13 +336,9 @@ export const FINANCIAL_REPORTS_MOCK = {
           { description: 'Corporate Branch Network Seats — Daily Graphic & Graphic Business', details: '2,140 active branch & treasury seats', quantity: 2140, unitPrice: 12.0 },
           { description: 'Research Archive Access — Economic & Banking Clippings', details: 'Treasury & Risk research desk license', quantity: 1, unitPrice: 4500.0 },
         ],
-        subtotal: 30180.0,
-        vat: 4527.0,
-        getflNhil: 1509.0,
         discount: 0.0,
-        totalDue: 36216.0,
-      },
-      'p-gnat-003': {
+      }),
+      'p-gnat-003': buildPartnerInvoiceResult({
         invoiceNo: 'INV-GNP-2026-1044',
         partnerId: 'p-gnat-003',
         partnerName: 'Ghana National Association of Teachers (GNAT)',
@@ -224,13 +347,9 @@ export const FINANCIAL_REPORTS_MOCK = {
         items: [
           { description: 'Regional Secretariat Digital Subscriptions — Daily Graphic & Junior Graphic', details: '1,280 regional & district education seats', quantity: 1280, unitPrice: 10.0 },
         ],
-        subtotal: 12800.0,
-        vat: 1920.0,
-        getflNhil: 640.0,
         discount: 640.0,
-        totalDue: 14720.0,
-      },
-      'p-ug-004': {
+      }),
+      'p-ug-004': buildPartnerInvoiceResult({
         invoiceNo: 'INV-GNP-2026-1045',
         partnerId: 'p-ug-004',
         partnerName: 'University of Ghana (Balme Library)',
@@ -240,13 +359,9 @@ export const FINANCIAL_REPORTS_MOCK = {
           { description: 'Campus-Wide Academic Seat Allocation — All 6 Graphic Publications', details: '2,790 faculty & postgraduate seats', quantity: 2790, unitPrice: 9.5 },
           { description: '1950–2026 Digitized Archive & AI RAG Research Credits', details: '5,000 institutional archive research credits', quantity: 5000, unitPrice: 1.2 },
         ],
-        subtotal: 32505.0,
-        vat: 4875.75,
-        getflNhil: 1625.25,
         discount: 1625.25,
-        totalDue: 37380.75,
-      },
-      'p-bog-005': {
+      }),
+      'p-bog-005': buildPartnerInvoiceResult({
         invoiceNo: 'INV-GNP-2026-1046',
         partnerId: 'p-bog-005',
         partnerName: 'Bank of Ghana Research Department',
@@ -256,36 +371,9 @@ export const FINANCIAL_REPORTS_MOCK = {
           { description: 'Monetary Policy & Financial Press Enterprise Seats', details: '685 active seats across BoG departments', quantity: 685, unitPrice: 15.0 },
           { description: 'Macroeconomic Archive & Vector Search API Access', details: 'Monthly institutional API tier', quantity: 1, unitPrice: 3500.0 },
         ],
-        subtotal: 13775.0,
-        vat: 2066.25,
-        getflNhil: 688.75,
         discount: 0.0,
-        totalDue: 16530.0,
-      },
+      }),
     },
-    charts: [
-      {
-        id: 'partner_billing_comparison',
-        title: 'Partner Invoice Totals (Net vs Statutory Taxes)',
-        type: 'stacked_bar',
-        labels: ['MTN Ghana', 'Univ. of Ghana', 'GCB Bank', 'Bank of Ghana', 'GNAT'],
-        yAxisLabel: 'GHS',
-        series: [
-          { name: 'Net Subtotal', data: [48972.5, 30879.75, 30180.0, 13775.0, 12160.0] },
-          { name: 'VAT + GETFund/NHIL (20%)', data: [10310.0, 6501.0, 6036.0, 2755.0, 2560.0] },
-        ],
-      },
-      {
-        id: 'invoice_collection_status',
-        title: 'Receivables Aging Breakdown',
-        type: 'donut',
-        items: [
-          { name: 'Paid on Time', value: 112008.5 },
-          { name: 'Current (Due < 14d)', value: 36216.0 },
-          { name: 'Overdue (15–30d)', value: 15904.75 },
-        ],
-      },
-    ],
   },
 
   // 1.4 Subscription Renewals & Churn -> POST /api/v1/reports/subscription-renewals

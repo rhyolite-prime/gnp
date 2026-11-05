@@ -1,3 +1,4 @@
+import type { PartnerInvoiceReport } from '~/models/reports';
 import { getMockReportData, MOCK_PARTNERS_LIST } from '~/mocks/reports/index.js';
 
 export interface ReportFilterDto {
@@ -8,6 +9,8 @@ export interface ReportFilterDto {
   status?: string;
   plan?: string;
   channel?: string;
+  /** Include chart blocks in the rendered report (client-side presentation toggle). */
+  includeCharts?: boolean;
   /** Lookback window (days) for "renewed within the last X days" reports: 7 | 30 | 60 | 90. */
   renewalWindowDays?: number;
 }
@@ -25,7 +28,9 @@ export const runReportById = async (reportId: string, dto: ReportFilterDto = {})
 export const generateSalesReport = async (dto: ReportFilterDto) => getMockReportData('sales_revenue', dto);
 export const generateRevenueByPublicationReport = async (dto: ReportFilterDto) => getMockReportData('revenue_by_publication', dto);
 export const generatePaymentTransactionsReport = async (dto: ReportFilterDto) => getMockReportData('payment_transactions', dto);
-export const generatePartnerInvoice = async (dto: ReportFilterDto) => getMockReportData('partner_invoices', dto);
+/** `POST /api/v1/reports/partner-invoice` — resolves to a `PartnerInvoiceReport`. */
+export const generatePartnerInvoice = async (dto: ReportFilterDto): Promise<PartnerInvoiceReport> =>
+  getMockReportData('partner_invoices', dto) as PartnerInvoiceReport;
 export const generateSubscriptionRenewalsReport = async (dto: ReportFilterDto) => getMockReportData('subscription_renewals', dto);
 export const generateSubscriptionExpiryReport = async (dto: ReportFilterDto) => getMockReportData('subscription_expiry_renewals', dto);
 export const generateSingleCopyFunnelReport = async (dto: ReportFilterDto) => getMockReportData('single_copy_paywall_funnel', dto);
