@@ -1,13 +1,13 @@
 import { computed } from 'vue';
 import { getLatestNewsPapers } from '~/services/newsPapers';
-import type { NewsPaper } from '~/models';
+import type { LatestNewsPaper } from '~/utils/latestNewspapers';
 
 /**
  * Shared client-side feed for the homepage hero and “Latest Newspapers” section.
  * A single useAsyncData key keeps both components on one request/payload.
  */
 export function useLatestNewspapers() {
-  const request = useAsyncData<NewsPaper[]>(
+  const request = useAsyncData<LatestNewsPaper[]>(
     'home-latest-newspapers',
     async () => {
       const result = await getLatestNewsPapers({ pageNo: 1, pageSize: 12 });
@@ -19,6 +19,8 @@ export function useLatestNewspapers() {
     {
       server: false,
       lazy: true,
+      // Both homepage components mount together; share the in-flight request.
+      dedupe: 'defer',
       default: () => [],
     },
   );
