@@ -41,43 +41,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { getLatestNewsPapers } from '~/services/newsPapers';
+import { useLatestNewspapers } from '~/composables/useLatestNewspapers';
+import { getNewspaperDetailPath } from '~/utils/latestNewspapers';
 import type { NewsPaper } from '~/models';
 
-const newspapers = ref<NewsPaper[]>([]);
-const isLoading = ref(true);
-
-const formatNiceDate = (dateString: string) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-};
+// Shared with HeroSection so the hero can link to an edition from this same feed.
+const { newspapers, isLoading } = useLatestNewspapers();
 
 function viewNewspaper(newspaper: NewsPaper) {
-  navigateTo(`/newspapers/${newspaper.id}`)
+  navigateTo(getNewspaperDetailPath(newspaper.id));
 }
-
-onMounted(async () => {
-  try {
-    const result = await getLatestNewsPapers({ pageNo: 1, pageSize: 12 });
-    if (result?.data) {
-      newspapers.value = result.data.map((paper: NewsPaper) => ({
-        id: paper.id,
-        title: paper.title,
-        date: formatNiceDate(paper.publicationDate),
-        thumbnailId: paper.thumbnailId
-      }));
-    }
-  } catch (error) {
-    console.error('Error fetching latest newspapers:', error);
-  } finally {
-    isLoading.value = false;
-  }
-});
 </script>
