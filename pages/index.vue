@@ -17,7 +17,7 @@
           <div class="flex items-center gap-2.5 text-xs sm:text-sm">
             <span>
               <strong>Breaking News &amp; Morning Edition Alerts:</strong>
-              Enable browser &amp; in-app notifications so you never miss a major update.
+              Enable notifications so you never miss a major update.
             </span>
           </div>
 
