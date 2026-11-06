@@ -17,15 +17,6 @@
       <div class="grid items-center gap-12 py-14 sm:py-16 lg:grid-cols-12 lg:gap-12 lg:py-24">
         <!-- Copy -->
         <div class="lg:col-span-6">
-          <p
-            class="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white/85 px-3 py-1.5 text-[10px] font-bold uppercase leading-none tracking-[0.18em] text-stone-600 shadow-sm backdrop-blur sm:text-[11px]"
-          >
-            <span class="relative flex h-1.5 w-1.5 shrink-0">
-              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-500 opacity-75 motion-reduce:hidden" />
-              <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary-600" />
-            </span>
-            Ghana's trusted newsroom · Est. 1950
-          </p>
 
           <h1
             id="home-hero-title"
@@ -57,9 +48,9 @@
           </h1>
 
           <p class="mt-6 max-w-xl text-base leading-7 text-stone-600 sm:mt-7 sm:text-lg sm:leading-8">
-            Every front page, the moment it prints. Read the
-            <span class="font-semibold text-stone-800">Daily Graphic</span>, Graphic Business,
-            Graphic Sports and The Mirror in crisp digital detail — on any device, anywhere in the
+            Access digital versions of Ghana's most trusted newspapers including
+            <span class="font-semibold text-stone-800">Daily Graphic, Graphic Business,
+            Graphic Sports and The Mirror</span> and more — on any device, anywhere in the
             world.
           </p>
 
@@ -86,24 +77,6 @@
             </NuxtLink>
           </div>
 
-          <p class="mt-4 text-xs font-medium text-stone-500">
-            No downloads needed · Read on any device · Cancel anytime
-          </p>
-
-          <!-- Proof -->
-          <dl class="mt-9 grid max-w-lg grid-cols-3 divide-x divide-stone-200 border-t border-stone-200 pt-6 sm:mt-10">
-            <div v-for="stat in stats" :key="stat.label" class="min-w-0 px-5 first:pl-0 last:pr-0">
-              <dt class="sr-only">{{ stat.label }}</dt>
-              <dd>
-                <span class="block font-display text-2xl font-semibold leading-none text-stone-900 sm:text-[1.75rem]">
-                  {{ stat.value }}
-                </span>
-                <span class="mt-2 block text-[10px] font-bold uppercase leading-none tracking-[0.12em] text-stone-500">
-                  {{ stat.label }}
-                </span>
-              </dd>
-            </div>
-          </dl>
         </div>
 
         <!-- Artwork -->
@@ -131,15 +104,6 @@
               class="absolute inset-0 bg-gradient-to-t from-stone-950/60 via-stone-950/5 to-transparent"
               aria-hidden="true"
             />
-
-            <div class="absolute left-3 top-3 sm:left-4 sm:top-4">
-              <span
-                class="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[9px] font-black uppercase leading-none tracking-[0.16em] text-stone-800 shadow-sm backdrop-blur sm:text-[10px]"
-              >
-                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-primary-600 motion-reduce:animate-none" />
-                Live edition
-              </span>
-            </div>
 
             <figcaption class="absolute inset-x-3 bottom-3 sm:inset-x-4 sm:bottom-4">
               <div class="flex items-center gap-3 rounded-2xl bg-white/95 p-3 shadow-lg backdrop-blur">

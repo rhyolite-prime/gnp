@@ -29,8 +29,8 @@
                 Allow Browser &amp; In-App Notifications?
               </h3>
               <p class="text-xs sm:text-sm text-gray-600 mt-1 leading-relaxed">
-                Stay ahead with instant breaking news alerts, 5:30 AM
-                <strong>Daily Graphic</strong> edition drops, and important updates.
+                Stay ahead with instant breaking news alerts,
+                <strong>edition drops</strong> and important updates.
               </p>
             </div>
 

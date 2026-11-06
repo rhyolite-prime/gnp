@@ -15,7 +15,6 @@
       >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2.5 text-xs sm:text-sm">
-            <span class="inline-flex h-2 w-2 rounded-full bg-red-500 animate-pulse shrink-0" />
             <span>
               <strong>Breaking News &amp; Morning Edition Alerts:</strong>
               Enable browser &amp; in-app notifications so you never miss a major update.
