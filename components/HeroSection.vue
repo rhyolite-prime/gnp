@@ -106,7 +106,12 @@
             />
 
             <figcaption class="absolute inset-x-3 bottom-3 sm:inset-x-4 sm:bottom-4">
-              <div class="flex items-center gap-3 rounded-2xl bg-white/95 p-3 shadow-lg backdrop-blur">
+              <NuxtLink
+                :to="editionLink"
+                :aria-label="editionAriaLabel"
+                :aria-busy="isLoading"
+                class="group/edition flex items-center gap-3 rounded-2xl bg-white/95 p-3 shadow-lg backdrop-blur transition-colors hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
+              >
                 <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-600 text-white">
                   <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true">
                     <path d="M4 6.5A1.5 1.5 0 0 1 5.5 5H16a1.5 1.5 0 0 1 1.5 1.5V17A2 2 0 0 0 19.5 19H7a1.5 1.5 0 0 1-1.5-1.5V6.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
@@ -118,13 +123,13 @@
                     Today's edition · Daily Graphic
                   </p>
                   <p class="truncate text-[11px] font-medium text-stone-500">
-                    {{ todayLabel }} · ready to read
+                    {{ editionSubtitle }}
                   </p>
                 </div>
-                <span class="hidden shrink-0 items-center gap-1 rounded-full bg-stone-900 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white sm:inline-flex">
-                  Open
+                <span class="hidden shrink-0 items-center gap-1 rounded-full bg-stone-900 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white transition-colors group-hover/edition:bg-primary-600 sm:inline-flex">
+                  {{ editionBadge }}
                 </span>
-              </div>
+              </NuxtLink>
             </figcaption>
           </figure>
         </div>
@@ -150,10 +155,18 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { useBasicAuthStore } from '~/stores/basic-user-auth';
+import { useLatestNewspapers } from '~/composables/useLatestNewspapers';
+import {
+  findDailyGraphicEdition,
+  getLocalDateKey,
+  getNewspaperDetailPath,
+} from '~/utils/latestNewspapers';
 
 const showSignInModal = useState<boolean>('showSignInModal', () => false);
 const authStore = useBasicAuthStore();
+const { newspapers, isLoading, refresh } = useLatestNewspapers();
 
 const stats = [
   { value: '12', label: 'Editions' },
@@ -169,14 +182,48 @@ const mastheads = [
   'Graphic Showbiz',
 ];
 
-const todayLabel = useState<string>('hero-edition-date', () =>
-  new Date().toLocaleDateString('en-GB', {
+// Keep the calendar date hydrated from the server, then follow the reader’s clock.
+const todayDateKey = useState<string>('hero-edition-date-key', () => getLocalDateKey());
+let dateTimer: ReturnType<typeof setInterval> | undefined;
+
+onMounted(() => {
+  todayDateKey.value = getLocalDateKey();
+  dateTimer = setInterval(() => {
+    todayDateKey.value = getLocalDateKey();
+  }, 60_000);
+});
+
+onBeforeUnmount(() => {
+  if (dateTimer) clearInterval(dateTimer);
+});
+
+// If the page stays open overnight, reload the feed for the new day.
+watch(todayDateKey, (value, previous) => {
+  if (previous && value !== previous) refresh();
+});
+
+const todayEdition = computed(() => findDailyGraphicEdition(newspapers.value, todayDateKey.value));
+const editionLink = computed(() => todayEdition.value ? getNewspaperDetailPath(todayEdition.value.id) : '/newspapers');
+const todayLabel = computed(() => {
+  if (!todayDateKey.value) return '';
+  return new Intl.DateTimeFormat('en-GB', {
     weekday: 'short',
     day: '2-digit',
     month: 'short',
     year: 'numeric',
-  })
-);
+    timeZone: 'UTC',
+  }).format(new Date(`${todayDateKey.value}T00:00:00Z`));
+});
+const editionSubtitle = computed(() => {
+  if (isLoading.value) return 'Checking the latest editions…';
+  return todayEdition.value
+    ? `${todayLabel.value} · ready to read`
+    : 'Not available yet · browse all editions';
+});
+const editionBadge = computed(() => isLoading.value ? '…' : todayEdition.value ? 'Open' : 'Browse');
+const editionAriaLabel = computed(() => todayEdition.value
+  ? `Read today's Daily Graphic edition (${todayLabel.value})`
+  : 'Browse all newspaper editions');
 
 function startReading() {
   if (authStore.isAuthenticated) {
