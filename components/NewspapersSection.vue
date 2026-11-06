@@ -43,12 +43,12 @@
 <script setup lang="ts">
 import { useLatestNewspapers } from '~/composables/useLatestNewspapers';
 import { getNewspaperDetailPath } from '~/utils/latestNewspapers';
-import type { NewsPaper } from '~/models';
+import type { LatestNewsPaper } from '~/utils/latestNewspapers';
 
 // Shared with HeroSection so the hero can link to an edition from this same feed.
 const { newspapers, isLoading } = useLatestNewspapers();
 
-function viewNewspaper(newspaper: NewsPaper) {
+function viewNewspaper(newspaper: LatestNewsPaper) {
   navigateTo(getNewspaperDetailPath(newspaper.id));
 }
 </script>
