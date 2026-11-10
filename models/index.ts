@@ -280,13 +280,21 @@ export interface UserSubscription extends BaseEntityModel {
     fee: number;
 }
 
+/** Price of one plan for one billing cycle (e.g. the `Monthly` entry of `pricing`). */
+export interface SubscriptionPricingTier {
+    price: number;
+    savePercentage: number;
+}
+
 export interface SubscriptionPlan extends BaseEntityModel {
     name: string;
     description: string;
-    targetPublications: [],
+    targetPublications: string[];
+    /** Free-form server value; the public pricing page understands regular/bundle/premium. */
     planType: string;
     createdAt: string;
-    pricing: Record<string, { price: number ,savePercentage: number }>;
+    updatedAt?: string | null;
+    pricing: Record<string, SubscriptionPricingTier>;
 }
 
 export interface Campaign extends BaseEntityModel {

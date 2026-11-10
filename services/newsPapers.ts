@@ -1,4 +1,4 @@
-import type { NewsPaper, Article, Video, VideoPage, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { NewsPaper, Article, Video, VideoPage, BaseApiResponse, BasePaginationModel, SubscriptionPlan } from "~/models";
 
  
 export async function getNewsPapers(query: object) {
@@ -8,11 +8,23 @@ export async function getNewsPapers(query: object) {
    return response.result;
 }
 
+/**
+ * Public pricing plans (`regular`, `bundle` and `premium`). The endpoint answers
+ * with the standard pagination envelope, so the page receives the plan array.
+ */
 export async function getPricingPlans() {
- 
-    const response = await httpClient<BaseApiResponse<any[]>>('news-papers/get-pricing-plans', "");
-    
-   return response.result;
+
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<SubscriptionPlan[]>>>(
+        'news-papers/get-pricing-plans', "");
+
+    if (!response || response.success === false) {
+        throw new Error(response?.message || 'Unable to load pricing plans');
+    }
+
+    return {
+        data: Array.isArray(response.result?.data) ? response.result.data : [],
+        totalCount: response.result?.totalCount ?? 0,
+    };
 }
 
 export async function getTopStories() {
