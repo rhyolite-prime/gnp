@@ -79,8 +79,14 @@
             <div
               v-for="row in activePlanRows"
               :key="row.plan.id"
-              class="bg-white rounded-lg border p-4 flex items-center transition-colors"
+              role="button"
+              tabindex="0"
+              :aria-label="`Subscribe to ${row.plan.name}`"
+              class="bg-white rounded-lg border p-4 flex items-center transition-colors cursor-pointer hover:border-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
               :class="selectedPlanId === row.plan.id ? 'border-red-600 ring-1 ring-red-600' : 'border-gray-200'"
+              @click="openBuyModal(row.plan)"
+              @keydown.enter.prevent="openBuyModal(row.plan)"
+              @keydown.space.prevent="openBuyModal(row.plan)"
             >
               <!-- Radio Button -->
               <div class="mr-4">
@@ -90,7 +96,7 @@
                     :name="'plan-' + activeTab"
                     class="form-radio h-5 w-5 text-red-600"
                     :checked="selectedPlanId === row.plan.id"
-                    @click="selectedPlanId = row.plan.id"
+                    @click.stop="selectedPlanId = row.plan.id"
                   >
                 </label>
               </div>
@@ -123,6 +129,7 @@
               type="button"
               :disabled="!selectedPlanId"
               class="bg-red-600 text-white font-medium px-8 py-3 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              @click="openBuyModal()"
             >
               {{ activeTab === 'premium' ? 'Get Premium' : 'Subscribe Now' }}
             </button>
@@ -205,6 +212,16 @@
         </div>
       </div>
     </div>
+
+    <!-- Guest checkout -->
+    <BuySubscriptionModal
+      v-if="showBuyModal"
+      :plans="buyModalPlans"
+      :initial-plan-id="buyModalPlanId"
+      :initial-billing-cycle="activeDuration"
+      @close="closeBuyModal"
+      @request-sign-in="handleRequestSignIn"
+    />
   </div>
 </template>
 
@@ -229,13 +246,17 @@ useHead({
 })
 
 // Plans come from news-papers/get-pricing-plans and are grouped per tab.
-const { groups, isLoading, error: plansError, refresh: refreshPlans } = usePricingPlans();
+const { plans, groups, isLoading, error: plansError, refresh: refreshPlans } = usePricingPlans();
 
 // State
 const activeTab = ref<PricingTabKey>('custom') // 'bundle' | 'custom' | 'premium'
 const activeDuration = ref<string>(PRICING_BILLING_CYCLES[0])
 const selectedPlanId = ref('')
 const openFaqIndex = ref(-1)
+
+// The header owns <SignInModal>; it reads this shared flag, so guests can be
+// handed over to the regular sign-in flow from the checkout modal.
+const showSignInModal = useState<boolean>('showSignInModal', () => false)
 
 // Plans shown on the active tab, straight from the API groups.
 const activePlans = computed<SubscriptionPlan[]>(() => groups.value[activeTab.value]);
@@ -304,6 +325,38 @@ const faqs = [
     answer: 'We accept credit/debit cards, mobile money, and bank transfers for subscription payments.'
   }
 ]
+
+// ─── Guest checkout ───────────────────────────────────────────────────────────
+// Clicking a plan card (or the CTA) opens the Buy Subscription modal with that
+// plan pre-selected; the modal itself calls subscription/guest.
+const showBuyModal = ref(false);
+const buyModalPlanId = ref('');
+
+// Pass every plan so the buyer can switch plans inside the modal, but list the
+// clicked tab's plans first so the highlighted plan is in view.
+const buyModalPlans = computed<SubscriptionPlan[]>(() => {
+  const active = groups.value[activeTab.value];
+  const activeIds = new Set(active.map((plan) => plan.id));
+  return [...active, ...plans.value.filter((plan) => !activeIds.has(plan.id))];
+});
+
+function openBuyModal(plan?: SubscriptionPlan) {
+  const target = plan ?? activePlanRows.value.find((row) => row.plan.id === selectedPlanId.value)?.plan;
+  buyModalPlanId.value = target?.id ?? selectedPlanId.value;
+  if (target) selectedPlanId.value = target.id;
+  showBuyModal.value = true;
+}
+
+function closeBuyModal() {
+  showBuyModal.value = false;
+}
+
+// Guests without access to a subscription plan can sign in instead; the header
+// owns the sign-in modal, so nudge the buyer to the account area.
+function handleRequestSignIn() {
+  showBuyModal.value = false;
+  showSignInModal.value = true;
+}
 
 // Methods
 function setActiveTab(tab: PricingTabKey) {
