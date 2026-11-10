@@ -8,6 +8,13 @@ export async function getNewsPapers(query: object) {
    return response.result;
 }
 
+export async function getPricingPlans() {
+ 
+    const response = await httpClient<BaseApiResponse<any[]>>('news-papers/get-pricing-plans', "");
+    
+   return response.result;
+}
+
 export async function getTopStories() {
  
     const response = await httpClient<BaseApiResponse<Article[]>>('news-papers/get-top-stories', "");
