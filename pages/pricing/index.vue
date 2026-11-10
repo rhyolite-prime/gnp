@@ -22,50 +22,46 @@
 
         <!-- Tab Navigation -->
         <div class="grid grid-cols-3 gap-0 mb-6">
-          <button 
-            @click="setActiveTab('bundle')"
+          <button
+            v-for="tab in PRICING_TABS"
+            :key="tab.key"
+            @click="setActiveTab(tab.key)"
             :class="[
               'py-3 text-center font-medium transition-colors',
-              activeTab === 'bundle' 
-                ? 'bg-red-600 text-white' 
+              activeTab === tab.key
+                ? 'bg-red-600 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             ]"
           >
-            Bundle
-          </button>
-          <button 
-            @click="setActiveTab('custom')"
-            :class="[
-              'py-3 text-center font-medium transition-colors',
-              activeTab === 'custom' 
-                ? 'bg-red-600 text-white' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            ]"
-          >
-            Custom
-          </button>
-          <button 
-            @click="setActiveTab('premium')"
-            :class="[
-              'py-3 text-center font-medium transition-colors',
-              activeTab === 'premium' 
-                ? 'bg-red-600 text-white' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            ]"
-          >
-            Premium
+            {{ tab.label }}
           </button>
         </div>
 
-        <!-- Custom Tab Content -->
-        <div v-if="activeTab === 'custom'">
-          <p class="text-gray-700 mb-6">To buy just one publication, use the CUSTOM option</p>
+        <!-- Loading / Error States -->
+        <div v-if="isLoading" class="flex flex-col items-center justify-center py-16" role="status">
+          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+          <p class="mt-4 text-gray-600">Loading subscription plans…</p>
+        </div>
+
+        <div v-else-if="plansError" class="py-12 text-center" role="alert">
+          <p class="text-gray-700">We couldn't load the subscription plans right now.</p>
+          <button
+            type="button"
+            @click="refreshPlans()"
+            class="mt-4 bg-red-600 text-white font-medium px-6 py-2 rounded-md hover:bg-red-700 transition-colors"
+          >
+            Try again
+          </button>
+        </div>
+
+        <template v-else>
+          <p class="text-gray-700 mb-6">{{ activeTabDescription }}</p>
 
           <!-- Duration Selection -->
-          <div class="flex flex-wrap justify-center gap-4 mb-8">
-            <button 
-              v-for="(duration, index) in durations" 
-              :key="index"
+          <div v-if="activePlans.length" class="flex flex-wrap justify-center gap-4 mb-8">
+            <button
+              v-for="duration in activeBillingCycles"
+              :key="duration"
               @click="setActiveDuration(duration)"
               :class="[
                 'px-8 py-2 rounded-full text-center font-medium transition-colors',
@@ -79,175 +75,59 @@
           </div>
 
           <!-- Subscription Options -->
-          <div class="space-y-4 mb-6">
-            <div 
-              v-for="(plan, index) in customSubscriptionPlans" 
-              :key="index"
-              class="bg-white rounded-lg border border-gray-200 p-4 flex items-center"
+          <div v-if="activePlans.length" class="space-y-4 mb-6">
+            <div
+              v-for="row in activePlanRows"
+              :key="row.plan.id"
+              class="bg-white rounded-lg border p-4 flex items-center transition-colors"
+              :class="selectedPlanId === row.plan.id ? 'border-red-600 ring-1 ring-red-600' : 'border-gray-200'"
             >
               <!-- Radio Button -->
               <div class="mr-4">
                 <label class="inline-flex items-center cursor-pointer">
-                  <input 
-                    type="radio" 
-                    :name="'plan-' + index" 
+                  <input
+                    type="radio"
+                    :name="'plan-' + activeTab"
                     class="form-radio h-5 w-5 text-red-600"
-                    :checked="selectedPlan === index"
-                    @click="selectedPlan = index"
+                    :checked="selectedPlanId === row.plan.id"
+                    @click="selectedPlanId = row.plan.id"
                   >
                 </label>
               </div>
-              
+
               <!-- Plan Details -->
               <div class="flex-1">
-                <h3 class="font-semibold text-gray-900">{{ plan.name }}</h3>
-                <p class="text-sm text-gray-600">{{ plan.description }}</p>
+                <h3 class="font-semibold text-gray-900">{{ row.plan.name }}</h3>
+                <p class="text-sm text-gray-600">{{ row.plan.description }}</p>
               </div>
-              
+
               <!-- Price -->
               <div class="text-right">
-                <div class="text-gray-900 font-bold">GHS {{ currentPricing(plan).price.toFixed(2) }}</div>
-                <div v-if="currentPricing(plan).savePercentage > 0" class="text-sm text-gray-600">
-                  Save {{ currentPricing(plan).savePercentage }}%
-                </div>
+                <template v-if="row.pricing">
+                  <div class="text-gray-900 font-bold">{{ formatPlanPrice(row.pricing.price) }}</div>
+                  <div v-if="row.pricing.savePercentage > 0" class="text-sm text-gray-600">
+                    Save {{ row.pricing.savePercentage }}%
+                  </div>
+                </template>
+                <div v-else class="text-gray-500 text-sm">Not available</div>
               </div>
             </div>
           </div>
 
-          <div class="text-center">
-            <button class="bg-red-600 text-white font-medium px-8 py-3 rounded-md hover:bg-red-700 transition-colors">
-              Subscribe Now
-            </button>
+          <div v-else class="py-12 text-center">
+            <p class="text-gray-500">No {{ activeTabLabel.toLowerCase() }} plans are available at the moment.</p>
           </div>
-        </div>
-        
-        <!-- Bundle Tab Content -->
-        <div v-if="activeTab === 'bundle'">
-          <p class="text-gray-700 mb-6">Subscribe to all our publications at a discounted price.</p>
 
-          <!-- Duration Selection -->
-          <div class="flex flex-wrap justify-center gap-4 mb-8">
-            <button 
-              v-for="(duration, index) in durations" 
-              :key="index"
-              @click="setActiveDuration(duration)"
-              :class="[
-                'px-8 py-2 rounded-full text-center font-medium transition-colors',
-                activeDuration === duration
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              ]"
+          <div v-if="activePlans.length" class="text-center">
+            <button
+              type="button"
+              :disabled="!selectedPlanId"
+              class="bg-red-600 text-white font-medium px-8 py-3 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {{ duration }}
+              {{ activeTab === 'premium' ? 'Get Premium' : 'Subscribe Now' }}
             </button>
           </div>
-          
-          <!-- Bundle Subscription Options -->
-          <div class="space-y-4 mb-6">
-            <div 
-              v-for="(plan, index) in bundleSubscriptionPlans" 
-              :key="index"
-              class="bg-white rounded-lg border border-gray-200 p-4 flex items-center"
-            >
-              <!-- Radio Button -->
-              <div class="mr-4">
-                <label class="inline-flex items-center cursor-pointer">
-                  <input 
-                    type="radio" 
-                    :name="'plan-' + index" 
-                    class="form-radio h-5 w-5 text-red-600"
-                    :checked="selectedPlan === index"
-                    @click="selectedPlan = index"
-                  >
-                </label>
-              </div>
-              
-              <!-- Plan Details -->
-              <div class="flex-1">
-                <h3 class="font-semibold text-gray-900">{{ plan.name }}</h3>
-                <p class="text-sm text-gray-600">{{ plan.description }}</p>
-              </div>
-              
-              <!-- Price -->
-              <div class="text-right">
-                <div class="text-gray-900 font-bold">GHS {{ currentPricing(plan).price.toFixed(2) }}</div>
-                <div v-if="currentPricing(plan).savePercentage > 0" class="text-sm text-gray-600">
-                  Save {{ currentPricing(plan).savePercentage }}%
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="text-center">
-            <button class="bg-red-600 text-white font-medium px-8 py-3 rounded-md hover:bg-red-700 transition-colors">
-              Subscribe Now
-            </button>
-          </div>
-        </div>
-        
-        <!-- Premium Tab Content -->
-        <div v-if="activeTab === 'premium'">
-          <p class="text-gray-700 mb-6">Get access to all our publications plus premium features and exclusive content.</p>
-
-          <!-- Duration Selection -->
-          <div class="flex flex-wrap justify-center gap-4 mb-8">
-            <button 
-              v-for="(duration, index) in durations" 
-              :key="index"
-              @click="setActiveDuration(duration)"
-              :class="[
-                'px-8 py-2 rounded-full text-center font-medium transition-colors',
-                activeDuration === duration
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              ]"
-            >
-              {{ duration }}
-            </button>
-          </div>
-
-          <!-- Premium Subscription Options -->
-          <div class="space-y-4 mb-6">
-            <div 
-              v-for="(plan, index) in premiumSubscriptionPlans" 
-              :key="index"
-              class="bg-white rounded-lg border border-gray-200 p-4 flex items-center"
-            >
-              <!-- Radio Button -->
-              <div class="mr-4">
-                <label class="inline-flex items-center cursor-pointer">
-                  <input 
-                    type="radio" 
-                    :name="'plan-' + index" 
-                    class="form-radio h-5 w-5 text-red-600"
-                    :checked="selectedPlan === index"
-                    @click="selectedPlan = index"
-                  >
-                </label>
-              </div>
-              
-              <!-- Plan Details -->
-              <div class="flex-1">
-                <h3 class="font-semibold text-gray-900">{{ plan.name }}</h3>
-                <p class="text-sm text-gray-600">{{ plan.description }}</p>
-              </div>
-              
-              <!-- Price -->
-              <div class="text-right">
-                <div class="text-gray-900 font-bold">GHS {{ currentPricing(plan).price.toFixed(2) }}</div>
-                <div v-if="currentPricing(plan).savePercentage > 0" class="text-sm text-gray-600">
-                  Save {{ currentPricing(plan).savePercentage }}%
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="text-center">
-            <button class="bg-red-600 text-white font-medium px-8 py-3 rounded-md hover:bg-red-700 transition-colors">
-              Get Premium
-            </button>
-          </div>
-        </div>
+        </template>
       </div>
 
       <!-- Benefits Section -->
@@ -329,6 +209,17 @@
 </template>
 
 <script setup lang="ts">
+import {
+  PRICING_BILLING_CYCLES,
+  PRICING_TABS,
+  formatPlanPrice,
+  getAvailableBillingCycles,
+  getPlanPricing,
+  resolveActiveBillingCycle,
+} from '~/utils/pricingPlans';
+import type { PricingTabKey } from '~/utils/pricingPlans';
+import type { SubscriptionPlan } from '~/models';
+
 // Page metadata
 useHead({
   title: 'Pricing & Subscription Plans - Graphic NewsPlus',
@@ -337,213 +228,58 @@ useHead({
   ]
 })
 
+// Plans come from news-papers/get-pricing-plans and are grouped per tab.
+const { groups, isLoading, error: plansError, refresh: refreshPlans } = usePricingPlans();
+
 // State
-const activeTab = ref('custom') // 'bundle', 'custom', 'premium'
-const activeDuration = ref('Weekly')
-const selectedPlan = ref(0)
+const activeTab = ref<PricingTabKey>('custom') // 'bundle' | 'custom' | 'premium'
+const activeDuration = ref<string>(PRICING_BILLING_CYCLES[0])
+const selectedPlanId = ref('')
 const openFaqIndex = ref(-1)
 
-// Duration options
-const durations = [
-  'Weekly',
-  'Monthly',
-  '3 Months',
-  'Half-Yearly',
-  'Yearly'
-]
+// Plans shown on the active tab, straight from the API groups.
+const activePlans = computed<SubscriptionPlan[]>(() => groups.value[activeTab.value]);
 
- 
+const activeTabConfig = computed(
+  () => PRICING_TABS.find((tab) => tab.key === activeTab.value) ?? PRICING_TABS[1],
+);
+const activeTabLabel = computed(() => activeTabConfig.value.label);
 
-// Define prices for each subscription plan based on billing cycle
-interface PriceTier {
-  price: number;
-  savePercentage: number;
-}
+const activeTabDescription = computed(() => {
+  switch (activeTab.value) {
+    case 'bundle':
+      return 'Subscribe to all our publications at a discounted price.';
+    case 'premium':
+      return 'Get access to all our publications plus premium features and exclusive content.';
+    default:
+      return 'To buy just one publication, use the CUSTOM option';
+  }
+});
 
-interface SubscriptionPricing {
-  [key: string]: PriceTier;
-}
+// Billing cycles offered by the active tab; the current choice is kept when possible.
+const activeBillingCycles = computed(() => getAvailableBillingCycles(activePlans.value));
 
-interface SubscriptionPlan {
-  name: string;
-  description: string;
-  pricing: {
-    Weekly: PriceTier;
-    Monthly: PriceTier;
-    '3 Months': PriceTier;
-    'Half-Yearly': PriceTier;
-    Yearly: PriceTier;
-  };
-}
+// One row per plan, priced for the selected billing cycle.
+const activePlanRows = computed(() =>
+  activePlans.value.map((plan) => ({
+    plan,
+    pricing: getPlanPricing(plan, activeDuration.value),
+  })),
+);
 
+// Keep the selected plan and duration valid whenever the tab or data changes.
+watch(
+  activePlans,
+  (plans) => {
+    activeDuration.value = resolveActiveBillingCycle(plans, activeDuration.value);
 
-const bundleSubscriptionPlans: SubscriptionPlan[] = [
-    {
-        name: 'Corporate',
-        description: 'Daily Graphic & Graphic Business',
-        pricing: {
-            'Weekly': { price: 9.90, savePercentage: 10 },
-            'Monthly': { price: 16.80, savePercentage: 60 },
-            '3 Months': { price: 50.40, savePercentage: 60 },
-            'Half-Yearly': { price: 100.80, savePercentage: 60 },
-            'Yearly': { price: 201.60, savePercentage: 60 }
-        }
-    },
-    {
-        name: 'Special',
-        description: 'Daily Graphic & The Mirror',
-        pricing: {
-            'Weekly': { price: 11.75, savePercentage: 0 },
-            'Monthly': { price: 42.00, savePercentage: 7 },
-            '3 Months': { price: 119.90, savePercentage: 12 },
-            'Half-Yearly': { price: 219.90, savePercentage: 18 },
-            'Yearly': { price: 399.90, savePercentage: 22 }
-        }
-    },
-    {
-        name: 'Diva',
-        description: 'The Mirror & Graphic Showbiz',
-        pricing: {
-            'Weekly': { price: 5.00, savePercentage: 0 },
-            'Monthly': { price: 18.90, savePercentage: 5 },
-            '3 Months': { price: 52.90, savePercentage: 8 },
-            'Half-Yearly': { price: 99.90, savePercentage: 10 },
-            'Yearly': { price: 189.90, savePercentage: 15 }
-        }
-    },
-    {
-        name: 'Family',
-        description: 'Daily Graphic, The Mirror, Graphic Showbiz & Graphic Sports',
-        pricing: {
-            'Weekly': { price: 13.50, savePercentage: 0 },
-            'Monthly': { price: 49.90, savePercentage: 8 },
-            '3 Months': { price: 139.90, savePercentage: 12 },
-            'Half-Yearly': { price: 259.90, savePercentage: 15 },
-            'Yearly': { price: 499.90, savePercentage: 20 }
-        }
-    },
-    {
-        name: 'Lifestyle',
-        description: 'Daily Graphic, The Mirror, Graphic Showbiz',
-        pricing: {
-            'Weekly': { price: 12.00, savePercentage: 0 },
-            'Monthly': { price: 44.90, savePercentage: 5 },
-            '3 Months': { price: 124.90, savePercentage: 10 },
-            'Half-Yearly': { price: 239.90, savePercentage: 12 },
-            'Yearly': { price: 459.90, savePercentage: 15 }
-        }
-    },
-    {
-        name: 'Suave',
-        description: 'Daily Graphic, Graphic Business & Graphic Sports',
-        pricing: {
-            'Weekly': { price: 13.00, savePercentage: 0 },
-            'Monthly': { price: 48.90, savePercentage: 5 },
-            '3 Months': { price: 134.90, savePercentage: 10 },
-            'Half-Yearly': { price: 249.90, savePercentage: 15 },
-            'Yearly': { price: 479.90, savePercentage: 20 }
-        }
-    },
-    {
-        name: 'Combo',
-        description: 'Daily Graphic, Graphic Business, The Mirror, Graphic Showbiz, Junior Graphic & Graphic Sports',
-        pricing: {
-            'Weekly': { price: 13.00, savePercentage: 0 },
-            'Monthly': { price: 48.90, savePercentage: 5 },
-            '3 Months': { price: 134.90, savePercentage: 10 },
-            'Half-Yearly': { price: 249.90, savePercentage: 15 },
-            'Yearly': { price: 479.90, savePercentage: 20 }
-        }
+    if (!plans.some((plan) => plan.id === selectedPlanId.value)) {
+      const firstPriced = plans.find((plan) => getPlanPricing(plan, activeDuration.value));
+      selectedPlanId.value = (firstPriced ?? plans[0])?.id ?? '';
     }
-
-];
-
-// Subscription plans with pricing for each billing cycle
-const customSubscriptionPlans: SubscriptionPlan[] = [
-    {
-        name: 'Daily Graphic',
-        description: '6 Issues Per Week',
-        pricing: {
-            'Weekly': { price: 9.90, savePercentage: 0 },
-            'Monthly': { price: 35.90, savePercentage: 10 },
-            '3 Months': { price: 99.90, savePercentage: 15 },
-            'Half-Yearly': { price: 189.90, savePercentage: 20 },
-            'Yearly': { price: 349.90, savePercentage: 25 }
-        }
-    },
-    {
-        name: 'The Mirror',
-        description: '1 Issue Per Week - Saturday Only',
-        pricing: {
-            'Weekly': { price: 11.75, savePercentage: 0 },
-            'Monthly': { price: 42.00, savePercentage: 7 },
-            '3 Months': { price: 119.90, savePercentage: 12 },
-            'Half-Yearly': { price: 219.90, savePercentage: 18 },
-            'Yearly': { price: 399.90, savePercentage: 22 }
-        }
-    },
-    {
-        name: 'Graphic Sports',
-        description: '1 Issue Per Week - Mon Only',
-        pricing: {
-            'Weekly': { price: 5.00, savePercentage: 0 },
-            'Monthly': { price: 18.90, savePercentage: 5 },
-            '3 Months': { price: 52.90, savePercentage: 8 },
-            'Half-Yearly': { price: 99.90, savePercentage: 10 },
-            'Yearly': { price: 189.90, savePercentage: 15 }
-        }
-    },
-    {
-        name: 'Graphic Showbiz',
-        description: '1 Issue Per Week - Thu Only',
-        pricing: {
-            'Weekly': { price: 13.50, savePercentage: 0 },
-            'Monthly': { price: 49.90, savePercentage: 8 },
-            '3 Months': { price: 139.90, savePercentage: 12 },
-            'Half-Yearly': { price: 259.90, savePercentage: 15 },
-            'Yearly': { price: 499.90, savePercentage: 20 }
-        }
-    },
-    {
-        name: 'Graphic Business',
-        description: '1 Issue Per Week - Tue Only',
-        pricing: {
-            'Weekly': { price: 12.00, savePercentage: 0 },
-            'Monthly': { price: 44.90, savePercentage: 5 },
-            '3 Months': { price: 124.90, savePercentage: 10 },
-            'Half-Yearly': { price: 239.90, savePercentage: 12 },
-            'Yearly': { price: 459.90, savePercentage: 15 }
-        }
-    },
-    {
-        name: 'Junior Graphic',
-        description: '1 Issue Per Week - Wed Only',
-        pricing: {
-            'Weekly': { price: 13.00, savePercentage: 0 },
-            'Monthly': { price: 48.90, savePercentage: 5 },
-            '3 Months': { price: 134.90, savePercentage: 10 },
-            'Half-Yearly': { price: 249.90, savePercentage: 15 },
-            'Yearly': { price: 479.90, savePercentage: 20 }
-        }
-    }
-
-];
-
-const premiumSubscriptionPlans: SubscriptionPlan[] = [
-    {
-        name: 'Blogging Subscription',
-        description: 'Premium Blog Posts Subscription (Unlimited access). Enjoy unlimited blog posts access.',
-        pricing: {
-            'Weekly': { price: 9.90, savePercentage: 0 },
-            'Monthly': { price: 35.90, savePercentage: 10 },
-            '3 Months': { price: 99.90, savePercentage: 15 },
-            'Half-Yearly': { price: 189.90, savePercentage: 20 },
-            'Yearly': { price: 349.90, savePercentage: 25 }
-        }
-    },
-
-];
-
+  },
+  { immediate: true },
+);
 
 // FAQ data
 const faqs = [
@@ -569,15 +305,8 @@ const faqs = [
   }
 ]
 
-// Computed properties
-const currentPricing = computed(() => {
-  return (plan: SubscriptionPlan) => {
-    return plan.pricing[activeDuration.value as keyof typeof plan.pricing];
-  };
-});
-
 // Methods
-function setActiveTab(tab: string) {
+function setActiveTab(tab: PricingTabKey) {
   activeTab.value = tab
 }
 
