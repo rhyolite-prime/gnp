@@ -770,24 +770,22 @@ const handleContinueToPay = async () =>  {
   };
 
   try {
-     
+
     isProcessing.value = true;
-     
+
     const result = await guestSubscription(payload);
 
-    // Redirect user to the payment URL returned by your API
-    if (result) {
-      console.log('result =>', result);
-      paymentInfo.value = result;
+    // Show the payment iframe returned by the API
+    if (result.success && result.data) {
+      paymentInfo.value = result.data;
       showPaymentModal.value = true;
       showSubscriptionModal.value = false;
-
     } else {
-      //alert("Payment initiation failed. Please try again.");
+      $toast.error(result.message || "Could not start your subscription. Please try again.");
     }
   } catch (err) {
     console.error("Payment error:", err);
-    //alert("Something went wrong while processing your payment.");
+    $toast.error("Something went wrong while processing your payment.");
   }
   finally {
 

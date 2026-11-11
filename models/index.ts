@@ -57,6 +57,22 @@ export interface SubscriptionResponseModel {
     userId: string;
 }
 
+/**
+ * Body of POST `subscription/guest` — checkout started by a visitor who has no
+ * account yet. The billing cycle rides along so the backend can price the plan
+ * tier the buyer picked on /pricing; the legacy newspaper modal omits it and
+ * lets the backend default the plan's cycle.
+ */
+export interface GuestSubscriptionPayload {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    subscriptionPlanId: string;
+    billingCycle?: string;
+    subscriptionType?: string;
+}
+
 export interface NewsPaperEntitlementResponseModel {
     hasAccess: boolean;
     newsPaperId: string;

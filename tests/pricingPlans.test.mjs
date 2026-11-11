@@ -10,8 +10,12 @@ import {
   getPlanPricing,
   formatPlanPrice,
   resolveActiveBillingCycle,
+  resolvePlanPrice,
+  formatPlanTypeLabel,
+  splitFullName,
 } from '../utils/pricingPlans.ts';
 import { getPricingPlans } from '../services/newsPapers.ts';
+import { guestSubscription } from '../services/userSubscription.ts';
 
 // Trimmed copy of the news-papers/get-pricing-plans response.
 const MONTHLY = { price: 35.9, savePercentage: 10 };
@@ -170,4 +174,54 @@ test('pricing service throws on failure and tolerates a missing payload', async 
 
   globalThis.httpClient = async () => ({ success: true, message: '', result: null });
   assert.deepEqual(await getPricingPlans(), { data: [], totalCount: 0 });
+});
+
+test('plan price resolution falls back to the plan’s own cycle when the chosen one is missing', () => {
+  const diva = { id: 'diva', name: 'Diva', pricing: { Weekly: { price: 5, savePercentage: 0 }, Monthly: { price: 18.9, savePercentage: 5 } } };
+  assert.deepEqual(resolvePlanPrice(diva, 'Monthly'), { cycle: 'Monthly', pricing: { price: 18.9, savePercentage: 5 } });
+  // Yearly is not sold on this plan → first canonical cycle it does sell.
+  assert.deepEqual(resolvePlanPrice(diva, 'Yearly'), { cycle: 'Weekly', pricing: { price: 5, savePercentage: 0 } });
+  assert.equal(resolvePlanPrice({ id: 'x', pricing: {} }, 'Monthly'), null);
+  assert.equal(resolvePlanPrice(null, 'Monthly'), null);
+});
+
+test('plan type labels and full-name splitting match the checkout payload shape', () => {
+  assert.equal(formatPlanTypeLabel('bundle'), 'Bundle');
+  assert.equal(formatPlanTypeLabel(' PREMIUM '), 'Premium');
+  assert.equal(formatPlanTypeLabel(''), 'Standard');
+  assert.equal(formatPlanTypeLabel(undefined), 'Standard');
+
+  assert.deepEqual(splitFullName('Kwabena Imhotep'), { firstName: 'Kwabena', lastName: 'Imhotep' });
+  assert.deepEqual(splitFullName('  Nana   Kwame  Mensah '), { firstName: 'Nana', lastName: 'Kwame Mensah' });
+  assert.deepEqual(splitFullName('Madonna'), { firstName: 'Madonna', lastName: '' });
+  assert.deepEqual(splitFullName(''), { firstName: '', lastName: '' });
+  assert.deepEqual(splitFullName(null), { firstName: '', lastName: '' });
+});
+
+test('guest subscription posts the selected plan + cycle and unwraps the payment', async () => {
+  const payment = { paymentUrl: 'https://checkout.paystack.com/abc', reference: 'ref-1', userId: 'user-1' };
+  let captured = null;
+  globalThis.gnpUserHttpClient = async (path, baseURL, options) => {
+    captured = { path, options };
+    return { success: true, message: '', result: payment };
+  };
+
+  const result = await guestSubscription({
+    firstName: 'Kwabena', lastName: 'Imhotep', email: 'k@example.com',
+    phoneNumber: '0541234567', subscriptionPlanId: 'plan-1', billingCycle: 'Monthly',
+  });
+
+  assert.equal(captured.path, 'subscription/guest');
+  assert.equal(captured.options.method, 'post');
+  assert.equal(captured.options.body.subscriptionPlanId, 'plan-1');
+  assert.equal(captured.options.body.billingCycle, 'Monthly');
+  assert.deepEqual(result, { success: true, data: payment });
+});
+
+test('guest subscription surfaces API failures instead of returning null', async () => {
+  globalThis.gnpUserHttpClient = async () => ({ success: false, message: 'Plan is no longer available', result: null });
+  assert.deepEqual(await guestSubscription({ subscriptionPlanId: 'plan-1', billingCycle: 'Monthly' }), {
+    success: false,
+    message: 'Plan is no longer available',
+  });
 });
