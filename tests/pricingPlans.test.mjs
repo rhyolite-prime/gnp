@@ -15,9 +15,12 @@ import {
   splitFullName,
   getPlansForPublication,
   formatSubscriptionPlanDescription,
+  summarizeSubscription,
+  pickCurrentSubscription,
+  describeSubscriptionStatus,
 } from '../utils/pricingPlans.ts';
 import { getPricingPlans } from '../services/newsPapers.ts';
-import { guestSubscription } from '../services/userSubscription.ts';
+import { guestSubscription, userSubscription } from '../services/userSubscription.ts';
 
 // Trimmed copy of the news-papers/get-pricing-plans response.
 const MONTHLY = { price: 35.9, savePercentage: 10 };
@@ -245,6 +248,133 @@ test('guest subscription surfaces API failures instead of returning null', async
   assert.deepEqual(await guestSubscription({ subscriptionPlanId: 'plan-1', billingCycle: 'Monthly' }), {
     success: false,
     message: 'Plan is no longer available',
+  });
+});
+
+// ─── Signed-in buyers ─────────────────────────────────────────────────────────
+
+// Fixed clock so "days remaining" is deterministic.
+const NOW = Date.parse('2026-11-10T00:00:00Z');
+
+const membership = (overrides = {}) => ({
+  id: 'sub-1',
+  createdAt: '2026-10-01T00:00:00Z',
+  subscriptionIdentifier: 'Daily Graphic - Monthly',
+  userId: 'usr-1',
+  username: 'kwabena_i',
+  email: 'k@example.com',
+  currentSubscriptionPlanId: 'plan-daily',
+  startDate: '2026-10-01T00:00:00Z',
+  endDate: '2026-11-20T00:00:00Z',
+  currentBillingCycle: 'Monthly',
+  isActive: true,
+  nextRenewalDate: '2026-11-20T00:00:00Z',
+  fee: 35.9,
+  ...overrides,
+});
+
+test('a subscription is summarised into the current-package panel', () => {
+  const summary = summarizeSubscription(membership(), NOW);
+
+  assert.deepEqual(summary, {
+    label: 'Daily Graphic - Monthly',
+    cycle: 'Monthly',
+    planId: 'plan-daily',
+    isActive: true,
+    startDate: '2026-10-01T00:00:00Z',
+    endDate: '2026-11-20T00:00:00Z',
+    daysRemaining: 10,
+    fee: 35.9,
+  });
+
+  // Missing optional pieces degrade instead of throwing.
+  const sparse = summarizeSubscription({ currentSubscriptionPlanId: 'p', currentBillingCycle: 'Weekly' }, NOW);
+  assert.equal(sparse.label, 'Current plan - Weekly');
+  assert.equal(sparse.isActive, true); // no end date → assume running
+  assert.equal(sparse.daysRemaining, null);
+  assert.equal(sparse.fee, null);
+
+  assert.equal(summarizeSubscription(null), null);
+  assert.equal(summarizeSubscription({ subscriptionIdentifier: '   ' }), null);
+});
+
+test('an ended subscription reads as inactive even if the flag says otherwise', () => {
+  const lapsed = summarizeSubscription(membership({ endDate: '2026-11-01T00:00:00Z' }), NOW);
+  assert.equal(lapsed.isActive, false);
+  assert.equal(lapsed.daysRemaining, 0); // never negative
+  assert.equal(describeSubscriptionStatus(lapsed, NOW), 'Expired');
+
+  const live = summarizeSubscription(membership(), NOW);
+  assert.equal(describeSubscriptionStatus(live, NOW), 'Active · 10 days left');
+  assert.equal(describeSubscriptionStatus(summarizeSubscription(membership({ endDate: '2026-11-11T00:00:00Z' }), NOW), NOW), 'Active · 1 day left');
+  // Same calendar day counts as the last day, even though the ceiling says 1.
+  assert.equal(describeSubscriptionStatus(summarizeSubscription(membership({ endDate: '2026-11-10T12:00:00Z' }), NOW), NOW), 'Expires today');
+  assert.equal(describeSubscriptionStatus(summarizeSubscription(membership({ endDate: '' }), NOW), NOW), 'Active');
+  assert.equal(describeSubscriptionStatus(null), '');
+});
+
+test('the row shown is the active one, then the one expiring last', () => {
+  const expired = membership({ id: 'old', currentSubscriptionPlanId: 'plan-old', endDate: '2026-09-01T00:00:00Z', isActive: false });
+  const active = membership({ id: 'live', currentSubscriptionPlanId: 'plan-live', endDate: '2026-12-01T00:00:00Z' });
+  const longer = membership({ id: 'long', currentSubscriptionPlanId: 'plan-long', endDate: '2027-06-01T00:00:00Z' });
+
+  assert.equal(pickCurrentSubscription([expired], NOW).id, 'old');
+  assert.equal(pickCurrentSubscription([expired, active], NOW).id, 'live');
+  // Two running packages: the later end date wins.
+  assert.equal(pickCurrentSubscription([active, longer], NOW).id, 'long');
+  assert.equal(pickCurrentSubscription([active, longer, expired], NOW).id, 'long');
+  assert.equal(pickCurrentSubscription([]), null);
+  assert.equal(pickCurrentSubscription(null), null);
+});
+
+test('member subscription posts plan details to subscription/user and unwraps the payment', async () => {
+  const payment = { paymentUrl: 'https://checkout.paystack.com/member', reference: 'ref-m', userId: 'usr-1' };
+  let captured = null;
+  globalThis.gnpUserHttpClient = async (path, baseURL, options) => {
+    captured = { path, options };
+    return { success: true, message: '', result: payment };
+  };
+
+  const result = await userSubscription({
+    subscriptionPlanId: 'plan-daily',
+    subscriptionPlanName: 'Daily Graphic (Monthly)',
+    subscriptionPlanDescription: 'Daily Graphic - Monthly (GHS 35.90)',
+    billingCycle: 'Monthly',
+    subscriptionType: 'regular',
+    price: 35.9,
+  });
+
+  assert.equal(captured.path, 'subscription/user');
+  assert.equal(captured.options.method, 'post');
+  // No contact details: the bearer token identifies the reader.
+  assert.deepEqual(captured.options.body, {
+    subscriptionPlanId: 'plan-daily',
+    subscriptionPlanName: 'Daily Graphic (Monthly)',
+    subscriptionPlanDescription: 'Daily Graphic - Monthly (GHS 35.90)',
+    billingCycle: 'Monthly',
+    subscriptionType: 'regular',
+    price: 35.9,
+  });
+  assert.deepEqual(result, { success: true, message: '', data: payment });
+});
+
+test('member subscription reports API failures instead of a bare boolean', async () => {
+  globalThis.gnpUserHttpClient = async () => ({ success: false, message: 'Plan is no longer available', result: null });
+  assert.deepEqual(await userSubscription({ subscriptionPlanId: 'p', subscriptionPlanName: 'P', subscriptionPlanDescription: 'P', billingCycle: 'Monthly' }), {
+    success: false,
+    message: 'Plan is no longer available',
+  });
+
+  // A rejected Paystack init still carries the message the modal displays.
+  globalThis.gnpUserHttpClient = async () => ({
+    success: false,
+    message: 'Failed to initialize payment',
+    result: { paymentUrl: '', reference: '', userId: 'usr-1' },
+  });
+  assert.deepEqual(await userSubscription({ subscriptionPlanId: 'p', subscriptionPlanName: 'P', subscriptionPlanDescription: 'P', billingCycle: 'Monthly' }), {
+    success: false,
+    message: 'Failed to initialize payment',
+    data: { paymentUrl: '', reference: '', userId: 'usr-1' },
   });
 });
 

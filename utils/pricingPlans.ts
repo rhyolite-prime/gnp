@@ -1,4 +1,4 @@
-import type { SubscriptionPlan, SubscriptionPricingTier } from '~/models';
+import type { SubscriptionPlan, SubscriptionPricingTier, UserSubscription } from '~/models';
 
 /** Billing cycles in the order the pricing page should display them. */
 export const PRICING_BILLING_CYCLES = ['Weekly', 'Monthly', '3 Months', 'Half-Yearly', 'Yearly'] as const;
@@ -218,4 +218,121 @@ export function formatSubscriptionPlanDescription(
 
   const head = [name, billing].filter(Boolean).join(' - ');
   return Number.isFinite(amount) ? `${head} (${formatPlanPrice(amount)})` : head;
+}
+
+// ─── Signed-in buyer's existing subscription ──────────────────────────────────
+
+/** One active package as the buy modal presents it to a signed-in reader. */
+export interface CurrentSubscriptionSummary {
+  /** Plan + cycle label, e.g. `Daily Graphic - Monthly`. */
+  label: string;
+  /** Billing cycle when the API knows it, else an empty string. */
+  cycle: string;
+  /** Plan id, used to preselect a renewal of the same package. */
+  planId: string;
+  isActive: boolean;
+  /** ISO dates exactly as the API sent them ('' when missing). */
+  startDate: string;
+  endDate: string;
+  /** Days left in the current period; null when the end date is unusable. */
+  daysRemaining: number | null;
+  fee: number | null;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function toTimestamp(value: string | null | undefined): number | null {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const time = Date.parse(value);
+  return Number.isFinite(time) ? time : null;
+}
+
+/**
+ * Turns a `subscription/get-all` row into what the buy modal shows above the
+ * plan list. `now` is injectable so the remaining days are testable.
+ */
+export function summarizeSubscription(
+  subscription: UserSubscription | null | undefined,
+  now: number = Date.now(),
+): CurrentSubscriptionSummary | null {
+  if (!subscription) return null;
+
+  const planId = typeof subscription.currentSubscriptionPlanId === 'string'
+    ? subscription.currentSubscriptionPlanId
+    : '';
+  const cycle = typeof subscription.currentBillingCycle === 'string'
+    ? subscription.currentBillingCycle.trim()
+    : '';
+  const identifier = typeof subscription.subscriptionIdentifier === 'string'
+    ? subscription.subscriptionIdentifier.trim()
+    : '';
+
+  const label = identifier || [planId && 'Current plan', cycle].filter(Boolean).join(' - ');
+  if (!label) return null;
+
+  const endTime = toTimestamp(subscription.endDate);
+  const daysRemaining = endTime === null
+    ? null
+    : Math.max(0, Math.ceil((endTime - now) / DAY_MS));
+  const fee = Number(subscription.fee);
+
+  return {
+    label,
+    cycle,
+    planId,
+    isActive: subscription.isActive !== false && (endTime === null || endTime > now),
+    startDate: typeof subscription.startDate === 'string' ? subscription.startDate : '',
+    endDate: typeof subscription.endDate === 'string' ? subscription.endDate : '',
+    daysRemaining,
+    fee: Number.isFinite(fee) ? fee : null,
+  };
+}
+
+/**
+ * Picks the package that matters to a buyer who may have several rows: an
+ * active one first, then the one expiring last. Returns null for no rows.
+ */
+export function pickCurrentSubscription(
+  subscriptions: readonly UserSubscription[] | null | undefined,
+  now: number = Date.now(),
+): UserSubscription | null {
+  const rows = (subscriptions ?? []).filter(Boolean);
+  if (!rows.length) return null;
+
+  const endOf = (row: UserSubscription) => toTimestamp(row.endDate) ?? 0;
+
+  return [...rows].sort((a, b) => {
+    const aActive = a.isActive !== false && (toTimestamp(a.endDate) ?? Infinity) > now;
+    const bActive = b.isActive !== false && (toTimestamp(b.endDate) ?? Infinity) > now;
+    if (aActive !== bActive) return aActive ? -1 : 1;
+    return endOf(b) - endOf(a);
+  })[0];
+}
+
+/** `2026-11-20` — the UTC calendar day, used to compare period end dates. */
+function toDayKey(value: string | null | undefined, fallback: number): string {
+  const time = toTimestamp(value) ?? fallback;
+  return new Date(time).toISOString().slice(0, 10);
+}
+
+/**
+ * Badge text for the current-package panel: `Active · 10 days left`,
+ * `Expires today`, `Expired`.
+ *
+ * `daysRemaining` is a ceiling, so a period ending later today still counts as
+ * "1 day left"; the last day is therefore detected by comparing calendar days
+ * rather than the rounded count.
+ */
+export function describeSubscriptionStatus(
+  summary: CurrentSubscriptionSummary | null | undefined,
+  now: number = Date.now(),
+): string {
+  if (!summary) return '';
+  if (!summary.isActive) return 'Expired';
+
+  const days = summary.daysRemaining;
+  if (days === null) return 'Active';
+  if (toDayKey(summary.endDate, now) === toDayKey(new Date(now).toISOString(), now)) return 'Expires today';
+
+  return `Active · ${days} day${days === 1 ? '' : 's'} left`;
 }

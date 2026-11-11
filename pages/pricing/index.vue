@@ -213,9 +213,24 @@
       </div>
     </div>
 
-    <!-- Guest checkout -->
+    <!--
+      Signed-in checkout: no contact fields (the bearer token identifies the
+      reader), shows their current package and calls subscription/user.
+    -->
+    <BuySubscriptionModalAuthenticated
+      v-if="showBuyModal && isSignedIn"
+      :plans="buyModalPlans"
+      :initial-plan-id="buyModalPlanId"
+      :initial-billing-cycle="activeDuration"
+      :load-current-subscription="loadCurrentSubscription"
+      redirect-to-checkout
+      @close="closeBuyModal"
+      @payment-started="handlePaymentStarted"
+    />
+
+    <!-- Guest checkout — also reachable while signed in, to buy as a new reader -->
     <BuySubscriptionModal
-      v-if="showBuyModal"
+      v-else-if="showBuyModal"
       :plans="buyModalPlans"
       :initial-plan-id="buyModalPlanId"
       :initial-billing-cycle="activeDuration"
@@ -256,6 +271,7 @@ import {
 import type { PricingTabKey } from '~/utils/pricingPlans';
 import type { SubscriptionPlan, SubscriptionResponseModel } from '~/models';
 import type { SubscriptionIdentity } from '~/utils/subscriptionIdentity';
+import { useBasicAuthStore } from '~/stores/basic-user-auth';
 
 // Page metadata
 useHead({
@@ -356,6 +372,11 @@ const checkoutPaymentUrl = ref('');
 // Auto sign-in for guests who just bought a plan (see useGnpUserSession).
 const { signInFromCheckout } = useGnpUserSession();
 
+// Signed-in readers buy with subscription/user instead of the guest endpoints.
+const authStore = useBasicAuthStore();
+const { loadCurrentSubscription } = useMemberSubscription();
+const isSignedIn = computed(() => Boolean(authStore.isAuthenticated && authStore.accessToken));
+
 // Shown when the API created the account but Paystack could not be initialised.
 const checkoutError = reactive({ title: '', message: '', buttonText: 'Close' });
 const showCheckoutError = ref(false);
@@ -384,10 +405,9 @@ function closeBuyModal() {
 function handlePaymentStarted(payment: SubscriptionResponseModel) {
   showBuyModal.value = false;
 
-  // The checkout result also carries a GNP identity token: use it to sign the
-  // buyer in under `gnp-user-identity` before payment, whether or not Paystack
-  // managed to initialise (the account exists either way).
-  const identity = signInFromCheckout(payment);
+  // A signed-in buyer already has a session, so there is nothing to establish;
+  // signing in again with a guest token would swap their identity mid-purchase.
+  const identity = isSignedIn.value ? null : signInFromCheckout(payment);
   const paymentUrl = payment?.paymentUrl ?? '';
 
   if (!paymentUrl) {
@@ -411,9 +431,11 @@ function openCheckoutError(payment: SubscriptionResponseModel, identity: Subscri
   // `message` on the result is the envelope's Paystack reason when present.
   const reason = (payment as { message?: string } | null)?.message || 'Failed to initialize payment';
 
+  const account = identity?.email || identity?.username || authStore.user?.email || '';
+
   checkoutError.title = 'Payment could not be started';
-  checkoutError.message = identity
-    ? `${reason}. Your account (${identity.email || identity.username || 'new reader'}) is ready — retry the payment from this page.`
+  checkoutError.message = account
+    ? `${reason}. Your account (${account}) is ready — retry the payment from this page.`
     : `${reason}. Please try again.`;
   checkoutError.buttonText = 'Close';
   showCheckoutError.value = true;
