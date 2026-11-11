@@ -154,9 +154,21 @@
       </div>
     </div>
 
-    <!-- Subscription Modal (shared checkout design with /pricing) -->
+    <!-- Subscription Modal (shared checkout design with /pricing).
+         Signed-in readers get the no-form variant backed by subscription/user. -->
+    <BuySubscriptionModalAuthenticated
+      v-if="showSubscriptionModal && isSignedIn"
+      :plans="subscriptionModalPlans"
+      :initial-plan-id="initialSubscriptionPlanId"
+      :initial-billing-cycle="initialBillingCycle"
+      :context-note="subscriptionContextNote"
+      redirect-to-checkout
+      @close="closeSubscriptionModal"
+      @payment-started="handleSubscriptionPaymentStarted"
+    />
+
     <BuySubscriptionModal
-      v-if="showSubscriptionModal"
+      v-else-if="showSubscriptionModal"
       :plans="subscriptionModalPlans"
       :initial-plan-id="initialSubscriptionPlanId"
       :initial-billing-cycle="initialBillingCycle"
@@ -510,6 +522,10 @@ function closeInfoModal() {
   showInfoModal.value = false;
 }
 
+// Signed-in readers buy with subscription/user (no contact form). Read from the
+// store rather than the cookie so the flag is reactive right after sign-in.
+const isSignedIn = computed(() => Boolean(authStore.isAuthenticated && authStore.accessToken));
+
 // ─── Subscription checkout ────────────────────────────────────────────────────
 // The modal is the same component the pricing page uses; it renders live plans
 // from news-papers/get-pricing-plans and calls subscription/guest itself.
@@ -577,7 +593,9 @@ async function handleSubscriptionPaymentStarted(payment: SubscriptionResponseMod
 
   // Sign the buyer in with the identity token from checkout, then run the same
   // express-login / entitlement follow-up as a guest one-time purchase.
-  const identity = signInFromCheckout(payment);
+  // Signed-in buyers already have a session; re-signing them with a guest token
+  // would replace their identity mid-purchase.
+  const identity = isSignedIn.value ? null : signInFromCheckout(payment);
   if (identity) {
     await promptBiometricOrRefreshEntitlement(identity);
   }

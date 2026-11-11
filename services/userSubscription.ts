@@ -6,6 +6,7 @@ import type {
   BasePaginationModel,
   NewsPaper,
   GuestSubscriptionPayload,
+  MemberSubscriptionPayload,
 } from "~/models";
 
 
@@ -133,13 +134,33 @@ export async function validateNewsPaperEntitlement(query: object) {
   } as NewsPaperEntitlementResponseModel;
 }
 
-export async function userSubscription(payload: object) {
+/**
+ * Starts a subscription purchase for an already signed-in reader.
+ *
+ * The bearer token from `gnp-user-identity` identifies the buyer, so the payload
+ * only describes the package (see `MemberSubscriptionPayload`). Mirrors
+ * `guestSubscription`'s contract: `{ success, message, data }`, with `data`
+ * carrying the Paystack handles (`paymentUrl`, `reference`) when present.
+ */
+export async function userSubscription(payload: MemberSubscriptionPayload) {
 
-  const response = await httpClient<BaseApiResponse<object>>('subscription/user', "", {
+  const response = await gnpUserHttpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/user', "", {
     method: "post",
     body: payload,
   });
-  return response.success;
+
+  if (!response.result) {
+    return {
+      success: false,
+      message: response.message,
+    };
+  }
+
+  return {
+    success: response.success !== false,
+    message: response.message,
+    data: response.result,
+  };
 }
 
 
