@@ -220,7 +220,7 @@ test('guest subscription posts the selected plan, cycle and description, then un
   assert.equal(captured.options.body.subscriptionPlanId, 'plan-1');
   assert.equal(captured.options.body.billingCycle, 'Monthly');
   assert.equal(captured.options.body.subscriptionPlanDescription, 'Combo - Monthly (GHS 48.90)');
-  assert.deepEqual(result, { success: true, data: payment });
+  assert.deepEqual(result, { success: true, message: '', data: payment });
 });
 
 test('subscription plan descriptions read like the partner/admin flows', () => {

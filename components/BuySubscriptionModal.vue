@@ -119,8 +119,25 @@
                 </div>
               </div>
 
+              <!-- Checkout could not be initialised (e.g. Paystack error) -->
+              <div v-if="paymentError" class="mt-5 rounded-xl border border-red-200 bg-red-50 p-5 text-center">
+                <h3 class="text-base font-bold text-gray-900">We couldn't start your payment</h3>
+                <p class="mt-1 text-sm text-gray-600">{{ paymentError }}</p>
+                <p v-if="signedInEmail" class="mt-2 text-xs text-gray-500">
+                  Your account ({{ signedInEmail }}) is ready — you can retry the payment from
+                  <NuxtLink to="/pricing" class="font-medium text-red-600 hover:underline">the pricing page</NuxtLink>.
+                </p>
+                <button
+                  type="button"
+                  class="mt-4 inline-flex w-full justify-center rounded-md bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
+                  @click="emit('close')"
+                >
+                  Close
+                </button>
+              </div>
+
               <!-- Payment confirmed -->
-              <div v-if="paymentCompleted" class="mt-5 rounded-xl border border-green-200 bg-green-50 p-5 text-center">
+              <div v-else-if="paymentCompleted" class="mt-5 rounded-xl border border-green-200 bg-green-50 p-5 text-center">
                 <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
                   <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -340,6 +357,9 @@ function fieldError(field: 'fullName' | 'email' | 'phoneNumber') {
 // ─── Checkout ─────────────────────────────────────────────────────────────────
 const paymentInfo = ref<SubscriptionResponseModel | null>(null);
 const paymentCompleted = ref(false);
+// Set when the API returned a result but Paystack could not be initialised.
+const paymentError = ref('');
+const signedInEmail = ref('');
 
 async function submit() {
   touched.fullName = true;
@@ -371,15 +391,25 @@ async function submit() {
   try {
     const result = await guestSubscription(payload);
 
-    if (!result.success || !result.data) {
+    if (!result.data) {
       errorMessage.value = result.message || 'We could not start your subscription. Please try again.';
       return;
     }
 
+    // Hand over even when Paystack failed to initialise: the payload also carries
+    // the reader identity token, and the host signs the buyer in with it.
     emit('paymentStarted', result.data);
+
     if (props.redirectToCheckout) {
-      // Host owns the Paystack overlay, so close this dialog first.
+      // Host owns the payment overlay, so close this dialog first.
       emit('close');
+      return;
+    }
+
+    // In-modal checkout needs a URL; without one, surface the API/Paystack error.
+    paymentError.value = result.success ? '' : result.message || 'Failed to initialize payment.';
+    if (paymentError.value) {
+      signedInEmail.value = result.data.email ?? '';
       return;
     }
 
