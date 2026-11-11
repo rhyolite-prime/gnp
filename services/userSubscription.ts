@@ -1,4 +1,12 @@
-import type { UserSubscription, SubscriptionResponseModel, NewsPaperEntitlementResponseModel, BaseApiResponse, BasePaginationModel, NewsPaper } from "~/models";
+import type {
+  UserSubscription,
+  SubscriptionResponseModel,
+  NewsPaperEntitlementResponseModel,
+  BaseApiResponse,
+  BasePaginationModel,
+  NewsPaper,
+  GuestSubscriptionPayload,
+} from "~/models";
 
 
 export async function getUserSubscription(query: object) {
@@ -8,13 +16,24 @@ export async function getUserSubscription(query: object) {
 }
 
 
-export async function guestSubscription(payload: object) {
-    
+export async function guestSubscription(payload: GuestSubscriptionPayload) {
+
   const response = await gnpUserHttpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/guest', "", {
     method: "post",
     body: payload,
   });
-  return response.result;
+
+  if (!response.result) {
+    return {
+      success: false,
+      message: response.message,
+    };
+  }
+
+  return {
+    success: true,
+    data: response.result,
+  };
 }
 
 

@@ -128,3 +128,48 @@ export function resolveActiveBillingCycle(
 
   return cheapest?.cycle ?? cycles[0] ?? PRICING_BILLING_CYCLES[0];
 }
+
+/** Cycle + price shown for a plan once a buyer has chosen a duration. */
+export interface PlanPriceSelection {
+  cycle: string;
+  pricing: SubscriptionPricingTier;
+}
+
+/**
+ * Resolves the tier to display for a plan: the chosen cycle when that plan
+ * sells it, otherwise its first available saved cycle (kept in canonical order)
+ * so the plan still shows a price instead of "Not available".
+ */
+export function resolvePlanPrice(
+  plan: SubscriptionPlan | null | undefined,
+  preferred: string | null | undefined,
+): PlanPriceSelection | null {
+  const preferredTier = getPlanPricing(plan, preferred);
+  if (preferredTier && typeof preferred === 'string') return { cycle: preferred, pricing: preferredTier };
+
+  for (const cycle of getPlanBillingCycles(plan)) {
+    const tier = getPlanPricing(plan, cycle);
+    if (tier) return { cycle, pricing: tier };
+  }
+
+  return null;
+}
+
+/** Human label for a plan's tier, e.g. `Bundle · Monthly`. */
+export function formatPlanTypeLabel(planType: string | null | undefined): string {
+  const value = typeof planType === 'string' ? planType.trim() : '';
+  if (!value) return 'Standard';
+  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+}
+
+/**
+ * Splits the checkout name into the API's first/last name fields. A single word
+ * is sent as the first name; every extra word goes to the surname.
+ */
+export function splitFullName(fullName: string | null | undefined): { firstName: string; lastName: string } {
+  const parts = (fullName ?? '').trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] ?? '',
+    lastName: parts.slice(1).join(' '),
+  };
+}
