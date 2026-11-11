@@ -51,10 +51,27 @@ export interface GnpUserAuthModel {
     
 }
 
+/**
+ * `result` of the subscription checkout endpoints (`subscription/guest`, …).
+ *
+ * Besides the Paystack handles the API now returns a signed GNP identity so the
+ * buyer can be signed in automatically: `token` is the JWT stored in the
+ * `gnp-user-identity` cookie, plus the profile fields it was minted from. Those
+ * profile fields are optional because older deployments only return the token.
+ *
+ * NOTE: `success` on the envelope can be `false` while this payload is still
+ * present — Paystack may have failed to initialise while the account/token was
+ * created — so callers must inspect `result`, not only `success`.
+ */
 export interface SubscriptionResponseModel {
     paymentUrl: string;
     reference: string;
     userId: string;
+    /** JWT for the `gnp-user-identity` cookie; absent before this addition. */
+    token?: string;
+    username?: string;
+    fullName?: string;
+    email?: string;
 }
 
 /**
