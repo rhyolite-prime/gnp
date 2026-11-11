@@ -200,3 +200,22 @@ export function getPlansForPublication(
   const rank = (plan: SubscriptionPlan) => (normalizePlanType(plan.planType) === 'bundle' ? 1 : 0);
   return matches.sort((a, b) => rank(a) - rank(b) || byName(a, b));
 }
+
+/**
+ * Stable, human-readable label for a plan + billing cycle, e.g.
+ * `Combo - Monthly (GHS 48.90)`. Sent as `subscriptionPlanDescription` on guest
+ * checkout so payment records and receipts describe what was bought even after
+ * the plan is renamed or repriced.
+ */
+export function formatSubscriptionPlanDescription(
+  plan: Pick<SubscriptionPlan, 'name'> | null | undefined,
+  cycle: string | null | undefined,
+  price?: number | null,
+): string {
+  const name = typeof plan?.name === 'string' ? plan.name.trim() : '';
+  const billing = typeof cycle === 'string' ? cycle.trim() : '';
+  const amount = Number(price);
+
+  const head = [name, billing].filter(Boolean).join(' - ');
+  return Number.isFinite(amount) ? `${head} (${formatPlanPrice(amount)})` : head;
+}

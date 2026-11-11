@@ -60,8 +60,9 @@ export interface SubscriptionResponseModel {
 /**
  * Body of POST `subscription/guest` — checkout started by a visitor who has no
  * account yet. The billing cycle rides along so the backend can price the plan
- * tier the buyer picked on /pricing; the legacy newspaper modal omits it and
- * lets the backend default the plan's cycle.
+ * tier the buyer picked on /pricing, and `subscriptionPlanDescription` is the
+ * human-readable label (e.g. `Combo - Monthly (GHS 48.90)`) stored on the
+ * resulting subscription/payment record.
  */
 export interface GuestSubscriptionPayload {
     firstName: string;
@@ -69,6 +70,7 @@ export interface GuestSubscriptionPayload {
     email: string;
     phoneNumber: string;
     subscriptionPlanId: string;
+    subscriptionPlanDescription: string;
     billingCycle?: string;
     subscriptionType?: string;
 }

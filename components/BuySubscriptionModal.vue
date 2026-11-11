@@ -239,6 +239,7 @@
 import {
   formatPlanPrice,
   formatPlanTypeLabel,
+  formatSubscriptionPlanDescription,
   resolveActiveBillingCycle,
   resolvePlanPrice,
   splitFullName,
@@ -361,13 +362,16 @@ async function submit() {
   }
 
   const { firstName, lastName } = splitFullName(fullName.value);
+  const { cycle, pricing } = selectedSelection.value;
   const payload: GuestSubscriptionPayload = {
     firstName,
     lastName,
     email: email.value.trim(),
     phoneNumber: phoneNumber.value.trim(),
     subscriptionPlanId: selectedPlan.value.id,
-    billingCycle: selectedSelection.value.cycle,
+    // Readable snapshot, e.g. "Combo - Monthly (GHS 48.90)".
+    subscriptionPlanDescription: formatSubscriptionPlanDescription(selectedPlan.value, cycle, pricing.price),
+    billingCycle: cycle,
     subscriptionType: selectedPlan.value.planType,
   };
 

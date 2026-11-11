@@ -14,6 +14,7 @@ import {
   formatPlanTypeLabel,
   splitFullName,
   getPlansForPublication,
+  formatSubscriptionPlanDescription,
 } from '../utils/pricingPlans.ts';
 import { getPricingPlans } from '../services/newsPapers.ts';
 import { guestSubscription } from '../services/userSubscription.ts';
@@ -199,7 +200,7 @@ test('plan type labels and full-name splitting match the checkout payload shape'
   assert.deepEqual(splitFullName(null), { firstName: '', lastName: '' });
 });
 
-test('guest subscription posts the selected plan + cycle and unwraps the payment', async () => {
+test('guest subscription posts the selected plan, cycle and description, then unwraps the payment', async () => {
   const payment = { paymentUrl: 'https://checkout.paystack.com/abc', reference: 'ref-1', userId: 'user-1' };
   let captured = null;
   globalThis.gnpUserHttpClient = async (path, baseURL, options) => {
@@ -209,14 +210,34 @@ test('guest subscription posts the selected plan + cycle and unwraps the payment
 
   const result = await guestSubscription({
     firstName: 'Kwabena', lastName: 'Imhotep', email: 'k@example.com',
-    phoneNumber: '0541234567', subscriptionPlanId: 'plan-1', billingCycle: 'Monthly',
+    phoneNumber: '0541234567', subscriptionPlanId: 'plan-1',
+    subscriptionPlanDescription: 'Combo - Monthly (GHS 48.90)',
+    billingCycle: 'Monthly',
   });
 
   assert.equal(captured.path, 'subscription/guest');
   assert.equal(captured.options.method, 'post');
   assert.equal(captured.options.body.subscriptionPlanId, 'plan-1');
   assert.equal(captured.options.body.billingCycle, 'Monthly');
+  assert.equal(captured.options.body.subscriptionPlanDescription, 'Combo - Monthly (GHS 48.90)');
   assert.deepEqual(result, { success: true, data: payment });
+});
+
+test('subscription plan descriptions read like the partner/admin flows', () => {
+  assert.equal(
+    formatSubscriptionPlanDescription({ name: 'Combo' }, 'Monthly', 48.9),
+    'Combo - Monthly (GHS 48.90)',
+  );
+  assert.equal(
+    formatSubscriptionPlanDescription(API_PLANS[0], 'Weekly', 9.9),
+    'Blogging Subscription - Weekly (GHS 9.90)',
+  );
+  // Missing piece of the label simply drops out instead of printing "undefined".
+  assert.equal(formatSubscriptionPlanDescription({ name: 'Diva' }, 'Yearly'), 'Diva - Yearly');
+  assert.equal(formatSubscriptionPlanDescription({ name: 'Diva' }, null, 189.9), 'Diva (GHS 189.90)');
+  assert.equal(formatSubscriptionPlanDescription({ name: '  Diva  ' }, '  Weekly  ', 5), 'Diva - Weekly (GHS 5.00)');
+  assert.equal(formatSubscriptionPlanDescription(null, 'Monthly', 10), 'Monthly (GHS 10.00)');
+  assert.equal(formatSubscriptionPlanDescription(null, null), '');
 });
 
 test('guest subscription surfaces API failures instead of returning null', async () => {
