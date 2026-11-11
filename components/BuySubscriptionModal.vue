@@ -433,6 +433,7 @@ function handleClose() {
 // like the newspaper checkout. The backend (subscription/guest) owns fulfilment
 // and emails the access details, so we only acknowledge the payment here.
 function onCheckoutMessage(message: MessageEvent<any>) {
+  console.log('message->', message)
   if (message.origin !== 'https://checkout.paystack.com') return;
   if (!message.data?.data?.status) return;
 
