@@ -13,6 +13,7 @@ import {
   resolvePlanPrice,
   formatPlanTypeLabel,
   splitFullName,
+  getPlansForPublication,
 } from '../utils/pricingPlans.ts';
 import { getPricingPlans } from '../services/newsPapers.ts';
 import { guestSubscription } from '../services/userSubscription.ts';
@@ -224,4 +225,35 @@ test('guest subscription surfaces API failures instead of returning null', async
     success: false,
     message: 'Plan is no longer available',
   });
+});
+
+test('plans targeting a publication are listed first, regular before bundle', () => {
+  const DG = '7378357e-1a8a-4e8e-a1fd-00e8f9f2af2b';
+  const MIRROR = 'c5bb19de-8b85-4952-93c5-6c63d5b0bea1';
+  const plans = [
+    { id: 'family', name: 'Family', planType: 'bundle', pricing: { Monthly: MONTHLY }, targetPublications: [DG, MIRROR] },
+    { id: 'daily', name: 'Daily Graphic', planType: 'regular', pricing: { Monthly: MONTHLY }, targetPublications: [DG] },
+    { id: 'mirror', name: 'The Mirror', planType: 'regular', pricing: { Monthly: MONTHLY }, targetPublications: [MIRROR] },
+    { id: 'combo', name: 'Combo', planType: 'bundle', pricing: { Monthly: MONTHLY }, targetPublications: [MIRROR] },
+    { id: 'blog', name: 'Blogging', planType: 'premium', pricing: { Monthly: MONTHLY }, targetPublications: [] },
+  ];
+
+  // Regular single-publication plan wins over bundles that also include the paper.
+  assert.deepEqual(getPlansForPublication(plans, DG).map((p) => p.id), ['daily', 'family']);
+  // The Mirror has its own regular plan, which outranks the bundles again.
+  assert.deepEqual(getPlansForPublication(plans, MIRROR).map((p) => p.id), ['mirror', 'combo', 'family']);
+});
+
+test('publication matching is case/whitespace tolerant and handles empty input', () => {
+  const plans = [
+    { id: 'a', name: 'A', planType: 'regular', pricing: {}, targetPublications: [' ABC-123 '] },
+    { id: 'b', name: 'B', planType: 'regular', pricing: {}, targetPublications: [] },
+    { id: 'c', name: 'C', planType: 'regular', pricing: {} },
+  ];
+  assert.deepEqual(getPlansForPublication(plans, 'abc-123').map((p) => p.id), ['a']);
+  assert.deepEqual(getPlansForPublication(plans, '  ABC-123  ').map((p) => p.id), ['a']);
+  assert.deepEqual(getPlansForPublication(plans, ''), []);
+  assert.deepEqual(getPlansForPublication(plans, null), []);
+  assert.deepEqual(getPlansForPublication(null, 'abc-123'), []);
+  assert.deepEqual(getPlansForPublication(plans, 'missing'), []);
 });

@@ -173,3 +173,30 @@ export function splitFullName(fullName: string | null | undefined): { firstName:
     lastName: parts.slice(1).join(' '),
   };
 }
+
+/**
+ * Plans that grant access to a specific publication: the regular plan whose
+ * `targetPublications` contains it, followed by every bundle that includes it.
+ * Used by the newspaper page to pre-select the right plan for the edition being
+ * read. Matching is case-insensitive and ignores surrounding whitespace because
+ * ids come from different backend tables.
+ */
+export function getPlansForPublication(
+  plans: readonly SubscriptionPlan[] | null | undefined,
+  publicationId: string | null | undefined,
+): SubscriptionPlan[] {
+  const target = typeof publicationId === 'string' ? publicationId.trim().toLowerCase() : '';
+  if (!target) return [];
+
+  const grants = (plan: SubscriptionPlan | null | undefined) =>
+    Array.isArray(plan?.targetPublications) &&
+    plan!.targetPublications.some(
+      (id) => typeof id === 'string' && id.trim().toLowerCase() === target,
+    );
+
+  const matches = (plans ?? []).filter((plan) => plan && grants(plan));
+
+  // Regular plans first (single-publication access), then bundles.
+  const rank = (plan: SubscriptionPlan) => (normalizePlanType(plan.planType) === 'bundle' ? 1 : 0);
+  return matches.sort((a, b) => rank(a) - rank(b) || byName(a, b));
+}
