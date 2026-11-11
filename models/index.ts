@@ -92,6 +92,26 @@ export interface GuestSubscriptionPayload {
     subscriptionType?: string;
 }
 
+/**
+ * Body of POST `subscription/user` — a signed-in reader buying or renewing a
+ * package from /pricing.
+ *
+ * Unlike `GuestSubscriptionPayload` there are no contact details: the bearer
+ * token identifies the reader, so the API only needs to know what was bought.
+ * `billingCycle` and the readable `subscriptionPlanDescription` keep payment
+ * records self-describing after a plan is renamed or repriced.
+ */
+export interface MemberSubscriptionPayload {
+    subscriptionPlanId: string;
+    /** Display label for the purchase, e.g. `Daily Graphic (Monthly)`. */
+    subscriptionPlanName: string;
+    /** Receipt label, e.g. `Daily Graphic - Monthly (GHS 35.90)`. */
+    subscriptionPlanDescription: string;
+    billingCycle: string;
+    subscriptionType?: string;
+    price?: number;
+}
+
 export interface NewsPaperEntitlementResponseModel {
     hasAccess: boolean;
     newsPaperId: string;
