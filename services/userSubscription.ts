@@ -23,6 +23,11 @@ export async function guestSubscription(payload: GuestSubscriptionPayload) {
     body: payload,
   });
 
+  // The API creates the reader account + identity token even when the envelope's
+  // `success` is false (e.g. "Failed to initialize payment"). `data` is therefore
+  // returned whenever the result payload exists, and `success` tells the caller
+  // whether checkout actually started; the token lets them sign the buyer in
+  // either way instead of losing it.
   if (!response.result) {
     return {
       success: false,
@@ -31,7 +36,8 @@ export async function guestSubscription(payload: GuestSubscriptionPayload) {
   }
 
   return {
-    success: true,
+    success: response.success !== false,
+    message: response.message,
     data: response.result,
   };
 }

@@ -428,6 +428,7 @@ import {
 } from 'lucide-vue-next'
 import { useBiometrics } from '~/composables/useBiometrics'
 import { getPlansForPublication } from '~/utils/pricingPlans';
+import { toBiometricUser, type SubscriptionIdentity } from '~/utils/subscriptionIdentity';
 
 const route = useRoute();
 const router = useRouter();
@@ -475,6 +476,8 @@ const showSubscriptionModal = ref(false);
 const showShareModal = ref(false);
 const showPaymentModal = ref(false);
 const showFingerprintModal = ref(false);
+// Identity from a subscription checkout, used by the express-login enrolment.
+const biometricUser = ref<{ id: string; email: string; name: string } | null>(null);
 const isBiometricAvailable = ref(false);
 const isRegisteringBiometric = ref(false);
 const purchaseType = ref<'ONE_TIME' | 'SHARE' | 'SUBSCRIPTION'>('ONE_TIME');
@@ -566,13 +569,44 @@ function closeSubscriptionModal() {
 
 // Checkout replaces the buy modal so the two dialogs never stack; the existing
 // payment overlay (shared with the one-time purchase flow) renders the iframe.
-function handleSubscriptionPaymentStarted(payment: SubscriptionResponseModel) {
+const { signInFromCheckout } = useGnpUserSession();
+
+async function handleSubscriptionPaymentStarted(payment: SubscriptionResponseModel) {
   showSubscriptionModal.value = false;
+  purchaseType.value = 'SUBSCRIPTION';
+
+  // Sign the buyer in with the identity token from checkout, then run the same
+  // express-login / entitlement follow-up as a guest one-time purchase.
+  const identity = signInFromCheckout(payment);
+  if (identity) {
+    await promptBiometricOrRefreshEntitlement(identity);
+  }
+
   if (payment?.paymentUrl) {
     paymentInfo.value = payment;
-    purchaseType.value = 'SUBSCRIPTION';
     showPaymentModal.value = true;
+  } else {
+    showInfo({
+      type: 'error',
+      title: 'Payment could not be started',
+      message: identity
+        ? `Failed to initialize payment. Your account (${identity.email || identity.username}) is ready — please retry.`
+        : 'Failed to initialize payment. Please try again.',
+    });
   }
+}
+
+// Offer express login when the device supports it, otherwise just refresh access.
+async function promptBiometricOrRefreshEntitlement(identity: SubscriptionIdentity) {
+  const available = await isBiometricsAvailable();
+  if (available) {
+    isBiometricAvailable.value = true;
+    biometricUser.value = toBiometricUser(identity);
+    showFingerprintModal.value = true;
+    return;
+  }
+
+  await retrieveNewsPaperEntitlement(newspaperId.value);
 }
 
 
@@ -990,18 +1024,17 @@ const handleLinkFingerprint = async () => {
       
       isRegisteringBiometric.value = true;
       
-      // Use current user details for enrollment
-      // In a real app we might want to ensure we have a persistent user ID from the response
-      const user = {
+      // Prefer the identity returned by checkout; fall back to the typed details.
+      const user = biometricUser.value ?? {
           id: paymentInfo.value?.userId || 'guest-user',
           email: email.value,
           name: fullName.value
       };
 
       const credential = await register(user);
-        
+
       // Send to backend..
-      await registerBiometric(credential, paymentInfo.value?.userId);
+      await registerBiometric(credential, paymentInfo.value?.userId || user.id);
 
       await retrieveNewsPaperEntitlement(newspaperId.value);
 
@@ -1019,6 +1052,7 @@ const handleLinkFingerprint = async () => {
 
 const skipFingerprint = async () => {
   showFingerprintModal.value = false;
+  biometricUser.value = null;
     await retrieveNewsPaperEntitlement(newspaperId.value)
 }
 </script>

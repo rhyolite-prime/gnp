@@ -231,6 +231,16 @@
       :payment-url="checkoutPaymentUrl"
       @close="closeCheckout"
     />
+
+    <!-- Account created but Paystack refused to initialise -->
+    <InfoModal
+      :show="showCheckoutError"
+      type="error"
+      :title="checkoutError.title"
+      :message="checkoutError.message"
+      :button-text="checkoutError.buttonText"
+      @close="showCheckoutError = false"
+    />
   </div>
 </template>
 
@@ -245,6 +255,7 @@ import {
 } from '~/utils/pricingPlans';
 import type { PricingTabKey } from '~/utils/pricingPlans';
 import type { SubscriptionPlan, SubscriptionResponseModel } from '~/models';
+import type { SubscriptionIdentity } from '~/utils/subscriptionIdentity';
 
 // Page metadata
 useHead({
@@ -342,6 +353,13 @@ const showBuyModal = ref(false);
 const buyModalPlanId = ref('');
 const checkoutPaymentUrl = ref('');
 
+// Auto sign-in for guests who just bought a plan (see useGnpUserSession).
+const { signInFromCheckout } = useGnpUserSession();
+
+// Shown when the API created the account but Paystack could not be initialised.
+const checkoutError = reactive({ title: '', message: '', buttonText: 'Close' });
+const showCheckoutError = ref(false);
+
 // Pass every plan so the buyer can switch plans inside the modal, but list the
 // clicked tab's plans first so the highlighted plan is in view.
 const buyModalPlans = computed<SubscriptionPlan[]>(() => {
@@ -365,11 +383,40 @@ function closeBuyModal() {
 // to <PaymentCheckoutModal>, so only one dialog is on screen at a time.
 function handlePaymentStarted(payment: SubscriptionResponseModel) {
   showBuyModal.value = false;
-  checkoutPaymentUrl.value = payment?.paymentUrl ?? '';
+
+  // The checkout result also carries a GNP identity token: use it to sign the
+  // buyer in under `gnp-user-identity` before payment, whether or not Paystack
+  // managed to initialise (the account exists either way).
+  const identity = signInFromCheckout(payment);
+  const paymentUrl = payment?.paymentUrl ?? '';
+
+  if (!paymentUrl) {
+    checkoutPaymentUrl.value = '';
+    openCheckoutError(payment, identity);
+    return;
+  }
+
+  checkoutPaymentUrl.value = paymentUrl;
 }
 
 function closeCheckout() {
   checkoutPaymentUrl.value = '';
+}
+
+/**
+ * Paystack refused to initialise. The reader is still signed in by then, so the
+ * message says so instead of implying the purchase failed silently.
+ */
+function openCheckoutError(payment: SubscriptionResponseModel, identity: SubscriptionIdentity | null) {
+  // `message` on the result is the envelope's Paystack reason when present.
+  const reason = (payment as { message?: string } | null)?.message || 'Failed to initialize payment';
+
+  checkoutError.title = 'Payment could not be started';
+  checkoutError.message = identity
+    ? `${reason}. Your account (${identity.email || identity.username || 'new reader'}) is ready — retry the payment from this page.`
+    : `${reason}. Please try again.`;
+  checkoutError.buttonText = 'Close';
+  showCheckoutError.value = true;
 }
 
 // Guests without access to a subscription plan can sign in instead; the header
