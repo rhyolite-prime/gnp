@@ -161,7 +161,9 @@
       :initial-plan-id="initialSubscriptionPlanId"
       :initial-billing-cycle="initialBillingCycle"
       :context-note="subscriptionContextNote"
+      redirect-to-checkout
       @close="closeSubscriptionModal"
+      @payment-started="handleSubscriptionPaymentStarted"
     />
 
     <!-- One-Time Purchase Modal -->
@@ -560,6 +562,17 @@ function openSubscriptionModal() {
 // Close modal
 function closeSubscriptionModal() {
   showSubscriptionModal.value = false;
+}
+
+// Checkout replaces the buy modal so the two dialogs never stack; the existing
+// payment overlay (shared with the one-time purchase flow) renders the iframe.
+function handleSubscriptionPaymentStarted(payment: SubscriptionResponseModel) {
+  showSubscriptionModal.value = false;
+  if (payment?.paymentUrl) {
+    paymentInfo.value = payment;
+    purchaseType.value = 'SUBSCRIPTION';
+    showPaymentModal.value = true;
+  }
 }
 
 

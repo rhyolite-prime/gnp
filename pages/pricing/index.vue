@@ -219,8 +219,17 @@
       :plans="buyModalPlans"
       :initial-plan-id="buyModalPlanId"
       :initial-billing-cycle="activeDuration"
+      redirect-to-checkout
       @close="closeBuyModal"
       @request-sign-in="handleRequestSignIn"
+      @payment-started="handlePaymentStarted"
+    />
+
+    <!-- Paystack checkout: replaces the buy modal while payment is in progress -->
+    <PaymentCheckoutModal
+      v-if="checkoutPaymentUrl"
+      :payment-url="checkoutPaymentUrl"
+      @close="closeCheckout"
     />
   </div>
 </template>
@@ -235,7 +244,7 @@ import {
   resolveActiveBillingCycle,
 } from '~/utils/pricingPlans';
 import type { PricingTabKey } from '~/utils/pricingPlans';
-import type { SubscriptionPlan } from '~/models';
+import type { SubscriptionPlan, SubscriptionResponseModel } from '~/models';
 
 // Page metadata
 useHead({
@@ -331,6 +340,7 @@ const faqs = [
 // plan pre-selected; the modal itself calls subscription/guest.
 const showBuyModal = ref(false);
 const buyModalPlanId = ref('');
+const checkoutPaymentUrl = ref('');
 
 // Pass every plan so the buyer can switch plans inside the modal, but list the
 // clicked tab's plans first so the highlighted plan is in view.
@@ -349,6 +359,17 @@ function openBuyModal(plan?: SubscriptionPlan) {
 
 function closeBuyModal() {
   showBuyModal.value = false;
+}
+
+// Buying a plan dismisses the Buy Subscription modal and hands the Paystack URL
+// to <PaymentCheckoutModal>, so only one dialog is on screen at a time.
+function handlePaymentStarted(payment: SubscriptionResponseModel) {
+  showBuyModal.value = false;
+  checkoutPaymentUrl.value = payment?.paymentUrl ?? '';
+}
+
+function closeCheckout() {
+  checkoutPaymentUrl.value = '';
 }
 
 // Guests without access to a subscription plan can sign in instead; the header
