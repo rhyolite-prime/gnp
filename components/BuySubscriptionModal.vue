@@ -13,6 +13,12 @@
               <p class="mt-1 text-sm text-gray-500">
                 You're subscribing as a guest — no account needed. We'll email your access details after payment.
               </p>
+              <p v-if="contextNote" class="mt-2 inline-flex items-start gap-1.5 rounded-md bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700">
+                <svg class="mt-px h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ contextNote }}
+              </p>
             </div>
             <button
               type="button"
@@ -233,6 +239,7 @@
 import {
   formatPlanPrice,
   formatPlanTypeLabel,
+  formatSubscriptionPlanDescription,
   resolveActiveBillingCycle,
   resolvePlanPrice,
   splitFullName,
@@ -248,8 +255,10 @@ const props = withDefaults(
     initialPlanId?: string;
     /** Billing cycle to price with, e.g. `Monthly`. */
     initialBillingCycle?: string;
+    /** Optional note, e.g. which edition the subscription unlocks. */
+    contextNote?: string;
   }>(),
-  { initialPlanId: '', initialBillingCycle: '' },
+  { initialPlanId: '', initialBillingCycle: '', contextNote: '' },
 );
 
 const emit = defineEmits<{
@@ -353,13 +362,16 @@ async function submit() {
   }
 
   const { firstName, lastName } = splitFullName(fullName.value);
+  const { cycle, pricing } = selectedSelection.value;
   const payload: GuestSubscriptionPayload = {
     firstName,
     lastName,
     email: email.value.trim(),
     phoneNumber: phoneNumber.value.trim(),
     subscriptionPlanId: selectedPlan.value.id,
-    billingCycle: selectedSelection.value.cycle,
+    // Readable snapshot, e.g. "Combo - Monthly (GHS 48.90)".
+    subscriptionPlanDescription: formatSubscriptionPlanDescription(selectedPlan.value, cycle, pricing.price),
+    billingCycle: cycle,
     subscriptionType: selectedPlan.value.planType,
   };
 

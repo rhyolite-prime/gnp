@@ -13,6 +13,8 @@ import {
   resolvePlanPrice,
   formatPlanTypeLabel,
   splitFullName,
+  getPlansForPublication,
+  formatSubscriptionPlanDescription,
 } from '../utils/pricingPlans.ts';
 import { getPricingPlans } from '../services/newsPapers.ts';
 import { guestSubscription } from '../services/userSubscription.ts';
@@ -198,7 +200,7 @@ test('plan type labels and full-name splitting match the checkout payload shape'
   assert.deepEqual(splitFullName(null), { firstName: '', lastName: '' });
 });
 
-test('guest subscription posts the selected plan + cycle and unwraps the payment', async () => {
+test('guest subscription posts the selected plan, cycle and description, then unwraps the payment', async () => {
   const payment = { paymentUrl: 'https://checkout.paystack.com/abc', reference: 'ref-1', userId: 'user-1' };
   let captured = null;
   globalThis.gnpUserHttpClient = async (path, baseURL, options) => {
@@ -208,14 +210,34 @@ test('guest subscription posts the selected plan + cycle and unwraps the payment
 
   const result = await guestSubscription({
     firstName: 'Kwabena', lastName: 'Imhotep', email: 'k@example.com',
-    phoneNumber: '0541234567', subscriptionPlanId: 'plan-1', billingCycle: 'Monthly',
+    phoneNumber: '0541234567', subscriptionPlanId: 'plan-1',
+    subscriptionPlanDescription: 'Combo - Monthly (GHS 48.90)',
+    billingCycle: 'Monthly',
   });
 
   assert.equal(captured.path, 'subscription/guest');
   assert.equal(captured.options.method, 'post');
   assert.equal(captured.options.body.subscriptionPlanId, 'plan-1');
   assert.equal(captured.options.body.billingCycle, 'Monthly');
+  assert.equal(captured.options.body.subscriptionPlanDescription, 'Combo - Monthly (GHS 48.90)');
   assert.deepEqual(result, { success: true, data: payment });
+});
+
+test('subscription plan descriptions read like the partner/admin flows', () => {
+  assert.equal(
+    formatSubscriptionPlanDescription({ name: 'Combo' }, 'Monthly', 48.9),
+    'Combo - Monthly (GHS 48.90)',
+  );
+  assert.equal(
+    formatSubscriptionPlanDescription(API_PLANS[0], 'Weekly', 9.9),
+    'Blogging Subscription - Weekly (GHS 9.90)',
+  );
+  // Missing piece of the label simply drops out instead of printing "undefined".
+  assert.equal(formatSubscriptionPlanDescription({ name: 'Diva' }, 'Yearly'), 'Diva - Yearly');
+  assert.equal(formatSubscriptionPlanDescription({ name: 'Diva' }, null, 189.9), 'Diva (GHS 189.90)');
+  assert.equal(formatSubscriptionPlanDescription({ name: '  Diva  ' }, '  Weekly  ', 5), 'Diva - Weekly (GHS 5.00)');
+  assert.equal(formatSubscriptionPlanDescription(null, 'Monthly', 10), 'Monthly (GHS 10.00)');
+  assert.equal(formatSubscriptionPlanDescription(null, null), '');
 });
 
 test('guest subscription surfaces API failures instead of returning null', async () => {
@@ -224,4 +246,35 @@ test('guest subscription surfaces API failures instead of returning null', async
     success: false,
     message: 'Plan is no longer available',
   });
+});
+
+test('plans targeting a publication are listed first, regular before bundle', () => {
+  const DG = '7378357e-1a8a-4e8e-a1fd-00e8f9f2af2b';
+  const MIRROR = 'c5bb19de-8b85-4952-93c5-6c63d5b0bea1';
+  const plans = [
+    { id: 'family', name: 'Family', planType: 'bundle', pricing: { Monthly: MONTHLY }, targetPublications: [DG, MIRROR] },
+    { id: 'daily', name: 'Daily Graphic', planType: 'regular', pricing: { Monthly: MONTHLY }, targetPublications: [DG] },
+    { id: 'mirror', name: 'The Mirror', planType: 'regular', pricing: { Monthly: MONTHLY }, targetPublications: [MIRROR] },
+    { id: 'combo', name: 'Combo', planType: 'bundle', pricing: { Monthly: MONTHLY }, targetPublications: [MIRROR] },
+    { id: 'blog', name: 'Blogging', planType: 'premium', pricing: { Monthly: MONTHLY }, targetPublications: [] },
+  ];
+
+  // Regular single-publication plan wins over bundles that also include the paper.
+  assert.deepEqual(getPlansForPublication(plans, DG).map((p) => p.id), ['daily', 'family']);
+  // The Mirror has its own regular plan, which outranks the bundles again.
+  assert.deepEqual(getPlansForPublication(plans, MIRROR).map((p) => p.id), ['mirror', 'combo', 'family']);
+});
+
+test('publication matching is case/whitespace tolerant and handles empty input', () => {
+  const plans = [
+    { id: 'a', name: 'A', planType: 'regular', pricing: {}, targetPublications: [' ABC-123 '] },
+    { id: 'b', name: 'B', planType: 'regular', pricing: {}, targetPublications: [] },
+    { id: 'c', name: 'C', planType: 'regular', pricing: {} },
+  ];
+  assert.deepEqual(getPlansForPublication(plans, 'abc-123').map((p) => p.id), ['a']);
+  assert.deepEqual(getPlansForPublication(plans, '  ABC-123  ').map((p) => p.id), ['a']);
+  assert.deepEqual(getPlansForPublication(plans, ''), []);
+  assert.deepEqual(getPlansForPublication(plans, null), []);
+  assert.deepEqual(getPlansForPublication(null, 'abc-123'), []);
+  assert.deepEqual(getPlansForPublication(plans, 'missing'), []);
 });
