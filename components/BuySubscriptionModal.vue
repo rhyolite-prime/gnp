@@ -217,20 +217,6 @@
         </div>
       </div>
 
-      <!-- Paystack checkout -->
-      <div v-if="paymentInfo?.paymentUrl" class="fixed inset-0 flex items-center justify-center bg-gray-900/70 p-4">
-        <div class="w-full max-w-2xl">
-          <div class="mb-2 flex items-center justify-between text-white">
-            <p class="text-sm font-medium">Complete your payment</p>
-            <button type="button" class="rounded-md px-2 py-1 text-sm hover:bg-white/10" @click="closePayment">Close</button>
-          </div>
-          <iframe
-            title="Payment"
-            :src="paymentInfo.paymentUrl"
-            class="h-[600px] w-full rounded-lg border-0 bg-white"
-          ></iframe>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -257,8 +243,14 @@ const props = withDefaults(
     initialBillingCycle?: string;
     /** Optional note, e.g. which edition the subscription unlocks. */
     contextNote?: string;
+    /**
+     * Dismiss this dialog once checkout starts and let the host render
+     * <PaymentCheckoutModal> with the returned URL. Defaults to keeping the
+     * Paystack iframe inside this modal.
+     */
+    redirectToCheckout?: boolean;
   }>(),
-  { initialPlanId: '', initialBillingCycle: '', contextNote: '' },
+  { initialPlanId: '', initialBillingCycle: '', contextNote: '', redirectToCheckout: false },
 );
 
 const emit = defineEmits<{
@@ -384,8 +376,14 @@ async function submit() {
       return;
     }
 
-    paymentInfo.value = result.data;
     emit('paymentStarted', result.data);
+    if (props.redirectToCheckout) {
+      // Host owns the Paystack overlay, so close this dialog first.
+      emit('close');
+      return;
+    }
+
+    paymentInfo.value = result.data;
   } catch (error: any) {
     console.error('Guest subscription error:', error);
     errorMessage.value =
@@ -394,15 +392,6 @@ async function submit() {
   } finally {
     isProcessing.value = false;
   }
-}
-
-function closePayment() {
-  // Before payment: dismiss the iframe. After payment: close the whole modal.
-  if (paymentCompleted.value) {
-    emit('close');
-    return;
-  }
-  paymentInfo.value = null;
 }
 
 function handleClose() {
