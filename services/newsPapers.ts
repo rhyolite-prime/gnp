@@ -106,11 +106,18 @@ export async function getLatestNewsPapers(query: object) {
    return response.result;
 }
 
-export async function getAllPublications() {
- 
-    const response = await httpClient<BaseApiResponse<BasePaginationModel<Publication[]>>>('news-papers/get-all-publications', "");
-    
-   return response.result;
+export async function getAllPublications(): Promise<Publication[]> {
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<Publication[]> | Publication[]>>(
+        'news-papers/get-all-publications', "");
+
+    if (!response || response.success === false) {
+        throw new Error(response?.message || 'Unable to load publications');
+    }
+
+    const result = response.result;
+    const list = Array.isArray(result) ? result : result?.data;
+
+    return Array.isArray(list) ? list : [];
 }
 
 export async function getNewsPaperDetails(query: object) {
