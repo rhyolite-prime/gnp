@@ -180,7 +180,7 @@
                 </dl>
               </div>
 
-              <!-- Purchase could not be initialised (e.g. Paystack error) -->
+              <!-- Purchase could n ot be initialised (e.g. Paystack error) -->
               <div v-if="paymentError" class="mt-5 rounded-xl border border-red-200 bg-red-50 p-5 text-center">
                 <h3 class="text-base font-bold text-gray-900">We couldn't start your payment</h3>
                 <p class="mt-1 text-sm text-gray-600">{{ paymentError }}</p>
