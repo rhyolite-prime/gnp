@@ -125,7 +125,7 @@ const selectedPublicationName = computed(() =>
 const loadPublications = async () => {
   isLoadingPublications.value = true;
   try {
-    const list = await getPublicPublications();
+    const list = await getAllPublications();
     publications.value = list
       .filter(p => p.isActive !== false)
       .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
