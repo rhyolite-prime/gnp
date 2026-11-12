@@ -1,4 +1,4 @@
-import type { BaseApiResponse, GnpUser, BasePaginationModel, UserAccountMetaData } from "~/models";
+import type { BaseApiResponse, GnpUser, BasePaginationModel, UserAccountMetaData, PartnerSubscriberSubscriptionSummary } from "~/models";
 
 export async function getUsers(query: object) {
  
@@ -14,7 +14,8 @@ export async function getUserAccountMetaData() {
 
 export async function getUserSubscriptionDetails(id: string) {
     
-    const response = await gnpUserHttpClient<BaseApiResponse<any>>(`users/get-subscriber-info/${id}`, "");
+    const response = await gnpUserHttpClient<BaseApiResponse<PartnerSubscriberSubscriptionSummary | null>>(`users/get-subscriber-info/${encodeURIComponent(id)}`, "");
+    if (!response.success) throw new Error(response.message || 'Failed to load subscription details.');
     return response.result;
 }
 
