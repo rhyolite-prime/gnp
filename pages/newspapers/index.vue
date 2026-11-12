@@ -21,13 +21,18 @@
           <div class="bg-white rounded-lg shadow p-6 mb-6">
             <!-- Filter at top of newspapers section -->
             <div class="mb-6">
-              <NewspaperFilter @filter="handleFilterApply" class="mb-4" />
+              <NewspaperFilter
+                :model-value="appliedFilters"
+                :publications="publications"
+                :loading-publications="isLoadingPublications"
+                @filter="handleFilterApply"
+                @reset="resetFilters"
+                class="mb-4"
+              />
             </div>
             
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-              <h2 class="text-xl font-semibold text-gray-900">{{ 
-                activeFilters.category || activeFilters.publication || 'All Newspapers'
-              }}</h2>
+              <h2 class="text-xl font-semibold text-gray-900">{{ selectedPublicationName || 'All Newspapers' }}</h2>
               <div class="flex items-center space-x-2">
                 <span class="text-sm text-gray-500">{{ paginationParams.totalCount }} results</span>
               </div>
@@ -68,7 +73,7 @@
           
           <!-- Pagination info -->
           <div class="flex justify-between items-center text-sm text-gray-500" v-if="newsPaperList.length > 0">
-            <span>Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentPage * itemsPerPage, newsPaperList.length) }} of {{ newsPaperList.length }} results</span>
+            <span>Showing {{ paginationParams.lowerBound }} to {{ Math.min(paginationParams.upperBound, paginationParams.totalCount) }} of {{ paginationParams.totalCount }} results</span>
             <span>Page {{ currentPage }} of {{ paginationParams.totalPages }}</span>
           </div>
           
@@ -85,8 +90,8 @@
 </template>
 
 <script setup lang="ts">
-import type { NewsPaper } from "~/models";
-import { isEmpty, debounce } from "lodash-es";
+import type { NewsPaper, Publication } from "~/models";
+import { debounce } from "lodash-es";
 import { Search } from 'lucide-vue-next'
 
 
@@ -99,8 +104,38 @@ const filters = reactive({
   query: '',
   pageNo: 1,
   pageSize: 10,
-
+  publicationId: '',
+  startDate: '',
+  endDate: '',
 });
+
+// Publications for the filter drop-down (loaded from the API).
+const publications = ref<Publication[]>([]);
+const isLoadingPublications = ref(false);
+
+const appliedFilters = computed(() => ({
+  publicationId: filters.publicationId,
+  startDate: filters.startDate,
+  endDate: filters.endDate,
+}));
+
+const selectedPublicationName = computed(() =>
+  publications.value.find(p => p.id === filters.publicationId)?.name ?? '');
+
+const loadPublications = async () => {
+  isLoadingPublications.value = true;
+  try {
+    const list = await getPublicPublications();
+    publications.value = list
+      .filter(p => p.isActive !== false)
+      .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+  } catch (error) {
+    console.error('Unable to fetch publications', error);
+    publications.value = [];
+  } finally {
+    isLoadingPublications.value = false;
+  }
+}
 
 
 const paginationParams = reactive({
@@ -151,8 +186,12 @@ const publicationCategories = ref<Category[]>([
 // State
 const isLoading = ref(false)
 const isShimmerLoading = ref(false)
-const currentPage = ref(1)
-const itemsPerPage = 12 // Display 12 items per page (2 rows of 6 on xl screens)
+// The current page lives in `filters.pageNo` (what is sent to the API), so the
+// pagination control and the request can never drift apart.
+const currentPage = computed({
+  get: () => filters.pageNo,
+  set: (value: number) => { filters.pageNo = value }
+})
 const currentSelectedNewspaper = ref<NewsPaper | null>(null)
 const activeFilters = reactive({
   category: '',
@@ -162,44 +201,84 @@ const activeFilters = reactive({
 
 const newsPaperList = ref<NewsPaper[]>([]);
 
-const onPageChange = async (pageNumber: number) => {
-
-	filters.pageNo = pageNumber;
-	const filteredQuery = filterQueryParams({ ...route.query, ...filters });
-
-	router.replace({ name: route.name ?? '', query: filteredQuery });
-    await getPaginatedNewsPapers()
+const parsePageNo = (value: unknown) => {
+  const page = parseInt(String(Array.isArray(value) ? value[0] : value ?? ''), 10);
+  return Number.isFinite(page) && page > 0 ? page : 1;
 }
 
+const syncRouteQuery = () => {
+  const filteredQuery = filterQueryParams({ ...route.query, ...filters });
+  router.replace({ name: route.name ?? '', query: filteredQuery });
+}
 
+const onPageChange = async (pageNumber: number) => {
+  const lastPage = paginationParams.totalPages || 1;
+  const target = Math.min(Math.max(1, pageNumber), lastPage);
 
- const getPaginatedNewsPapers = async () => {
+  if (target === filters.pageNo) return;
 
-    isShimmerLoading.value = true;
+  filters.pageNo = target;
+  syncRouteQuery();
+  await getPaginatedNewsPapers();
 
-    try {
+  if (import.meta.client) window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
-      let result = await getNewsPapers(filters);
+// Only the response of the most recent request may update the page, so quick
+// successive clicks cannot leave the list showing a different page than the control.
+let latestRequestId = 0;
 
-      newsPaperList.value = result.data;
+const getPaginatedNewsPapers = async () => {
+  const requestId = ++latestRequestId;
+  isShimmerLoading.value = true;
 
-      paginationParams.totalPages = result.totalPages;
-      paginationParams.totalCount = result.totalCount;
-      paginationParams.lowerBound = result.lowerBound;
-      paginationParams.upperBound = result.upperBound;
+  try {
+    const result = await getNewsPapers({ ...filters });
 
-    } catch (error) {
-        //$toast.error('Unable to fetch finishing options !');
-    } finally {
-        isShimmerLoading.value = false;
+    if (requestId !== latestRequestId) return;
+
+    const totalPages = Number(result?.totalPages) || 0;
+
+    // Requested page is past the end (e.g. stale ?pageNo= in the URL): load the last page.
+    if (totalPages > 0 && filters.pageNo > totalPages) {
+      filters.pageNo = totalPages;
+      syncRouteQuery();
+      return getPaginatedNewsPapers();
     }
 
- }
+    newsPaperList.value = Array.isArray(result?.data) ? result.data : [];
 
- 
+    paginationParams.totalPages = totalPages;
+    paginationParams.totalCount = Number(result?.totalCount) || 0;
+    paginationParams.lowerBound = Number(result?.lowerBound) || 0;
+    paginationParams.upperBound = Number(result?.upperBound) || 0;
+  } catch (error) {
+    console.error('Unable to fetch newspapers', error);
+  } finally {
+    if (requestId === latestRequestId) isShimmerLoading.value = false;
+  }
+}
 
- 
- 
+function handleFilterApply(selected: { publicationId?: string; startDate?: string; endDate?: string }) {
+  filters.publicationId = selected?.publicationId ?? '';
+  filters.startDate = selected?.startDate ?? '';
+  filters.endDate = selected?.endDate ?? '';
+
+  filters.pageNo = 1;
+  syncRouteQuery();
+  getPaginatedNewsPapers();
+}
+
+function resetFilters() {
+  filters.publicationId = '';
+  filters.startDate = '';
+  filters.endDate = '';
+  filters.query = '';
+
+  filters.pageNo = 1;
+  syncRouteQuery();
+  getPaginatedNewsPapers();
+}
 
 // Event handlers
 function handleCategorySelect(category: Category) {
@@ -264,9 +343,15 @@ function viewNewspaper(newspaper: NewsPaper) {
   watch(() => filters.query, debouncedSearch);
 
   onMounted(async () => {
-    if (!isEmpty(route.query)) {
-      filters.pageNo = parseInt(route.query.pageNo as string);
-    }
+    const fromQuery = (value: unknown) => String((Array.isArray(value) ? value[0] : value) ?? '');
+    const isIsoDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+    filters.pageNo = parsePageNo(route.query.pageNo);
+    filters.publicationId = fromQuery(route.query.publicationId);
+    filters.startDate = isIsoDate(fromQuery(route.query.startDate)) ? fromQuery(route.query.startDate) : '';
+    filters.endDate = isIsoDate(fromQuery(route.query.endDate)) ? fromQuery(route.query.endDate) : '';
+
+    loadPublications();
     
     await getPaginatedNewsPapers();
 
