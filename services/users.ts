@@ -12,6 +12,12 @@ export async function getUserAccountMetaData() {
     return response.result;
 }
 
+export async function getUserSubscriptionDetails(id: string) {
+    
+    const response = await gnpUserHttpClient<BaseApiResponse<any>>(`users/get-subscriber-info/${id}`, "");
+    return response.result;
+}
+
 export async function changePassword(payload: object) {
     
     const response = await gnpUserHttpClient<BaseApiResponse<object>>('auth/change-password', "", {
