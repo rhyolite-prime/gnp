@@ -34,9 +34,8 @@
           <h4 class="text-lg font-semibold mb-6 text-white">Information</h4>
           <ul class="space-y-3">
             <li><NuxtLink to="/about" class="footer-link">About Us</NuxtLink></li>
-            <li><a href="#magazines" class="footer-link">Magazines</a></li>
-            <li><NuxtLink to="/news" class="footer-link">News</NuxtLink></li>
-            <li><NuxtLink to="/services" class="footer-link">Graphic Services</NuxtLink></li>
+            <li><a href="/more/videos" class="footer-link">Videos</a></li>
+            <li><NuxtLink to="/newspapers" class="footer-link">News</NuxtLink></li>
             <li><NuxtLink to="/partners" class="footer-link">Commercial Partners</NuxtLink></li>
             <li><NuxtLink to="/contact" class="footer-link">Contact Us</NuxtLink></li>
           </ul>

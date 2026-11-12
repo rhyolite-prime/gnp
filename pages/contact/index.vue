@@ -39,7 +39,7 @@
                   id="firstName" 
                   name="firstName" 
                   class="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300"
-                  placeholder="John"
+                  placeholder="Kwabena"
                 >
               </div>
               <div class="space-y-2">
@@ -49,7 +49,7 @@
                   id="lastName" 
                   name="lastName" 
                   class="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300"
-                  placeholder="Doe"
+                  placeholder="Imhotep"
                 >
               </div>
             </div>
@@ -61,7 +61,7 @@
                 id="email" 
                 name="email" 
                 class="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-300"
-                placeholder="john.doe@example.com"
+                placeholder="kwabena.imhotep@example.com"
               >
             </div>
             
