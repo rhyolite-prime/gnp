@@ -176,10 +176,7 @@
                     <dt class="text-gray-400">Account</dt>
                     <dd class="truncate text-right font-medium text-gray-200">{{ profile.email || displayName }}</dd>
                   </div>
-                  <div v-if="profile.username" class="flex items-center justify-between gap-3">
-                    <dt class="text-gray-400">Username</dt>
-                    <dd class="truncate text-right font-medium text-gray-200">{{ profile.username }}</dd>
-                  </div>
+                   
                 </dl>
               </div>
 
@@ -239,7 +236,7 @@
                 </button>
 
                 <p class="text-center text-[11px] leading-relaxed text-gray-500">
-                  Payment is handled by Paystack. Your {{ isRenewal ? 'new package' : 'subscription' }} starts
+                  Your {{ isRenewal ? 'new package' : 'subscription' }} starts
                   once the payment is confirmed.
                 </p>
               </form>
