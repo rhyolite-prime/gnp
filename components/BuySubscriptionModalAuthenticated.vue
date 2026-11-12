@@ -47,7 +47,7 @@
               <div
                 v-if="currentSubscription"
                 class="mb-4 rounded-lg border p-3"
-                :class="currentSubscription.isActive ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'"
+                :class="currentSubscription.isActive === null ? 'border-gray-200 bg-gray-50' : currentSubscription.isActive ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'"
               >
                 <div class="flex flex-wrap items-center justify-between gap-2">
                   <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -55,28 +55,29 @@
                   </p>
                   <span
                     class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-                    :class="currentSubscription.isActive ? 'bg-green-600 text-white' : 'bg-amber-500 text-white'"
+                    :class="currentSubscription.isActive === null ? 'bg-gray-500 text-white' : currentSubscription.isActive ? 'bg-green-600 text-white' : 'bg-amber-500 text-white'"
                   >
                     {{ currentStatusLabel }}
                   </span>
                 </div>
                 <p class="mt-1 text-sm font-semibold text-gray-900">{{ currentSubscription.label }}</p>
-                <p class="mt-0.5 text-xs text-gray-600">
-                  <template v-if="currentSubscription.endDate">
-                    {{ currentSubscription.isActive ? 'Renews' : 'Ended' }}
-                    {{ formatDate(currentSubscription.endDate) }}
-                  </template>
-                  <template v-else>No end date on record.</template>
-                  <template v-if="currentSubscription.fee !== null">
-                    · {{ formatPlanPrice(currentSubscription.fee) }}
-                  </template>
-                </p>
-                <p v-if="currentSubscription.isActive" class="mt-1 text-xs text-gray-500">
-                  Buying below starts a new package; your current one keeps running until it ends.
-                </p>
-                <p v-else class="mt-1 text-xs text-gray-500">
-                  Buying below restarts your access from the new payment.
-                </p>
+                <dl class="mt-1 space-y-0.5 text-xs text-gray-600">
+                  <div v-if="currentSubscription.startDate">
+                    <dt class="inline">Activated:</dt> <dd class="inline">{{ formatDate(currentSubscription.startDate) }}</dd>
+                  </div>
+                  <div v-if="currentSubscription.endDate">
+                    <dt class="inline">Valid until:</dt> <dd class="inline">{{ formatDate(currentSubscription.endDate) }}</dd>
+                  </div>
+                  <div v-if="currentSubscription.dueDate">
+                    <dt class="inline">Due date:</dt> <dd class="inline">{{ formatDate(currentSubscription.dueDate) }}</dd>
+                  </div>
+                  <div v-if="currentSubscription.cycle">
+                    <dt class="inline">Billing cycle:</dt> <dd class="inline">{{ currentSubscription.cycle }}</dd>
+                  </div>
+                  <div v-if="currentSubscription.fee !== null">
+                    <dt class="inline">Price:</dt> <dd class="inline">{{ formatPlanPrice(currentSubscription.fee) }}</dd>
+                  </div>
+                </dl>
               </div>
 
               <div class="mb-3 flex items-center justify-between">
@@ -321,14 +322,14 @@ const isLoadingCurrent = ref(false);
 
 const currentStatusLabel = computed(() => describeSubscriptionStatus(currentSubscription.value));
 
-const isRenewal = computed(() => Boolean(currentSubscription.value?.isActive));
+const isRenewal = computed(() => currentSubscription.value?.isActive === true);
 
 function isCurrentPlan(plan: SubscriptionPlan) {
   return Boolean(currentSubscription.value?.planId) && plan.id === currentSubscription.value?.planId;
 }
 
 function formatDate(value: string) {
-  return standardDateFormat(value) ?? value;
+  return Number.isNaN(Date.parse(value)) ? value : (standardDateFormat(value) ?? value);
 }
 
 async function loadCurrent() {
@@ -341,7 +342,7 @@ async function loadCurrent() {
     // A reader who already owns a package most likely pressed this to renew or
     // upgrade it — start on that plan instead of the first in the list.
     const planId = currentSubscription.value?.planId;
-    if (planId && props.plans.some((plan) => plan.id === planId)) {
+    if (!hasSelectedPlan.value && planId && props.plans.some((plan) => plan.id === planId)) {
       selectedPlanId.value = planId;
       if (currentSubscription.value?.cycle) fallbackCycle.value = currentSubscription.value.cycle;
     }
@@ -358,6 +359,7 @@ onMounted(loadCurrent);
 
 // ─── Selection ───────────────────────────────────────────────────────────────
 const selectedPlanId = ref('');
+const hasSelectedPlan = ref(false);
 const fallbackCycle = ref(props.initialBillingCycle);
 
 const selectedPlan = computed(() => props.plans.find((plan) => plan.id === selectedPlanId.value) ?? null);
@@ -390,6 +392,7 @@ watch(selectedPlan, (plan) => {
 });
 
 function selectPlan(plan: SubscriptionPlan) {
+  hasSelectedPlan.value = true;
   selectedPlanId.value = plan.id;
   errorMessage.value = '';
 }

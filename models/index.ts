@@ -657,6 +657,7 @@ export interface SubscriberSubscriptionSummary {
     daysRemaining: number;
     activatedOn: string;
     validUntil: string;
+    dueDate?: string;
     package: string;
     subscriptionId: string;
 }

@@ -1,4 +1,4 @@
-import type { SubscriptionPlan, SubscriptionPricingTier, UserSubscription } from '~/models';
+import type { SubscriptionPlan, SubscriptionPricingTier, UserSubscription, PartnerSubscriberSubscriptionSummary } from '~/models';
 
 /** Billing cycles in the order the pricing page should display them. */
 export const PRICING_BILLING_CYCLES = ['Weekly', 'Monthly', '3 Months', 'Half-Yearly', 'Yearly'] as const;
@@ -230,7 +230,9 @@ export interface CurrentSubscriptionSummary {
   cycle: string;
   /** Plan id, used to preselect a renewal of the same package. */
   planId: string;
-  isActive: boolean;
+  isActive: boolean | null;
+  /** Optional due date returned by the subscriber details endpoint. */
+  dueDate?: string;
   /** ISO dates exactly as the API sent them ('' when missing). */
   startDate: string;
   endDate: string;
@@ -288,6 +290,37 @@ export function summarizeSubscription(
   };
 }
 
+/** Adapt the subscriber-info response without treating its subscription ID as a plan ID. */
+export function summarizeSubscriberDetails(
+  details: PartnerSubscriberSubscriptionSummary | null | undefined,
+  now: number = Date.now(),
+): CurrentSubscriptionSummary | null {
+  const summary = details?.subscriptionSummary;
+  const label = typeof summary?.package === 'string' ? summary.package.trim() : '';
+  if (!summary || !label) return null;
+
+  const endDate = typeof summary.validUntil === 'string' ? summary.validUntil.trim() : '';
+  const endTime = toTimestamp(endDate);
+  // A date-only expiry includes the whole calendar day, not just midnight.
+  const endDay = endTime === null ? '' : new Date(endTime).toISOString().slice(0, 10);
+  const today = new Date(now).toISOString().slice(0, 10);
+  const isActive = endDay ? endDay >= today : null;
+  const remaining = summary.daysRemaining;
+
+  return {
+    label,
+    cycle: typeof summary.billingCycle === 'string' ? summary.billingCycle.trim() : '',
+    planId: '', // subscriptionId identifies the subscription, not a purchasable plan.
+    isActive,
+    startDate: typeof summary.activatedOn === 'string' ? summary.activatedOn.trim() : '',
+    endDate,
+    dueDate: typeof summary.dueDate === 'string' ? summary.dueDate.trim() : '',
+    daysRemaining: typeof remaining === 'number' && Number.isFinite(remaining) && remaining >= 0
+      ? remaining : null,
+    fee: null, // Renewal history amounts need not be the price of the current plan.
+  };
+}
+
 /**
  * Picks the package that matters to a buyer who may have several rows: an
  * active one first, then the one expiring last. Returns null for no rows.
@@ -328,6 +361,7 @@ export function describeSubscriptionStatus(
   now: number = Date.now(),
 ): string {
   if (!summary) return '';
+  if (summary.isActive === null) return 'Status unavailable';
   if (!summary.isActive) return 'Expired';
 
   const days = summary.daysRemaining;

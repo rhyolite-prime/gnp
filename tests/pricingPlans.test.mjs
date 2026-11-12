@@ -16,9 +16,11 @@ import {
   getPlansForPublication,
   formatSubscriptionPlanDescription,
   summarizeSubscription,
+  summarizeSubscriberDetails,
   pickCurrentSubscription,
   describeSubscriptionStatus,
 } from '../utils/pricingPlans.ts';
+import { getUserSubscriptionDetails } from '../services/users.ts';
 import { getPricingPlans } from '../services/newsPapers.ts';
 import { guestSubscription, userSubscription } from '../services/userSubscription.ts';
 
@@ -407,4 +409,50 @@ test('publication matching is case/whitespace tolerant and handles empty input',
   assert.deepEqual(getPlansForPublication(plans, null), []);
   assert.deepEqual(getPlansForPublication(null, 'abc-123'), []);
   assert.deepEqual(getPlansForPublication(plans, 'missing'), []);
+});
+
+test('subscriber details render the current package without confusing subscription and plan IDs', () => {
+  const details = {
+    renewalHistory: [{ amount: 'GHS 2.00 (Covered by Magma Studios)', date: 'Sep 04, 2026', package: 'Junior Graphic', reference: 'ref', status: 'Successful' }],
+    subscriptionSummary: {
+      activatedOn: '2026-05-03', billingCycle: '', daysRemaining: 0,
+      dueDate: 'Nov 03, 2026', package: 'Junior Graphic (Assigned)',
+      subscriptionId: 'subscription-1', validUntil: '2026-11-03',
+    },
+  };
+  const summary = summarizeSubscriberDetails(details, Date.parse('2026-11-12T12:00:00Z'));
+  assert.deepEqual(summary, {
+    label: 'Junior Graphic (Assigned)', cycle: '', planId: '', isActive: false,
+    startDate: '2026-05-03', endDate: '2026-11-03', dueDate: 'Nov 03, 2026',
+    daysRemaining: 0, fee: null,
+  });
+  assert.equal(describeSubscriptionStatus(summary), 'Expired');
+});
+
+test('subscriber details handle missing data and date-only expiry', () => {
+  assert.equal(summarizeSubscriberDetails(null), null);
+  assert.equal(summarizeSubscriberDetails({ subscriptionSummary: null }), null);
+  assert.equal(summarizeSubscriberDetails({ subscriptionSummary: { package: '  ' } }), null);
+  const today = Date.parse('2026-11-03T12:00:00Z');
+  const details = { subscriptionSummary: { package: 'Plan', validUntil: '2026-11-03', daysRemaining: 0, billingCycle: 'Monthly' } };
+  const summary = summarizeSubscriberDetails(details, today);
+  assert.equal(summary.isActive, true);
+  assert.equal(describeSubscriptionStatus(summary, today), 'Expires today');
+  assert.equal(summarizeSubscriberDetails(details, Date.parse('2026-11-04T00:00:00Z')).isActive, false);
+  const unknown = summarizeSubscriberDetails({ subscriptionSummary: { package: 'Plan', validUntil: '', daysRemaining: null } }, today);
+  assert.equal(unknown.isActive, null);
+  assert.equal(unknown.daysRemaining, null);
+  assert.equal(describeSubscriptionStatus(unknown, today), 'Status unavailable');
+});
+
+test('subscriber details service requests the signed-in user and unwraps the result', async () => {
+  const details = { subscriptionSummary: { package: 'Junior Graphic (Assigned)' }, renewalHistory: [] };
+  let path;
+  globalThis.gnpUserHttpClient = async (url) => { path = url; return { success: true, result: details }; };
+  assert.equal(await getUserSubscriptionDetails('user-123'), details);
+  assert.equal(path, 'users/get-subscriber-info/user-123');
+  globalThis.gnpUserHttpClient = async () => ({ success: true, result: null });
+  assert.equal(await getUserSubscriptionDetails('user-123'), null);
+  globalThis.gnpUserHttpClient = async () => ({ success: false, message: 'Unavailable', result: details });
+  await assert.rejects(getUserSubscriptionDetails('user-123'), /Unavailable/);
 });

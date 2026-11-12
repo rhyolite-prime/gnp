@@ -222,7 +222,6 @@
       :plans="buyModalPlans"
       :initial-plan-id="buyModalPlanId"
       :initial-billing-cycle="activeDuration"
-      :load-current-subscription="loadCurrentSubscription"
       redirect-to-checkout
       @close="closeBuyModal"
       @payment-started="handlePaymentStarted"
@@ -374,7 +373,6 @@ const { signInFromCheckout } = useGnpUserSession();
 
 // Signed-in readers buy with subscription/user instead of the guest endpoints.
 const authStore = useBasicAuthStore();
-const { loadCurrentSubscription } = useMemberSubscription();
 const isSignedIn = computed(() => Boolean(authStore.isAuthenticated && authStore.accessToken));
 
 // Shown when the API created the account but Paystack could not be initialised.

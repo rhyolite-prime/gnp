@@ -1,10 +1,10 @@
 import {
   describeSubscriptionStatus,
-  pickCurrentSubscription,
-  summarizeSubscription,
+  summarizeSubscriberDetails,
   type CurrentSubscriptionSummary,
 } from '~/utils/pricingPlans';
-import type { MemberSubscriptionPayload, SubscriptionResponseModel, UserSubscription } from '~/models';
+import type { MemberSubscriptionPayload, SubscriptionResponseModel } from '~/models';
+import { getUserSubscriptionDetails } from '~/services/users';
 
 /** What the buy modal needs to know about the reader before they pay. */
 export interface MemberSubscriptionContext {
@@ -17,7 +17,7 @@ export interface MemberSubscriptionContext {
   current: CurrentSubscriptionSummary | null;
   /** `Active · 12 days left`, `Expired`, … Empty for a first purchase. */
   statusLabel: string;
-  /** False while `subscription/get-all` is still in flight or failed. */
+  /** False while the subscription request is still in flight or has failed. */
   isLoaded: boolean;
 }
 
@@ -66,15 +66,16 @@ export function useMemberSubscription() {
   );
 
   /**
-   * Loads the reader's packages and reduces them to the one worth showing.
+   * Loads the signed-in reader's current subscriber details.
    * Failures are swallowed: not knowing the current plan must never block a
    * purchase, it only hides the summary panel.
    */
   async function loadCurrentSubscription(): Promise<CurrentSubscriptionSummary | null> {
     try {
-      const page = await getUserSubscription({ pageNo: 1, pageSize: 50 });
-      const rows = Array.isArray(page?.data) ? (page!.data as UserSubscription[]) : [];
-      return summarizeSubscription(pickCurrentSubscription(rows));
+      const userId = profile.value.userId;
+      if (!userId) return null;
+      const details = await getUserSubscriptionDetails(userId);
+      return summarizeSubscriberDetails(details);
     } catch (error) {
       console.error('Failed to load the current subscription:', error);
       return null;
