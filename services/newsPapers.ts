@@ -1,6 +1,30 @@
-import type { NewsPaper, Article, Video, VideoPage, BaseApiResponse, BasePaginationModel, SubscriptionPlan } from "~/models";
+import type { NewsPaper, Article, Video, VideoPage, BaseApiResponse, BasePaginationModel, SubscriptionPlan, Publication } from "~/models";
 
  
+/**
+ * Public list of publications (Daily Graphic, The Mirror, ...) used to filter
+ * the newspapers listing. Accepts either the standard pagination envelope or a
+ * plain array in `result`.
+ */
+export async function getPublicPublications(): Promise<Publication[]> {
+
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<Publication[]> | Publication[]>>(
+        'news-papers/get-publications', "", { query: { pageNo: 1, pageSize: 100 } });
+
+    if (!response || response.success === false) {
+        throw new Error(response?.message || 'Unable to load publications');
+    }
+
+    const result: any = response.result;
+    const list = Array.isArray(result) ? result : result?.data;
+
+    return Array.isArray(list) ? list : [];
+}
+
+/**
+ * Supported filters: `query`, `publicationId`, `startDate`, `endDate`
+ * (dates as YYYY-MM-DD) plus `pageNo` / `pageSize`. Empty values are dropped.
+ */
 export async function getNewsPapers(query: object) {
  
     const response = await httpClient<BaseApiResponse<BasePaginationModel<NewsPaper[]>>>('news-papers/get-all', "", { query });
