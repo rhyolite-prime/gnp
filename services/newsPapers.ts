@@ -106,6 +106,13 @@ export async function getLatestNewsPapers(query: object) {
    return response.result;
 }
 
+export async function getAllPublications() {
+ 
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<Publication[]>>>('news-papers/get-all-publications', "");
+    
+   return response.result;
+}
+
 export async function getNewsPaperDetails(query: object) {
  
     const response = await httpClient<BaseApiResponse<NewsPaper>>('news-papers/get-redacted-details', "", { query });
