@@ -46,6 +46,8 @@
     <!-- Content -->
     <div class="relative z-10">
       <HeroSection />
+      <ExplorePlatform />
+      <RememberWhenSlider />
       <NewspapersSection />
       <TopStoriesSection />
       <VideosSection />
