@@ -18,7 +18,7 @@ export async function getUserSubscription(query: object) {
 
 export async function validateArchiveAccess(id: string) {
 
-    const response = await gnpUserHttpClient<BaseApiResponse<any>>('subscription/validate-archive-access', "");
+    const response = await gnpUserHttpClient<BaseApiResponse<any>>(`subscription/validate-archive-access/${id}`, "");
     return response.result;
 }
 
