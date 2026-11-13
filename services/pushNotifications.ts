@@ -1,3 +1,4 @@
+import { CONTENT_CATEGORIES, contentTopic } from '~/utils/contentCategories';
 import type {
   BaseApiResponse,
   BrowserPushSubscriptionRecord,
@@ -16,6 +17,13 @@ export const PUSH_TOPIC_DEFINITIONS: {
   icon: string;
   badgeColor: string;
 }[] = [
+  ...CONTENT_CATEGORIES.map(category => ({
+    id: contentTopic(category.id),
+    label: category.label,
+    description: `New ${category.label.toLowerCase()} content and notices.`,
+    icon: 'lucide:newspaper',
+    badgeColor: 'bg-stone-50 text-stone-700 border-stone-200',
+  })),
   {
     id: 'breaking_news',
     label: 'Breaking news',
@@ -128,6 +136,10 @@ export async function savePushPreferencesOnServer(payload: {
       body: payload,
     }
   );
+  if (!res.success) throw new Error(res.message || 'Unable to save notification preferences.');
+  if (payload.endpoint && (!res.result?.id || res.result.endpoint !== payload.endpoint)) {
+    throw new Error('This browser subscription is no longer registered. Disable and re-enable notifications in notification settings, then try again.');
+  }
   return res.result;
 }
 

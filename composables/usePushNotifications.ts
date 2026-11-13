@@ -145,7 +145,7 @@ export function usePushNotifications() {
     const category = (CLIENT_CATEGORY_ALIAS[rawCat] || rawCat) as PushTopicCategory;
 
     // Filter out unsubscribed topics unless user hasn't configured topics yet
-    if (store.subscribedTopics.length > 0 && !store.subscribedTopics.includes(category)) {
+    if (!store.subscribedTopics.includes(category)) {
       return;
     }
 
@@ -357,6 +357,14 @@ export function usePushNotifications() {
     }
   }
 
+  async function setTopicPreferences(topics: PushTopicCategory[]) {
+    if (!activeEndpoint.value) throw new Error('Enable browser notifications before saving alert preferences.');
+    const next = [...new Set(topics)];
+    await savePushPreferencesOnServer({ endpoint: activeEndpoint.value, topics: next, quietHours: quietHours.value });
+    subscribedTopics.value = next;
+    store.persistState();
+  }
+
   async function toggleTopicPreference(topic: PushTopicCategory) {
     const current = new Set(subscribedTopics.value);
     if (current.has(topic)) {
@@ -416,6 +424,7 @@ export function usePushNotifications() {
     enablePushNotifications: enableBrowserPush,
     disablePushNotifications: disableBrowserPush,
     toggleTopicPreference,
+    setTopicPreferences,
     updateQuietHours,
     triggerLiveTestNotification,
     sendLiveBrowserTestPush: triggerLiveTestNotification,
