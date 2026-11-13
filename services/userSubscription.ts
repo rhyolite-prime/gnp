@@ -7,7 +7,11 @@ import type {
   NewsPaper,
   GuestSubscriptionPayload,
   MemberSubscriptionPayload,
+  ArchiveAccessResponse,
 } from "~/models";
+// Type-only import (erased at build time); `toArchiveAccessState` itself is
+// auto-imported from `utils/` like every other helper in this project.
+import type { ArchiveAccessState } from "~/utils/archiveAccess";
 
 
 export async function getUserSubscription(query: object) {
@@ -16,10 +20,36 @@ export async function getUserSubscription(query: object) {
     return response.result;
 }
 
-export async function validateArchiveAccess(id: string) {
+/**
+ * Checks whether the current reader may open an archived document.
+ *
+ * GET `subscription/validate-archive-access/{id}` answers with
+ * `{ success, message, result: { metadata: { hasAccess, fileType, ... } } }`.
+ * The envelope is flattened into `ArchiveAccessState` so the detail page can
+ * branch on `hasAccess` alone — a failed request, a missing result or a null
+ * metadata block all resolve to `hasAccess: false` (the paywall) instead of
+ * throwing and blanking the page.
+ */
+export async function validateArchiveAccess(id: string): Promise<ArchiveAccessState> {
+  const archiveId = typeof id === 'string' ? id.trim() : '';
 
-    const response = await gnpUserHttpClient<BaseApiResponse<any>>(`subscription/validate-archive-access/${id}`, "");
-    return response.result;
+  if (!archiveId) {
+    return toArchiveAccessState(null);
+  }
+
+  try {
+    const response = await gnpUserHttpClient<ArchiveAccessResponse>(
+      `subscription/validate-archive-access/${encodeURIComponent(archiveId)}`,
+      "",
+    );
+
+    return toArchiveAccessState(response);
+  } catch (error) {
+    // 401/403/network: the reader is not verified, which is exactly what the
+    // paywall is for. Log for diagnostics and let the page render the upsell.
+    console.error('Archive access validation failed:', error);
+    return toArchiveAccessState(null);
+  }
 }
 
 
