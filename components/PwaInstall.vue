@@ -18,7 +18,7 @@
 
 <script setup lang="ts">
 const { $pwa } = useNuxtApp()
-const showInstallButton = ref(false)
+const showInstallButton = ref(true)
 let deferredPrompt: any = null
 
 onMounted(() => {
