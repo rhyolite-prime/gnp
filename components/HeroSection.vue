@@ -89,19 +89,10 @@
           <figure
             class="group relative overflow-hidden rounded-[1.75rem] shadow-2xl shadow-stone-900/20 ring-1 ring-stone-900/10"
           >
-            <img
-              src="/welcome-1.png"
-              width="682"
-              height="761"
-              alt="A reader browsing the Graphic NewsPlus digital edition of a newspaper on a desktop screen"
-              class="aspect-[4/5] w-full object-cover object-[50%_30%] transition-transform duration-700 group-hover:scale-[1.02]"
-              fetchpriority="high"
-              loading="eager"
-              decoding="async"
-            />
+            <WelcomeSlider />
 
             <div
-              class="absolute inset-0 bg-gradient-to-t from-stone-950/60 via-stone-950/5 to-transparent"
+              class="pointer-events-none absolute inset-0 bg-gradient-to-t from-stone-950/60 via-stone-950/5 to-transparent"
               aria-hidden="true"
             />
 
