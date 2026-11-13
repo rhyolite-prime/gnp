@@ -118,7 +118,7 @@ export default defineEventHandler(async (event) => {
       userId: body?.userId,
       userLabel: body?.userLabel || `${browserName} on ${osName} (Current Session)`,
       segment: body?.segment || 'paid_active',
-      topics: Array.isArray(body?.topics) && body.topics.length ? body.topics : existing?.topics || defaultTopics,
+      topics: Array.isArray(body?.topics) ? body.topics : existing?.topics || defaultTopics,
       quietHours: body?.quietHours || existing?.quietHours || {
         enabled: false,
         start: '22:00',

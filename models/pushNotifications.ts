@@ -1,4 +1,7 @@
+import type { ContentTopic } from '~/utils/contentCategories';
+
 export type PushTopicCategory =
+  | ContentTopic
   | 'breaking_news'
   | 'morning_edition'
   | 'subscriptions_billing'

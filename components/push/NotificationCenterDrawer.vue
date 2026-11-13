@@ -320,7 +320,7 @@ function formatCategory(cat?: string) {
     games_daily: 'Games',
     promotions_offers: 'Offers',
   };
-  return map[cat || ''] || 'Update';
+  return PUSH_TOPIC_DEFINITIONS.find(topic => topic.id === cat)?.label || map[cat || ''] || 'Update';
 }
 
 function formatRelative(ts: number) {

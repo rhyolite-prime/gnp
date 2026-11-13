@@ -408,7 +408,7 @@ export async function executeBroadcastDispatch(
     if (options.targetEndpointOnly) {
       return sub.endpoint === options.targetEndpointOnly;
     }
-    if (sub.topics?.length && !sub.topics.includes(normalizedCategory)) return false;
+    if (!sub.topics?.includes(normalizedCategory)) return false;
     if (dto.targetSegment !== 'all_subscribers' && sub.segment !== dto.targetSegment) {
       // Always deliver live dispatches to real interactive browser sessions in dev/demo
       if (sub.isSimulated) return false;

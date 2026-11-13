@@ -101,6 +101,9 @@
               <option value="subscription">Subscription & Retention</option>
               <option value="promo_offer">Promotional Offer</option>
               <option value="system">System Announcement</option>
+              <optgroup label="Content interests">
+                <option v-for="category in CONTENT_CATEGORIES" :key="category.id" :value="contentTopic(category.id)">{{ category.label }}</option>
+              </optgroup>
             </select>
           </div>
         </div>
@@ -702,6 +705,7 @@
 </template>
 
 <script setup lang="ts">
+import { CONTENT_CATEGORIES, contentTopic } from '~/utils/contentCategories';
 import { ref, reactive, computed, watch, onMounted } from 'vue';
 import {
   BellAlertIcon,
