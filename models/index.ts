@@ -743,6 +743,36 @@ export interface ArchiveSearchResponse {
     targetUrl: string;
 }
 
+// ── Archive access (reader detail page) ───────────────────────────────────────
+// GET subscription/validate-archive-access/{id} — tells the detail page whether
+// the current reader may read the archived document.
+
+/** Asset kinds the archive API reports in `metadata.fileType`. */
+export type ArchiveFileType = 'IMAGE' | 'PDF' | 'TEXT' | string;
+
+/** `result.metadata` of subscription/validate-archive-access/{id}. */
+export interface ArchiveAccessMetadata {
+    fileType: ArchiveFileType;
+    /** The single flag the page must branch on: false → paywall. */
+    hasAccess: boolean;
+    /** Newspaper/edition id the document belongs to. */
+    newspaperId: string;
+    /** yyyy-MM-dd. */
+    publicationDate: string;
+    publicationName: string;
+    tags: string[];
+}
+
+/** `result` of subscription/validate-archive-access/{id}. */
+export interface ArchiveAccessResult {
+    metadata: ArchiveAccessMetadata | null;
+}
+
+/** Envelope returned by GET subscription/validate-archive-access/{id}. */
+export interface ArchiveAccessResponse extends BaseApiResponse<ArchiveAccessResult | null> {
+    targetUrl?: string;
+}
+
 // ── Archived Newspapers & Pages browser (admin) ────────────────────────────────────────────────
 // GET admin/archives/decades + GET admin/archives/editions — mock-backed via ~/mocks/archivedNewspapers.
 // Two display modes: "Collections by Years" (decade cards) and "By Dates" (date groups + thumbnails).

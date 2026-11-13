@@ -125,49 +125,72 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const fileName = `${newspaperResult.id}.pdf`
+  /**
+   * Downloads one candidate asset; null when that name is not in the bucket.
+   * Mirrors GetFileAsset(): GET /g3/get-file/gnp-master-documents/{fileName}
+   * with the user's Bearer token as authorization.
+   */
+  async function fetchAsset(name: string): Promise<Buffer | null> {
+    // Per (asset + user) so readers never share a cached copy.
+    const cacheKey = createHash('sha1').update(`${name}:${userId}`).digest('hex')
+    const cachePath = path.join('/tmp', `document-cache-${cacheKey}`)
 
-  // ── Step 2: Fetch the PDF asset ──────────────────────────────────────────
-  // Mirrors GetFileAsset(): GET /g3/get-file/gnp-master-documents/{fileName}
-  // with the user's Bearer token as authorization.
-  const fileUrl = `${apiBase}g3/get-file/gnp-master-documents/${fileName}`
-
-  // Cache by (fileName + userId) so different users get their own cached copy
-  // and the cache key is stable regardless of token rotation.
-  const cacheKey  = createHash('sha1').update(`${fileName}:${userId}`).digest('hex')
-  const cachePath = path.join('/tmp', `pdf-cache-${cacheKey}.pdf`)
-
-  let buf: Buffer | null = null
-  try {
-    buf = await fs.readFile(cachePath)
-  } catch {
-    /* not cached yet */
-  }
-
-  if (!buf) {
-    let fileRes: Response
     try {
-      fileRes = await fetch(fileUrl, {
+      return await fs.readFile(cachePath)
+    } catch {
+      /* not cached yet */
+    }
+
+    let res: Response
+    try {
+      res = await fetch(`${apiBase}g3/get-file/gnp-master-documents/${name}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          'User-Agent':  'NewsPlus PDF Proxy',
+          'User-Agent': 'NewsPlus Document Proxy',
         },
       })
     } catch {
       throw createError({ statusCode: 502, statusMessage: 'Failed to reach file storage service' })
     }
 
-    if (!fileRes.ok) {
+    // 404 means this name does not exist; the caller tries the next candidate.
+    if (res.status === 404) return null
+
+    if (!res.ok) {
       throw createError({
         statusCode: 502,
-        statusMessage: `File fetch failed (${fileRes.status})`,
+        statusMessage: `File fetch failed (${res.status})`,
       })
     }
 
-    buf = Buffer.from(await fileRes.arrayBuffer())
-    // Write to disk-cache in the background; don't block the response
-    fs.writeFile(cachePath, buf).catch(() => {})
-  } 
+    const fetched = Buffer.from(await res.arrayBuffer())
+    // Disk cache; never blocks the response.
+    fs.writeFile(cachePath, fetched).catch(() => {})
+    return fetched
+  }
+
+  // Archive documents can be page scans (fileType `IMAGE`) rather than PDFs;
+  // the asset keeps the type suffix the ingestion pipeline stored it under.
+  const fileType = String(newspaperResult.fileType || 'pdf').trim().toLowerCase();
+  const fileExtension = IMAGE_FILE_TYPES.has(fileType) ? fileType : 'pdf';
+  const contentType = CONTENT_TYPES[fileExtension] ?? 'application/pdf';
+
+  // Cache/inline names in priority order: the typed asset first, then the bare id.
+  const assetNames = [`${newspaperResult.id}.${fileExtension}`]
+  if (!newspaperResult.id.endsWith(`.${fileExtension}`)) assetNames.push(newspaperResult.id)
+
+  let buf: Buffer | null = null
+  for (const name of assetNames) {
+    buf = await fetchAsset(name)
+    if (buf) break
+  }
+
+  if (!buf) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'Document asset not found in storage',
+    })
+  }
 
   // ── Step 3: Track   Engagement (fire-and-forget) ─────────────────────────
   // We fire this asynchronously so it doesn't block the PDF from streaming to the user.
@@ -191,12 +214,26 @@ export default defineEventHandler(async (event) => {
     })
   }).catch((err) => console.error('[pdf.get.ts] Failed to track engagement:', err))
 
-  setHeader(event, 'Content-Type', 'application/pdf')
+  setHeader(event, 'Content-Type', contentType)
   setHeader(event, 'Content-Length', buf.length.toString())
   setHeader(event, 'Cache-Control', 'public, max-age=7200')
   return buf
 })
 
+
+/** Asset types the reader renders as a still image instead of a PDF. */
+const IMAGE_FILE_TYPES = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'tif', 'tiff'])
+
+const CONTENT_TYPES: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  webp: 'image/webp',
+  gif: 'image/gif',
+  tif: 'image/tiff',
+  tiff: 'image/tiff',
+  pdf: 'application/pdf',
+}
 
 /**
  * Detect device type from User-Agent string
