@@ -16,6 +16,12 @@ export async function getUserSubscription(query: object) {
     return response.result;
 }
 
+export async function validateArchiveAccess(id: string) {
+
+    const response = await gnpUserHttpClient<BaseApiResponse<any>>('subscription/validate-archive-access', "");
+    return response.result;
+}
+
 
 export async function guestSubscription(payload: GuestSubscriptionPayload) {
 

@@ -147,10 +147,10 @@
         </div>
         
         <!-- Suggested Articles Section -->
-        <SuggestedArticlesSection 
+        <!-- <SuggestedArticlesSection 
           :current-newspaper-id="newspaperId"
           class="mb-8"
-        />
+        /> -->
       </div>
     </div>
 

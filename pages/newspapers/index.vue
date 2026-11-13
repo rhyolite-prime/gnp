@@ -78,10 +78,10 @@
           </div>
           
           <!-- Suggested Articles Section -->
-          <SuggestedArticlesSection 
+          <!-- <SuggestedArticlesSection 
             :current-newspaper-id="currentSelectedNewspaper?.id"
             class="mt-8"
-          />
+          /> -->
         </div>
         
       </div>

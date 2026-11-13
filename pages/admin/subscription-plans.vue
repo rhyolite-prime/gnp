@@ -584,7 +584,7 @@ const savePlan = async () => {
     }
 
     const isSuccessful = isEditing.value
-      ? await updateSubscriptionPlan(payload)
+      ? await updateSubscriptionPlan(payload.id,payload)
       : await createSubscriptionPlan(payload)
 
     if (isSuccessful) {
