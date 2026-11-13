@@ -5,6 +5,7 @@
       <slot />
     </main>
     <AppFooter />
+    <PwaInstall />
     <!-- Global Floating AI Research Assistant Launcher -->
     <RagWidgetLauncher />
   </div>
