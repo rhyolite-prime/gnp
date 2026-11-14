@@ -47,6 +47,7 @@
     <div class="relative z-10">
       <HeroSection />
       <ClientOnly><InterestWelcomeWizard /></ClientOnly>
+      <DiscoverTeaser />
       <ExplorePlatform />
       <RememberWhenSlider />
       <NewspapersSection />

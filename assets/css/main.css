@@ -38,30 +38,30 @@
   }
 }
 
-/* One extra pixel per side for public header and standard main-content containers.
+/* Two extra pixels per side for public header and standard main-content containers.
    At narrow widths use the existing gutters instead of creating viewport overflow. */
 .app-header-container,
 .app-main .max-w-7xl.px-4 {
-  max-width: calc(80rem + 2px);
+  max-width: calc(80rem + 4px);
 }
 @media (max-width: 80rem) {
   .app-header-container,
   .app-main .max-w-7xl.px-4 {
-    padding-left: calc(1rem - 1px);
-    padding-right: calc(1rem - 1px);
+    padding-left: calc(1rem - 2px);
+    padding-right: calc(1rem - 2px);
   }
 }
 @media (min-width: 640px) and (max-width: 80rem) {
   .app-header-container,
   .app-main .max-w-7xl.px-4 {
-    padding-left: calc(1.5rem - 1px);
-    padding-right: calc(1.5rem - 1px);
+    padding-left: calc(1.5rem - 2px);
+    padding-right: calc(1.5rem - 2px);
   }
 }
 @media (min-width: 1024px) and (max-width: 80rem) {
   .app-header-container,
   .app-main .max-w-7xl.px-4 {
-    padding-left: calc(2rem - 1px);
-    padding-right: calc(2rem - 1px);
+    padding-left: calc(2rem - 2px);
+    padding-right: calc(2rem - 2px);
   }
 }

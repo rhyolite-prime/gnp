@@ -25,7 +25,7 @@
           <NuxtLink to="/newspapers" class="nav-link">Newspapers</NuxtLink>
           <!-- <a href="#magazines" class="nav-link">Magazines</a> -->
           <NuxtLink to="/archives" class="nav-link">Archives</NuxtLink>
-          <NuxtLink to="/interests" class="nav-link">Interests</NuxtLink>
+          <NuxtLink to="/discover" class="nav-link">Discover</NuxtLink>
           <NuxtLink v-if="false" to="/research-ai" class="nav-link flex items-center gap-1.5 !text-primary-600 font-semibold group">
             <span class="relative flex h-2 w-2">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
@@ -197,6 +197,7 @@
           <NuxtLink to="/newspapers" class="mobile-nav-link" @click="closeMobileMenu">Newspapers</NuxtLink>
           <!-- <a href="#magazines" class="mobile-nav-link" @click="closeMobileMenu">Magazines</a> -->
           <NuxtLink to="/archives" class="mobile-nav-link" @click="closeMobileMenu">Archives</NuxtLink>
+          <NuxtLink to="/discover" class="mobile-nav-link" @click="closeMobileMenu">Discover · For you</NuxtLink>
           <NuxtLink to="/interests" class="mobile-nav-link" @click="closeMobileMenu">Content interests</NuxtLink>
           <!-- <NuxtLink to="/research-ai" class="mobile-nav-link !text-primary-600 font-bold flex items-center justify-between" @click="closeMobileMenu">
             <div class="flex items-center gap-2">
