@@ -1,6 +1,6 @@
 # Archive document viewer and authenticated proxy
 
-`/archives/:id` validates `subscription/validate-archive-access/:id` and renders `ArchiveDocumentViewer` only when the response grants access. PDF metadata selects the existing `NewspaperReader` (PDF.js). IMAGE/JPG/JPEG and other recognised image labels select the scan viewer, with fit, zoom, scrolling and open-in-new-tab controls. Unsupported formats display an explicit error rather than attempting to decode them as PDFs.
+`/archives/:id` validates `subscription/validate-archive-access/:id` and renders `ArchiveDocumentViewer` only when the response grants access. PDF metadata selects the existing `NewspaperReader` (PDF.js). IMAGE/JPG/JPEG and other recognised image labels select the scan viewer, with fit, zoom, scrolling and mouse drag-to-pan controls. The open-in-new-tab control is available only for PDFs. Unsupported formats display an explicit error rather than attempting to decode them as PDFs.
 
 ## Authentication fix
 
@@ -15,10 +15,15 @@ Access validation is client-side (`server: false`), watches token changes, uses 
 3. `server/api/archive-file.get.ts` revalidates the same archive ID using that bearer token. Missing authentication returns 401; denied access returns 403. The browser's file-type hint never grants access or overrides the validated type.
 4. The proxy's `fetchAsset` follows the newspaper proxy approach but fetches **`g3/get-archived-file/gnp-master-documents/{archiveId}.jpg`** for image metadata, or **`.../{archiveId}.pdf`** for PDF metadata, relative to the existing API base. Image labels map to the archive storage contract's canonical `.jpg` suffix, not `.image`.
 5. Return inline JPEG or PDF bytes with `private, no-store`, `Vary: Cookie, Authorization`, and `nosniff`. There is no shared protected-file cache. Validation/storage 401, 403 and 404 statuses are preserved; network failures return 502. A stale type hint returns 409.
-6. The client creates a local Blob URL for PDF.js/image rendering and the open-in-new-tab link. It aborts old requests and revokes object URLs on token/document changes or unmount. Loading, unsupported-type and fetch-error states have explicit messages and retry controls.
+6. The client creates a local Blob URL for PDF.js/image rendering and the PDF-only open-in-new-tab link. It aborts old requests and revokes object URLs on token/document changes or unmount. Loading, unsupported-type and fetch-error states have explicit messages and retry controls.
 
 The newspaper `/api/pdf` implementation and `/newspapers/:id/open` flow remain unchanged. No changes to backend access rules or subscription purchases are required. The upstream archived-file endpoint must enforce the same authenticated storage contract.
 
 ## Validation
 
 Run `node --test tests/*.test.mjs`. Regression tests cover JPEG/PDF suffixes, secret-free URLs, explicit fresh-token forwarding, cookie/header proxy authentication, canonical archive asset paths, denied/expired sessions, type-hint mismatch, unsupported types and missing assets. A production build passes. Actual storage assets, sign-in/purchase transitions and PDF/image rendering still need integration testing against the upstream backend.
+
+
+## Image mouse interaction
+
+When zoom is above Fit (100%), the image viewport shows a grab cursor. Hold the primary mouse button and drag in either direction to pan; pointer capture keeps the drag working when the cursor leaves the viewport. Release, cancellation, lost capture, changing zoom, replacing the document, and unmount all stop dragging. Image boundaries clamp scroll offsets. Native image dragging is disabled. Touch scrolling and keyboard scrolling remain available, and mouse panning is disabled at Fit. Image viewers no longer offer an open-in-new-tab button; PDF controls are unchanged.
