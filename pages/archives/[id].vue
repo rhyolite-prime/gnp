@@ -111,38 +111,14 @@
               <CheckBadgeIcon class="h-5 w-5" />
               <span>Access granted — full document unlocked</span>
             </div>
-            <a
-              :href="documentUrl"
-              target="_blank"
-              rel="noopener"
-              class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
-            >
-              <ArrowTopRightOnSquareIcon class="h-4 w-4" />
-              Open in new tab
-            </a>
           </div>
-
-          <div class="h-[calc(100dvh-14rem)] min-h-[520px] w-full bg-gray-200">
-            <!-- PDFs go through the page-turning reader; scans render as an image -->
-            <ClientOnly v-if="isPdfDocument">
-              <NewspaperReader
-                :pdf-url="documentUrl"
-                :title="readerTitle"
-                class="h-full w-full overflow-hidden shadow-2xl"
-              />
-              <template #fallback>
-                <div class="flex h-full items-center justify-center text-sm text-gray-500">Preparing the reader…</div>
-              </template>
-            </ClientOnly>
-
-            <div v-else class="flex h-full items-start justify-center overflow-auto p-4">
-              <img
-                :src="documentUrl"
-                :alt="readerTitle"
-                class="max-h-full max-w-full rounded-lg bg-white object-contain shadow-2xl"
-              />
-            </div>
-          </div>
+          <ArchiveDocumentViewer
+            :key="archiveId"
+            :src="documentUrl"
+            :file-type="metadata?.fileType || ''"
+            :access-token="accessToken"
+            :title="readerTitle"
+          />
         </section>
 
         <ArchivePaywall
@@ -283,7 +259,6 @@
 <script setup lang="ts">
 import {
   ArrowLeftIcon,
-  ArrowTopRightOnSquareIcon,
   BookmarkIcon,
   BuildingOfficeIcon,
   CalendarIcon,
@@ -301,7 +276,6 @@ import {
   buildArchiveDocumentUrl,
   formatArchiveFileType,
   formatArchivePublicationDate,
-  isPdfArchive,
   pickRelatedArchives,
 } from '~/utils/archiveAccess';
 
@@ -310,7 +284,9 @@ const authStore = useBasicAuthStore();
 const { $toast } = useNuxtApp();
 
 // The reader's JWT lives in the `gnp-user-identity` cookie (shared state).
-const gnpUserAuthIdentity = useGnpUserAuthIdentity();
+const identityCookie = useCookie<string | null>('gnp-user-identity');
+const accessToken = computed(() => authStore.accessToken || identityCookie.value || '');
+const archiveApiBase = useRuntimeConfig().public.proxyApiBaseURL;
 
 // The header owns <SignInModal> and reads this shared flag.
 const showSignInModal = useState<boolean>('showSignInModal', () => false);
@@ -336,11 +312,18 @@ const {
   refresh: refreshAccess,
 } = await useAsyncData<ArchiveAccessState>(
   () => `archive-access-${archiveId.value}`,
-  () => validateArchiveAccess(archiveId.value),
+  async () => {
+    const id = archiveId.value;
+    const token = accessToken.value;
+    const result = await validateArchiveAccess(id, { accessToken: token, apiBase: archiveApiBase });
+    return id === archiveId.value && token === accessToken.value ? result : EMPTY_ACCESS;
+  },
   {
-    // Keyed by id, so navigating between documents refetches; the cached payload
-    // is reused while the request is in flight so the page never flashes empty.
-    watch: [archiveId],
+    // Reactive key follows the document. Session changes force fresh validation,
+    // and grants are never reused from an earlier reader's cached payload.
+    server: false,
+    watch: [accessToken],
+    getCachedData: () => undefined,
     default: () => EMPTY_ACCESS,
   },
 );
@@ -349,7 +332,6 @@ const isLoading = computed(() => accessStatus.value === 'pending' || accessStatu
 
 const metadata = computed(() => access.value?.metadata ?? null);
 const hasAccess = computed(() => access.value?.hasAccess === true);
-const isPdfDocument = computed(() => isPdfArchive(metadata.value?.fileType));
 
 const pageTitle = computed(
   () => metadata.value?.publicationName || 'Archive Document',
@@ -361,10 +343,9 @@ const readerTitle = computed(() => {
   return date ? `${name} — ${date}` : name;
 });
 
-// The document is streamed through /api/pdf, which re-validates the reader's
-// grant server-side before fetching the asset, so no raw storage URL leaks.
+// The archive-specific proxy revalidates the archive grant before fetching its asset.
 const documentUrl = computed(() =>
-  buildArchiveDocumentUrl(metadata.value?.newspaperId || archiveId.value, gnpUserAuthIdentity.value),
+  buildArchiveDocumentUrl(archiveId.value, metadata.value?.fileType),
 );
 
 const dateLabel = computed(() => formatArchivePublicationDate(metadata.value?.publicationDate));
@@ -381,9 +362,9 @@ function loadAccess() {
 }
 
 // Signing in or out changes who is asking, so the grant must be re-checked.
-watch(() => authStore.accessToken, () => loadAccess());
+watch([archiveId, accessToken], () => { access.value = { ...EMPTY_ACCESS }; }, { flush: 'sync' });
 
-// Fresh metadata is the best title/description the page can have (SSR included).
+// Update the page title when client-side access metadata arrives.
 watchEffect(() => {
   if (!metadata.value) return;
   useHead({

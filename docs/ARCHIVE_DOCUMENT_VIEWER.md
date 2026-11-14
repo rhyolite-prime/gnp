@@ -1,0 +1,24 @@
+# Archive document viewer and authenticated proxy
+
+`/archives/:id` validates `subscription/validate-archive-access/:id` and renders `ArchiveDocumentViewer` only when the response grants access. PDF metadata selects the existing `NewspaperReader` (PDF.js). IMAGE/JPG/JPEG and other recognised image labels select the scan viewer, with fit, zoom, scrolling and open-in-new-tab controls. Unsupported formats display an explicit error rather than attempting to decode them as PDFs.
+
+## Authentication fix
+
+The page captures the runtime API base, identity cookie and auth store during setup. Each async-data request receives the current token explicitly through `validateArchiveAccess(id, { accessToken, apiBase })`, instead of calling an auth composable from inside an asynchronous handler and reading a stale `gnpUserAuth` useState snapshot. The explicit service branch forwards `Authorization: Bearer <token>` with `$fetch`.
+
+Access validation is client-side (`server: false`), watches token changes, uses no cached access payload, clears grants immediately on document/session changes, and ignores results whose document or token no longer matches. Manual refreshes after sign-in/purchase still work. Guests/denied requests retain the existing paywall behaviour. Other service callers can still use the backward-compatible implicit-auth branch.
+
+## File flow
+
+1. Build `/api/archive-file?archiveId=<archive/page ID>&fileType=IMAGE|PDF` using the file type from validation metadata. Do not substitute the parent `newspaperId` for the archive/page ID.
+2. The viewer requests a Blob from this same-origin URL, forwarding the current bearer header (with same-origin cookies as fallback). Tokens are not placed in URLs.
+3. `server/api/archive-file.get.ts` revalidates the same archive ID using that bearer token. Missing authentication returns 401; denied access returns 403. The browser's file-type hint never grants access or overrides the validated type.
+4. The proxy's `fetchAsset` follows the newspaper proxy approach but fetches **`g3/get-archived-file/gnp-master-documents/{archiveId}.jpg`** for image metadata, or **`.../{archiveId}.pdf`** for PDF metadata, relative to the existing API base. Image labels map to the archive storage contract's canonical `.jpg` suffix, not `.image`.
+5. Return inline JPEG or PDF bytes with `private, no-store`, `Vary: Cookie, Authorization`, and `nosniff`. There is no shared protected-file cache. Validation/storage 401, 403 and 404 statuses are preserved; network failures return 502. A stale type hint returns 409.
+6. The client creates a local Blob URL for PDF.js/image rendering and the open-in-new-tab link. It aborts old requests and revokes object URLs on token/document changes or unmount. Loading, unsupported-type and fetch-error states have explicit messages and retry controls.
+
+The newspaper `/api/pdf` implementation and `/newspapers/:id/open` flow remain unchanged. No changes to backend access rules or subscription purchases are required. The upstream archived-file endpoint must enforce the same authenticated storage contract.
+
+## Validation
+
+Run `node --test tests/*.test.mjs`. Regression tests cover JPEG/PDF suffixes, secret-free URLs, explicit fresh-token forwarding, cookie/header proxy authentication, canonical archive asset paths, denied/expired sessions, type-hint mismatch, unsupported types and missing assets. A production build passes. Actual storage assets, sign-in/purchase transitions and PDF/image rendering still need integration testing against the upstream backend.

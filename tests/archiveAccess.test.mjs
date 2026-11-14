@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {
+  archiveAssetType,
   normalizeArchiveMetadata,
   toArchiveAccessState,
   formatArchiveFileType,
@@ -120,18 +121,20 @@ test('file type labels and the PDF/image decision', () => {
   assert.equal(isPdfArchive('IMAGE'), false);
 });
 
-test('document URLs go through the server-side proxy and encode the token', () => {
-  assert.equal(
-    buildArchiveDocumentUrl('abc-123', 'header.payload.sig'),
-    '/api/pdf?uniqueId=abc-123&accessToken=header.payload.sig',
-  );
-  assert.equal(
-    buildArchiveDocumentUrl('a b', 'tok/en+1='),
-    '/api/pdf?uniqueId=a%20b&accessToken=tok%2Fen%2B1%3D',
-  );
-  // No id → no URL, so the page never renders a broken reader.
-  assert.equal(buildArchiveDocumentUrl('', 'token'), '');
+test('archive URLs carry the route/page ID and file type, never a bearer token', () => {
+  assert.equal(buildArchiveDocumentUrl('abc-123', 'IMAGE'), '/api/archive-file?archiveId=abc-123&fileType=IMAGE');
+  assert.equal(buildArchiveDocumentUrl('a b', 'PDF'), '/api/archive-file?archiveId=a%20b&fileType=PDF');
+  assert.equal(buildArchiveDocumentUrl('', 'PDF'), '');
   assert.equal(buildArchiveDocumentUrl(null, null), '');
+  assert.equal(buildArchiveDocumentUrl('id', 'TEXT'), '');
+});
+
+test('archive storage suffixes resolve only supported image and PDF types', () => {
+  assert.deepEqual(archiveAssetType('IMAGE'), { extension: 'jpg', contentType: 'image/jpeg' });
+  assert.equal(archiveAssetType('jpeg').extension, 'jpg');
+  assert.equal(archiveAssetType('application/pdf').extension, 'pdf');
+  assert.equal(archiveAssetType('../pdf'), null);
+  assert.equal(archiveAssetType('TEXT'), null);
 });
 
 test('publication dates render day-first without shifting the day', () => {
@@ -162,7 +165,7 @@ test('the archive access service is wired to subscription/validate-archive-acces
   // The service lives in `services/` and relies on Nuxt auto-imports, so it is
   // read rather than imported here; behaviour is covered by the pure helpers.
   const source = await readFile(new URL('../services/userSubscription.ts', import.meta.url), 'utf8');
-  assert.match(source, /export async function validateArchiveAccess\(id: string\): Promise<ArchiveAccessState>/);
+  assert.match(source, /export async function validateArchiveAccess\(id: string, request\?/);
   assert.match(source, /subscription\/validate-archive-access\/\$\{encodeURIComponent\(archiveId\)\}/);
   // Failures never escape: the page must always receive a state object.
   assert.match(source, /catch \(error\) \{[\s\S]*?return toArchiveAccessState\(null\);/);
