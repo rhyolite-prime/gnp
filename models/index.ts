@@ -285,6 +285,20 @@ export interface VideoPage extends BasePaginationModel<Video[]> {
 
 
 
+export interface RelatedArchivedContent {
+
+    fileType: string;
+    newspaperId: string;
+    pageNumber: string;
+    thumbnailId: string;
+    publicationName: string;
+    id: string;
+    tags: []
+    publicationDate: string;
+ 
+    
+}
+
 export interface NewsPaper {
     documentId: string;
     editionNumber: string;

@@ -1,4 +1,4 @@
-import type { NewsPaper, Article, Video, VideoPage, BaseApiResponse, BasePaginationModel, SubscriptionPlan, Publication } from "~/models";
+import type { NewsPaper, Article, Video, VideoPage, RelatedArchivedContent, BaseApiResponse, BasePaginationModel, SubscriptionPlan, Publication } from "~/models";
 
  
 /**
@@ -123,6 +123,17 @@ export async function getAllPublications(): Promise<Publication[]> {
 export async function getNewsPaperDetails(query: object) {
  
     const response = await httpClient<BaseApiResponse<NewsPaper>>('news-papers/get-redacted-details', "", { query });
+    
+   return response.result;
+}
+
+export async function getRelatedArchivedContent(payload: object) {
+ 
+    const response = await gnpUserHttpClient<BaseApiResponse<RelatedArchivedContent>>('news-papers/get-related-archived-content', "",
+        {
+            method: "post",
+            body: payload,
+        });
     
    return response.result;
 }
