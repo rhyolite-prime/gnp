@@ -7,9 +7,10 @@
           <button type="button" aria-label="Zoom out" class="viewer-button" :disabled="zoom <= 1" @click="zoom = Math.max(1, zoom - 0.25)">−</button>
           <button type="button" class="viewer-button text-xs" @click="zoom = 1">{{ Math.round(zoom * 100) }}% · Fit</button>
           <button type="button" aria-label="Zoom in" class="viewer-button" :disabled="zoom >= 4" @click="zoom = Math.min(4, zoom + 0.25)">+</button>
+          <span v-if="zoom > 1" class="text-xs text-gray-500">Drag to pan</span>
         </template>
       </div>
-      <a v-if="blobUrl" :href="blobUrl" target="_blank" rel="noopener" class="viewer-button text-sm">Open in new tab ↗</a>
+      <a v-if="isPdf && blobUrl" :href="blobUrl" target="_blank" rel="noopener" class="viewer-button text-sm">Open in new tab ↗</a>
     </div>
     <div v-if="loading" role="status" class="flex flex-1 items-center justify-center p-6 text-gray-600">Loading your archive document…</div>
     <div v-else-if="error" role="alert" class="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
@@ -21,9 +22,21 @@
         <NewspaperReader :key="blobUrl" :pdf-url="blobUrl" :title="title" class="min-h-0 w-full flex-1 overflow-hidden" />
         <template #fallback><p class="p-6 text-center">Preparing PDF reader…</p></template>
       </ClientOnly>
-      <div v-else class="min-h-0 flex-1 overflow-auto p-3 sm:p-6" tabindex="0" aria-label="Archive image; use zoom controls to inspect the scan">
+      <div
+        v-else
+        ref="imageViewport"
+        class="min-h-0 flex-1 overflow-auto p-3 sm:p-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-600"
+        :class="zoom > 1 ? (dragging ? 'cursor-grabbing select-none' : 'cursor-grab select-none') : ''"
+        tabindex="0"
+        aria-label="Archive image; zoom in and drag with your mouse to pan, or use arrow keys to scroll"
+        @pointerdown="pan.start"
+        @pointermove="pan.move"
+        @pointerup="pan.stop"
+        @pointercancel="pan.stop"
+        @lostpointercapture="pan.stop"
+      >
         <div class="flex min-h-full min-w-full items-start justify-center" :style="zoom > 1 ? { width: `${zoom * 100}%` } : { height: '100%' }">
-          <img :src="blobUrl" :alt="title" class="block h-auto max-h-none bg-white shadow-lg" :class="zoom === 1 ? 'max-h-full max-w-full object-contain' : 'w-full'" :style="zoom === 1 ? { maxHeight: '100%' } : {}" @error="error = 'The archive image could not be displayed. Please try again.'" />
+          <img :draggable="false" @dragstart.prevent :src="blobUrl" :alt="title" class="block h-auto max-h-none bg-white shadow-lg" :class="zoom === 1 ? 'max-h-full max-w-full object-contain' : 'w-full'" :style="zoom === 1 ? { maxHeight: '100%' } : {}" @error="error = 'The archive image could not be displayed. Please try again.'" />
         </div>
       </div>
     </template>
@@ -31,18 +44,30 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { createImagePanController } from '~/utils/imagePan';
 import { archiveAssetType } from '~/utils/archiveAccess';
 const props = defineProps<{ src: string; fileType: string; accessToken: string; title: string }>();
 const loading = ref(true);
 const error = ref('');
 const blobUrl = ref('');
 const zoom = ref(1);
+const imageViewport = ref<HTMLElement | null>(null);
+const dragging = ref(false);
+const pan = createImagePanController(() => zoom.value > 1 && !loading.value && !error.value, value => { dragging.value = value; });
+watch(zoom, async value => {
+  pan.stop();
+  if (value === 1) {
+    await nextTick();
+    imageViewport.value?.scrollTo({ left: 0, top: 0 });
+  }
+});
 const isPdf = computed(() => archiveAssetType(props.fileType)?.extension === 'pdf');
 let controller: AbortController | undefined;
 let generation = 0;
 let mounted = false;
 function release() {
+  pan.stop();
   if (blobUrl.value) URL.revokeObjectURL(blobUrl.value);
   blobUrl.value = '';
 }
