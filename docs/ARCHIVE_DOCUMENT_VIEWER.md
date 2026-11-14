@@ -27,3 +27,13 @@ Run `node --test tests/*.test.mjs`. Regression tests cover JPEG/PDF suffixes, se
 ## Image mouse interaction
 
 When zoom is above Fit (100%), the image viewport shows a grab cursor. Hold the primary mouse button and drag in either direction to pan; pointer capture keeps the drag working when the cursor leaves the viewport. Release, cancellation, lost capture, changing zoom, replacing the document, and unmount all stop dragging. Image boundaries clamp scroll offsets. Native image dragging is disabled. Touch scrolling and keyboard scrolling remain available, and mouse panning is disabled at Fit. Image viewers no longer offer an open-in-new-tab button; PDF controls are unchanged.
+
+## Edition navigation and related results
+
+`ArchivePageRecommendations` appears below the archive reader/paywall when validation supplied metadata:
+
+- **More pages from this edition** searches the exact publication date with no keyword filter, then checks publication name and (when present in both records) parent newspaper/edition ID. It excludes the current archive page, deduplicates records and sorts page numbers numerically. The horizontally scrollable, keyboard-focusable strip uses uncropped thumbnails, page labels and safe `/archives/:id` links. Missing/broken thumbnails have a fallback. Date results are paginated with a Load more control, so the first result batch is not mistaken for the entire edition. Empty, loading and retry states do not block the current reader.
+- **Related High-Ranking Results** preserves the original archive search keyword and ranks cached search hits by the API's `relevance` value. If fewer than three candidates are available (including direct entry with no search state), it requests fresh most-relevant results using the original keyword, first metadata tag or publication name. Results exclude the current page and duplicates. A lack of matching results is shown explicitly; no ranking scores or thumbnail data are fabricated.
+- These requests have separate local state; neither mutates the main Archives search filters/results. Late responses after a document change/unmount are ignored. Thumbnail cards provide navigation only; full access is still checked on each destination page.
+
+Recommendation helpers and UI wiring are covered by `tests/archiveRecommendations.test.mjs`. Vue compilation has been checked for both the archive page and recommendations component; live date-search pagination and actual thumbnails still require upstream integration verification.

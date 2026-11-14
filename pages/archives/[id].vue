@@ -158,57 +158,13 @@
           </div>
         </section>
 
-        <!-- Related results from the same search set -->
-        <section v-if="relatedItems.length" class="mt-12">
-          <h3 class="mb-6 flex items-center gap-2 text-xl font-bold text-gray-900">
-            <DocumentTextIcon class="h-6 w-6 text-[#e32932]" />
-            Related Archive Results
-          </h3>
-
-          <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <NuxtLink
-              v-for="item in relatedItems"
-              :key="item.id"
-              :to="`/archives/${item.id}`"
-              class="group flex h-full transform flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-            >
-              <div class="relative h-40 overflow-hidden bg-gray-100">
-                <img
-                  v-if="relatedThumbnail(item)"
-                  :src="relatedThumbnail(item)"
-                  :alt="`${item.publicationName} page ${item.pageNumber}`"
-                  loading="lazy"
-                  class="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                />
-                <div v-else class="absolute inset-0 flex flex-col items-center justify-center border-b border-gray-100 bg-[#fdfbf7] p-4">
-                  <p class="font-serif text-center text-sm font-bold leading-snug text-gray-800 line-clamp-4">
-                    "{{ item.snippet || item.supportingText || 'Archive page' }}"
-                  </p>
-                  <DocumentTextIcon class="absolute -bottom-3 -right-3 h-24 w-24 -rotate-12 transform text-gray-900/5" />
-                </div>
-                <span class="absolute left-3 top-3 rounded border border-gray-100 bg-white/95 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-800 shadow-sm backdrop-blur">
-                  {{ item.publicationName }}
-                </span>
-              </div>
-
-              <div class="flex flex-1 flex-col p-5">
-                <h4 class="mb-2 text-base font-bold leading-tight text-gray-900 line-clamp-2 transition-colors group-hover:text-[#e32932]">
-                  {{ item.publicationName }}<span v-if="item.pageNumber"> — Page {{ item.pageNumber }}</span>
-                </h4>
-                <p class="mb-4 flex-1 text-sm leading-relaxed text-gray-600 line-clamp-3">
-                  {{ item.snippet || item.supportingText || 'Open this archive page to read more.' }}
-                </p>
-                <div class="mt-auto flex items-center justify-between border-t border-gray-100 pt-4">
-                  <span class="flex items-center gap-1.5 rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-500">
-                    <CalendarIcon class="h-3.5 w-3.5" />
-                    {{ formatArchivePublicationDate(item.publicationDate) }}
-                  </span>
-                  <span class="text-xs font-semibold text-[#e32932]">View</span>
-                </div>
-              </div>
-            </NuxtLink>
-          </div>
-        </section>
+        <ArchivePageRecommendations
+          v-if="metadata"
+          :current-id="archiveId"
+          :metadata="metadata"
+          :cached-items="searchedItems"
+          :query="appliedQuery"
+        />
       </template>
     </main>
 
@@ -264,19 +220,17 @@ import {
   CalendarIcon,
   CheckBadgeIcon,
   DocumentIcon,
-  DocumentTextIcon,
   ExclamationTriangleIcon,
   ShareIcon,
   TagIcon,
 } from '@heroicons/vue/24/outline';
-import type { ArchiveSearchItem, SubscriptionPlan, SubscriptionResponseModel } from '~/models';
+import type { SubscriptionPlan, SubscriptionResponseModel } from '~/models';
 import type { SubscriptionIdentity } from '~/utils/subscriptionIdentity';
 import type { ArchiveAccessState } from '~/utils/archiveAccess';
 import {
   buildArchiveDocumentUrl,
   formatArchiveFileType,
   formatArchivePublicationDate,
-  pickRelatedArchives,
 } from '~/utils/archiveAccess';
 
 const route = useRoute();
@@ -378,18 +332,9 @@ watchEffect(() => {
   });
 });
 
-// ─── Related results ──────────────────────────────────────────────────────────
-// Reuses whatever the archive search fetched, so the strip costs no request.
-const { items: searchedItems } = useArchiveSearch();
-
-const relatedItems = computed<ArchiveSearchItem[]>(() =>
-  pickRelatedArchives(searchedItems.value, archiveId.value, 3),
-);
-
-function relatedThumbnail(item: ArchiveSearchItem): string {
-  const match = item?.thumbnailId?.match(/https?:\/\/[^\s)\]]+/i);
-  return match?.[0] ?? '';
-}
+// Keep the original keyword context for high-relevance recommendations.
+// Edition-page requests are independent and never mutate these search results.
+const { items: searchedItems, appliedQuery } = useArchiveSearch();
 
 async function shareDocument() {
   const url = import.meta.client ? window.location.href : '';
