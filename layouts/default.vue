@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50">
     <AppHeader />
-    <main>
+    <main class="app-main">
       <slot />
     </main>
     <AppFooter />
