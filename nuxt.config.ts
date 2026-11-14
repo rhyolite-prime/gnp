@@ -149,6 +149,8 @@ export default defineNuxtConfig({
     strict: true
   },
   runtimeConfig: {
+    // Identity backend adapter; kept private and disabled until a registration API is configured.
+    onboardingRegistrationUrl: process.env.NUXT_ONBOARDING_REGISTRATION_URL || '',
     public: {
       microsoftClientId: process.env.NUXT_MICROSOFT_CLIENT_ID || '',
       googleClientId: process.env.NUXT_GOOGLE_CLIENT_ID || '',
