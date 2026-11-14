@@ -30,7 +30,7 @@ export async function getUserSubscription(query: object) {
  * metadata block all resolve to `hasAccess: false` (the paywall) instead of
  * throwing and blanking the page.
  */
-export async function validateArchiveAccess(id: string): Promise<ArchiveAccessState> {
+export async function validateArchiveAccess(id: string, request?: { accessToken: string; apiBase: string }): Promise<ArchiveAccessState> {
   const archiveId = typeof id === 'string' ? id.trim() : '';
 
   if (!archiveId) {
@@ -38,16 +38,22 @@ export async function validateArchiveAccess(id: string): Promise<ArchiveAccessSt
   }
 
   try {
-    const response = await gnpUserHttpClient<ArchiveAccessResponse>(
-      `subscription/validate-archive-access/${encodeURIComponent(archiveId)}`,
-      "",
-    );
+    // Async-data handlers may run outside setup context. Use the session and
+    // API base captured by the caller rather than re-reading cached auth state.
+    const endpoint = `subscription/validate-archive-access/${encodeURIComponent(archiveId)}`;
+    const response = request
+      ? await $fetch<ArchiveAccessResponse>(endpoint, {
+          baseURL: request.apiBase,
+          headers: request.accessToken ? { Authorization: `Bearer ${request.accessToken}` } : {},
+          retry: 0,
+        })
+      : await gnpUserHttpClient<ArchiveAccessResponse>(endpoint, '');
 
     return toArchiveAccessState(response);
   } catch (error) {
     // 401/403/network: the reader is not verified, which is exactly what the
     // paywall is for. Log for diagnostics and let the page render the upsell.
-    console.error('Archive access validation failed:', error);
+    // Do not log request objects: they may contain bearer credentials.
     return toArchiveAccessState(null);
   }
 }

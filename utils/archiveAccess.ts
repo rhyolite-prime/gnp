@@ -103,26 +103,24 @@ export function isPdfArchive(fileType: ArchiveFileType | null | undefined): bool
   const value = text(fileType).toUpperCase();
   // Unknown formats are treated as PDF: the reader surfaces a clean failure,
   // whereas an <img> tag would silently fail for a PDF asset.
-  return value === 'PDF' || value === '';
+  return value === 'PDF' || value === 'APPLICATION/PDF' || value === '';
 }
 
-/**
- * URL of the archive document, streamed through the existing server-side proxy.
- *
- * `/api/pdf` validates the reader's grant with the subscription service before
- * fetching the asset from storage, so the raw storage URL (and the token) never
- * reach the page markup directly.
- */
-export function buildArchiveDocumentUrl(
-  newspaperId: string | null | undefined,
-  accessToken: string | null | undefined,
-): string {
-  const id = text(newspaperId);
-  if (!id) return '';
+/** Archive storage has one canonical image suffix and one PDF suffix. */
+export function archiveAssetType(fileType: unknown): { extension: 'jpg' | 'pdf'; contentType: string } | null {
+  const type = typeof fileType === 'string' ? fileType.trim().toUpperCase() : '';
+  if (['PDF', 'APPLICATION/PDF'].includes(type)) return { extension: 'pdf', contentType: 'application/pdf' };
+  if (['IMAGE', 'JPG', 'JPEG', 'PNG', 'WEBP', 'GIF', 'TIF', 'TIFF', 'IMAGE/JPEG', 'IMAGE/PNG', 'IMAGE/WEBP'].includes(type)) {
+    return { extension: 'jpg', contentType: 'image/jpeg' };
+  }
+  return null;
+}
 
-  const token = text(accessToken);
-  const query = `uniqueId=${encodeURIComponent(id)}`;
-  return `/api/pdf?${query}&accessToken=${encodeURIComponent(token)}`;
+/** Same-origin archive proxy URL. Authentication is sent as a header or cookie, never in the URL. */
+export function buildArchiveDocumentUrl(archiveId: string | null | undefined, fileType: string | null | undefined): string {
+  const id = text(archiveId);
+  if (!id || !archiveAssetType(fileType)) return '';
+  return `/api/archive-file?archiveId=${encodeURIComponent(id)}&fileType=${encodeURIComponent(text(fileType))}`;
 }
 
 /** `1950-12-18` → `18 December 1950` (kept UTC so the day never shifts). */
