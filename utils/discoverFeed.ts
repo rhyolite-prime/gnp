@@ -17,6 +17,7 @@ export interface DiscoverItem {
   body?: string;
   free?: boolean;
   videoEmbed?: string;
+  mock?: boolean;
 }
 
 export function feedText(value: unknown): string {
