@@ -56,9 +56,9 @@ test('registration fails closed when its identity backend is unavailable', async
   assert.match(endpoint, /retry: 0/);
 });
 
-test('public width adjustment adds two pixels total and protects narrow viewport gutters', async () => {
+test('public width adjustment adds four pixels total and protects narrow viewport gutters', async () => {
   const css = await readFile(new URL('../assets/css/main.css', import.meta.url), 'utf8');
-  assert.match(css, /max-width: calc\(80rem \+ 2px\)/);
-  assert.match(css, /padding-left: calc\(1rem - 1px\)/);
-  assert.match(css, /padding-right: calc\(2rem - 1px\)/);
+  assert.match(css, /max-width: calc\(80rem \+ 4px\)/);
+  assert.match(css, /padding-left: calc\(1rem - 2px\)/);
+  assert.match(css, /padding-right: calc\(2rem - 2px\)/);
 });

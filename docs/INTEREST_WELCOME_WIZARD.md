@@ -51,7 +51,7 @@ The checkbox records an explicit request, not a completed passkey enrollment. Af
 
 ## Width change
 
-The default public layout's standard `.max-w-7xl.px-4` containers and the header get a maximum width of `calc(80rem + 2px)`, increasing width by 1px per side on wide screens. Below the original width cap, existing horizontal gutters decrease by 1px per side at each Tailwind breakpoint rather than extending beyond the viewport. The footer, admin layout, and smaller specialised content containers are unchanged.
+The default public layout's standard `.max-w-7xl.px-4` containers and the header get a maximum width of `calc(80rem + 4px)`, increasing width by 2px per side (including the additional 1px-per-side adjustment) on wide screens. Below the original width cap, existing horizontal gutters decrease by 2px per side at each Tailwind breakpoint rather than extending beyond the viewport. The footer, admin layout, and smaller specialised content containers are unchanged.
 
 ## Validation
 
