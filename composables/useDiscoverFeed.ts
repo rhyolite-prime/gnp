@@ -23,6 +23,7 @@ export function useDiscoverFeed() {
   let preferredIndex = 0;
   let seen = new Set<string>();
   let disposed = false;
+  let sampleQueue: DiscoverItem[] | null = null;
 
   function buildSources(selected: ContentCategoryId[]): Source[] {
     const source = (id: string, label: string, fetch: Source['fetch'], preferred = false): Source => ({ id, label, fetch, preferred, page: 1, done: false });
@@ -61,6 +62,13 @@ export function useDiscoverFeed() {
 
   async function loadMore() {
     if (loading.value || !more.value || disposed) return;
+    if (sampleQueue !== null) {
+      loading.value = true;
+      items.value.push(...sampleQueue.splice(0, 12));
+      more.value = sampleQueue.length > 0;
+      loading.value = false;
+      return;
+    }
     const currentGeneration = generation;
     loading.value = true;
     const general = sources.filter(source => !source.preferred && !source.done);
@@ -87,10 +95,11 @@ export function useDiscoverFeed() {
     loading.value = false;
   }
 
-  async function reset(selected: ContentCategoryId[]) {
+  async function reset(selected: ContentCategoryId[], samples?: DiscoverItem[]) {
     generation++;
     selection.value = [...selected];
-    sources = buildSources(selected);
+    sampleQueue = samples ? mixDiscoverBatch(samples.map(item => personaliseFeedItem(item, selected)), new Set()) : null;
+    sources = samples ? [] : buildSources(selected);
     preferredIndex = 0;
     seen = new Set();
     items.value = [];

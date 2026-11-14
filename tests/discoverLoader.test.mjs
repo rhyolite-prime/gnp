@@ -89,3 +89,21 @@ test('simultaneous load triggers do not issue duplicate page requests', async ()
   resolve(empty());
   await first;
 });
+
+test('sample pagination is isolated from live APIs and ends without recycling cards', async () => {
+  let calls = 0;
+  const unexpected = async () => { calls++; throw new Error('Live API called in sample mode'); };
+  const state = loader({ searchArchives: unexpected, getNewsPapers: unexpected, getVideos: unexpected, getTopStories: unexpected });
+  const samples = Array.from({ length: 25 }, (_, index) => ({ key: `sample:${index}`, title: 'Banking', excerpt: '', topics: [], preferred: false }));
+  await state.reset(['banking'], samples);
+  assert.equal(state.items.value.length, 12);
+  assert.equal(state.items.value[0].preferred, true);
+  await state.loadMore();
+  assert.equal(state.items.value.length, 24);
+  await state.loadMore();
+  assert.equal(state.items.value.length, 25);
+  assert.equal(state.finished.value, true);
+  await state.loadMore();
+  assert.equal(state.items.value.length, 25);
+  assert.equal(calls, 0);
+});
