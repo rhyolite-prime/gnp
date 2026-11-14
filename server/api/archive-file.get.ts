@@ -54,6 +54,8 @@ export default defineEventHandler(async event => {
   }
   // The archive/page ID is deliberately not replaced by its parent newspaperId.
   const filename = `${archiveId}.${assetType.extension}`;
+ 
+
   const buffer = await fetchAsset(filename);
   setHeader(event, 'Content-Type', assetType.contentType);
   setHeader(event, 'Content-Disposition', `inline; filename="${filename}"`);
