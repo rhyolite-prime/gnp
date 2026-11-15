@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRelatedArchivePayload, keepReadingPages, isSameEdition, rankRelatedArchives, archiveThumbnail } from '../utils/archiveRecommendations.ts';
+import { buildRelatedArchivePayload, keepReadingPages, relatedArchivePages, isCurrentArchivePage, currentArchivePage, editionPages, isSameEdition, rankRelatedArchives, archiveThumbnail } from '../utils/archiveRecommendations.ts';
 const metadata = { newspaperId: 'edition1', publicationName: 'Daily Graphic', publicationDate: '2026-11-13' };
 const item = (id, pageNumber, extra = {}) => ({ id, newspaperId: 'edition1', publicationName: 'Daily Graphic', publicationDate: '2026-11-13', pageNumber, relevance: 0, ...extra });
 
@@ -70,18 +70,60 @@ test('thumbnails support imported URL wrappers and local assets without executab
   assert.equal(archiveThumbnail('//example.com/scan.jpg'), '');
 });
 
-test('keep reading uses the related-archived-content API and related results keep the direct-link relevance fallback', async () => {
+test('the page list keeps the page being read, which keep-reading leaves out', () => {
+  const record = (newspaperId, pageNumber) => ({ ...API_RESULT[0], newspaperId, pageNumber });
+  const records = [record('n2', 2), record(API_METADATA.newspaperId, 1), record('n2', 2), record('', 3)];
+  const all = relatedArchivePages(records, API_METADATA);
+  assert.deepEqual(all.map(page => page.id), ['n2', API_METADATA.newspaperId]);
+  assert.deepEqual(all.map(page => isCurrentArchivePage(page, 'route-id', API_METADATA)), [false, true]);
+  assert.equal(isCurrentArchivePage(all[0], 'n2', API_METADATA), true);
+  assert.equal(isCurrentArchivePage(all[0], 'route-id', null), false);
+  assert.deepEqual(keepReadingPages(records, API_METADATA, 'route-id').map(page => page.id), ['n2']);
+});
+
+test('the pane lists the page being read in page order among the other pages', () => {
+  const others = keepReadingPages([item('p10', 10), item('p2', 2), item('p4', 4)], metadata, 'p3');
+  const current = relatedArchivePages([item('p3', 3)], metadata)[0];
+  assert.deepEqual(editionPages(others, current).map(page => page.pageNumber), ['2', '3', '4', '10']);
+  assert.deepEqual(editionPages([...others, current], current).map(page => page.id), ['p2', 'p3', 'p4', 'p10']);
+});
+
+test('a page being read whose number is unknown leads the pane, ahead of other editions', () => {
+  const others = keepReadingPages([item('other', 1, { publicationName: 'The Mirror' }), item('p2', 2)], metadata, 'route-id');
+  const current = currentArchivePage('route-id', { ...metadata, fileType: 'PDF' });
+  assert.deepEqual(current, { id: 'route-id', newspaperId: 'edition1', publicationName: 'Daily Graphic', publicationDate: '2026-11-13', pageNumber: '', thumbnailId: '', fileType: 'PDF', sameEdition: true });
+  assert.deepEqual(editionPages(others, current).map(page => page.id), ['route-id', 'p2', 'other']);
+});
+
+test('the left pane uses the related-archived-content API and opens pages in the same reader', async () => {
   const { readFile } = await import('node:fs/promises');
-  const component = await readFile(new URL('../components/ArchivePageRecommendations.vue', import.meta.url), 'utf8');
-  const page = await readFile(new URL('../pages/archives/[id].vue', import.meta.url), 'utf8');
-  assert.match(component, /Related High-Ranking Results/);
-  assert.match(component, /getRelatedArchivedContent\(buildRelatedArchivePayload\(props.currentId, props.metadata\)\)/);
-  assert.match(component, /keepReadingPages\(result, props.metadata, props.currentId\)/);
-  assert.doesNotMatch(component, /publicationDate: date.value/);
-  assert.match(component, /rankRelatedArchives\(props.cachedItems, props.currentId\).length < 3/);
-  assert.match(component, /request === generation/);
-  assert.match(component, /failedThumbnails.add\(item.id\)/);
+  const read = path => readFile(new URL(path, import.meta.url), 'utf8');
+  const pane = await read('../components/archives/ArchiveEditionPages.vue');
+  const related = await read('../components/ArchivePageRecommendations.vue');
+  const page = await read('../pages/archives/[id].vue');
+
+  // Pane: data source, stale-response guard, in-app navigation, internal scrolling.
+  assert.match(pane, /getRelatedArchivedContent\(buildRelatedArchivePayload\(currentId, metadata\)\)/);
+  assert.match(pane, /keepReadingPages\(/);
+  assert.doesNotMatch(pane, /publicationDate: date.value/);
+  assert.match(pane, /request !== generation/);
+  assert.match(pane, /failedThumbnails.add\(page.id\)/);
+  assert.match(pane, /<NuxtLink\s+:to="`\/archives\/\$\{encodeURIComponent\(page.id\)\}`"/);
+  assert.match(pane, /:aria-current="isCurrent\(page\) \? 'page' : undefined"/);
+  assert.match(pane, /lg:overflow-y-auto/);
+  assert.match(pane, /list.scrollBy\(/);
+  assert.doesNotMatch(pane, /scrollIntoView/);
+
+  // The list lives in the pane only; the section below the reader keeps the search matches.
+  assert.match(related, /Related High-Ranking Results/);
+  assert.match(related, /rankRelatedArchives\(props.cachedItems, props.currentId\).length < 3/);
+  assert.doesNotMatch(related, /getRelatedArchivedContent|More pages from this edition/);
+
+  // Page: pane beside the reader, one page instance for every archive, no window jump on a page change.
+  assert.match(page, /<ArchiveEditionPages[\s\S]*?:current-id="archiveId"[\s\S]*?\/>[\s\S]*?<ArchiveDocumentViewer/);
+  assert.match(page, /key: 'archive-detail'/);
+  assert.match(page, /scrollToTop: \(to, from\) => to.name !== from.name/);
+  assert.match(page, /<ArchiveDocumentViewer[\s\S]*?:key="archiveId"/);
   assert.match(page, /<ArchivePageRecommendations/);
-  assert.match(page, /:current-id="archiveId"/);
   assert.match(page, /:query="appliedQuery"/);
 });

@@ -5,7 +5,7 @@ const normalise = (value: string) => (value || '').trim().toLowerCase().replace(
 /** Trimmed string; numbers are accepted because the API sends `pageNumber` as a number. */
 const text = (value: unknown) => typeof value === 'string' ? value.trim() : typeof value === 'number' && Number.isFinite(value) ? String(value) : '';
 
-/** One card in the "Keep reading" strip on /archives/:id. */
+/** One archive page offered for further reading on /archives/:id. */
 export interface KeepReadingPage {
   /** Route id for `/archives/:id`: the record's `id`, or its `newspaperId` when the API sends none. */
   id: string;
@@ -40,30 +40,36 @@ export function isSameEdition(item: { publicationName?: string; publicationDate?
 }
 
 /**
- * Turns the `result` of news-papers/get-related-archived-content into the cards
- * for the "Keep reading" strip. The API returns a plain array; the standard
- * pagination envelope (`{ data: [...] }`) and a single record are tolerated.
- * The page being read and duplicates are dropped. Pages of the current edition
- * come first in page order; anything else keeps the order the API ranked it in.
+ * True when `page` is the archive page being read: it carries the route id, or
+ * (for records the API identifies by `newspaperId`) the open document's own
+ * `newspaperId`.
  */
-export function keepReadingPages(result: unknown, metadata: ArchiveAccessMetadata, currentId: string): KeepReadingPage[] {
+export function isCurrentArchivePage(page: { id: string }, currentId: string, metadata: ArchiveAccessMetadata | null | undefined): boolean {
+  const id = text(page.id);
+  return !!id && (id === text(currentId) || id === text(metadata?.newspaperId));
+}
+
+/**
+ * Normalises the `result` of news-papers/get-related-archived-content. The API
+ * returns a plain array; the standard pagination envelope (`{ data: [...] }`)
+ * and a single record are tolerated. Duplicates and records with no usable id
+ * are dropped; nothing else is filtered and the API order is kept.
+ */
+export function relatedArchivePages(result: unknown, metadata: ArchiveAccessMetadata): KeepReadingPage[] {
   const envelope = result as { data?: unknown } | null | undefined;
   const records: unknown[] = Array.isArray(result) ? result
     : Array.isArray(envelope?.data) ? envelope.data
     : result && typeof result === 'object' ? [result] : [];
 
-  const seen = new Set<string>([text(currentId)]);
+  const seen = new Set<string>();
   const pages: KeepReadingPage[] = [];
   for (const record of records) {
     if (!record || typeof record !== 'object') continue;
     const source = record as Record<string, unknown>;
-    const ownId = text(source.id);
     const newspaperId = text(source.newspaperId);
-    // The API sends no `id` on these records, so `newspaperId` is the only handle
-    // on the page. A record identified that way is the page being read when it
-    // carries the current document's `newspaperId`.
-    const id = ownId || newspaperId;
-    if (!id || seen.has(id) || (!ownId && id === text(metadata.newspaperId))) continue;
+    // The API sends no `id` on these records, so `newspaperId` is the only handle on the page.
+    const id = text(source.id) || newspaperId;
+    if (!id || seen.has(id)) continue;
     seen.add(id);
     const page = {
       id,
@@ -76,13 +82,46 @@ export function keepReadingPages(result: unknown, metadata: ArchiveAccessMetadat
     };
     pages.push({ ...page, sameEdition: isSameEdition(page, metadata) });
   }
+  return pages;
+}
 
+/** Pages of the current edition first, in page order; anything else keeps its given order. */
+function inReadingOrder(pages: KeepReadingPage[]): KeepReadingPage[] {
   const pageOrder = (page: KeepReadingPage) => Number(page.pageNumber) || Infinity;
-  return pages.sort((a, b) => {
+  return [...pages].sort((a, b) => {
     if (a.sameEdition !== b.sameEdition) return a.sameEdition ? -1 : 1;
     if (!a.sameEdition || pageOrder(a) === pageOrder(b)) return 0;
     return pageOrder(a) - pageOrder(b);
   });
+}
+
+/** The other pages to keep reading: everything the API returned except the page being read. */
+export function keepReadingPages(result: unknown, metadata: ArchiveAccessMetadata, currentId: string): KeepReadingPage[] {
+  return inReadingOrder(relatedArchivePages(result, metadata).filter(page => !isCurrentArchivePage(page, currentId, metadata)));
+}
+
+/** Stand-in for the page being read when no record of it (page number, thumbnail) is known yet. */
+export function currentArchivePage(currentId: string, metadata: ArchiveAccessMetadata): KeepReadingPage {
+  return {
+    id: text(currentId),
+    newspaperId: text(metadata.newspaperId),
+    publicationName: text(metadata.publicationName),
+    publicationDate: text(metadata.publicationDate),
+    pageNumber: '',
+    thumbnailId: '',
+    fileType: text(metadata.fileType),
+    sameEdition: true,
+  };
+}
+
+/**
+ * The page list beside the reader: the other pages plus the page being read, in
+ * reading order. A current page whose number is unknown leads the list rather
+ * than sinking to the end of its edition.
+ */
+export function editionPages(others: KeepReadingPage[], current: KeepReadingPage): KeepReadingPage[] {
+  const rest = inReadingOrder(others.filter(page => page.id !== current.id));
+  return Number(current.pageNumber) ? inReadingOrder([...rest, current]) : [current, ...rest];
 }
 
 export function rankRelatedArchives(items: ArchiveSearchItem[], currentId: string, limit = 3): ArchiveSearchItem[] {
