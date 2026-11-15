@@ -285,18 +285,20 @@ export interface VideoPage extends BasePaginationModel<Video[]> {
 
 
 
+/** One record in `result` of POST news-papers/get-related-archived-content. */
 export interface RelatedArchivedContent {
 
     fileType: string;
     newspaperId: string;
-    pageNumber: string;
+    pageNumber: number;
+    /** Absolute thumbnail URL. */
     thumbnailId: string;
     publicationName: string;
-    id: string;
-    tags: []
+    /** Not sent by the API at the moment; `newspaperId` identifies the page. */
+    id?: string;
+    tags: string[];
     publicationDate: string;
- 
-    
+
 }
 
 export interface NewsPaper {

@@ -129,7 +129,7 @@ export async function getNewsPaperDetails(query: object) {
 
 export async function getRelatedArchivedContent(payload: object) {
  
-    const response = await gnpUserHttpClient<BaseApiResponse<RelatedArchivedContent>>('news-papers/get-related-archived-content', "",
+    const response = await gnpUserHttpClient<BaseApiResponse<RelatedArchivedContent[]>>('news-papers/get-related-archived-content', "",
         {
             method: "post",
             body: payload,
