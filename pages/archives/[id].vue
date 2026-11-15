@@ -21,22 +21,22 @@
     </div>
 
     <main class="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <!-- Loading -->
-      <div v-if="isLoading" class="flex flex-col items-center justify-center gap-4 py-32 text-gray-500" role="status">
+      <!-- First visit: nothing is known about the document yet -->
+      <div v-if="isLoading && !shownMetadata" class="flex flex-col items-center justify-center gap-4 py-32 text-gray-500" role="status">
         <div class="h-14 w-14 animate-spin rounded-full border-4 border-gray-200 border-t-[#e32932]"></div>
         <p class="text-sm font-medium">Checking your access to this document…</p>
       </div>
 
       <template v-else>
-        <!-- Metadata card — rendered whenever the API described the document -->
-        <section v-if="metadata" class="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+        <!-- Metadata card — rendered whenever the API described the document; kept on screen while switching pages -->
+        <section v-if="shownMetadata" class="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm md:p-8">
           <div class="mb-6 flex flex-wrap items-start justify-between gap-4 border-b border-gray-100 pb-5">
             <div class="min-w-0">
               <p class="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-[#e32932]">Graphic Archives</p>
               <h1 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-                {{ metadata.publicationName || 'Archived publication' }}
+                {{ shownMetadata.publicationName || 'Archived publication' }}
               </h1>
-              <p class="mt-1 text-base text-gray-600">{{ formatArchivePublicationDate(metadata.publicationDate) }}</p>
+              <p class="mt-1 text-base text-gray-600">{{ formatArchivePublicationDate(shownMetadata.publicationDate) }}</p>
             </div>
 
             <div class="flex items-center gap-2">
@@ -64,7 +64,7 @@
               <BuildingOfficeIcon class="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-400" />
               <div>
                 <dt class="text-xs font-semibold uppercase tracking-wider text-gray-500">Publisher</dt>
-                <dd class="text-gray-800">{{ metadata.publicationName || '—' }}</dd>
+                <dd class="text-gray-800">{{ shownMetadata.publicationName || '—' }}</dd>
               </div>
             </div>
 
@@ -72,7 +72,7 @@
               <CalendarIcon class="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-400" />
               <div>
                 <dt class="text-xs font-semibold uppercase tracking-wider text-gray-500">Date Published</dt>
-                <dd class="text-gray-800">{{ formatArchivePublicationDate(metadata.publicationDate) || '—' }}</dd>
+                <dd class="text-gray-800">{{ formatArchivePublicationDate(shownMetadata.publicationDate) || '—' }}</dd>
               </div>
             </div>
 
@@ -81,18 +81,18 @@
               <div>
                 <dt class="text-xs font-semibold uppercase tracking-wider text-gray-500">File Type</dt>
                 <dd class="text-gray-800">
-                  <span class="rounded bg-gray-100 px-2 py-0.5 font-mono text-sm">{{ formatArchiveFileType(metadata.fileType) }}</span>
+                  <span class="rounded bg-gray-100 px-2 py-0.5 font-mono text-sm">{{ formatArchiveFileType(shownMetadata.fileType) }}</span>
                 </dd>
               </div>
             </div>
 
-            <div v-if="metadata.tags.length" class="flex items-start gap-3 sm:col-span-2 lg:col-span-3">
+            <div v-if="shownMetadata.tags.length" class="flex items-start gap-3 sm:col-span-2 lg:col-span-3">
               <TagIcon class="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-400" />
               <div class="min-w-0">
                 <dt class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">Tags</dt>
                 <dd class="flex flex-wrap gap-2">
                   <span
-                    v-for="tag in metadata.tags"
+                    v-for="tag in shownMetadata.tags"
                     :key="tag"
                     class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-gray-600"
                   >
@@ -104,66 +104,98 @@
           </dl>
         </section>
 
-        <!-- Document viewer, or the paywall when the API denies access -->
-        <section v-if="hasAccess" class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3">
-            <div class="flex items-center gap-2 text-sm font-medium text-green-700">
-              <CheckBadgeIcon class="h-5 w-5" />
-              <span>Access granted — full document unlocked</span>
-            </div>
-          </div>
-          <ArchiveDocumentViewer
-            :key="archiveId"
-            :src="documentUrl"
-            :file-type="metadata?.fileType || ''"
-            :access-token="accessToken"
-            :title="readerTitle"
+        <!-- Reader: the pages of the edition on the left, the open page in the main area -->
+        <div class="lg:flex lg:items-stretch lg:gap-5">
+          <ArchiveEditionPages
+            v-if="shownMetadata"
+            class="mb-5 lg:mb-0"
+            :current-id="archiveId"
+            :metadata="metadata"
+            :known-items="searchedItems"
           />
-        </section>
 
-        <ArchivePaywall
-          v-else
-          :publication-name="metadata?.publicationName ?? ''"
-          :date-label="formatArchivePublicationDate(metadata?.publicationDate)"
-          :file-type="metadata?.fileType ?? ''"
-          :is-loading-plans="isLoadingPlans"
-          :is-signed-in="isSignedIn"
-          @view-plans="openSubscriptionModal"
-        />
+          <div class="min-w-0 flex-1">
+            <!-- Switching pages: hold the reader's footprint so nothing jumps -->
+            <section
+              v-if="isLoading && lastHadAccess"
+              class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+              role="status"
+            >
+              <div class="flex items-center gap-2 border-b border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-600">
+                <span class="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-[#e32932]" aria-hidden="true"></span>
+                <span>Opening page…</span>
+              </div>
+              <!-- Same footprint as ArchiveDocumentViewer -->
+              <div class="flex h-[calc(100dvh-14rem)] min-h-[400px] items-center justify-center bg-gray-100">
+                <span class="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#e32932]" aria-hidden="true"></span>
+              </div>
+            </section>
 
-        <!-- The API failed entirely (network, 5xx): no metadata to show -->
-        <section
-          v-if="!metadata && !hasAccess"
-          class="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm"
-        >
-          <ExclamationTriangleIcon class="mx-auto mb-4 h-10 w-10 text-amber-500" />
-          <h2 class="text-xl font-bold text-gray-900">We couldn't load this document</h2>
-          <p class="mx-auto mt-2 max-w-md text-sm text-gray-600">
-            {{ access?.message || 'The archive service is unavailable right now. Please try again.' }}
-          </p>
-          <div class="mt-6 flex flex-wrap justify-center gap-3">
-            <button
-              type="button"
-              class="rounded-lg bg-[#e32932] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700"
-              @click="loadAccess()"
+            <!-- Document viewer, or the paywall when the API denies access -->
+            <section v-else-if="hasAccess" class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+              <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3">
+                <div class="flex items-center gap-2 text-sm font-medium text-green-700">
+                  <CheckBadgeIcon class="h-5 w-5" />
+                  <span>Access granted — full document unlocked</span>
+                </div>
+              </div>
+              <ArchiveDocumentViewer
+                :key="archiveId"
+                :src="documentUrl"
+                :file-type="metadata?.fileType || ''"
+                :access-token="accessToken"
+                :title="readerTitle"
+              />
+            </section>
+
+            <ArchivePaywall
+              v-else
+              :class="{ 'pointer-events-none opacity-60': isLoading }"
+              :aria-busy="isLoading"
+              :publication-name="shownMetadata?.publicationName ?? ''"
+              :date-label="formatArchivePublicationDate(shownMetadata?.publicationDate)"
+              :file-type="shownMetadata?.fileType ?? ''"
+              :is-loading-plans="isLoadingPlans"
+              :is-signed-in="isSignedIn"
+              @view-plans="openSubscriptionModal"
+            />
+
+            <!-- The API failed entirely (network, 5xx): no metadata to show -->
+            <section
+              v-if="!isLoading && !metadata && !hasAccess"
+              class="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm"
             >
-              Try again
-            </button>
-            <NuxtLink
-              to="/archives"
-              class="rounded-lg border border-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
-            >
-              Back to Archives
-            </NuxtLink>
+              <ExclamationTriangleIcon class="mx-auto mb-4 h-10 w-10 text-amber-500" />
+              <h2 class="text-xl font-bold text-gray-900">We couldn't load this document</h2>
+              <p class="mx-auto mt-2 max-w-md text-sm text-gray-600">
+                {{ access?.message || 'The archive service is unavailable right now. Please try again.' }}
+              </p>
+              <div class="mt-6 flex flex-wrap justify-center gap-3">
+                <button
+                  type="button"
+                  class="rounded-lg bg-[#e32932] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+                  @click="loadAccess()"
+                >
+                  Try again
+                </button>
+                <NuxtLink
+                  to="/archives"
+                  class="rounded-lg border border-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                >
+                  Back to Archives
+                </NuxtLink>
+              </div>
+            </section>
           </div>
-        </section>
+        </div>
 
         <ArchivePageRecommendations
-          v-if="metadata"
+          v-if="shownMetadata"
           :current-id="archiveId"
-          :metadata="metadata"
+          :metadata="shownMetadata"
           :cached-items="searchedItems"
           :query="appliedQuery"
+          @open="scrollToTop"
         />
       </template>
     </main>
@@ -224,7 +256,7 @@ import {
   ShareIcon,
   TagIcon,
 } from '@heroicons/vue/24/outline';
-import type { SubscriptionPlan, SubscriptionResponseModel } from '~/models';
+import type { ArchiveAccessMetadata, SubscriptionPlan, SubscriptionResponseModel } from '~/models';
 import type { SubscriptionIdentity } from '~/utils/subscriptionIdentity';
 import type { ArchiveAccessState } from '~/utils/archiveAccess';
 import {
@@ -247,11 +279,12 @@ const showSignInModal = useState<boolean>('showSignInModal', () => false);
 
 const archiveId = computed(() => String(route.params.id ?? '').trim());
 
-useHead({
-  title: 'Archive Document - Graphic NewsPlus',
-  meta: [
-    { name: 'description', content: 'Read historical editions from Graphic Archives on Graphic NewsPlus.' },
-  ],
+// One page instance serves every /archives/:id, so picking another page of the
+// edition swaps the document in place instead of rebuilding (and re-scrolling)
+// the whole page. Moving between archive pages therefore never scrolls by itself.
+definePageMeta({
+  key: 'archive-detail',
+  scrollToTop: (to, from) => to.name !== from.name,
 });
 
 // ─── Access validation ────────────────────────────────────────────────────────
@@ -287,13 +320,25 @@ const isLoading = computed(() => accessStatus.value === 'pending' || accessStatu
 const metadata = computed(() => access.value?.metadata ?? null);
 const hasAccess = computed(() => access.value?.hasAccess === true);
 
+// While another page of the edition loads, `access` is empty. The page keeps
+// describing the last document it knew about (display only — the viewer and the
+// paywall still decide on the fresh `metadata` / `hasAccess`), so the layout holds.
+const settledMetadata = ref<ArchiveAccessMetadata | null>(null);
+const lastHadAccess = ref(false);
+watch([isLoading, metadata, hasAccess], () => {
+  if (isLoading.value) return;
+  settledMetadata.value = metadata.value;
+  lastHadAccess.value = hasAccess.value;
+}, { immediate: true });
+const shownMetadata = computed(() => metadata.value ?? (isLoading.value ? settledMetadata.value : null));
+
 const pageTitle = computed(
-  () => metadata.value?.publicationName || 'Archive Document',
+  () => shownMetadata.value?.publicationName || 'Archive Document',
 );
 
 const readerTitle = computed(() => {
-  const name = metadata.value?.publicationName ?? 'Graphic Archives';
-  const date = formatArchivePublicationDate(metadata.value?.publicationDate);
+  const name = shownMetadata.value?.publicationName ?? 'Graphic Archives';
+  const date = formatArchivePublicationDate(shownMetadata.value?.publicationDate);
   return date ? `${name} — ${date}` : name;
 });
 
@@ -301,8 +346,6 @@ const readerTitle = computed(() => {
 const documentUrl = computed(() =>
   buildArchiveDocumentUrl(archiveId.value, metadata.value?.fileType),
 );
-
-const dateLabel = computed(() => formatArchivePublicationDate(metadata.value?.publicationDate));
 
 const isBookmarked = ref(false);
 
@@ -318,23 +361,30 @@ function loadAccess() {
 // Signing in or out changes who is asking, so the grant must be re-checked.
 watch([archiveId, accessToken], () => { access.value = { ...EMPTY_ACCESS }; }, { flush: 'sync' });
 
-// Update the page title when client-side access metadata arrives.
-watchEffect(() => {
-  if (!metadata.value) return;
-  useHead({
-    title: `${readerTitle.value} - Graphic NewsPlus`,
-    meta: [
-      {
-        name: 'description',
-        content: `Archive ${formatArchiveFileType(metadata.value.fileType)} of ${metadata.value.publicationName} from ${dateLabel.value}.`,
-      },
-    ],
-  });
+// The bookmark toggle belongs to one document.
+watch(archiveId, () => { isBookmarked.value = false; });
+
+// Title and description follow the document once its metadata arrives.
+useHead({
+  title: () => shownMetadata.value ? `${readerTitle.value} - Graphic NewsPlus` : 'Archive Document - Graphic NewsPlus',
+  meta: [
+    {
+      name: 'description',
+      content: () => shownMetadata.value
+        ? `Archive ${formatArchiveFileType(shownMetadata.value.fileType)} of ${shownMetadata.value.publicationName} from ${formatArchivePublicationDate(shownMetadata.value.publicationDate)}.`
+        : 'Read historical editions from Graphic Archives on Graphic NewsPlus.',
+    },
+  ],
 });
 
 // Keep the original keyword context for high-relevance recommendations.
 // Edition-page requests are independent and never mutate these search results.
 const { items: searchedItems, appliedQuery } = useArchiveSearch();
+
+/** A related result further down the page was opened: bring the reader back into view. */
+function scrollToTop() {
+  if (import.meta.client) window.scrollTo({ top: 0 });
+}
 
 async function shareDocument() {
   const url = import.meta.client ? window.location.href : '';
