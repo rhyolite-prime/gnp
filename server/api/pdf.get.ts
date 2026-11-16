@@ -87,12 +87,6 @@ export default defineEventHandler(async (event) => {
   // proxyApiBaseURL is public so it lives under config.public
   const apiBase: string = (config.public as Record<string, string>).proxyApiBaseURL
 
-  console.log('apiBase->', apiBase); 
-
-  console.log('userId->', userId); 
-
-  console.log('email->', email); 
-
   const grantUrl = `${apiBase}subscription/grant-newspaper-access`
 
   let newsPaperDetails: NewsPaperResponse | null = null
