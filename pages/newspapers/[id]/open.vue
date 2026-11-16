@@ -83,9 +83,12 @@
           <!-- Reader state -->
           <ClientOnly v-else>
             <NewspaperReader
+              :key="assetUrl"
               :pdf-url="assetUrl"
               :title="newspaperTitle"
               class="w-full h-full border-0 shadow-2xl rounded-b-lg overflow-hidden"
+              @document-loaded="handleDocumentLoaded"
+              @page-view="handlePageView"
             />
           </ClientOnly>
       </div>
@@ -94,13 +97,32 @@
 </template>
 
 <script setup lang="ts">
-import type { NewsPaper,Publication, SubscriptionResponseModel } from "~/models";
+import type {
+  EngagementFlushReason,
+  NewsPaper,
+  NewspaperEngagementPayload,
+  PdfReaderDocumentLoadedEvent,
+  PdfReaderPageViewEvent,
+  Publication,
+} from "~/models";
 import { Lock, FileText, Search } from 'lucide-vue-next';
 import { useWindowSize } from '@vueuse/core';
+import { useBasicAuthStore } from '~/stores/basic-user-auth';
+import {
+  createPdfPageViewTracker,
+  resolveEngagementDeviceType,
+} from '~/utils/pdfPageViewTracker';
 
 const route = useRoute();
 const router = useRouter();
 const { $toast } = useNuxtApp();
+const authStore = useBasicAuthStore();
+const gnpUserAuthIdentity = useGnpUserAuthIdentity();
+const apiBase = useRuntimeConfig().public.proxyApiBaseURL;
+const activeAccessToken = computed(
+  () => gnpUserAuthIdentity.value || authStore.accessToken || '',
+);
+
 const newspaperId = route.params.id as string;
 const newspaperTitle = ref('');
 const assetUrl = ref('');
@@ -114,11 +136,92 @@ const selectedDate = ref('');
 const newsPaperDetail = ref<NewsPaper | null>(null);
 const publicationList = ref<Publication[]>([]);
 
- 
+// Call useWindowSize at the top level of the setup script
+const { width, height } = useWindowSize();
+
+// Per-page PDF view counter & dwell-time tracker for this reading session
+const pageViewTracker = createPdfPageViewTracker();
+const pageViewCounts = ref<Record<string, number>>({});
+const totalPages = ref(0);
 
 definePageMeta({
   middleware: ['basic-user-auth']
 })
+
+function handleDocumentLoaded(event: PdfReaderDocumentLoadedEvent) {
+  pageViewTracker.setTotalPages(event.totalPages);
+  totalPages.value = pageViewTracker.totalPages;
+}
+
+function handlePageView(event: PdfReaderPageViewEvent) {
+  pageViewTracker.setTotalPages(event.totalPages);
+  pageViewTracker.recordPageView(event.pageNumber, event.trigger);
+  totalPages.value = pageViewTracker.totalPages;
+  pageViewCounts.value = pageViewTracker.getPageViewCounts();
+}
+
+function buildEngagementAnalyticsPayload(
+  flushReason: EngagementFlushReason,
+): NewspaperEngagementPayload | null {
+  if (!newsPaperDetail.value?.id) return null;
+
+  const userAgent =
+    typeof window !== 'undefined' ? window.navigator?.userAgent || 'Unknown' : 'Unknown';
+  const viewportWidth = Number.isFinite(width.value) ? Math.round(width.value) : 0;
+  const viewportHeight = Number.isFinite(height.value) ? Math.round(height.value) : 0;
+
+  return pageViewTracker.buildPayload({
+    newspaper: newsPaperDetail.value,
+    uniqueId: newspaperId,
+    deviceType: resolveEngagementDeviceType({ viewportWidth, userAgent }),
+    userAgent,
+    viewport:
+      viewportWidth > 0 && viewportHeight > 0
+        ? { width: viewportWidth, height: viewportHeight }
+        : undefined,
+    flushReason,
+  });
+}
+
+async function flushEngagementMetrics(flushReason: EngagementFlushReason) {
+  if (!pageViewTracker.hasUnflushedActivity()) return;
+
+  const payload = buildEngagementAnalyticsPayload(flushReason);
+  if (!payload) return;
+
+  pageViewTracker.markFlushed();
+
+  try {
+    await updateUserEngagementMetrics(payload, {
+      accessToken: activeAccessToken.value,
+      apiBase,
+      keepalive: true,
+    });
+  } catch (error) {
+    console.error("Failed to update engagement metrics:", error);
+  }
+}
+
+function handleVisibilityChange() {
+  if (typeof document === 'undefined') return;
+  if (document.visibilityState === 'hidden') {
+    pageViewTracker.pause();
+  } else if (accessGranted.value && !isLoading.value) {
+    pageViewTracker.resume();
+  }
+}
+
+function handlePageHide() {
+  void flushEngagementMetrics('pagehide');
+}
+
+watch([isLoading, accessGranted], ([loadingState, granted]) => {
+  if (loadingState || !granted) {
+    pageViewTracker.pause();
+  } else if (typeof document === 'undefined' || document.visibilityState !== 'hidden') {
+    pageViewTracker.resume();
+  }
+});
 
 const getAllPublications = async () => {
 
@@ -153,6 +256,7 @@ const getNewspaperByDate = async () => {
     // Force a full browser reload to the new newspaper uniqueId.
     // This ensures a clean slate and re-runs all initialization logic.
     if (response.data.uniqueId !== route.params.id) {
+       await flushEngagementMetrics('edition_switch');
        window.location.href = `/newspapers/${response.data.uniqueId}/open`;
     } else {
        isLoading.value = false;
@@ -170,39 +274,32 @@ const getNewspaperByDate = async () => {
 
 }
 
-// Call useWindowSize at the top level of the setup script
-const { width } = useWindowSize();
-
 onBeforeUnmount(async() => {
-   //call api to update user engagement metrics
-   try {
-     // use vueusecore to get the user agent and device info 
-     let deviceType = 'web';
-     if (width.value < 768) {
-       deviceType = 'mobile';
-     } else if (width.value < 1024) {
-       deviceType = 'tablet';
-     }
-     
-     const userAgent = window?.navigator?.userAgent || 'Unknown';
-      
-     await updateUserEngagementMetrics({ 
-       newspaperId : newsPaperDetail.value.id, 
-       deviceType,
-       userAgent // Assuming your method supports this; feel free to omit if not in schema
-     });
-    
-   } catch (error) {
-    console.error("Failed to update engagement metrics on unmount:", error)
-   }
- })
+  if (typeof document !== 'undefined') {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('pagehide', handlePageHide);
+  }
+
+  await flushEngagementMetrics('unmount');
+})
 
 onMounted( async() => {
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    if (document.visibilityState === 'hidden') {
+      pageViewTracker.pause();
+    }
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('pagehide', handlePageHide);
+  }
 
   //await getAllPublications();
 
   var response = await getRedactedNewsPaperDetailsViaUniqueId(newspaperId);
-  if (!response.success)
+  if (!response.success || !response.data)
   { 
     accessGranted.value = false;
     // display a no access div in place of the iframe
@@ -214,13 +311,12 @@ onMounted( async() => {
   newsPaperDetail.value = response.data;
   newspaperTitle.value = response.data.title;
   selectedPublication.value = response.data.publicationId;
-  selectedDate.value = response.data.publicationDate.split('T')[0];
+  selectedDate.value = (response.data.publicationDate || '').split('T')[0];
   accessGranted.value = true;
 
   // Build the proxy URL: the server handler validates the subscription
   // and fetches the PDF asset using the supplied uniqueId + JWT token.
-  const gnpUserAuthIdentity = useGnpUserAuthIdentity();
-  assetUrl.value = `/api/pdf?uniqueId=${encodeURIComponent(newspaperId)}&accessToken=${encodeURIComponent(gnpUserAuthIdentity.value ?? '')}`;
+  assetUrl.value = `/api/pdf?uniqueId=${encodeURIComponent(newspaperId)}&accessToken=${encodeURIComponent(activeAccessToken.value)}`;
 
   isLoading.value = false;
 

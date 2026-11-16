@@ -1,4 +1,4 @@
-import type { NewsPaper, Article, Video, VideoPage, RelatedArchivedContent, BaseApiResponse, BasePaginationModel, SubscriptionPlan, Publication } from "~/models";
+import type { NewsPaper, NewspaperEngagementPayload, Article, Video, VideoPage, RelatedArchivedContent, BaseApiResponse, BasePaginationModel, SubscriptionPlan, Publication } from "~/models";
 
  
 /**
@@ -139,15 +139,63 @@ export async function getRelatedArchivedContent(payload: object) {
 }
 
 
-export async function updateUserEngagementMetrics(payload: object) {
- 
-    const response = await gnpUserHttpClient<BaseApiResponse<object>>('news-papers/update-user-engagement', "",
+export interface EngagementTransportOptions {
+    /** Bearer JWT captured during setup so unload/unmount handlers need no Nuxt context. */
+    accessToken?: string;
+    /** Base API URL captured during setup (`config.public.proxyApiBaseURL`). */
+    apiBase?: string;
+    /** Keep the POST request alive across tab close / reload / hard navigation. */
+    keepalive?: boolean;
+}
+
+/**
+ * Dispatches newspaper & per-page PDF reader engagement metrics to
+ * `POST news-papers/update-user-engagement`.
+ *
+ * When `transport.apiBase` is supplied (captured at setup time on `open.vue`),
+ * uses native `fetch` synchronously so `keepalive: true` survives `pagehide`
+ * and `onBeforeUnmount` without touching Nuxt setup-only composables.
+ */
+export async function updateUserEngagementMetrics(
+    payload: NewspaperEngagementPayload | Record<string, unknown>,
+    transport?: EngagementTransportOptions,
+): Promise<boolean> {
+    if (transport?.apiBase) {
+        const base = transport.apiBase.endsWith('/') ? transport.apiBase : `${transport.apiBase}/`;
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+        };
+        if (transport.accessToken) {
+            headers.Authorization = `Bearer ${transport.accessToken}`;
+        }
+
+        const res = await fetch(`${base}news-papers/update-user-engagement`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(payload),
+            keepalive: Boolean(transport.keepalive),
+        });
+
+        if (!res.ok) return false;
+        try {
+            const data = (await res.json()) as Partial<BaseApiResponse<object>>;
+            return data?.success !== false;
+        } catch {
+            return true;
+        }
+    }
+
+    const response = await gnpUserHttpClient<BaseApiResponse<object>>(
+        'news-papers/update-user-engagement',
+        "",
         {
             method: "post",
             body: payload,
-        });
-    
-   return response.success;
+            ...(transport?.keepalive ? { keepalive: true } : {}),
+        },
+    );
+
+    return Boolean(response?.success);
 }
 
 

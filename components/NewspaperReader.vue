@@ -208,7 +208,7 @@
         </div>
         <div class="modal-foot">
           <button class="ghost-btn" @click="article = null">Dismiss</button>
-          <button class="solid-btn" @click="jumpTo(article.page)">Open page {{ article.page }} →</button>
+          <button class="solid-btn" @click="jumpTo(article.page, 'headline')">Open page {{ article.page }} →</button>
         </div>
       </div>
     </Transition>
@@ -227,6 +227,8 @@ const props = defineProps({
     default: ''
   }
 })
+
+const emit = defineEmits(['document-loaded', 'page-view'])
 
 
 /* ────────────────────────── state ────────────────────────── */
@@ -273,6 +275,7 @@ const settings = reactive({
 let pdfDoc = null
 let renderToken = 0
 let activeRenderTask = null
+let resizeObserver = null
 let resizeTimer = null
 let clickTimer = null
 let lastTouchNav = 0
@@ -281,6 +284,17 @@ let lastRenderedZoom = 1
 let zoomTimer = null
 let pinch = null
 let drag = null
+let unmounted = false
+
+function notifyPageView(pageNumber, previousPage, trigger) {
+  if (!pageCount.value || pageNumber < 1 || pageNumber > pageCount.value) return
+  emit('page-view', {
+    pageNumber,
+    totalPages: pageCount.value,
+    previousPage,
+    trigger
+  })
+}
 
 const progressPct = computed(() =>
   pageCount.value ? Math.round((currentPage.value / pageCount.value) * 100) : 0
@@ -315,17 +329,25 @@ onMounted(async () => {
     if (total) loadPct.value = Math.min(99, Math.round((loaded / total) * 100))
   }
   pdfDoc = await task.promise
+  if (unmounted) return
   pageCount.value = pdfDoc.numPages
   loading.value = false
+  emit('document-loaded', { totalPages: pdfDoc.numPages })
 
   await renderPage(1)
-  new ResizeObserver(() => {
-    clearTimeout(resizeTimer)
-    resizeTimer = setTimeout(() => { if (!liquid.value) renderPage(currentPage.value) }, 150)
-  }).observe(stageEl.value)
+  if (unmounted) return
+  notifyPageView(1, null, 'initial')
 
-  // Ctrl/Cmd + scroll (and trackpad pinch) zoom — needs a non-passive listener
-  stageEl.value.addEventListener('wheel', onWheel, { passive: false })
+  if (stageEl.value) {
+    resizeObserver = new ResizeObserver(() => {
+      clearTimeout(resizeTimer)
+      resizeTimer = setTimeout(() => { if (!liquid.value) renderPage(currentPage.value) }, 150)
+    })
+    resizeObserver.observe(stageEl.value)
+
+    // Ctrl/Cmd + scroll (and trackpad pinch) zoom — needs a non-passive listener
+    stageEl.value.addEventListener('wheel', onWheel, { passive: false })
+  }
   window.addEventListener('mousemove', onDragMove)
   window.addEventListener('mouseup', onDragEnd)
 
@@ -333,6 +355,12 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  unmounted = true
+  clearTimeout(resizeTimer)
+  clearTimeout(clickTimer)
+  clearTimeout(zoomTimer)
+  resizeObserver?.disconnect()
+  stageEl.value?.removeEventListener('wheel', onWheel)
   window.removeEventListener('keydown', onKey)
   document.removeEventListener('click', closePopovers)
   window.removeEventListener('mousemove', onDragMove)
@@ -433,20 +461,26 @@ function onDragEnd() {
 function go(dir) {
   const target = currentPage.value + dir
   if (target < 1 || target > pageCount.value) return
+  const previousPage = currentPage.value
   if (!liquid.value) animateTurn(dir)
   currentPage.value = target
+  notifyPageView(target, previousPage, dir > 0 ? 'next' : 'previous')
   if (liquid.value) liquidEl.value?.scrollTo({ top: 0 })
   else renderPage(target)
 }
 
-function jumpTo(page) {
+function jumpTo(page, trigger = 'jump') {
   article.value = null
-  if (page === currentPage.value) return
-  const dir = page >= currentPage.value ? 1 : -1
+  if (!pageCount.value) return
+  const target = Math.min(pageCount.value, Math.max(1, Math.trunc(page)))
+  if (target === currentPage.value) return
+  const previousPage = currentPage.value
+  const dir = target >= currentPage.value ? 1 : -1
   if (!liquid.value) animateTurn(dir)
-  currentPage.value = page
+  currentPage.value = target
+  notifyPageView(target, previousPage, trigger)
   if (liquid.value) liquidEl.value?.scrollTo({ top: 0 })
-  else renderPage(page)
+  else renderPage(target)
 }
 
 function toggleLiquid() {
@@ -477,10 +511,11 @@ function animateTurn(dir) {
 }
 
 function scrub(e) {
+  if (!pageCount.value) return
   const rect = e.currentTarget.getBoundingClientRect()
   const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width))
   const target = Math.max(1, Math.round(ratio * pageCount.value))
-  jumpTo(target)
+  jumpTo(target, 'scrub')
 }
 
 /* tap zones: left third = back, right third = forward, centre = immersive toggle */
@@ -582,6 +617,10 @@ async function extractHeadlines() {
   }
 
   for (let p = 1; p <= pdfDoc.numPages; p++) {
+    if (unmounted) {
+      worker.terminate()
+      return
+    }
     try {
       const page = await pdfDoc.getPage(p)
       const tc = await page.getTextContent()

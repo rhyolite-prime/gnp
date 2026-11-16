@@ -1062,3 +1062,115 @@ export interface EnterpriseCsvRow {
     valid: boolean;
     error: string;
 }
+
+// ── Newspaper PDF Reader Page-View Engagement & Analytics ────────────────────
+// Instrumented on `pages/newspapers/[id]/open.vue` + `components/NewspaperReader.vue`
+// and dispatched to `POST news-papers/update-user-engagement`.
+
+export type EngagementDeviceType = 'mobile' | 'tablet' | 'web';
+
+export type PdfPageNavigationTrigger =
+    | 'initial'
+    | 'next'
+    | 'previous'
+    | 'jump'
+    | 'headline'
+    | 'scrub';
+
+export type EngagementFlushReason =
+    | 'unmount'
+    | 'pagehide'
+    | 'edition_switch'
+    | 'manual';
+
+/** Event emitted by `<NewspaperReader>` once the PDF document metadata is loaded. */
+export interface PdfReaderDocumentLoadedEvent {
+    /** Total number of pages in the loaded PDF document. */
+    totalPages: number;
+}
+
+/** Event emitted by `<NewspaperReader>` whenever an individual page is viewed. */
+export interface PdfReaderPageViewEvent {
+    /** 1-based page number inside the PDF document (`1..totalPages`). */
+    pageNumber: number;
+    /** Total number of pages in the PDF document. */
+    totalPages: number;
+    /** Previous 1-based page number, or `null` on initial open. */
+    previousPage: number | null;
+    /** Interaction that caused navigation to this page. */
+    trigger: PdfPageNavigationTrigger;
+}
+
+/** Per-page engagement breakdown within a newspaper PDF reading session. */
+export interface NewspaperPageViewMetric {
+    /** 1-based PDF page number (`1..totalPages`). */
+    pageNumber: number;
+    /** Number of times this individual page was viewed in the session. */
+    viewCount: number;
+    /** Accumulated active reading time spent on this page in seconds. */
+    timeSpentSeconds: number;
+    /** ISO-8601 timestamp when this page was first viewed in the session. */
+    firstViewedAt: string;
+    /** ISO-8601 timestamp when this page was most recently viewed in the session. */
+    lastViewedAt: string;
+}
+
+/**
+ * Backend reporting & analytics payload formed on `open.vue` and sent to
+ * `POST news-papers/update-user-engagement`.
+ *
+ * Retains top-level fields (`newspaperId`, `timeSpentSeconds`, `deviceType`,
+ * `userAgent`) for backward compatibility with `gnp-api` while supplying
+ * per-page view counts (`pageViewCounts`, `pageViews`) and edition-level
+ * readership funnel metrics (`pagesRead`, `totalPageViews`, `readingProgress`).
+ */
+export interface NewspaperEngagementPayload {
+    /** Client-generated UUID identifying this single reading session. */
+    sessionId: string;
+    /** Canonical newspaper UUID (`NewsPaper.id`). */
+    newspaperId: string;
+    /** Entitlement / route `uniqueId` passed to `/api/pdf`. */
+    uniqueId: string;
+    /** Parent publication UUID (`NewsPaper.publicationId`). */
+    publicationId: string;
+    /** Human-readable publication name (e.g. `"Daily Graphic"`). */
+    publicationName: string;
+    /** Edition publication date normalized to `YYYY-MM-DD`. */
+    publicationDate: string;
+    /** Edition number when available. */
+    editionNumber: string;
+    /** Total number of pages in the PDF edition. */
+    totalPages: number;
+    /** Count of distinct pages viewed (`user_reading_history.pages_read`). */
+    pagesRead: number;
+    /** Sum of `viewCount` across all viewed pages in the session. */
+    totalPageViews: number;
+    /** Percentage (`0`–`100`, max 2 decimals) of `totalPages` read (`user_reading_history.reading_progress`). */
+    readingProgress: number;
+    /** Highest 1-based page number reached during the session. */
+    furthestPageReached: number;
+    /** Most recent 1-based page number viewed before emitting the payload. */
+    lastPageViewed: number;
+    /** Total active reading time across the session in whole seconds. */
+    timeSpentSeconds: number;
+    /** Direct lookup map of 1-based page number (`"1"`, `"2"`, …) -> view count. */
+    pageViewCounts: Record<string, number>;
+    /** Per-page view counts, dwell times, and timestamps ordered ascending by `pageNumber`. */
+    pageViews: NewspaperPageViewMetric[];
+    /** Reader device classification (`mobile` | `tablet` | `web`). */
+    deviceType: EngagementDeviceType;
+    /** Browser User-Agent string. */
+    userAgent: string;
+    /** Reader viewport size in CSS pixels when available. */
+    viewport?: {
+        width: number;
+        height: number;
+    };
+    /** Lifecycle reason that triggered flushing this payload. */
+    flushReason: EngagementFlushReason;
+    /** ISO-8601 timestamp when the reading session started. */
+    startedAt: string;
+    /** ISO-8601 timestamp when the payload was formed (`user_reading_history.last_read_at`). */
+    endedAt: string;
+}
+
