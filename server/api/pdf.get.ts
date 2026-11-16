@@ -240,14 +240,26 @@ const CONTENT_TYPES: Record<string, string> = {
  */
 function detectDeviceType(userAgent: string): string {
   const ua = userAgent.toLowerCase()
-  
-  if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone') || ua.includes('ipad')) {
-    return 'mobile'
-  }
-  
-  if (ua.includes('tablet') || ua.includes('ipad')) {
+
+  if (
+    ua.includes('ipad') ||
+    ua.includes('tablet') ||
+    ua.includes('playbook') ||
+    ua.includes('silk') ||
+    (ua.includes('android') && !ua.includes('mobile'))
+  ) {
     return 'tablet'
   }
-  
+
+  if (
+    ua.includes('iphone') ||
+    ua.includes('ipod') ||
+    ua.includes('windows phone') ||
+    ua.includes('mobile') ||
+    ua.includes('android')
+  ) {
+    return 'mobile'
+  }
+
   return 'web'
 }
