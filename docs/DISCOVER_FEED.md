@@ -51,6 +51,31 @@ A backend implementation can use:
 
 The current UI maps the fixtures into the existing `DiscoverItem` view model; this is a prototype contract, not a database migration or an implemented backend endpoint.
 
+## Engagement (Views, Likes, and Comments)
+
+Items published on the discovery timelines support interactive engagement metrics with real-time UI updates, local persistence, and server API synchronization:
+
+- **View Tracking**:
+  - Automatically records views as items become active on the discovery timeline or when their story preview is opened.
+  - Deduplicated per session to avoid duplicate counts during rapid scrolling.
+  - View counts are formatted (`1.2k`, `45k`, `1.5M`) and displayed both on the right-side action stack and inside the card metadata line.
+- **Likes**:
+  - Readers can like and unlike any discovery item with immediate visual feedback, heart bounce micro-animation, and accessible `aria-pressed` / `aria-label` states.
+  - User likes persist across browser reloads via `localStorage` and synchronize with the `/api/v1/discover/engagement/like` endpoint.
+- **Comments & Discussion**:
+  - Each item features a discussion drawer/modal accessible from the card or full story dialog.
+  - Displays total comments, rich Ghanaian contextual seed discussions, user avatars, and relative timestamps.
+  - Readers can post comments as authenticated subscribers or as custom guest readers, with client-side and server-side validation (2–500 characters, markup sanitization).
+  - Authors can delete their own comments, and readers can like individual comments.
+- **Backend Endpoints**:
+  - `GET /api/v1/discover/engagement?key=:key`
+  - `POST /api/v1/discover/engagement/view`
+  - `POST /api/v1/discover/engagement/like`
+  - `GET /api/v1/discover/comments?key=:key`
+  - `POST /api/v1/discover/comments`
+  - `DELETE /api/v1/discover/comments/:id`
+  - `POST /api/v1/discover/comments/:id/like`
+
 ## Mobile layout
 
 The page fills the dynamic viewport beneath the existing responsive app header, with a compact title/source toolbar, edge-to-edge cards, safe-area padding and a flexible scroll region (no old 420px minimum height). Mobile uses snap-to-card scrolling, full-width readable copy, and at least 44px action targets; desktop retains arrow controls and roomier typography. Short screens simplify excerpts, while copy remains scrollable for larger text sizes. A resize observer keeps the active-card index aligned as browser chrome/orientation changes. The default layout suppresses the footer, PWA install button and floating research launcher on Discover only, so they cannot cover the feed actions. Other pages are unchanged.

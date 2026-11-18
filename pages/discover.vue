@@ -19,7 +19,13 @@
       <div class="discover-stage relative mx-auto w-full max-w-5xl">
         <div ref="scroller" class="discover-scroller rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-600" role="feed" aria-label="Personalised discovery feed" aria-describedby="feed-instructions" :aria-busy="loading" tabindex="0" @scroll.passive="onScroll" @keydown="onKeydown">
           <article v-for="(item, index) in items" :key="item.key" class="discover-slide" :aria-labelledby="`discover-title-${index + 1}`" :aria-posinset="index + 1" :aria-setsize="-1">
-            <DiscoverFeedCard :item="item" :active="activeIndex === index && !selectedStory" :position="index + 1" @story="selectedStory = $event" />
+            <DiscoverFeedCard
+              :item="item"
+              :active="activeIndex === index && !selectedStory"
+              :position="index + 1"
+              @story="selectedStory = $event"
+              @comment="openComments"
+            />
           </article>
           <div ref="sentinel" class="snap-start flex min-h-full flex-col items-center justify-center gap-4 p-6 text-center" :class="!items.length ? 'min-h-full' : ''">
             <p v-if="loading" role="status" class="text-stone-600">Mixing your next discoveries…</p>
@@ -47,6 +53,7 @@
       </div>
     </div>
 
+    <!-- Story Preview Dialog -->
     <TransitionRoot :show="!!selectedStory" as="template">
       <Dialog as="div" class="relative z-[80]" @close="selectedStory = null">
         <div class="fixed inset-0 bg-black/75" />
@@ -57,6 +64,37 @@
               <p v-if="selectedStory?.mock" class="mb-3 text-xs font-bold uppercase tracking-wider text-amber-700">Fictional sample · {{ selectedStory.kind }}</p>
               <DialogTitle class="text-2xl font-bold">{{ selectedStory?.title }}</DialogTitle>
               <p class="mt-6 whitespace-pre-line text-base leading-8 text-stone-700">{{ selectedStory?.body }}</p>
+
+              <!-- Story Engagement Bar -->
+              <div v-if="selectedStory" class="mt-8 flex flex-wrap items-center justify-between gap-3 border-y border-stone-200 py-4">
+                <div class="flex items-center gap-3">
+                  <span class="inline-flex items-center gap-1.5 text-xs text-stone-600 font-medium">
+                    <EyeIcon class="h-4 w-4 text-stone-500" />
+                    {{ formatCount(selectedStoryEngagement.views) }} views
+                  </span>
+                  <span>·</span>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-600"
+                    :class="selectedStoryEngagement.isLiked ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-200'"
+                    @click="toggleLike(selectedStory.key)"
+                  >
+                    <HeartSolid v-if="selectedStoryEngagement.isLiked" class="h-4 w-4 text-red-600" />
+                    <HeartIcon v-else class="h-4 w-4 text-stone-500" />
+                    <span>{{ formatCount(selectedStoryEngagement.likes) }} {{ selectedStoryEngagement.likes === 1 ? 'like' : 'likes' }}</span>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-4 py-2 text-xs font-bold text-primary-700 hover:bg-primary-100 transition-colors"
+                  @click="openComments(selectedStory)"
+                >
+                  <ChatBubbleBottomCenterTextIcon class="h-4 w-4" />
+                  <span>Discussion ({{ selectedStoryEngagement.commentsCount }})</span>
+                </button>
+              </div>
+
               <details v-if="selectedMockRecord" class="mt-6 rounded-xl bg-stone-100 p-4">
                 <summary class="min-h-[44px] cursor-pointer text-sm font-semibold">Inspect sample backend record</summary>
                 <pre class="mt-3 max-h-80 overflow-auto whitespace-pre-wrap break-words text-xs leading-6">{{ JSON.stringify(selectedMockRecord, null, 2) }}</pre>
@@ -66,14 +104,23 @@
         </div>
       </Dialog>
     </TransitionRoot>
+
+    <!-- Comments Sheet / Modal -->
+    <DiscoverCommentsModal
+      v-model="commentsModalOpen"
+      :item="activeCommentsItem"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot } from '@headlessui/vue';
+import { EyeIcon, HeartIcon, ChatBubbleBottomCenterTextIcon } from '@heroicons/vue/24/outline';
+import { HeartIcon as HeartSolid } from '@heroicons/vue/24/solid';
 import { DISCOVER_MOCK_RECORDS, getDiscoverMockItems } from '~/mocks/discover';
 import { useDiscoverFeed } from '~/composables/useDiscoverFeed';
+import { useDiscoverEngagement } from '~/composables/useDiscoverEngagement';
 import { normalizeContentSelection, type ContentCategoryId } from '~/utils/contentCategories';
 import { INTERESTS_STORAGE_KEY } from '~/utils/onboarding';
 import type { DiscoverItem } from '~/utils/discoverFeed';
@@ -82,15 +129,28 @@ useHead({ title: 'Discover — For you | Graphic NewsPlus', meta: [{ name: 'desc
 const route = useRoute();
 const sampleMode = computed(() => route.query.source !== 'live');
 const { items, loading, errors, selection, finished, loadMore, reset } = useDiscoverFeed();
+const { getEngagement, trackView, toggleLike, formatCount } = useDiscoverEngagement();
+
 const scroller = ref<HTMLElement | null>(null);
 const sentinel = ref<HTMLElement | null>(null);
 const activeIndex = ref(0);
 const selectedStory = ref<DiscoverItem | null>(null);
 const selectedMockRecord = computed(() => selectedStory.value?.mock ? DISCOVER_MOCK_RECORDS.find(record => `${record.contentType}:${record.id}` === selectedStory.value?.key) : undefined);
+const selectedStoryEngagement = computed(() => getEngagement(selectedStory.value?.key || ''));
+
+const commentsModalOpen = ref(false);
+const activeCommentsItem = ref<DiscoverItem | null>(null);
+
 let observer: IntersectionObserver | undefined;
 let resizeObserver: ResizeObserver | undefined;
 let mounted = false;
 let disposed = false;
+
+function openComments(item: DiscoverItem) {
+  activeCommentsItem.value = item;
+  commentsModalOpen.value = true;
+}
+
 async function refreshFeed() {
   let selected: ContentCategoryId[] = [];
   try { selected = normalizeContentSelection(JSON.parse(localStorage.getItem(INTERESTS_STORAGE_KEY) || '[]')); } catch { /* Discovery is available without saved preferences. */ }
@@ -102,22 +162,31 @@ async function refreshFeed() {
   // Re-observe when the data source changes, including an empty catalogue.
   if (mounted) { await nextTick(); observe(); }
 }
+
 function onScroll() {
   const element = scroller.value;
-  if (element) activeIndex.value = Math.min(Math.max(0, items.value.length - 1), Math.round(element.scrollTop / element.clientHeight));
+  if (element) {
+    const newIdx = Math.min(Math.max(0, items.value.length - 1), Math.round(element.scrollTop / element.clientHeight));
+    if (newIdx !== activeIndex.value) {
+      activeIndex.value = newIdx;
+    }
+  }
 }
+
 function move(direction: number) {
   const element = scroller.value;
   if (!element) return;
   const index = Math.max(0, Math.min(items.value.length, activeIndex.value + direction));
   element.scrollTo({ top: index * element.clientHeight, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
 }
+
 function onKeydown(event: KeyboardEvent) {
   if ((event.target as HTMLElement).closest('a, button, input, select, textarea')) return;
   if (['ArrowDown', 'PageDown', 'ArrowUp', 'PageUp'].includes(event.key)) {
     event.preventDefault(); move(event.key === 'ArrowDown' || event.key === 'PageDown' ? 1 : -1);
   }
 }
+
 function observe() {
   observer?.disconnect();
   if (!('IntersectionObserver' in window) || !scroller.value || !sentinel.value) return;
@@ -127,7 +196,24 @@ function observe() {
   }, { root: scroller.value, rootMargin: '0px 0px 600px 0px' });
   observer.observe(sentinel.value);
 }
+
+// Track view when an item becomes active on the timeline
+watch(activeIndex, (idx) => {
+  const activeItem = items.value[idx];
+  if (activeItem) {
+    trackView(activeItem.key);
+  }
+});
+
+// Track view when a story preview dialog opens
+watch(selectedStory, (story) => {
+  if (story) {
+    trackView(story.key);
+  }
+});
+
 watch(sampleMode, () => { if (mounted) refreshFeed(); });
+
 onMounted(async () => {
   mounted = true;
   if ('ResizeObserver' in window && scroller.value) {
@@ -135,7 +221,11 @@ onMounted(async () => {
     resizeObserver.observe(scroller.value);
   }
   await refreshFeed();
+  if (items.value.length > 0) {
+    trackView(items.value[0]!.key);
+  }
 });
+
 onBeforeUnmount(() => { disposed = true; mounted = false; observer?.disconnect(); resizeObserver?.disconnect(); });
 </script>
 
