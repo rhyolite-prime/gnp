@@ -42,6 +42,7 @@
           >
             <div class="relative flex aspect-[3/4] items-center justify-center overflow-hidden rounded-lg bg-white">
               <img v-if="thumbnail(page)" :src="thumbnail(page)" alt="" loading="lazy" decoding="async" class="h-full w-full object-contain" @error="failedThumbnails.add(page.id)" />
+              <div v-else-if="loadingThumbnails[page.id]" class="h-full w-full animate-pulse bg-gray-200" aria-hidden="true"></div>
               <span v-else class="text-3xl text-gray-300" aria-hidden="true">▤</span>
               <span v-if="isCurrent(page)" class="absolute inset-x-0 bottom-0 bg-red-600 py-0.5 text-center text-[10px] font-bold uppercase tracking-wider text-white">Reading</span>
             </div>
@@ -64,6 +65,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, useId, watch } from 'vue';
 import type { ArchiveAccessMetadata, ArchiveSearchItem } from '~/models';
+import { getArchiveThumbnail } from '~/services/archives';
 import { getRelatedArchivedContent } from '~/services/newsPapers';
 import type { KeepReadingPage } from '~/utils/archiveRecommendations';
 import {
@@ -92,6 +94,8 @@ const listEl = ref<HTMLElement | null>(null);
 const pages = ref<KeepReadingPage[]>([]);
 const loading = ref(true);
 const error = ref('');
+const thumbnailUrls = reactive<Record<string, string>>({});
+const loadingThumbnails = reactive<Record<string, boolean>>({});
 const failedThumbnails = reactive(new Set<string>());
 /** Records seen so far, by id: lets a page keep its thumbnail and number once it becomes the one being read. */
 const known = new Map<string, KeepReadingPage>();
@@ -100,7 +104,50 @@ let generation = 0;
 const title = computed(() => pages.value.every(page => page.sameEdition) ? 'Pages in this edition' : 'Related archive pages');
 
 function isCurrent(page: KeepReadingPage) { return isCurrentArchivePage(page, props.currentId, props.metadata); }
-function thumbnail(page: KeepReadingPage) { return failedThumbnails.has(page.id) ? '' : archiveThumbnail(page.thumbnailId); }
+function thumbnail(page: KeepReadingPage) {
+  if (failedThumbnails.has(page.id)) return '';
+  return thumbnailUrls[page.id] || '';
+}
+
+async function loadPageThumbnail(page: KeepReadingPage) {
+  if (!import.meta.client || !page.id) return;
+  if (thumbnailUrls[page.id] || loadingThumbnails[page.id] || failedThumbnails.has(page.id)) return;
+
+  loadingThumbnails[page.id] = true;
+  try {
+    const directUrl = archiveThumbnail(page.thumbnailId);
+    const candidateIds = [
+      page.id,
+      page.newspaperId && page.newspaperId !== page.id ? page.newspaperId : '',
+      !directUrl && page.thumbnailId && /^[a-zA-Z0-9._-]+$/.test(page.thumbnailId) && page.thumbnailId !== page.id ? page.thumbnailId : '',
+    ].filter(Boolean);
+
+    let resolvedUrl = '';
+    for (const candidateId of candidateIds) {
+      resolvedUrl = await getArchiveThumbnail(candidateId);
+      if (resolvedUrl) break;
+    }
+
+    if (!resolvedUrl) {
+      resolvedUrl = directUrl;
+    }
+
+    if (resolvedUrl) {
+      thumbnailUrls[page.id] = resolvedUrl;
+    } else {
+      failedThumbnails.add(page.id);
+    }
+  } catch {
+    const directUrl = archiveThumbnail(page.thumbnailId);
+    if (directUrl) {
+      thumbnailUrls[page.id] = directUrl;
+    } else {
+      failedThumbnails.add(page.id);
+    }
+  } finally {
+    loadingThumbnails[page.id] = false;
+  }
+}
 function editionLabel(page: KeepReadingPage) { return [page.publicationName, formatArchivePublicationDate(page.publicationDate)].filter(Boolean).join(' · '); }
 function pageLabel(page: KeepReadingPage) {
   const where = page.sameEdition ? '' : `${editionLabel(page)}, `;
@@ -184,5 +231,11 @@ watch(() => [props.currentId, props.metadata?.newspaperId, props.metadata?.publi
   load();
 });
 watch([() => props.currentId, pages], revealCurrent, { flush: 'post' });
+watch(pages, (nextPages) => {
+  if (!import.meta.client) return;
+  for (const page of nextPages) {
+    loadPageThumbnail(page);
+  }
+}, { immediate: true });
 onBeforeUnmount(() => { generation++; });
 </script>

@@ -87,3 +87,12 @@ test('pages/archives/index.vue loads archive search result thumbnails via getArc
   assert.match(page, /thumbnailUrls\[item\.id\]/);
   assert.doesNotMatch(page, /item\.thumbnailId/);
 });
+
+test('components/archives/ArchiveEditionPages.vue loads left-pane page thumbnails via getArchiveThumbnail', async () => {
+  const pane = await readFile(new URL('../components/archives/ArchiveEditionPages.vue', import.meta.url), 'utf8');
+  assert.match(pane, /getArchiveThumbnail/);
+  assert.match(pane, /loadPageThumbnail\(page\)/);
+  assert.match(pane, /thumbnailUrls\[page\.id\]/);
+  assert.match(pane, /loadingThumbnails\[page\.id\]/);
+  assert.match(pane, /archiveThumbnail\(page\.thumbnailId\)/);
+});
