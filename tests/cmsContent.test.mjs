@@ -303,4 +303,7 @@ test('admin navigation and public components are wired to the Discover and Remem
   const rememberSlider = await readFile(new URL('../components/RememberWhenSlider.vue', import.meta.url), 'utf8');
   assert.match(rememberSlider, /fetchRememberWhenCms/);
   assert.match(rememberSlider, /memoryDates/);
+
+  const cmsStoreSource = await readFile(new URL('../server/utils/cmsStore.ts', import.meta.url), 'utf8');
+  assert.doesNotMatch(cmsStoreSource, /memoryDates\.mjs/);
 });
