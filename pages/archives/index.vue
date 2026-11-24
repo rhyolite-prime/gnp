@@ -538,7 +538,7 @@ const isSearching = useState('archive-isSearching', () => false)
 
 const collectionsData = computed(() => {
   const decades = []
-  decades.push({ label: '1950s', years: Array.from({length: 7}, (_, i) => 1953 + i) })
+  decades.push({ label: '1950s', years: Array.from({length: 10}, (_, i) => 1950 + i) })
   decades.push({ label: '1960s', years: Array.from({length: 10}, (_, i) => 1960 + i) })
   decades.push({ label: '1970s', years: Array.from({length: 10}, (_, i) => 1970 + i) })
   decades.push({ label: '1980s', years: Array.from({length: 10}, (_, i) => 1980 + i) })
