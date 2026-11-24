@@ -310,14 +310,17 @@
              <NuxtLink :to="`/archives/${item.id}`" v-for="item in items" :key="item.id" :class="viewMode === 'grid' ? 'flex-col h-full' : 'flex-col sm:flex-row h-auto sm:h-56'" class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex group transform hover:-translate-y-1">
                 <!-- Card Image/Header -->
                 <div :class="viewMode === 'grid' ? 'h-48 w-full' : 'h-48 sm:h-full w-full sm:w-64 flex-shrink-0 border-r border-gray-100'" class="bg-gray-100 relative overflow-hidden">
-                  <div v-if="!thumbnailUrl(item)" class="absolute inset-0 p-6 flex flex-col justify-center items-center bg-[#fdfbf7] border-b border-gray-100">
+                  <div v-if="loadingThumbnails[item.id] && !thumbnailUrl(item)" class="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse">
+                    <span class="text-xs font-medium text-gray-400">Loading...</span>
+                  </div>
+                  <div v-else-if="!thumbnailUrl(item)" class="absolute inset-0 p-6 flex flex-col justify-center items-center bg-[#fdfbf7] border-b border-gray-100">
                      <div class="font-serif font-bold text-center text-base leading-snug text-gray-800 line-clamp-5 group-hover:text-[#e32932] transition-colors relative z-10">
                        "<template v-for="(segment, index) in snippetSegments(item)" :key="index"><mark v-if="segment.match" class="bg-red-100 text-[#e32932] rounded-sm px-0.5">{{ segment.text }}</mark><template v-else>{{ segment.text }}</template></template>"
                      </div>
                      <DocumentTextIcon class="absolute w-32 h-32 text-gray-900/5 -right-4 -bottom-4 transform -rotate-12" />
                   </div>
                   <div v-else class="absolute inset-0 bg-gray-200">
-                     <img :src="thumbnailUrl(item)" :alt="`${item.publicationName} page ${item.pageNumber}`" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+                     <img :src="thumbnailUrl(item)" :alt="`${item.publicationName} page ${item.pageNumber}`" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" @error="handleThumbnailError(item.id)" />
                      <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   <div class="absolute top-3 left-3">
@@ -524,6 +527,7 @@ import {
   FolderIcon
 } from '@heroicons/vue/24/outline'
 import type { ArchiveSearchItem } from '~/models'
+import { getArchiveThumbnail } from '~/services/archives'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 
@@ -647,13 +651,52 @@ const onSortChange = (event: Event) => {
   setSortOrder(value === 'asc' || value === 'desc' ? value : null)
 }
 
-// Presentation helpers
-const isHttpUrl = (value: string) => /^https?:\/\//i.test(value)
+// Archive result thumbnails (loaded as blobs from g3/get-file/archive-thumbnails/{id}.jpg)
+const thumbnailUrls = reactive<Record<string, string>>({})
+const loadingThumbnails = reactive<Record<string, boolean>>({})
+const failedThumbnails = reactive<Record<string, boolean>>({})
 
-// thumbnailId is expected to be an absolute URL; tolerate it being wrapped in markdown link syntax.
+const loadArchiveThumbnail = async (fileId: string) => {
+  if (!fileId || thumbnailUrls[fileId] || loadingThumbnails[fileId] || failedThumbnails[fileId]) return
+
+  loadingThumbnails[fileId] = true
+  try {
+    const url = await getArchiveThumbnail(fileId)
+    if (url) {
+      thumbnailUrls[fileId] = url
+    } else {
+      failedThumbnails[fileId] = true
+    }
+  } catch (error) {
+    failedThumbnails[fileId] = true
+    console.error('Failed to load archive thumbnail', error)
+  } finally {
+    loadingThumbnails[fileId] = false
+  }
+}
+
+const handleThumbnailError = (fileId: string) => {
+  if (!fileId) return
+  delete thumbnailUrls[fileId]
+  failedThumbnails[fileId] = true
+}
+
+watch(
+  items,
+  (archiveItems) => {
+    if (!import.meta.client) return
+    archiveItems.forEach((item) => {
+      if (item.id) {
+        loadArchiveThumbnail(item.id)
+      }
+    })
+  },
+  { immediate: true }
+)
+
+// Presentation helpers
 const thumbnailUrl = (item: ArchiveSearchItem): string => {
-  const match = item.thumbnailId?.match(/https?:\/\/[^\s)\]]+/i)
-  return match && isHttpUrl(match[0]) ? match[0] : ''
+  return thumbnailUrls[item.id] || ''
 }
 
 const snippetText = (item: ArchiveSearchItem): string => {
