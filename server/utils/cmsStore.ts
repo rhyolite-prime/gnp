@@ -12,7 +12,19 @@ import {
   type RememberWhenSlide,
   type RememberWhenStatus,
 } from '../../utils/cmsContent.ts';
-import { memoryDates } from '../../utils/memoryDates.mjs';
+
+function computeSeedMemoryDates(now = new Date()) {
+  const day = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const monthAgo = new Date(day);
+  monthAgo.setUTCDate(monthAgo.getUTCDate() - 30);
+  const yearAgo = new Date(day);
+  yearAgo.setUTCFullYear(yearAgo.getUTCFullYear() - 1);
+  if (yearAgo.getUTCMonth() !== day.getUTCMonth()) yearAgo.setUTCDate(0);
+  return [
+    { label: '30 days ago', date: monthAgo.toISOString().slice(0, 10) },
+    { label: 'A year ago', date: yearAgo.toISOString().slice(0, 10) },
+  ] as const;
+}
 
 interface CmsStoreState {
   discoverItems: DiscoverCmsItem[];
@@ -117,7 +129,7 @@ function buildInitialDiscoverItems(): DiscoverCmsItem[] {
 
 function buildInitialRememberSlides(): RememberWhenSlide[] {
   const now = '2026-11-20T09:00:00.000Z';
-  const [thirtyDays, oneYear] = memoryDates();
+  const [thirtyDays, oneYear] = computeSeedMemoryDates();
   return [
     {
       id: 'rem-001',
