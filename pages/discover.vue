@@ -3,7 +3,7 @@
     <div class="discover-shell mx-auto w-full max-w-7xl px-2 pb-2 pt-2 sm:px-6 sm:pb-5 sm:pt-5 lg:px-8">
       <header class="mb-2 flex shrink-0 items-center justify-between gap-2 sm:mb-4">
         <div>
-          <h1 class="text-xl font-bold sm:text-2xl">Discover <span class="font-normal text-stone-500">/</span> <span class="text-primary-700">For you</span></h1>
+          <h1 class="text-xl font-bold sm:text-2xl">{{ !sampleMode ? cmsConfig.heading : 'Discover' }} <span class="font-normal text-stone-500">/</span> <span class="text-primary-700">{{ !sampleMode ? cmsConfig.subheading : 'For you' }}</span></h1>
           <p class="mt-1 hidden text-xs leading-5 text-stone-600 sm:block">{{ selection.length ? `More from your ${selection.length} interests, mixed with fresh discoveries.` : 'A shuffled mix of news, newspapers, archives and videos.' }}</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
@@ -12,13 +12,13 @@
         </div>
       </header>
       <div class="mb-2 flex shrink-0 flex-wrap items-center justify-between gap-2 px-1 text-xs">
-        <span :class="sampleMode ? 'text-amber-800' : 'text-stone-600'">{{ sampleMode ? 'Sample feed · Fictional content, not live news' : 'Live catalogue' }}</span>
+        <span :class="sampleMode ? 'text-amber-800' : 'text-stone-600'">{{ sampleMode ? 'Sample feed · Fictional content, not live news' : (cmsItems.length ? 'Live & curated CMS feed' : 'Live catalogue') }}</span>
         <NuxtLink :to="sampleMode ? '/discover?source=live' : '/discover'" class="inline-flex min-h-[44px] items-center font-semibold text-primary-700 underline">{{ sampleMode ? 'View live content' : 'View sample feed' }}</NuxtLink>
       </div>
       <p id="feed-instructions" class="sr-only">Swipe or scroll to discover content. Focus this feed and use arrow up or down to move between cards. Full newspaper and archive content opens in the subscription reader.</p>
       <div class="discover-stage relative mx-auto w-full max-w-5xl">
         <div ref="scroller" class="discover-scroller rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-600" role="feed" aria-label="Personalised discovery feed" aria-describedby="feed-instructions" :aria-busy="loading" tabindex="0" @scroll.passive="onScroll" @keydown="onKeydown">
-          <article v-for="(item, index) in items" :key="item.key" class="discover-slide" :aria-labelledby="`discover-title-${index + 1}`" :aria-posinset="index + 1" :aria-setsize="-1">
+          <article v-for="(item, index) in displayItems" :key="item.key" class="discover-slide" :aria-labelledby="`discover-title-${index + 1}`" :aria-posinset="index + 1" :aria-setsize="-1">
             <DiscoverFeedCard
               :item="item"
               :active="activeIndex === index && !selectedStory"
@@ -27,28 +27,28 @@
               @comment="openComments"
             />
           </article>
-          <div ref="sentinel" class="snap-start flex min-h-full flex-col items-center justify-center gap-4 p-6 text-center" :class="!items.length ? 'min-h-full' : ''">
+          <div ref="sentinel" class="snap-start flex min-h-full flex-col items-center justify-center gap-4 p-6 text-center" :class="!displayItems.length ? 'min-h-full' : ''">
             <p v-if="loading" role="status" class="text-stone-600">Mixing your next discoveries…</p>
             <template v-else-if="errors.length">
               <p role="status" class="max-w-lg text-sm leading-6 text-amber-800">Some content couldn’t be loaded: {{ errors.map(error => error.label).join(', ') }}. Your available discoveries are still here.</p>
               <button type="button" class="feed-control" @click="loadMore">Retry / load more</button>
             </template>
             <template v-else-if="finished">
-              <p class="font-semibold">{{ items.length ? 'You’re all caught up.' : 'No discoveries are available right now.' }}</p>
-              <p class="max-w-md text-sm leading-6 text-stone-600">{{ items.length ? 'You’ve reached the end of this catalogue. Explore different interests or check back for more.' : 'Check back for new content or explore the newspaper collection.' }}</p>
+              <p class="font-semibold">{{ displayItems.length ? 'You’re all caught up.' : 'No discoveries are available right now.' }}</p>
+              <p class="max-w-md text-sm leading-6 text-stone-600">{{ displayItems.length ? 'You’ve reached the end of this catalogue. Explore different interests or check back for more.' : 'Check back for new content or explore the newspaper collection.' }}</p>
               <NuxtLink to="/interests" class="feed-control">Explore interests</NuxtLink>
               <NuxtLink to="/newspapers" class="text-sm text-primary-700 underline">Browse newspapers</NuxtLink>
             </template>
             <button v-else type="button" class="feed-control" @click="loadMore">Load more discoveries</button>
           </div>
         </div>
-        <nav v-if="items.length" class="pointer-events-none absolute bottom-[max(1rem,env(safe-area-inset-bottom))] right-3 z-10 hidden flex-col gap-2 sm:flex" aria-label="Move through discoveries">
+        <nav v-if="displayItems.length" class="pointer-events-none absolute bottom-[max(1rem,env(safe-area-inset-bottom))] right-3 z-10 hidden flex-col gap-2 sm:flex" aria-label="Move through discoveries">
           <button type="button" aria-label="Previous discovery" :disabled="activeIndex === 0" class="pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-stone-200 bg-white/95 text-stone-800 disabled:opacity-30" @click="move(-1)">↑</button>
           <button type="button" aria-label="Next discovery" class="pointer-events-auto grid h-11 w-11 place-items-center rounded-full border border-stone-200 bg-white/95 text-stone-800" @click="move(1)">↓</button>
         </nav>
       </div>
       <div class="mx-auto mt-2 flex w-full max-w-5xl shrink-0 flex-wrap justify-between gap-2 px-1 text-[11px] text-stone-600">
-        <span>{{ items.length ? `${Math.min(activeIndex + 1, items.length)} / ${items.length} loaded` : 'Your next discovery is waiting' }} · Scroll to explore</span>
+        <span>{{ displayItems.length ? `${Math.min(activeIndex + 1, displayItems.length)} / ${displayItems.length} loaded` : 'Your next discovery is waiting' }} · Scroll to explore</span>
         <span class="hidden sm:inline">Interest matches use keywords. New batches are shuffled; no paid access is bypassed.</span>
       </div>
     </div>
@@ -121,6 +121,13 @@ import { HeartIcon as HeartSolid } from '@heroicons/vue/24/solid';
 import { DISCOVER_MOCK_RECORDS, getDiscoverMockItems } from '~/mocks/discover';
 import { useDiscoverFeed } from '~/composables/useDiscoverFeed';
 import { useDiscoverEngagement } from '~/composables/useDiscoverEngagement';
+import { fetchDiscoverCms } from '~/services/cms';
+import {
+  DEFAULT_DISCOVER_CMS_CONFIG,
+  mergeDiscoverCmsWithFeed,
+  type DiscoverCmsConfig,
+  type DiscoverCmsItem,
+} from '~/utils/cmsContent';
 import { normalizeContentSelection, type ContentCategoryId } from '~/utils/contentCategories';
 import { INTERESTS_STORAGE_KEY } from '~/utils/onboarding';
 import type { DiscoverItem } from '~/utils/discoverFeed';
@@ -130,6 +137,15 @@ const route = useRoute();
 const sampleMode = computed(() => route.query.source !== 'live');
 const { items, loading, errors, selection, finished, loadMore, reset } = useDiscoverFeed();
 const { getEngagement, trackView, toggleLike, formatCount } = useDiscoverEngagement();
+
+const cmsItems = ref<DiscoverCmsItem[]>([]);
+const cmsConfig = ref<DiscoverCmsConfig>({ ...DEFAULT_DISCOVER_CMS_CONFIG });
+const displayItems = computed<DiscoverItem[]>(() => {
+  if (sampleMode.value) return items.value;
+  return mergeDiscoverCmsWithFeed(cmsItems.value, items.value, selection.value, {
+    prioritizePinned: cmsConfig.value.prioritizePinned,
+  });
+});
 
 const scroller = ref<HTMLElement | null>(null);
 const sentinel = ref<HTMLElement | null>(null);
@@ -157,7 +173,25 @@ async function refreshFeed() {
   selectedStory.value = null;
   activeIndex.value = 0;
   scroller.value?.scrollTo({ top: 0, behavior: 'instant' });
-  await reset(selected, sampleMode.value ? getDiscoverMockItems() : undefined);
+
+  if (sampleMode.value) {
+    cmsItems.value = [];
+    await reset(selected, getDiscoverMockItems());
+  } else {
+    let includeLive = true;
+    try {
+      const cmsRes = await fetchDiscoverCms({ publishedOnly: true });
+      cmsItems.value = cmsRes.items || [];
+      cmsConfig.value = cmsRes.config || { ...DEFAULT_DISCOVER_CMS_CONFIG };
+      includeLive = cmsConfig.value.includeLiveCatalogue !== false;
+    } catch {
+      cmsItems.value = [];
+      cmsConfig.value = { ...DEFAULT_DISCOVER_CMS_CONFIG };
+    }
+    if (disposed) return;
+    await reset(selected, includeLive ? undefined : []);
+  }
+
   if (disposed) return;
   // Re-observe when the data source changes, including an empty catalogue.
   if (mounted) { await nextTick(); observe(); }
@@ -166,7 +200,7 @@ async function refreshFeed() {
 function onScroll() {
   const element = scroller.value;
   if (element) {
-    const newIdx = Math.min(Math.max(0, items.value.length - 1), Math.round(element.scrollTop / element.clientHeight));
+    const newIdx = Math.min(Math.max(0, displayItems.value.length - 1), Math.round(element.scrollTop / element.clientHeight));
     if (newIdx !== activeIndex.value) {
       activeIndex.value = newIdx;
     }
@@ -176,7 +210,7 @@ function onScroll() {
 function move(direction: number) {
   const element = scroller.value;
   if (!element) return;
-  const index = Math.max(0, Math.min(items.value.length, activeIndex.value + direction));
+  const index = Math.max(0, Math.min(displayItems.value.length, activeIndex.value + direction));
   element.scrollTo({ top: index * element.clientHeight, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
 }
 
@@ -199,7 +233,7 @@ function observe() {
 
 // Track view when an item becomes active on the timeline
 watch(activeIndex, (idx) => {
-  const activeItem = items.value[idx];
+  const activeItem = displayItems.value[idx];
   if (activeItem) {
     trackView(activeItem.key);
   }
@@ -221,8 +255,8 @@ onMounted(async () => {
     resizeObserver.observe(scroller.value);
   }
   await refreshFeed();
-  if (items.value.length > 0) {
-    trackView(items.value[0]!.key);
+  if (displayItems.value.length > 0) {
+    trackView(displayItems.value[0]!.key);
   }
 });
 

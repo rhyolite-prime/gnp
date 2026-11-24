@@ -223,6 +223,8 @@ const navigation = [
       { name: 'Newspapers', href: '/admin/content-management/newspapers', permission: 'content.newspapers.view' },
       { name: 'Videos', href: '/admin/content-management/videos', permission: 'content.videos.view' },
       { name: 'Audios', href: '/admin/content-management/audios', permission: 'content.audios.view' },
+      { name: 'Discover Feed', href: '/admin/content-management/discover' },
+      { name: 'Remember When', href: '/admin/content-management/remember-when' },
       //{ name: 'Ingestion Jobs', href: '/admin/content-management/ingestion-jobs' },
     ],
   },
