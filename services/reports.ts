@@ -1,3 +1,4 @@
+import type { BaseApiResponse } from '~/models';
 import type { PartnerInvoiceReport } from '~/models/reports';
 import { getMockReportData, MOCK_PARTNERS_LIST } from '~/mocks/reports/index.js';
 
@@ -28,9 +29,23 @@ export const runReportById = async (reportId: string, dto: ReportFilterDto = {})
 export const generateSalesReport = async (dto: ReportFilterDto) => getMockReportData('sales_revenue', dto);
 export const generateRevenueByPublicationReport = async (dto: ReportFilterDto) => getMockReportData('revenue_by_publication', dto);
 export const generatePaymentTransactionsReport = async (dto: ReportFilterDto) => getMockReportData('payment_transactions', dto);
-/** `POST /api/v1/reports/partner-invoice` — resolves to a `PartnerInvoiceReport`. */
-export const generatePartnerInvoice = async (dto: ReportFilterDto): Promise<PartnerInvoiceReport> =>
-  getMockReportData('partner_invoices', dto) as PartnerInvoiceReport;
+/** `POST /reports/partner-invoice` — resolves to a `PartnerInvoiceReport`. */
+export const generatePartnerInvoice = async (dto: ReportFilterDto): Promise<PartnerInvoiceReport> => {
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<PartnerInvoiceReport>>('reports/partner-invoice', '', {
+    method: 'post',
+    body: {
+      partnerId: dto.partnerId,
+      startDate: dto.startDate,
+      endDate: dto.endDate,
+    },
+  });
+
+  if (!response?.success || !response.result) {
+    throw new Error(response?.message || 'Unable to generate partner invoice report');
+  }
+
+  return response.result;
+};
 export const generateSubscriptionRenewalsReport = async (dto: ReportFilterDto) => getMockReportData('subscription_renewals', dto);
 export const generateSubscriptionExpiryReport = async (dto: ReportFilterDto) => getMockReportData('subscription_expiry_renewals', dto);
 export const generateSingleCopyFunnelReport = async (dto: ReportFilterDto) => getMockReportData('single_copy_paywall_funnel', dto);
