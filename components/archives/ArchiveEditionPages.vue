@@ -41,9 +41,15 @@
             :class="isCurrent(page) ? 'border-red-500 bg-red-50 ring-2 ring-red-500/30' : 'border-gray-200 bg-gray-50 hover:border-red-400'"
           >
             <div class="relative flex aspect-[3/4] items-center justify-center overflow-hidden rounded-lg bg-white">
-              <img v-if="thumbnail(page)" :src="thumbnail(page)" alt="" loading="lazy" decoding="async" class="h-full w-full object-contain" @error="failedThumbnails.add(page.id)" />
+              <img v-if="thumbnail(page)" :src="thumbnail(page)" alt="" loading="lazy" decoding="async" class="h-full w-full object-contain" @error="handleThumbnailError(page.id)" />
               <div v-else-if="loadingThumbnails[page.id]" class="h-full w-full animate-pulse bg-gray-200" aria-hidden="true"></div>
-              <span v-else class="text-3xl text-gray-300" aria-hidden="true">▤</span>
+              <ArchivePageThumbnail
+                v-else
+                :publication-name="page.publicationName || props.metadata?.publicationName || 'Archive'"
+                :date-label="formatArchivePublicationDate(page.publicationDate) || ''"
+                accent="#b91c1c"
+                variant="mini"
+              />
               <span v-if="isCurrent(page)" class="absolute inset-x-0 bottom-0 bg-red-600 py-0.5 text-center text-[10px] font-bold uppercase tracking-wider text-white">Reading</span>
             </div>
             <p class="mt-1.5 text-center text-xs font-bold" :class="isCurrent(page) ? 'text-red-700' : 'text-gray-800 group-hover:text-red-600'">
@@ -69,7 +75,6 @@ import { getArchiveThumbnail } from '~/services/archives';
 import { getRelatedArchivedContent } from '~/services/newsPapers';
 import type { KeepReadingPage } from '~/utils/archiveRecommendations';
 import {
-  archiveThumbnail,
   buildRelatedArchivePayload,
   currentArchivePage,
   editionPages,
@@ -96,7 +101,7 @@ const loading = ref(true);
 const error = ref('');
 const thumbnailUrls = reactive<Record<string, string>>({});
 const loadingThumbnails = reactive<Record<string, boolean>>({});
-const failedThumbnails = reactive(new Set<string>());
+const failedThumbnails = reactive<Record<string, boolean>>({});
 /** Records seen so far, by id: lets a page keep its thumbnail and number once it becomes the one being read. */
 const known = new Map<string, KeepReadingPage>();
 let generation = 0;
@@ -105,48 +110,34 @@ const title = computed(() => pages.value.every(page => page.sameEdition) ? 'Page
 
 function isCurrent(page: KeepReadingPage) { return isCurrentArchivePage(page, props.currentId, props.metadata); }
 function thumbnail(page: KeepReadingPage) {
-  if (failedThumbnails.has(page.id)) return '';
+  if (failedThumbnails[page.id]) return '';
   return thumbnailUrls[page.id] || '';
 }
 
-async function loadPageThumbnail(page: KeepReadingPage) {
-  if (!import.meta.client || !page.id) return;
-  if (thumbnailUrls[page.id] || loadingThumbnails[page.id] || failedThumbnails.has(page.id)) return;
+async function loadArchiveThumbnail(fileId: string) {
+  if (!import.meta.client || !fileId) return;
+  if (thumbnailUrls[fileId] || loadingThumbnails[fileId] || failedThumbnails[fileId]) return;
 
-  loadingThumbnails[page.id] = true;
+  loadingThumbnails[fileId] = true;
   try {
-    const directUrl = archiveThumbnail(page.thumbnailId);
-    const candidateIds = [
-      page.id,
-      page.newspaperId && page.newspaperId !== page.id ? page.newspaperId : '',
-      !directUrl && page.thumbnailId && /^[a-zA-Z0-9._-]+$/.test(page.thumbnailId) && page.thumbnailId !== page.id ? page.thumbnailId : '',
-    ].filter(Boolean);
-
-    let resolvedUrl = '';
-    for (const candidateId of candidateIds) {
-      resolvedUrl = await getArchiveThumbnail(candidateId);
-      if (resolvedUrl) break;
-    }
-
-    if (!resolvedUrl) {
-      resolvedUrl = directUrl;
-    }
-
-    if (resolvedUrl) {
-      thumbnailUrls[page.id] = resolvedUrl;
+    const url = await getArchiveThumbnail(fileId);
+    if (url) {
+      thumbnailUrls[fileId] = url;
     } else {
-      failedThumbnails.add(page.id);
+      failedThumbnails[fileId] = true;
     }
-  } catch {
-    const directUrl = archiveThumbnail(page.thumbnailId);
-    if (directUrl) {
-      thumbnailUrls[page.id] = directUrl;
-    } else {
-      failedThumbnails.add(page.id);
-    }
+  } catch (error) {
+    failedThumbnails[fileId] = true;
+    console.error('Failed to load archive thumbnail', error);
   } finally {
-    loadingThumbnails[page.id] = false;
+    loadingThumbnails[fileId] = false;
   }
+}
+
+function handleThumbnailError(fileId: string) {
+  if (!fileId) return;
+  delete thumbnailUrls[fileId];
+  failedThumbnails[fileId] = true;
 }
 function editionLabel(page: KeepReadingPage) { return [page.publicationName, formatArchivePublicationDate(page.publicationDate)].filter(Boolean).join(' · '); }
 function pageLabel(page: KeepReadingPage) {
@@ -234,7 +225,9 @@ watch([() => props.currentId, pages], revealCurrent, { flush: 'post' });
 watch(pages, (nextPages) => {
   if (!import.meta.client) return;
   for (const page of nextPages) {
-    loadPageThumbnail(page);
+    if (page.id) {
+      loadArchiveThumbnail(page.id);
+    }
   }
 }, { immediate: true });
 onBeforeUnmount(() => { generation++; });
