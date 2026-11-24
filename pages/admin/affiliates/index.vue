@@ -17,8 +17,8 @@
   </div>
 
   <!-- Filters -->
-  <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
-    <div class="flex-1 min-w-[200px]">
+  <form class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end" @submit.prevent="onPageChange(1)">
+    <div class="w-full sm:w-72">
       <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
       <div class="relative rounded-md shadow-sm">
         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -28,7 +28,7 @@
           type="text"
           name="search"
           id="search"
-          v-model="searchQuery"
+          v-model="filters.query"
           class="block w-full rounded-lg border-gray-300 pl-10 focus:border-primary-500 focus:ring-primary-500 sm:text-sm py-2"
           placeholder="Search by name, email, or ID"
         />
@@ -40,13 +40,15 @@
       <select
         id="status"
         name="status"
-        v-model="statusFilter"
+        v-model="filters.status"
         class="block w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500 sm:text-sm py-2"
       >
-        <option value="">All Statuses</option>
-        <option value="Active">Active</option>
-        <option value="Pending">Pending</option>
-        <option value="Suspended">Suspended</option>
+        <option value="-1">All Statuses</option>
+        <option value="11">Active</option>
+        <option value="20">Pending</option>
+        <option value="2">Archived</option>
+        <option value="13">Suspended</option>
+        <option value="17">Rejected</option>
       </select>
     </div>
 
@@ -55,7 +57,7 @@
       <select
         id="sort"
         name="sort"
-        v-model="sortBy"
+        v-model="filters.sortBy"
         class="block w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500 sm:text-sm py-2"
       >
         <option value="newest">Newest First</option>
@@ -63,46 +65,52 @@
         <option value="earnings_low">Earnings: Low to High</option>
       </select>
     </div>
-  </div>
+
+    <button type="submit" class="inline-flex w-full sm:w-auto items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+      Search
+    </button>
+    <button type="button" class="inline-flex w-full sm:w-auto items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" @click="resetFilters">
+      Reset
+    </button>
+  </form>
 
   <!-- Table -->
-  <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-hidden">
+  <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
     <table class="min-w-full divide-y divide-gray-300">
-      <thead class="bg-gray-50">
+      <thead class="[&_th]:bg-gray-50">
         <tr>
-          <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Affiliate</th>
+          <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 sm:rounded-tl-xl">Affiliate</th>
           <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
           <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date Joined</th>
           <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Total Earnings</th>
-          <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+          <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Wallet Balance</th>
+          <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6 sm:rounded-tr-xl">
             <span class="sr-only">Actions</span>
           </th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200 bg-white">
-        <tr v-for="person in filteredAffiliates" :key="person.id">
+        <tr v-for="person in affiliateList" :key="person.id">
           <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
             <div class="flex items-center">
-              <div class="h-10 w-10 flex-shrink-0">
-                <img class="h-10 w-10 rounded-full" :src="person.image" alt="" />
-              </div>
+               
               <div class="ml-4">
-                <div class="font-medium text-gray-900">{{ person.name }}</div>
+                <div class="font-medium text-gray-900">{{ person.firstName }} {{ person.lastName }}</div>
                 <div class="text-gray-500">{{ person.email }}</div>
               </div>
             </div>
           </td>
           <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-            <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5" :class="{
-              'bg-green-100 text-green-800': person.status === 'Active',
-              'bg-yellow-100 text-yellow-800': person.status === 'Pending',
-              'bg-red-100 text-red-800': person.status === 'Suspended'
-            }">
-              {{ person.status }}
+            <span
+              class="inline-flex rounded-full px-2 text-xs font-semibold leading-5"
+              :class="getStatusBadgeClass(person.status)"
+            >
+              {{ getStatusLabel(person.status) }}
             </span>
           </td>
-          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ person.dateJoined }}</td>
-          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">₵{{ person.earnings }}</td>
+          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ longMonthDateFormat(person.dateJoined) }}</td>
+          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium"> GHS {{ person.totalEarnings }}</td>
+          <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium"> GHS {{ person.walletBalance }}</td>
           <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
             <Menu as="div" class="relative inline-block text-left">
               <div>
@@ -116,21 +124,15 @@
                 <MenuItems class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                   <div class="py-1">
                     <MenuItem v-slot="{ active }">
-                      <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">View Profile</a>
+                      <NuxtLink :to="`/admin/affiliates/${person.id}/profile`" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">View Profile</NuxtLink>
                     </MenuItem>
-                    <MenuItem v-slot="{ active }">
-                      <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Edit Details</a>
-                    </MenuItem>
+                   
                      <MenuItem v-slot="{ active }">
                       <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Update Account Status</a>
                     </MenuItem>
 
                     <MenuItem v-slot="{ active }">
                       <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Reset Password</a>
-                    </MenuItem>
-
-                    <MenuItem v-slot="{ active }">
-                      <NuxtLink :to="`/admin/affiliates/${person.id}`" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">View Earnings</NuxtLink>
                     </MenuItem>
 
                     <MenuItem v-slot="{ active }">
@@ -144,41 +146,19 @@
         </tr>
       </tbody>
     </table>
-    <!-- Pagination (Placeholder) -->
-    <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
-      <div class="flex flex-1 justify-between sm:hidden">
-        <a href="#" class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
-        <a href="#" class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
-      </div>
-      <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-        <div>
-          <p class="text-sm text-gray-700">
-            Showing
-            <span class="font-medium">1</span>
-            to
-            <span class="font-medium">10</span>
-            of
-            <span class="font-medium">{{ affiliates.length }}</span>
-            results
-          </p>
-        </div>
-        <div>
-          <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-            <a href="#" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-              <span class="sr-only">Previous</span>
-              <ChevronLeftIcon class="h-5 w-5" aria-hidden="true" />
-            </a>
-            <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-primary-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">1</a>
-            <a href="#" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">2</a>
-            <a href="#" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">3</a>
-            <a href="#" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-              <span class="sr-only">Next</span>
-              <ChevronRightIcon class="h-5 w-5" aria-hidden="true" />
-            </a>
-          </nav>
-        </div>
-      </div>
-    </div>
+   
+    <client-only>
+        <SimplePagination
+          :lower-bound="paginationParams.lowerBound"
+          :upper-bound="paginationParams.upperBound"
+          @on-page-changed="onPageChange"
+          :page-no="filters.pageNo"
+          :total-pages="paginationParams.totalPages"
+          :total-count="paginationParams.totalCount"
+          :disabled="isShimmerLoading"
+        />
+      </client-only>
+
   </div>
 
   <AffiliateModal 
@@ -190,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import type { Affiliate } from "~/models";
 import { 
   PlusIcon, 
   MagnifyingGlassIcon, 
@@ -207,10 +187,121 @@ definePageMeta({
 })
 
 const showAddModal = ref(false)
-const searchQuery = ref('')
-const statusFilter = ref('')
-const sortBy = ref('newest')
+const route = useRoute()
+const router = useRouter()
 const loading = ref(false)
+
+const filters = reactive({
+  sortBy: 'newest',
+  query: '',
+  status: -1,
+  pageNo: 1,
+  pageSize: 10,
+
+});
+
+const paginationParams = reactive({
+  totalPages: 0,
+  totalCount: 0,
+  lowerBound: 0,
+  upperBound: 0
+});
+
+const affiliateList = ref<Affiliate[]>([]);
+
+const isShimmerLoading = ref(true);
+const affiliateToDeleteId = ref('');
+const isLoading = ref(false);
+const isEditing = ref(false);
+
+
+const onPageChange = async (pageNumber: number) => {
+  if (filters.pageNo === pageNumber) {
+    await getPaginatedAffiliates()
+  } else {
+    filters.pageNo = pageNumber
+  }
+}
+
+const resetFilters = () => {
+  filters.query = ''
+  filters.status = -1
+  filters.sortBy = 'newest'
+  filters.pageNo = 1
+}
+
+watch(
+  () => [filters.query, filters.status, filters.sortBy, filters.pageNo, filters.pageSize] as const,
+  ([query, status, sortBy, , pageSize], [oldQuery, oldStatus, oldSortBy, , oldPageSize]) => {
+    if ((query !== oldQuery || status !== oldStatus || sortBy !== oldSortBy || pageSize !== oldPageSize) && filters.pageNo !== 1) {
+      filters.pageNo = 1
+      return
+    }
+
+    const filteredQuery = filterQueryParams({ ...route.query, ...filters })
+    router.replace({ name: route.name ?? '', query: filteredQuery })
+    getPaginatedAffiliates()
+  }
+)
+
+let latestRequest = 0
+
+const getPaginatedAffiliates = async () => {
+    const requestId = ++latestRequest
+    isShimmerLoading.value = true;
+
+    try {
+
+        let result = await getAffiliates({ ...filters });
+        if (requestId !== latestRequest) return
+
+        affiliateList.value = result.data;
+
+        paginationParams.totalPages = result.totalPages;
+        paginationParams.totalCount = result.totalCount;
+        paginationParams.lowerBound = result.lowerBound;
+        paginationParams.upperBound = result.upperBound;
+
+    } catch (error) {
+        if (requestId === latestRequest) $toast.error('Unable to fetch affiliate applications!');
+    } finally {
+        if (requestId === latestRequest) isShimmerLoading.value = false;
+    }
+
+}
+ 
+
+const STATUS = {
+  PENDING: 20,
+  APPROVED: 11,
+  REJECTED: 17,
+  ARCHIVED: 2,
+  SUSPENDED:13,
+} as const
+
+const getStatusLabel = (status: number): string => {
+  switch (status) {
+    case STATUS.PENDING: return 'Pending'
+    case STATUS.APPROVED: return 'Approved'
+    case STATUS.REJECTED: return 'Rejected'
+    case STATUS.ARCHIVED: return 'Archived'
+    case STATUS.SUSPENDED: return 'Suspended'
+    default: return 'Unknown'
+  }
+}
+
+const getStatusBadgeClass = (status: number): string => {
+  switch (status) {
+    case STATUS.PENDING:  return 'bg-yellow-100 text-yellow-800'
+    case STATUS.APPROVED: return 'bg-green-100 text-green-800'
+    case STATUS.REJECTED: return 'bg-red-100 text-red-800'
+    case STATUS.ARCHIVED: return 'bg-gray-100 text-gray-800'
+    default:              return 'bg-gray-100 text-gray-800'
+  }
+}
+
+
+
 
 const affiliates = ref([
   {
@@ -275,24 +366,16 @@ const affiliates = ref([
   },
 ])
 
-const filteredAffiliates = computed(() => {
-  return affiliates.value.filter(affiliate => {
-    const matchesSearch = affiliate.name.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-                          affiliate.email.toLowerCase().includes(searchQuery.value.toLowerCase())
-    const matchesStatus = statusFilter.value ? affiliate.status === statusFilter.value : true
-    
-    return matchesSearch && matchesStatus
-  }).sort((a, b) => {
-      if (sortBy.value === 'earnings_high') return b.earnings - a.earnings
-      if (sortBy.value === 'earnings_low') return a.earnings - b.earnings
-      // Default to newest (based on logic or actual date parsing if needed)
-      return 0
-  })
-})
+ 
 
 const handleCreateAffiliate = async (formData: any) => {
 
   console.log("formData =>", formData);
   
 }
+
+onMounted(async () => {
+  
+  await getPaginatedAffiliates()
+})
 </script>

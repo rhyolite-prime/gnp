@@ -16,9 +16,9 @@ export async function createSubscriptionPlan(payload: object) {
   return response.success;
 }
 
-export async function updateSubscriptionPlan(payload: object) {
+export async function updateSubscriptionPlan(id: string, payload: object) {
     
-  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/update-subscription-plan', "", {
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/update-subscription-plan/${id}`, "", {
     method: "post",
     body: payload,
   });

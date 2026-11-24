@@ -177,15 +177,7 @@ const otpForm = reactive({
 })
 
 const completeLogin = (response: any) => {
-  const gnpPartnerIdentityCookie = useCookie("gnp-partner-user-identity", {
-    maxAge: 60 * 60 * 24 * 30,
-    secure: true,
-    httpOnly: false,
-    priority: "medium",
-    sameSite: "strict"
-  });
-  
-  gnpPartnerIdentityCookie.value = response.token;
+  partnerAuthStore.gnpPartnerUserIdentityCookie = response.token;
   partnerAuthStore.setPartner(response);
   
   // Navigate to partner-specific dashboard

@@ -1,0 +1,372 @@
+import type { SubscriptionPlan, SubscriptionPricingTier, UserSubscription, PartnerSubscriberSubscriptionSummary } from '~/models';
+
+/** Billing cycles in the order the pricing page should display them. */
+export const PRICING_BILLING_CYCLES = ['Weekly', 'Monthly', '3 Months', 'Half-Yearly', 'Yearly'] as const;
+
+/** Tabs shown on /pricing, each mapped to the API `planType` it renders. */
+export const PRICING_TABS = [
+  { key: 'bundle', label: 'Bundle', planType: 'bundle' },
+  { key: 'custom', label: 'Custom', planType: 'regular' },
+  { key: 'premium', label: 'Premium', planType: 'premium' },
+] as const;
+
+export type PricingTabKey = (typeof PRICING_TABS)[number]['key'];
+
+/** Plan groups matching the pricing page tabs. */
+export interface PricingPlanGroups {
+  bundle: SubscriptionPlan[];
+  custom: SubscriptionPlan[];
+  premium: SubscriptionPlan[];
+}
+
+function normalizePlanType(value: unknown): string {
+  return typeof value === 'string' ? value.trim().toLowerCase() : '';
+}
+
+function byName(a: SubscriptionPlan, b: SubscriptionPlan): number {
+  return (a.name || '').localeCompare(b.name || '');
+}
+
+/**
+ * Splits the API plans across the Bundle / Custom / Premium tabs using the
+ * `planType` the backend sends. Unknown types stay reachable on the Custom tab
+ * so a new backend plan type never disappears from the page.
+ */
+export function groupPricingPlans(plans: readonly SubscriptionPlan[] | null | undefined): PricingPlanGroups {
+  const groups: PricingPlanGroups = { bundle: [], custom: [], premium: [] };
+
+  for (const plan of plans ?? []) {
+    if (!plan || typeof plan.id !== 'string' || !plan.id.trim()) continue;
+
+    const planType = normalizePlanType(plan.planType);
+    if (planType === 'bundle') groups.bundle.push(plan);
+    else if (planType === 'premium') groups.premium.push(plan);
+    else groups.custom.push(plan);
+  }
+
+  // The API ordering is insertion order; sort each tab by name for a stable UI.
+  groups.bundle.sort(byName);
+  groups.custom.sort(byName);
+  groups.premium.sort(byName);
+
+  return groups;
+}
+
+/**
+ * Billing cycles available for a plan, starting with the canonical order
+ * (Weekly → Yearly) and appending any unexpected server cycles at the end.
+ */
+export function getPlanBillingCycles(plan: SubscriptionPlan | null | undefined): string[] {
+  const cycles = Object.keys(plan?.pricing ?? {});
+  if (!cycles.length) return [...PRICING_BILLING_CYCLES];
+
+  const known = PRICING_BILLING_CYCLES.filter((cycle) => cycles.includes(cycle)) as unknown as string[];
+  const extra = cycles.filter((cycle) => !(PRICING_BILLING_CYCLES as readonly string[]).includes(cycle)).sort();
+  return [...known, ...extra];
+}
+
+/**
+ * Billing cycles offered by at least one plan in the active tab, kept in the
+ * canonical order so switching tabs never changes the duration order.
+ */
+export function getAvailableBillingCycles(plans: readonly SubscriptionPlan[] | null | undefined): string[] {
+  const offered = new Set<string>();
+  for (const plan of plans ?? []) {
+    for (const cycle of Object.keys(plan?.pricing ?? {})) offered.add(cycle);
+  }
+
+  if (!offered.size) return [...PRICING_BILLING_CYCLES];
+
+  const known = PRICING_BILLING_CYCLES.filter((cycle) => offered.has(cycle)) as unknown as string[];
+  const extra = [...offered].filter((cycle) => !(PRICING_BILLING_CYCLES as readonly string[]).includes(cycle)).sort();
+  return [...known, ...extra];
+}
+
+/** Price + saving for one plan/cycle pair, or null when the cycle is not sold. */
+export function getPlanPricing(
+  plan: SubscriptionPlan | null | undefined,
+  cycle: string | null | undefined,
+): SubscriptionPricingTier | null {
+  if (!plan?.pricing || typeof cycle !== 'string') return null;
+
+  const tier = plan.pricing[cycle];
+  const price = Number(tier?.price);
+  if (!Number.isFinite(price)) return null;
+
+  const savePercentage = Number(tier?.savePercentage);
+
+  return {
+    price,
+    savePercentage: Number.isFinite(savePercentage) ? savePercentage : 0,
+  };
+}
+
+/** `GHS 9.90` style label used by the plan rows. */
+export function formatPlanPrice(price: number | null | undefined, currency = 'GHS'): string {
+  const amount = Number(price);
+  return `${currency} ${(Number.isFinite(amount) ? amount : 0).toFixed(2)}`;
+}
+
+/**
+ * Picks the cycle to keep selected after a tab change: the current choice when
+ * the tab offers it, otherwise the tab's cheapest cycle, otherwise its first.
+ */
+export function resolveActiveBillingCycle(
+  plans: readonly SubscriptionPlan[] | null | undefined,
+  preferred: string | null | undefined,
+): string {
+  const cycles = getAvailableBillingCycles(plans);
+  if (preferred && cycles.includes(preferred)) return preferred;
+
+  let cheapest: { cycle: string; price: number } | null = null;
+  for (const plan of plans ?? []) {
+    for (const cycle of cycles) {
+      const tier = getPlanPricing(plan, cycle);
+      if (tier && (!cheapest || tier.price < cheapest.price)) cheapest = { cycle, price: tier.price };
+    }
+  }
+
+  return cheapest?.cycle ?? cycles[0] ?? PRICING_BILLING_CYCLES[0];
+}
+
+/** Cycle + price shown for a plan once a buyer has chosen a duration. */
+export interface PlanPriceSelection {
+  cycle: string;
+  pricing: SubscriptionPricingTier;
+}
+
+/**
+ * Resolves the tier to display for a plan: the chosen cycle when that plan
+ * sells it, otherwise its first available saved cycle (kept in canonical order)
+ * so the plan still shows a price instead of "Not available".
+ */
+export function resolvePlanPrice(
+  plan: SubscriptionPlan | null | undefined,
+  preferred: string | null | undefined,
+): PlanPriceSelection | null {
+  const preferredTier = getPlanPricing(plan, preferred);
+  if (preferredTier && typeof preferred === 'string') return { cycle: preferred, pricing: preferredTier };
+
+  for (const cycle of getPlanBillingCycles(plan)) {
+    const tier = getPlanPricing(plan, cycle);
+    if (tier) return { cycle, pricing: tier };
+  }
+
+  return null;
+}
+
+/** Human label for a plan's tier, e.g. `Bundle · Monthly`. */
+export function formatPlanTypeLabel(planType: string | null | undefined): string {
+  const value = typeof planType === 'string' ? planType.trim() : '';
+  if (!value) return 'Standard';
+  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+}
+
+/**
+ * Splits the checkout name into the API's first/last name fields. A single word
+ * is sent as the first name; every extra word goes to the surname.
+ */
+export function splitFullName(fullName: string | null | undefined): { firstName: string; lastName: string } {
+  const parts = (fullName ?? '').trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] ?? '',
+    lastName: parts.slice(1).join(' '),
+  };
+}
+
+/**
+ * Plans that grant access to a specific publication: the regular plan whose
+ * `targetPublications` contains it, followed by every bundle that includes it.
+ * Used by the newspaper page to pre-select the right plan for the edition being
+ * read. Matching is case-insensitive and ignores surrounding whitespace because
+ * ids come from different backend tables.
+ */
+export function getPlansForPublication(
+  plans: readonly SubscriptionPlan[] | null | undefined,
+  publicationId: string | null | undefined,
+): SubscriptionPlan[] {
+  const target = typeof publicationId === 'string' ? publicationId.trim().toLowerCase() : '';
+  if (!target) return [];
+
+  const grants = (plan: SubscriptionPlan | null | undefined) =>
+    Array.isArray(plan?.targetPublications) &&
+    plan!.targetPublications.some(
+      (id) => typeof id === 'string' && id.trim().toLowerCase() === target,
+    );
+
+  const matches = (plans ?? []).filter((plan) => plan && grants(plan));
+
+  // Regular plans first (single-publication access), then bundles.
+  const rank = (plan: SubscriptionPlan) => (normalizePlanType(plan.planType) === 'bundle' ? 1 : 0);
+  return matches.sort((a, b) => rank(a) - rank(b) || byName(a, b));
+}
+
+/**
+ * Stable, human-readable label for a plan + billing cycle, e.g.
+ * `Combo - Monthly (GHS 48.90)`. Sent as `subscriptionPlanDescription` on guest
+ * checkout so payment records and receipts describe what was bought even after
+ * the plan is renamed or repriced.
+ */
+export function formatSubscriptionPlanDescription(
+  plan: Pick<SubscriptionPlan, 'name'> | null | undefined,
+  cycle: string | null | undefined,
+  price?: number | null,
+): string {
+  const name = typeof plan?.name === 'string' ? plan.name.trim() : '';
+  const billing = typeof cycle === 'string' ? cycle.trim() : '';
+  const amount = Number(price);
+
+  const head = [name, billing].filter(Boolean).join(' - ');
+  return Number.isFinite(amount) ? `${head} (${formatPlanPrice(amount)})` : head;
+}
+
+// ─── Signed-in buyer's existing subscription ──────────────────────────────────
+
+/** One active package as the buy modal presents it to a signed-in reader. */
+export interface CurrentSubscriptionSummary {
+  /** Plan + cycle label, e.g. `Daily Graphic - Monthly`. */
+  label: string;
+  /** Billing cycle when the API knows it, else an empty string. */
+  cycle: string;
+  /** Plan id, used to preselect a renewal of the same package. */
+  planId: string;
+  isActive: boolean | null;
+  /** Optional due date returned by the subscriber details endpoint. */
+  dueDate?: string;
+  /** ISO dates exactly as the API sent them ('' when missing). */
+  startDate: string;
+  endDate: string;
+  /** Days left in the current period; null when the end date is unusable. */
+  daysRemaining: number | null;
+  fee: number | null;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function toTimestamp(value: string | null | undefined): number | null {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const time = Date.parse(value);
+  return Number.isFinite(time) ? time : null;
+}
+
+/**
+ * Turns a `subscription/get-all` row into what the buy modal shows above the
+ * plan list. `now` is injectable so the remaining days are testable.
+ */
+export function summarizeSubscription(
+  subscription: UserSubscription | null | undefined,
+  now: number = Date.now(),
+): CurrentSubscriptionSummary | null {
+  if (!subscription) return null;
+
+  const planId = typeof subscription.currentSubscriptionPlanId === 'string'
+    ? subscription.currentSubscriptionPlanId
+    : '';
+  const cycle = typeof subscription.currentBillingCycle === 'string'
+    ? subscription.currentBillingCycle.trim()
+    : '';
+  const identifier = typeof subscription.subscriptionIdentifier === 'string'
+    ? subscription.subscriptionIdentifier.trim()
+    : '';
+
+  const label = identifier || [planId && 'Current plan', cycle].filter(Boolean).join(' - ');
+  if (!label) return null;
+
+  const endTime = toTimestamp(subscription.endDate);
+  const daysRemaining = endTime === null
+    ? null
+    : Math.max(0, Math.ceil((endTime - now) / DAY_MS));
+  const fee = Number(subscription.fee);
+
+  return {
+    label,
+    cycle,
+    planId,
+    isActive: subscription.isActive !== false && (endTime === null || endTime > now),
+    startDate: typeof subscription.startDate === 'string' ? subscription.startDate : '',
+    endDate: typeof subscription.endDate === 'string' ? subscription.endDate : '',
+    daysRemaining,
+    fee: Number.isFinite(fee) ? fee : null,
+  };
+}
+
+/** Adapt the subscriber-info response without treating its subscription ID as a plan ID. */
+export function summarizeSubscriberDetails(
+  details: PartnerSubscriberSubscriptionSummary | null | undefined,
+  now: number = Date.now(),
+): CurrentSubscriptionSummary | null {
+  const summary = details?.subscriptionSummary;
+  const label = typeof summary?.package === 'string' ? summary.package.trim() : '';
+  if (!summary || !label) return null;
+
+  const endDate = typeof summary.validUntil === 'string' ? summary.validUntil.trim() : '';
+  const endTime = toTimestamp(endDate);
+  // A date-only expiry includes the whole calendar day, not just midnight.
+  const endDay = endTime === null ? '' : new Date(endTime).toISOString().slice(0, 10);
+  const today = new Date(now).toISOString().slice(0, 10);
+  const isActive = endDay ? endDay >= today : null;
+  const remaining = summary.daysRemaining;
+
+  return {
+    label,
+    cycle: typeof summary.billingCycle === 'string' ? summary.billingCycle.trim() : '',
+    planId: '', // subscriptionId identifies the subscription, not a purchasable plan.
+    isActive,
+    startDate: typeof summary.activatedOn === 'string' ? summary.activatedOn.trim() : '',
+    endDate,
+    dueDate: typeof summary.dueDate === 'string' ? summary.dueDate.trim() : '',
+    daysRemaining: typeof remaining === 'number' && Number.isFinite(remaining) && remaining >= 0
+      ? remaining : null,
+    fee: null, // Renewal history amounts need not be the price of the current plan.
+  };
+}
+
+/**
+ * Picks the package that matters to a buyer who may have several rows: an
+ * active one first, then the one expiring last. Returns null for no rows.
+ */
+export function pickCurrentSubscription(
+  subscriptions: readonly UserSubscription[] | null | undefined,
+  now: number = Date.now(),
+): UserSubscription | null {
+  const rows = (subscriptions ?? []).filter(Boolean);
+  if (!rows.length) return null;
+
+  const endOf = (row: UserSubscription) => toTimestamp(row.endDate) ?? 0;
+
+  return [...rows].sort((a, b) => {
+    const aActive = a.isActive !== false && (toTimestamp(a.endDate) ?? Infinity) > now;
+    const bActive = b.isActive !== false && (toTimestamp(b.endDate) ?? Infinity) > now;
+    if (aActive !== bActive) return aActive ? -1 : 1;
+    return endOf(b) - endOf(a);
+  })[0];
+}
+
+/** `2026-11-20` — the UTC calendar day, used to compare period end dates. */
+function toDayKey(value: string | null | undefined, fallback: number): string {
+  const time = toTimestamp(value) ?? fallback;
+  return new Date(time).toISOString().slice(0, 10);
+}
+
+/**
+ * Badge text for the current-package panel: `Active · 10 days left`,
+ * `Expires today`, `Expired`.
+ *
+ * `daysRemaining` is a ceiling, so a period ending later today still counts as
+ * "1 day left"; the last day is therefore detected by comparing calendar days
+ * rather than the rounded count.
+ */
+export function describeSubscriptionStatus(
+  summary: CurrentSubscriptionSummary | null | undefined,
+  now: number = Date.now(),
+): string {
+  if (!summary) return '';
+  if (summary.isActive === null) return 'Status unavailable';
+  if (!summary.isActive) return 'Expired';
+
+  const days = summary.daysRemaining;
+  if (days === null) return 'Active';
+  if (toDayKey(summary.endDate, now) === toDayKey(new Date(now).toISOString(), now)) return 'Expires today';
+
+  return `Active · ${days} day${days === 1 ? '' : 's'} left`;
+}

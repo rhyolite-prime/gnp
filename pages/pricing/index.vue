@@ -22,50 +22,46 @@
 
         <!-- Tab Navigation -->
         <div class="grid grid-cols-3 gap-0 mb-6">
-          <button 
-            @click="setActiveTab('bundle')"
+          <button
+            v-for="tab in PRICING_TABS"
+            :key="tab.key"
+            @click="setActiveTab(tab.key)"
             :class="[
               'py-3 text-center font-medium transition-colors',
-              activeTab === 'bundle' 
-                ? 'bg-red-600 text-white' 
+              activeTab === tab.key
+                ? 'bg-red-600 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             ]"
           >
-            Bundle
-          </button>
-          <button 
-            @click="setActiveTab('custom')"
-            :class="[
-              'py-3 text-center font-medium transition-colors',
-              activeTab === 'custom' 
-                ? 'bg-red-600 text-white' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            ]"
-          >
-            Custom
-          </button>
-          <button 
-            @click="setActiveTab('premium')"
-            :class="[
-              'py-3 text-center font-medium transition-colors',
-              activeTab === 'premium' 
-                ? 'bg-red-600 text-white' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            ]"
-          >
-            Premium
+            {{ tab.label }}
           </button>
         </div>
 
-        <!-- Custom Tab Content -->
-        <div v-if="activeTab === 'custom'">
-          <p class="text-gray-700 mb-6">To buy just one publication, use the CUSTOM option</p>
+        <!-- Loading / Error States -->
+        <div v-if="isLoading" class="flex flex-col items-center justify-center py-16" role="status">
+          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+          <p class="mt-4 text-gray-600">Loading subscription plans…</p>
+        </div>
+
+        <div v-else-if="plansError" class="py-12 text-center" role="alert">
+          <p class="text-gray-700">We couldn't load the subscription plans right now.</p>
+          <button
+            type="button"
+            @click="refreshPlans()"
+            class="mt-4 bg-red-600 text-white font-medium px-6 py-2 rounded-md hover:bg-red-700 transition-colors"
+          >
+            Try again
+          </button>
+        </div>
+
+        <template v-else>
+          <p class="text-gray-700 mb-6">{{ activeTabDescription }}</p>
 
           <!-- Duration Selection -->
-          <div class="flex flex-wrap justify-center gap-4 mb-8">
-            <button 
-              v-for="(duration, index) in durations" 
-              :key="index"
+          <div v-if="activePlans.length" class="flex flex-wrap justify-center gap-4 mb-8">
+            <button
+              v-for="duration in activeBillingCycles"
+              :key="duration"
               @click="setActiveDuration(duration)"
               :class="[
                 'px-8 py-2 rounded-full text-center font-medium transition-colors',
@@ -79,175 +75,66 @@
           </div>
 
           <!-- Subscription Options -->
-          <div class="space-y-4 mb-6">
-            <div 
-              v-for="(plan, index) in customSubscriptionPlans" 
-              :key="index"
-              class="bg-white rounded-lg border border-gray-200 p-4 flex items-center"
+          <div v-if="activePlans.length" class="space-y-4 mb-6">
+            <div
+              v-for="row in activePlanRows"
+              :key="row.plan.id"
+              role="button"
+              tabindex="0"
+              :aria-label="`Subscribe to ${row.plan.name}`"
+              class="bg-white rounded-lg border p-4 flex items-center transition-colors cursor-pointer hover:border-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+              :class="selectedPlanId === row.plan.id ? 'border-red-600 ring-1 ring-red-600' : 'border-gray-200'"
+              @click="openBuyModal(row.plan)"
+              @keydown.enter.prevent="openBuyModal(row.plan)"
+              @keydown.space.prevent="openBuyModal(row.plan)"
             >
               <!-- Radio Button -->
               <div class="mr-4">
                 <label class="inline-flex items-center cursor-pointer">
-                  <input 
-                    type="radio" 
-                    :name="'plan-' + index" 
+                  <input
+                    type="radio"
+                    :name="'plan-' + activeTab"
                     class="form-radio h-5 w-5 text-red-600"
-                    :checked="selectedPlan === index"
-                    @click="selectedPlan = index"
+                    :checked="selectedPlanId === row.plan.id"
+                    @click.stop="selectedPlanId = row.plan.id"
                   >
                 </label>
               </div>
-              
+
               <!-- Plan Details -->
               <div class="flex-1">
-                <h3 class="font-semibold text-gray-900">{{ plan.name }}</h3>
-                <p class="text-sm text-gray-600">{{ plan.description }}</p>
+                <h3 class="font-semibold text-gray-900">{{ row.plan.name }}</h3>
+                <p class="text-sm text-gray-600">{{ row.plan.description }}</p>
               </div>
-              
+
               <!-- Price -->
               <div class="text-right">
-                <div class="text-gray-900 font-bold">GHS {{ currentPricing(plan).price.toFixed(2) }}</div>
-                <div v-if="currentPricing(plan).savePercentage > 0" class="text-sm text-gray-600">
-                  Save {{ currentPricing(plan).savePercentage }}%
-                </div>
+                <template v-if="row.pricing">
+                  <div class="text-gray-900 font-bold">{{ formatPlanPrice(row.pricing.price) }}</div>
+                  <div v-if="row.pricing.savePercentage > 0" class="text-sm text-gray-600">
+                    Save {{ row.pricing.savePercentage }}%
+                  </div>
+                </template>
+                <div v-else class="text-gray-500 text-sm">Not available</div>
               </div>
             </div>
           </div>
 
-          <div class="text-center">
-            <button class="bg-red-600 text-white font-medium px-8 py-3 rounded-md hover:bg-red-700 transition-colors">
-              Subscribe Now
-            </button>
+          <div v-else class="py-12 text-center">
+            <p class="text-gray-500">No {{ activeTabLabel.toLowerCase() }} plans are available at the moment.</p>
           </div>
-        </div>
-        
-        <!-- Bundle Tab Content -->
-        <div v-if="activeTab === 'bundle'">
-          <p class="text-gray-700 mb-6">Subscribe to all our publications at a discounted price.</p>
 
-          <!-- Duration Selection -->
-          <div class="flex flex-wrap justify-center gap-4 mb-8">
-            <button 
-              v-for="(duration, index) in durations" 
-              :key="index"
-              @click="setActiveDuration(duration)"
-              :class="[
-                'px-8 py-2 rounded-full text-center font-medium transition-colors',
-                activeDuration === duration
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              ]"
+          <div v-if="activePlans.length" class="text-center">
+            <button
+              type="button"
+              :disabled="!selectedPlanId"
+              class="bg-red-600 text-white font-medium px-8 py-3 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              @click="openBuyModal()"
             >
-              {{ duration }}
+              {{ activeTab === 'premium' ? 'Get Premium' : 'Subscribe Now' }}
             </button>
           </div>
-          
-          <!-- Bundle Subscription Options -->
-          <div class="space-y-4 mb-6">
-            <div 
-              v-for="(plan, index) in bundleSubscriptionPlans" 
-              :key="index"
-              class="bg-white rounded-lg border border-gray-200 p-4 flex items-center"
-            >
-              <!-- Radio Button -->
-              <div class="mr-4">
-                <label class="inline-flex items-center cursor-pointer">
-                  <input 
-                    type="radio" 
-                    :name="'plan-' + index" 
-                    class="form-radio h-5 w-5 text-red-600"
-                    :checked="selectedPlan === index"
-                    @click="selectedPlan = index"
-                  >
-                </label>
-              </div>
-              
-              <!-- Plan Details -->
-              <div class="flex-1">
-                <h3 class="font-semibold text-gray-900">{{ plan.name }}</h3>
-                <p class="text-sm text-gray-600">{{ plan.description }}</p>
-              </div>
-              
-              <!-- Price -->
-              <div class="text-right">
-                <div class="text-gray-900 font-bold">GHS {{ currentPricing(plan).price.toFixed(2) }}</div>
-                <div v-if="currentPricing(plan).savePercentage > 0" class="text-sm text-gray-600">
-                  Save {{ currentPricing(plan).savePercentage }}%
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="text-center">
-            <button class="bg-red-600 text-white font-medium px-8 py-3 rounded-md hover:bg-red-700 transition-colors">
-              Subscribe Now
-            </button>
-          </div>
-        </div>
-        
-        <!-- Premium Tab Content -->
-        <div v-if="activeTab === 'premium'">
-          <p class="text-gray-700 mb-6">Get access to all our publications plus premium features and exclusive content.</p>
-
-          <!-- Duration Selection -->
-          <div class="flex flex-wrap justify-center gap-4 mb-8">
-            <button 
-              v-for="(duration, index) in durations" 
-              :key="index"
-              @click="setActiveDuration(duration)"
-              :class="[
-                'px-8 py-2 rounded-full text-center font-medium transition-colors',
-                activeDuration === duration
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              ]"
-            >
-              {{ duration }}
-            </button>
-          </div>
-
-          <!-- Premium Subscription Options -->
-          <div class="space-y-4 mb-6">
-            <div 
-              v-for="(plan, index) in premiumSubscriptionPlans" 
-              :key="index"
-              class="bg-white rounded-lg border border-gray-200 p-4 flex items-center"
-            >
-              <!-- Radio Button -->
-              <div class="mr-4">
-                <label class="inline-flex items-center cursor-pointer">
-                  <input 
-                    type="radio" 
-                    :name="'plan-' + index" 
-                    class="form-radio h-5 w-5 text-red-600"
-                    :checked="selectedPlan === index"
-                    @click="selectedPlan = index"
-                  >
-                </label>
-              </div>
-              
-              <!-- Plan Details -->
-              <div class="flex-1">
-                <h3 class="font-semibold text-gray-900">{{ plan.name }}</h3>
-                <p class="text-sm text-gray-600">{{ plan.description }}</p>
-              </div>
-              
-              <!-- Price -->
-              <div class="text-right">
-                <div class="text-gray-900 font-bold">GHS {{ currentPricing(plan).price.toFixed(2) }}</div>
-                <div v-if="currentPricing(plan).savePercentage > 0" class="text-sm text-gray-600">
-                  Save {{ currentPricing(plan).savePercentage }}%
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="text-center">
-            <button class="bg-red-600 text-white font-medium px-8 py-3 rounded-md hover:bg-red-700 transition-colors">
-              Get Premium
-            </button>
-          </div>
-        </div>
+        </template>
       </div>
 
       <!-- Benefits Section -->
@@ -325,10 +212,66 @@
         </div>
       </div>
     </div>
+
+    <!--
+      Signed-in checkout: no contact fields (the bearer token identifies the
+      reader), shows their current package and calls subscription/user.
+    -->
+    <BuySubscriptionModalAuthenticated
+      v-if="showBuyModal && isSignedIn"
+      :plans="buyModalPlans"
+      :initial-plan-id="buyModalPlanId"
+      :initial-billing-cycle="activeDuration"
+      redirect-to-checkout
+      @close="closeBuyModal"
+      @payment-started="handlePaymentStarted"
+    />
+
+    <!-- Guest checkout — also reachable while signed in, to buy as a new reader -->
+    <BuySubscriptionModal
+      v-else-if="showBuyModal"
+      :plans="buyModalPlans"
+      :initial-plan-id="buyModalPlanId"
+      :initial-billing-cycle="activeDuration"
+      redirect-to-checkout
+      @close="closeBuyModal"
+      @request-sign-in="handleRequestSignIn"
+      @payment-started="handlePaymentStarted"
+    />
+
+    <!-- Paystack checkout: replaces the buy modal while payment is in progress -->
+    <PaymentCheckoutModal
+      v-if="checkoutPaymentUrl"
+      :payment-url="checkoutPaymentUrl"
+      @close="closeCheckout"
+    />
+
+    <!-- Account created but Paystack refused to initialise -->
+    <InfoModal
+      :show="showCheckoutError"
+      type="error"
+      :title="checkoutError.title"
+      :message="checkoutError.message"
+      :button-text="checkoutError.buttonText"
+      @close="showCheckoutError = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import {
+  PRICING_BILLING_CYCLES,
+  PRICING_TABS,
+  formatPlanPrice,
+  getAvailableBillingCycles,
+  getPlanPricing,
+  resolveActiveBillingCycle,
+} from '~/utils/pricingPlans';
+import type { PricingTabKey } from '~/utils/pricingPlans';
+import type { SubscriptionPlan, SubscriptionResponseModel } from '~/models';
+import type { SubscriptionIdentity } from '~/utils/subscriptionIdentity';
+import { useBasicAuthStore } from '~/stores/basic-user-auth';
+
 // Page metadata
 useHead({
   title: 'Pricing & Subscription Plans - Graphic NewsPlus',
@@ -337,213 +280,62 @@ useHead({
   ]
 })
 
+// Plans come from news-papers/get-pricing-plans and are grouped per tab.
+const { plans, groups, isLoading, error: plansError, refresh: refreshPlans } = usePricingPlans();
+
 // State
-const activeTab = ref('custom') // 'bundle', 'custom', 'premium'
-const activeDuration = ref('Weekly')
-const selectedPlan = ref(0)
+const activeTab = ref<PricingTabKey>('custom') // 'bundle' | 'custom' | 'premium'
+const activeDuration = ref<string>(PRICING_BILLING_CYCLES[0])
+const selectedPlanId = ref('')
 const openFaqIndex = ref(-1)
 
-// Duration options
-const durations = [
-  'Weekly',
-  'Monthly',
-  '3 Months',
-  'Half-Yearly',
-  'Yearly'
-]
+// The header owns <SignInModal>; it reads this shared flag, so guests can be
+// handed over to the regular sign-in flow from the checkout modal.
+const showSignInModal = useState<boolean>('showSignInModal', () => false)
 
- 
+// Plans shown on the active tab, straight from the API groups.
+const activePlans = computed<SubscriptionPlan[]>(() => groups.value[activeTab.value]);
 
-// Define prices for each subscription plan based on billing cycle
-interface PriceTier {
-  price: number;
-  savePercentage: number;
-}
+const activeTabConfig = computed(
+  () => PRICING_TABS.find((tab) => tab.key === activeTab.value) ?? PRICING_TABS[1],
+);
+const activeTabLabel = computed(() => activeTabConfig.value.label);
 
-interface SubscriptionPricing {
-  [key: string]: PriceTier;
-}
+const activeTabDescription = computed(() => {
+  switch (activeTab.value) {
+    case 'bundle':
+      return 'Subscribe to all our publications at a discounted price.';
+    case 'premium':
+      return 'Get access to all our publications plus premium features and exclusive content.';
+    default:
+      return 'To buy just one publication, use the CUSTOM option';
+  }
+});
 
-interface SubscriptionPlan {
-  name: string;
-  description: string;
-  pricing: {
-    Weekly: PriceTier;
-    Monthly: PriceTier;
-    '3 Months': PriceTier;
-    'Half-Yearly': PriceTier;
-    Yearly: PriceTier;
-  };
-}
+// Billing cycles offered by the active tab; the current choice is kept when possible.
+const activeBillingCycles = computed(() => getAvailableBillingCycles(activePlans.value));
 
+// One row per plan, priced for the selected billing cycle.
+const activePlanRows = computed(() =>
+  activePlans.value.map((plan) => ({
+    plan,
+    pricing: getPlanPricing(plan, activeDuration.value),
+  })),
+);
 
-const bundleSubscriptionPlans: SubscriptionPlan[] = [
-    {
-        name: 'Corporate',
-        description: 'Daily Graphic & Graphic Business',
-        pricing: {
-            'Weekly': { price: 9.90, savePercentage: 10 },
-            'Monthly': { price: 16.80, savePercentage: 60 },
-            '3 Months': { price: 50.40, savePercentage: 60 },
-            'Half-Yearly': { price: 100.80, savePercentage: 60 },
-            'Yearly': { price: 201.60, savePercentage: 60 }
-        }
-    },
-    {
-        name: 'Special',
-        description: 'Daily Graphic & The Mirror',
-        pricing: {
-            'Weekly': { price: 11.75, savePercentage: 0 },
-            'Monthly': { price: 42.00, savePercentage: 7 },
-            '3 Months': { price: 119.90, savePercentage: 12 },
-            'Half-Yearly': { price: 219.90, savePercentage: 18 },
-            'Yearly': { price: 399.90, savePercentage: 22 }
-        }
-    },
-    {
-        name: 'Diva',
-        description: 'The Mirror & Graphic Showbiz',
-        pricing: {
-            'Weekly': { price: 5.00, savePercentage: 0 },
-            'Monthly': { price: 18.90, savePercentage: 5 },
-            '3 Months': { price: 52.90, savePercentage: 8 },
-            'Half-Yearly': { price: 99.90, savePercentage: 10 },
-            'Yearly': { price: 189.90, savePercentage: 15 }
-        }
-    },
-    {
-        name: 'Family',
-        description: 'Daily Graphic, The Mirror, Graphic Showbiz & Graphic Sports',
-        pricing: {
-            'Weekly': { price: 13.50, savePercentage: 0 },
-            'Monthly': { price: 49.90, savePercentage: 8 },
-            '3 Months': { price: 139.90, savePercentage: 12 },
-            'Half-Yearly': { price: 259.90, savePercentage: 15 },
-            'Yearly': { price: 499.90, savePercentage: 20 }
-        }
-    },
-    {
-        name: 'Lifestyle',
-        description: 'Daily Graphic, The Mirror, Graphic Showbiz',
-        pricing: {
-            'Weekly': { price: 12.00, savePercentage: 0 },
-            'Monthly': { price: 44.90, savePercentage: 5 },
-            '3 Months': { price: 124.90, savePercentage: 10 },
-            'Half-Yearly': { price: 239.90, savePercentage: 12 },
-            'Yearly': { price: 459.90, savePercentage: 15 }
-        }
-    },
-    {
-        name: 'Suave',
-        description: 'Daily Graphic, Graphic Business & Graphic Sports',
-        pricing: {
-            'Weekly': { price: 13.00, savePercentage: 0 },
-            'Monthly': { price: 48.90, savePercentage: 5 },
-            '3 Months': { price: 134.90, savePercentage: 10 },
-            'Half-Yearly': { price: 249.90, savePercentage: 15 },
-            'Yearly': { price: 479.90, savePercentage: 20 }
-        }
-    },
-    {
-        name: 'Combo',
-        description: 'Daily Graphic, Graphic Business, The Mirror, Graphic Showbiz, Junior Graphic & Graphic Sports',
-        pricing: {
-            'Weekly': { price: 13.00, savePercentage: 0 },
-            'Monthly': { price: 48.90, savePercentage: 5 },
-            '3 Months': { price: 134.90, savePercentage: 10 },
-            'Half-Yearly': { price: 249.90, savePercentage: 15 },
-            'Yearly': { price: 479.90, savePercentage: 20 }
-        }
+// Keep the selected plan and duration valid whenever the tab or data changes.
+watch(
+  activePlans,
+  (plans) => {
+    activeDuration.value = resolveActiveBillingCycle(plans, activeDuration.value);
+
+    if (!plans.some((plan) => plan.id === selectedPlanId.value)) {
+      const firstPriced = plans.find((plan) => getPlanPricing(plan, activeDuration.value));
+      selectedPlanId.value = (firstPriced ?? plans[0])?.id ?? '';
     }
-
-];
-
-// Subscription plans with pricing for each billing cycle
-const customSubscriptionPlans: SubscriptionPlan[] = [
-    {
-        name: 'Daily Graphic',
-        description: '6 Issues Per Week',
-        pricing: {
-            'Weekly': { price: 9.90, savePercentage: 0 },
-            'Monthly': { price: 35.90, savePercentage: 10 },
-            '3 Months': { price: 99.90, savePercentage: 15 },
-            'Half-Yearly': { price: 189.90, savePercentage: 20 },
-            'Yearly': { price: 349.90, savePercentage: 25 }
-        }
-    },
-    {
-        name: 'The Mirror',
-        description: '1 Issue Per Week - Saturday Only',
-        pricing: {
-            'Weekly': { price: 11.75, savePercentage: 0 },
-            'Monthly': { price: 42.00, savePercentage: 7 },
-            '3 Months': { price: 119.90, savePercentage: 12 },
-            'Half-Yearly': { price: 219.90, savePercentage: 18 },
-            'Yearly': { price: 399.90, savePercentage: 22 }
-        }
-    },
-    {
-        name: 'Graphic Sports',
-        description: '1 Issue Per Week - Mon Only',
-        pricing: {
-            'Weekly': { price: 5.00, savePercentage: 0 },
-            'Monthly': { price: 18.90, savePercentage: 5 },
-            '3 Months': { price: 52.90, savePercentage: 8 },
-            'Half-Yearly': { price: 99.90, savePercentage: 10 },
-            'Yearly': { price: 189.90, savePercentage: 15 }
-        }
-    },
-    {
-        name: 'Graphic Showbiz',
-        description: '1 Issue Per Week - Thu Only',
-        pricing: {
-            'Weekly': { price: 13.50, savePercentage: 0 },
-            'Monthly': { price: 49.90, savePercentage: 8 },
-            '3 Months': { price: 139.90, savePercentage: 12 },
-            'Half-Yearly': { price: 259.90, savePercentage: 15 },
-            'Yearly': { price: 499.90, savePercentage: 20 }
-        }
-    },
-    {
-        name: 'Graphic Business',
-        description: '1 Issue Per Week - Tue Only',
-        pricing: {
-            'Weekly': { price: 12.00, savePercentage: 0 },
-            'Monthly': { price: 44.90, savePercentage: 5 },
-            '3 Months': { price: 124.90, savePercentage: 10 },
-            'Half-Yearly': { price: 239.90, savePercentage: 12 },
-            'Yearly': { price: 459.90, savePercentage: 15 }
-        }
-    },
-    {
-        name: 'Junior Graphic',
-        description: '1 Issue Per Week - Wed Only',
-        pricing: {
-            'Weekly': { price: 13.00, savePercentage: 0 },
-            'Monthly': { price: 48.90, savePercentage: 5 },
-            '3 Months': { price: 134.90, savePercentage: 10 },
-            'Half-Yearly': { price: 249.90, savePercentage: 15 },
-            'Yearly': { price: 479.90, savePercentage: 20 }
-        }
-    }
-
-];
-
-const premiumSubscriptionPlans: SubscriptionPlan[] = [
-    {
-        name: 'Blogging Subscription',
-        description: 'Premium Blog Posts Subscription (Unlimited access). Enjoy unlimited blog posts access.',
-        pricing: {
-            'Weekly': { price: 9.90, savePercentage: 0 },
-            'Monthly': { price: 35.90, savePercentage: 10 },
-            '3 Months': { price: 99.90, savePercentage: 15 },
-            'Half-Yearly': { price: 189.90, savePercentage: 20 },
-            'Yearly': { price: 349.90, savePercentage: 25 }
-        }
-    },
-
-];
-
+  },
+  { immediate: true },
+);
 
 // FAQ data
 const faqs = [
@@ -569,15 +361,93 @@ const faqs = [
   }
 ]
 
-// Computed properties
-const currentPricing = computed(() => {
-  return (plan: SubscriptionPlan) => {
-    return plan.pricing[activeDuration.value as keyof typeof plan.pricing];
-  };
+// ─── Guest checkout ───────────────────────────────────────────────────────────
+// Clicking a plan card (or the CTA) opens the Buy Subscription modal with that
+// plan pre-selected; the modal itself calls subscription/guest.
+const showBuyModal = ref(false);
+const buyModalPlanId = ref('');
+const checkoutPaymentUrl = ref('');
+
+// Auto sign-in for guests who just bought a plan (see useGnpUserSession).
+const { signInFromCheckout } = useGnpUserSession();
+
+// Signed-in readers buy with subscription/user instead of the guest endpoints.
+const authStore = useBasicAuthStore();
+const isSignedIn = computed(() => Boolean(authStore.isAuthenticated && authStore.accessToken));
+
+// Shown when the API created the account but Paystack could not be initialised.
+const checkoutError = reactive({ title: '', message: '', buttonText: 'Close' });
+const showCheckoutError = ref(false);
+
+// Pass every plan so the buyer can switch plans inside the modal, but list the
+// clicked tab's plans first so the highlighted plan is in view.
+const buyModalPlans = computed<SubscriptionPlan[]>(() => {
+  const active = groups.value[activeTab.value];
+  const activeIds = new Set(active.map((plan) => plan.id));
+  return [...active, ...plans.value.filter((plan) => !activeIds.has(plan.id))];
 });
 
+function openBuyModal(plan?: SubscriptionPlan) {
+  const target = plan ?? activePlanRows.value.find((row) => row.plan.id === selectedPlanId.value)?.plan;
+  buyModalPlanId.value = target?.id ?? selectedPlanId.value;
+  if (target) selectedPlanId.value = target.id;
+  showBuyModal.value = true;
+}
+
+function closeBuyModal() {
+  showBuyModal.value = false;
+}
+
+// Buying a plan dismisses the Buy Subscription modal and hands the Paystack URL
+// to <PaymentCheckoutModal>, so only one dialog is on screen at a time.
+function handlePaymentStarted(payment: SubscriptionResponseModel) {
+  showBuyModal.value = false;
+
+  // A signed-in buyer already has a session, so there is nothing to establish;
+  // signing in again with a guest token would swap their identity mid-purchase.
+  const identity = isSignedIn.value ? null : signInFromCheckout(payment);
+  const paymentUrl = payment?.paymentUrl ?? '';
+
+  if (!paymentUrl) {
+    checkoutPaymentUrl.value = '';
+    openCheckoutError(payment, identity);
+    return;
+  }
+
+  checkoutPaymentUrl.value = paymentUrl;
+}
+
+function closeCheckout() {
+  checkoutPaymentUrl.value = '';
+}
+
+/**
+ * Paystack refused to initialise. The reader is still signed in by then, so the
+ * message says so instead of implying the purchase failed silently.
+ */
+function openCheckoutError(payment: SubscriptionResponseModel, identity: SubscriptionIdentity | null) {
+  // `message` on the result is the envelope's Paystack reason when present.
+  const reason = (payment as { message?: string } | null)?.message || 'Failed to initialize payment';
+
+  const account = identity?.email || identity?.username || authStore.user?.email || '';
+
+  checkoutError.title = 'Payment could not be started';
+  checkoutError.message = account
+    ? `${reason}. Your account (${account}) is ready — retry the payment from this page.`
+    : `${reason}. Please try again.`;
+  checkoutError.buttonText = 'Close';
+  showCheckoutError.value = true;
+}
+
+// Guests without access to a subscription plan can sign in instead; the header
+// owns the sign-in modal, so nudge the buyer to the account area.
+function handleRequestSignIn() {
+  showBuyModal.value = false;
+  showSignInModal.value = true;
+}
+
 // Methods
-function setActiveTab(tab: string) {
+function setActiveTab(tab: PricingTabKey) {
   activeTab.value = tab
 }
 

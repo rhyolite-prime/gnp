@@ -1,11 +1,54 @@
-import type { NewsPaper, Article, BaseApiResponse, BasePaginationModel } from "~/models";
+import type { NewsPaper, NewspaperEngagementPayload, Article, Video, VideoPage, RelatedArchivedContent, BaseApiResponse, BasePaginationModel, SubscriptionPlan, Publication } from "~/models";
 
  
+/**
+ * Public list of publications (Daily Graphic, The Mirror, ...) used to filter
+ * the newspapers listing. Accepts either the standard pagination envelope or a
+ * plain array in `result`.
+ */
+export async function getPublicPublications(): Promise<Publication[]> {
+
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<Publication[]> | Publication[]>>(
+        'news-papers/get-publications', "", { query: { pageNo: 1, pageSize: 100 } });
+
+    if (!response || response.success === false) {
+        throw new Error(response?.message || 'Unable to load publications');
+    }
+
+    const result: any = response.result;
+    const list = Array.isArray(result) ? result : result?.data;
+
+    return Array.isArray(list) ? list : [];
+}
+
+/**
+ * Supported filters: `query`, `publicationId`, `startDate`, `endDate`
+ * (dates as YYYY-MM-DD) plus `pageNo` / `pageSize`. Empty values are dropped.
+ */
 export async function getNewsPapers(query: object) {
  
     const response = await httpClient<BaseApiResponse<BasePaginationModel<NewsPaper[]>>>('news-papers/get-all', "", { query });
     
    return response.result;
+}
+
+/**
+ * Public pricing plans (`regular`, `bundle` and `premium`). The endpoint answers
+ * with the standard pagination envelope, so the page receives the plan array.
+ */
+export async function getPricingPlans() {
+
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<SubscriptionPlan[]>>>(
+        'news-papers/get-pricing-plans', "");
+
+    if (!response || response.success === false) {
+        throw new Error(response?.message || 'Unable to load pricing plans');
+    }
+
+    return {
+        data: Array.isArray(response.result?.data) ? response.result.data : [],
+        totalCount: response.result?.totalCount ?? 0,
+    };
 }
 
 export async function getTopStories() {
@@ -15,11 +58,66 @@ export async function getTopStories() {
    return response.result;
 }
 
+export async function getVideos(query: object) {
+ 
+    const response = await httpClient<BaseApiResponse<VideoPage>>('news-papers/get-all-videos', "", { query });
+
+    const page = response?.result;
+
+    if (!response || response.success === false || !page || !Array.isArray(page.data)) {
+        throw new Error(response?.message || 'Unable to load videos');
+    }
+
+   return page;
+}
+
+/**
+ * Looks up a single video for the details page. The dedicated endpoint is the
+ * source of truth, so deep links no longer page through the whole catalogue.
+ * Returns null when the video does not exist; real API failures still throw.
+ */
+export async function getVideoDetails(id: string): Promise<Video | null> {
+    const videoId = (id ?? '').trim();
+
+    // An id from the route can be empty (e.g. /videos/); never call the API with it.
+    if (!videoId) return null;
+
+    try {
+        const response = await httpClient<BaseApiResponse<Video>>(
+            `news-papers/get-video-details/${encodeURIComponent(videoId)}`, "");
+
+        if (!response || response.success === false) return null;
+
+        // Guard against a 2xx envelope that carries no actual video payload.
+        return response.result?.id ? response.result : null;
+    } catch (error: any) {
+        // A deleted/unknown video is "not found", not a failure to load the page.
+        const status = error?.statusCode ?? error?.status ?? error?.response?.status;
+        if (status === 404) return null;
+        throw error;
+    }
+}
+
+
 export async function getLatestNewsPapers(query: object) {
  
     const response = await httpClient<BaseApiResponse<BasePaginationModel<NewsPaper[]>>>('news-papers/get-latest', "", { query });
     
    return response.result;
+}
+
+export async function getAllPublications(): Promise<Publication[]> {
+    const response = await httpClient<BaseApiResponse<BasePaginationModel<Publication[]> | Publication[]>>(
+        'news-papers/get-all-publications', "");
+
+    if (!response || response.success === false) {
+        throw new Error(response?.message || 'Unable to load publications');
+    }
+
+    const result = response.result;
+    const list = Array.isArray(result) ? result : result?.data;
+
+    return Array.isArray(list) ? list : [];
 }
 
 export async function getNewsPaperDetails(query: object) {
@@ -29,16 +127,75 @@ export async function getNewsPaperDetails(query: object) {
    return response.result;
 }
 
-
-export async function updateUserEngagementMetrics(payload: object) {
+export async function getRelatedArchivedContent(payload: object) {
  
-    const response = await gnpUserHttpClient<BaseApiResponse<object>>('news-papers/update-user-engagement', "",
+    const response = await gnpUserHttpClient<BaseApiResponse<RelatedArchivedContent[]>>('news-papers/get-related-archived-content', "",
         {
             method: "post",
             body: payload,
         });
     
-   return response.success;
+   return response.result;
+}
+
+
+export interface EngagementTransportOptions {
+    /** Bearer JWT captured during setup so unload/unmount handlers need no Nuxt context. */
+    accessToken?: string;
+    /** Base API URL captured during setup (`config.public.proxyApiBaseURL`). */
+    apiBase?: string;
+    /** Keep the POST request alive across tab close / reload / hard navigation. */
+    keepalive?: boolean;
+}
+
+/**
+ * Dispatches newspaper & per-page PDF reader engagement metrics to
+ * `POST news-papers/update-user-engagement`.
+ *
+ * When `transport.apiBase` is supplied (captured at setup time on `open.vue`),
+ * uses native `fetch` synchronously so `keepalive: true` survives `pagehide`
+ * and `onBeforeUnmount` without touching Nuxt setup-only composables.
+ */
+export async function updateUserEngagementMetrics(
+    payload: NewspaperEngagementPayload | Record<string, unknown>,
+    transport?: EngagementTransportOptions,
+): Promise<boolean> {
+    if (transport?.apiBase) {
+        const base = transport.apiBase.endsWith('/') ? transport.apiBase : `${transport.apiBase}/`;
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+        };
+        if (transport.accessToken) {
+            headers.Authorization = `Bearer ${transport.accessToken}`;
+        }
+
+        const res = await fetch(`${base}news-papers/update-user-engagement`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(payload),
+            keepalive: Boolean(transport.keepalive),
+        });
+
+        if (!res.ok) return false;
+        try {
+            const data = (await res.json()) as Partial<BaseApiResponse<object>>;
+            return data?.success !== false;
+        } catch {
+            return true;
+        }
+    }
+
+    const response = await gnpUserHttpClient<BaseApiResponse<object>>(
+        'news-papers/update-user-engagement',
+        "",
+        {
+            method: "post",
+            body: payload,
+            ...(transport?.keepalive ? { keepalive: true } : {}),
+        },
+    );
+
+    return Boolean(response?.success);
 }
 
 

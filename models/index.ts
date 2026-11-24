@@ -51,10 +51,65 @@ export interface GnpUserAuthModel {
     
 }
 
+/**
+ * `result` of the subscription checkout endpoints (`subscription/guest`, …).
+ *
+ * Besides the Paystack handles the API now returns a signed GNP identity so the
+ * buyer can be signed in automatically: `token` is the JWT stored in the
+ * `gnp-user-identity` cookie, plus the profile fields it was minted from. Those
+ * profile fields are optional because older deployments only return the token.
+ *
+ * NOTE: `success` on the envelope can be `false` while this payload is still
+ * present — Paystack may have failed to initialise while the account/token was
+ * created — so callers must inspect `result`, not only `success`.
+ */
 export interface SubscriptionResponseModel {
     paymentUrl: string;
     reference: string;
     userId: string;
+    /** JWT for the `gnp-user-identity` cookie; absent before this addition. */
+    token?: string;
+    username?: string;
+    fullName?: string;
+    email?: string;
+}
+
+/**
+ * Body of POST `subscription/guest` — checkout started by a visitor who has no
+ * account yet. The billing cycle rides along so the backend can price the plan
+ * tier the buyer picked on /pricing, and `subscriptionPlanDescription` is the
+ * human-readable label (e.g. `Combo - Monthly (GHS 48.90)`) stored on the
+ * resulting subscription/payment record.
+ */
+export interface GuestSubscriptionPayload {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    subscriptionPlanId: string;
+    subscriptionPlanDescription: string;
+    billingCycle?: string;
+    subscriptionType?: string;
+}
+
+/**
+ * Body of POST `subscription/user` — a signed-in reader buying or renewing a
+ * package from /pricing.
+ *
+ * Unlike `GuestSubscriptionPayload` there are no contact details: the bearer
+ * token identifies the reader, so the API only needs to know what was bought.
+ * `billingCycle` and the readable `subscriptionPlanDescription` keep payment
+ * records self-describing after a plan is renamed or repriced.
+ */
+export interface MemberSubscriptionPayload {
+    subscriptionPlanId: string;
+    /** Display label for the purchase, e.g. `Daily Graphic (Monthly)`. */
+    subscriptionPlanName: string;
+    /** Receipt label, e.g. `Daily Graphic - Monthly (GHS 35.90)`. */
+    subscriptionPlanDescription: string;
+    billingCycle: string;
+    subscriptionType?: string;
+    price?: number;
 }
 
 export interface NewsPaperEntitlementResponseModel {
@@ -110,6 +165,7 @@ export interface PartnerSigninResponseModel {
 }
 
 export interface AffiliateSigninResponseModel {
+    affiliateNo: string;
     affiliateEmail: string;
     token: string;
     affiliateName: string;
@@ -185,6 +241,66 @@ export interface NewsPaperIngestionResponse {
     id: string;
 }
 
+export interface Affiliate {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNo: string;
+    status: string;
+    dateJoined: string;
+    totalEarnings: number;
+    walletBalance: number;
+    affiliateId: string;
+    createdAt: string;
+}
+
+export interface Video extends BaseEntityModel {
+    
+    filePath: string;
+    id: string;
+    thumbnailUrl: string;
+    title: string;
+    views: number;
+    description: string;
+    durationInMins: number;
+    checksum?: string;
+    createdBy?: string;
+    downloads?: number;
+    fileName?: string;
+    fileSize?: number;
+    format?: string;
+    likes?: number;
+    metadata?: string | Record<string, unknown> | null;
+    modifiedAt?: string;
+    modifiedBy?: string;
+    status?: number;
+    tags?: string | string[] | null;
+}
+
+export interface VideoPage extends BasePaginationModel<Video[]> {
+    pageSize: number;
+}
+
+
+
+
+/** One record in `result` of POST news-papers/get-related-archived-content. */
+export interface RelatedArchivedContent {
+
+    fileType: string;
+    newspaperId: string;
+    pageNumber: number;
+    /** Absolute thumbnail URL. */
+    thumbnailId: string;
+    publicationName: string;
+    /** Not sent by the API at the moment; `newspaperId` identifies the page. */
+    id?: string;
+    tags: string[];
+    publicationDate: string;
+
+}
+
 export interface NewsPaper {
     documentId: string;
     editionNumber: string;
@@ -235,13 +351,21 @@ export interface UserSubscription extends BaseEntityModel {
     fee: number;
 }
 
+/** Price of one plan for one billing cycle (e.g. the `Monthly` entry of `pricing`). */
+export interface SubscriptionPricingTier {
+    price: number;
+    savePercentage: number;
+}
+
 export interface SubscriptionPlan extends BaseEntityModel {
     name: string;
     description: string;
-    targetPublications: [],
+    targetPublications: string[];
+    /** Free-form server value; the public pricing page understands regular/bundle/premium. */
     planType: string;
     createdAt: string;
-    pricing: Record<string, { price: number ,savePercentage: number }>;
+    updatedAt?: string | null;
+    pricing: Record<string, SubscriptionPricingTier>;
 }
 
 export interface Campaign extends BaseEntityModel {
@@ -549,6 +673,7 @@ export interface SubscriberSubscriptionSummary {
     daysRemaining: number;
     activatedOn: string;
     validUntil: string;
+    dueDate?: string;
     package: string;
     subscriptionId: string;
 }
@@ -562,6 +687,8 @@ export interface RenewalHistory {
 }
 
 export * from './games';
+export * from './reports';
+export * from './pushNotifications';
 
 
 
@@ -632,6 +759,104 @@ export interface ArchiveSearchResponse {
     targetUrl: string;
 }
 
+// ── Archive access (reader detail page) ───────────────────────────────────────
+// GET subscription/validate-archive-access/{id} — tells the detail page whether
+// the current reader may read the archived document.
+
+/** Asset kinds the archive API reports in `metadata.fileType`. */
+export type ArchiveFileType = 'IMAGE' | 'PDF' | 'TEXT' | string;
+
+/** `result.metadata` of subscription/validate-archive-access/{id}. */
+export interface ArchiveAccessMetadata {
+    fileType: ArchiveFileType;
+    /** The single flag the page must branch on: false → paywall. */
+    hasAccess: boolean;
+    /** Newspaper/edition id the document belongs to. */
+    newspaperId: string;
+    /** yyyy-MM-dd. */
+    publicationDate: string;
+    publicationName: string;
+    tags: string[];
+}
+
+/** `result` of subscription/validate-archive-access/{id}. */
+export interface ArchiveAccessResult {
+    metadata: ArchiveAccessMetadata | null;
+}
+
+/** Envelope returned by GET subscription/validate-archive-access/{id}. */
+export interface ArchiveAccessResponse extends BaseApiResponse<ArchiveAccessResult | null> {
+    targetUrl?: string;
+}
+
+// ── Archived Newspapers & Pages browser (admin) ────────────────────────────────────────────────
+// GET admin/archives/decades + GET admin/archives/editions — mock-backed via ~/mocks/archivedNewspapers.
+// Two display modes: "Collections by Years" (decade cards) and "By Dates" (date groups + thumbnails).
+
+/** Per-year edition coverage inside a decade collection. */
+export interface ArchiveYearStat {
+    year: number;
+    editionCount: number;
+}
+
+/** One decade collection card ("1950's", "1960's", ...). */
+export interface ArchiveDecadeCollection {
+    id: string;
+    /** e.g. "1970's" */
+    label: string;
+    startYear: number;
+    endYear: number;
+    editionCount: number;
+    pageCount: number;
+    publicationsCovered: number;
+    description: string;
+    yearStats: ArchiveYearStat[];
+}
+
+/** One archived newspaper edition (with digitized page metadata). */
+export interface ArchivedNewspaperEdition {
+    id: string;
+    title: string;
+    slug: string;
+    publicationId: string;
+    publicationName: string;
+    editionNumber: string;
+    /** yyyy-MM-dd */
+    publicationDate: string;
+    pageCount: number;
+    digitizedPages: number;
+    ocrStatus: 'complete' | 'partial' | 'pending';
+    price: string;
+    isFree: boolean;
+    isPublished: boolean;
+    thumbnailId: string;
+    documentId: string;
+    storageService: string;
+    createdAt: string;
+    views: number;
+}
+
+/** One publication-date group in the "By Dates" mode. */
+export interface ArchiveDateGroup {
+    /** yyyy-MM-dd */
+    date: string;
+    /** e.g. "Saturday, 6 March 1957" */
+    label: string;
+    editionCount: number;
+    pageCount: number;
+    editions: ArchivedNewspaperEdition[];
+}
+
+/** Coverage chips shown above both display modes. */
+export interface ArchiveCoverageSummary {
+    decades: number;
+    editions: number;
+    pages: number;
+    publications: number;
+    ocrCompletePct: number;
+    dateSpan: string;
+}
+
 // ── Partner API request logs (admin) ──────────────────────────────────────────
 // GET admin/get-partner-api-request-logs
 // NOTE: item field names below are assumptions until confirmed against the API.
@@ -666,3 +891,286 @@ export interface PartnerApiRequestLog {
     responseBody?: unknown;
     createdAt: string;
 }
+
+// ── Subscriber Newspaper Access (admin) ────────────────────────────────────────────────────────
+// GET admin/subscribers/{subscriberId}/newspaper-access (mock-backed via ~/mocks/subscriberNewspapers)
+// Mirrors gnp-api tables: user_subscriptions.newspaper_entitlements, purchase_attempts,
+// GrantNewsPaperAccessDto grants, and free `newspapers` editions.
+
+/** How a subscriber gained access to one newspaper edition. */
+export type SubscriberAccessSource =
+    | 'plan_entitlement'
+    | 'single_copy_purchase'
+    | 'promo_grant'
+    | 'free_access';
+
+/** Derived access state as of today: revoked | expired | expiring_soon | active */
+export type SubscriberAccessStatus = 'active' | 'expiring_soon' | 'expired' | 'revoked';
+
+/** One row of the "newspapers a subscriber can access" list (access record + edition). */
+export interface SubscriberNewspaperAccessRow {
+    id: string;
+    subscriberId: string;
+    newspaperId: string;
+    accessType: SubscriberAccessSource;
+    accessTypeLabel: string;
+    /** Human-readable source (plan name, `Order PAY-…`, `Promo …`, or `Free edition`). */
+    grantedVia: string;
+    /** Backend reference: subscription identifier, purchase attempt reference, or promo code. */
+    sourceReference: string;
+    grantedAt: string;
+    /** Permanent copies (single-copy buys / free editions) have `null`. */
+    expiresAt: string | null;
+    revoked: boolean;
+    accessStatus: SubscriberAccessStatus;
+    newspaper: {
+        id: string;
+        title: string;
+        slug: string;
+        price: string;
+        isFree: boolean;
+        publicationId: string;
+        publicationName: string;
+        editionNumber: string;
+        isPopular: boolean;
+        fullDescription: string;
+        isPublished: boolean;
+        publishedDate: string;
+        createdAt: string;
+    };
+}
+
+/** Filter-aware summary chips for the access list. */
+export interface SubscriberAccessSummary {
+    total: number;
+    planEntitlement: number;
+    singleCopy: number;
+    promoGrant: number;
+    freeAccess: number;
+    active: number;
+    expiringSoon: number;
+    expired: number;
+    revoked: number;
+}
+
+/** Subscriber + plan snapshot shown at the top of the Subscriber Newspapers page. */
+export interface SubscriberAccessProfile {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    country: string;
+    isActive: boolean;
+    accountType: 'regular' | 'partner' | 'affiliate';
+    partnerId: string | null;
+    partnerName: string | null;
+    lastActive: string;
+    createdAt: string;
+    subscription: {
+        subscriptionIdentifier: string;
+        subscriptionPlanId: string;
+        planName: string;
+        planType: string;
+        billingCycle: string;
+        subscriptionPlanDescription: string;
+        pricing: string;
+        targetPublications: string[];
+        newspaperEntitlements: string[];
+        isActive: boolean;
+        startDate: string;
+        endDate: string;
+        nextRenewalDate: string | null;
+    } | null;
+}
+
+/** Paginated `result` of GET admin/subscribers/{subscriberId}/newspaper-access. */
+export interface SubscriberNewspaperAccessPage {
+    subscriber: SubscriberAccessProfile | null;
+    summary: SubscriberAccessSummary | null;
+    data: SubscriberNewspaperAccessRow[];
+    pageNo: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+    lowerBound: number;
+    upperBound: number;
+}
+
+// ── Enterprise Subscribers (admin) ─────────────────────────────────────────────────────────────
+// Onboard & approve enterprise orgs, onboard their seats manually / via CSV, assign packages.
+// Mock-backed via ~/mocks/enterpriseSubscribers; contracts documented in services/enterpriseSubscribers.ts.
+
+export type EnterpriseAccountType = 'corporate' | 'institution' | 'government' | 'sme';
+export type EnterpriseStatus = 'pending' | 'active' | 'suspended' | 'rejected';
+
+/** Subscription package available to enterprise subscribers (`subscription_plans`). */
+export interface EnterprisePackage {
+    id: string;
+    name: string;
+    planType: 'standard' | 'premium' | 'corporate';
+    description: string;
+    pricing: string;
+    targetPublications: string[];
+    userQuota: number;
+    billingCycles: string[];
+}
+
+/** One enterprise organization row. */
+export interface EnterpriseSubscriber {
+    id: string;
+    organizationName: string;
+    contactName: string;
+    contactEmail: string;
+    contactPhone: string;
+    accountType: EnterpriseAccountType;
+    address: string;
+    region: string;
+    packageId: string | null;
+    packageName: string | null;
+    billingCycle: string | null;
+    subscriberQuota: number;
+    enrolledUsers: number;
+    status: EnterpriseStatus;
+    createdAt: string;
+    approvedAt: string | null;
+    approvedBy: string | null;
+    rejectionReason?: string;
+}
+
+/** One onboarded seat (user) under an enterprise. */
+export interface EnterpriseUserRow {
+    id: string;
+    enterpriseId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    source: 'manual' | 'csv';
+    status: 'active';
+    createdAt: string;
+}
+
+/** One parsed CSV row (with validation state) from the enterprise users import. */
+export interface EnterpriseCsvRow {
+    /** Source line number in the uploaded file (1-based, header aware). */
+    line: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    valid: boolean;
+    error: string;
+}
+
+// ── Newspaper PDF Reader Page-View Engagement & Analytics ────────────────────
+// Instrumented on `pages/newspapers/[id]/open.vue` + `components/NewspaperReader.vue`
+// and dispatched to `POST news-papers/update-user-engagement`.
+
+export type EngagementDeviceType = 'mobile' | 'tablet' | 'web';
+
+export type PdfPageNavigationTrigger =
+    | 'initial'
+    | 'next'
+    | 'previous'
+    | 'jump'
+    | 'headline'
+    | 'scrub';
+
+export type EngagementFlushReason =
+    | 'unmount'
+    | 'pagehide'
+    | 'edition_switch'
+    | 'manual';
+
+/** Event emitted by `<NewspaperReader>` once the PDF document metadata is loaded. */
+export interface PdfReaderDocumentLoadedEvent {
+    /** Total number of pages in the loaded PDF document. */
+    totalPages: number;
+}
+
+/** Event emitted by `<NewspaperReader>` whenever an individual page is viewed. */
+export interface PdfReaderPageViewEvent {
+    /** 1-based page number inside the PDF document (`1..totalPages`). */
+    pageNumber: number;
+    /** Total number of pages in the PDF document. */
+    totalPages: number;
+    /** Previous 1-based page number, or `null` on initial open. */
+    previousPage: number | null;
+    /** Interaction that caused navigation to this page. */
+    trigger: PdfPageNavigationTrigger;
+}
+
+/** Per-page engagement breakdown within a newspaper PDF reading session. */
+export interface NewspaperPageViewMetric {
+    /** 1-based PDF page number (`1..totalPages`). */
+    pageNumber: number;
+    /** Number of times this individual page was viewed in the session. */
+    viewCount: number;
+    /** Accumulated active reading time spent on this page in seconds. */
+    timeSpentSeconds: number;
+    /** ISO-8601 timestamp when this page was first viewed in the session. */
+    firstViewedAt: string;
+    /** ISO-8601 timestamp when this page was most recently viewed in the session. */
+    lastViewedAt: string;
+}
+
+/**
+ * Backend reporting & analytics payload formed on `open.vue` and sent to
+ * `POST news-papers/update-user-engagement`.
+ *
+ * Retains top-level fields (`newspaperId`, `timeSpentSeconds`, `deviceType`,
+ * `userAgent`) for backward compatibility with `gnp-api` while supplying
+ * per-page view counts (`pageViewCounts`, `pageViews`) and edition-level
+ * readership funnel metrics (`pagesRead`, `totalPageViews`, `readingProgress`).
+ */
+export interface NewspaperEngagementPayload {
+    /** Client-generated UUID identifying this single reading session. */
+    sessionId: string;
+    /** Canonical newspaper UUID (`NewsPaper.id`). */
+    newspaperId: string;
+    /** Entitlement / route `uniqueId` passed to `/api/pdf`. */
+    uniqueId: string;
+    /** Parent publication UUID (`NewsPaper.publicationId`). */
+    publicationId: string;
+    /** Human-readable publication name (e.g. `"Daily Graphic"`). */
+    publicationName: string;
+    /** Edition publication date normalized to `YYYY-MM-DD`. */
+    publicationDate: string;
+    /** Edition number when available. */
+    editionNumber: string;
+    /** Total number of pages in the PDF edition. */
+    totalPages: number;
+    /** Count of distinct pages viewed (`user_reading_history.pages_read`). */
+    pagesRead: number;
+    /** Sum of `viewCount` across all viewed pages in the session. */
+    totalPageViews: number;
+    /** Percentage (`0`–`100`, max 2 decimals) of `totalPages` read (`user_reading_history.reading_progress`). */
+    readingProgress: number;
+    /** Highest 1-based page number reached during the session. */
+    furthestPageReached: number;
+    /** Most recent 1-based page number viewed before emitting the payload. */
+    lastPageViewed: number;
+    /** Total active reading time across the session in whole seconds. */
+    timeSpentSeconds: number;
+    /** Direct lookup map of 1-based page number (`"1"`, `"2"`, …) -> view count. */
+    pageViewCounts: Record<string, number>;
+    /** Per-page view counts, dwell times, and timestamps ordered ascending by `pageNumber`. */
+    pageViews: NewspaperPageViewMetric[];
+    /** Reader device classification (`mobile` | `tablet` | `web`). */
+    deviceType: EngagementDeviceType;
+    /** Browser User-Agent string. */
+    userAgent: string;
+    /** Reader viewport size in CSS pixels when available. */
+    viewport?: {
+        width: number;
+        height: number;
+    };
+    /** Lifecycle reason that triggered flushing this payload. */
+    flushReason: EngagementFlushReason;
+    /** ISO-8601 timestamp when the reading session started. */
+    startedAt: string;
+    /** ISO-8601 timestamp when the payload was formed (`user_reading_history.last_read_at`). */
+    endedAt: string;
+}
+

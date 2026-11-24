@@ -1,4 +1,17 @@
-import type { UserSubscription, SubscriptionResponseModel, NewsPaperEntitlementResponseModel, BaseApiResponse, BasePaginationModel, NewsPaper } from "~/models";
+import type {
+  UserSubscription,
+  SubscriptionResponseModel,
+  NewsPaperEntitlementResponseModel,
+  BaseApiResponse,
+  BasePaginationModel,
+  NewsPaper,
+  GuestSubscriptionPayload,
+  MemberSubscriptionPayload,
+  ArchiveAccessResponse,
+} from "~/models";
+// Type-only import (erased at build time); `toArchiveAccessState` itself is
+// auto-imported from `utils/` like every other helper in this project.
+import type { ArchiveAccessState } from "~/utils/archiveAccess";
 
 
 export async function getUserSubscription(query: object) {
@@ -7,14 +20,69 @@ export async function getUserSubscription(query: object) {
     return response.result;
 }
 
+/**
+ * Checks whether the current reader may open an archived document.
+ *
+ * GET `subscription/validate-archive-access/{id}` answers with
+ * `{ success, message, result: { metadata: { hasAccess, fileType, ... } } }`.
+ * The envelope is flattened into `ArchiveAccessState` so the detail page can
+ * branch on `hasAccess` alone — a failed request, a missing result or a null
+ * metadata block all resolve to `hasAccess: false` (the paywall) instead of
+ * throwing and blanking the page.
+ */
+export async function validateArchiveAccess(id: string, request?: { accessToken: string; apiBase: string }): Promise<ArchiveAccessState> {
+  const archiveId = typeof id === 'string' ? id.trim() : '';
 
-export async function guestSubscription(payload: object) {
-    
+  if (!archiveId) {
+    return toArchiveAccessState(null);
+  }
+
+  try {
+    // Async-data handlers may run outside setup context. Use the session and
+    // API base captured by the caller rather than re-reading cached auth state.
+    const endpoint = `subscription/validate-archive-access/${encodeURIComponent(archiveId)}`;
+    const response = request
+      ? await $fetch<ArchiveAccessResponse>(endpoint, {
+          baseURL: request.apiBase,
+          headers: request.accessToken ? { Authorization: `Bearer ${request.accessToken}` } : {},
+          retry: 0,
+        })
+      : await gnpUserHttpClient<ArchiveAccessResponse>(endpoint, '');
+
+    return toArchiveAccessState(response);
+  } catch (error) {
+    // 401/403/network: the reader is not verified, which is exactly what the
+    // paywall is for. Log for diagnostics and let the page render the upsell.
+    // Do not log request objects: they may contain bearer credentials.
+    return toArchiveAccessState(null);
+  }
+}
+
+
+export async function guestSubscription(payload: GuestSubscriptionPayload) {
+
   const response = await gnpUserHttpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/guest', "", {
     method: "post",
     body: payload,
   });
-  return response.result;
+
+  // The API creates the reader account + identity token even when the envelope's
+  // `success` is false (e.g. "Failed to initialize payment"). `data` is therefore
+  // returned whenever the result payload exists, and `success` tells the caller
+  // whether checkout actually started; the token lets them sign the buyer in
+  // either way instead of losing it.
+  if (!response.result) {
+    return {
+      success: false,
+      message: response.message,
+    };
+  }
+
+  return {
+    success: response.success !== false,
+    message: response.message,
+    data: response.result,
+  };
 }
 
 
@@ -108,13 +176,33 @@ export async function validateNewsPaperEntitlement(query: object) {
   } as NewsPaperEntitlementResponseModel;
 }
 
-export async function userSubscription(payload: object) {
+/**
+ * Starts a subscription purchase for an already signed-in reader.
+ *
+ * The bearer token from `gnp-user-identity` identifies the buyer, so the payload
+ * only describes the package (see `MemberSubscriptionPayload`). Mirrors
+ * `guestSubscription`'s contract: `{ success, message, data }`, with `data`
+ * carrying the Paystack handles (`paymentUrl`, `reference`) when present.
+ */
+export async function userSubscription(payload: MemberSubscriptionPayload) {
 
-  const response = await httpClient<BaseApiResponse<object>>('subscription/user', "", {
+  const response = await gnpUserHttpClient<BaseApiResponse<SubscriptionResponseModel>>('subscription/user', "", {
     method: "post",
     body: payload,
   });
-  return response.success;
+
+  if (!response.result) {
+    return {
+      success: false,
+      message: response.message,
+    };
+  }
+
+  return {
+    success: response.success !== false,
+    message: response.message,
+    data: response.result,
+  };
 }
 
 

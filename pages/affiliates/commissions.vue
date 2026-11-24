@@ -94,6 +94,7 @@
 
 <script setup lang="ts">
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+import { affiliateCommissions } from '~/mocks/affiliates/portal'
 
 definePageMeta({
   layout: 'default',
@@ -105,16 +106,5 @@ const searchQuery = ref('')
 const statusFilter = ref('All')
 const periodFilter = ref('30')
 
-const commissions = ref([
-  { id: 1, customer: 'John Doe', email: 'john@example.com', plan: 'Premium Yearly', revenue: 600, commission: 120, status: 'Completed', date: 'Feb 17, 2026' },
-  { id: 2, customer: 'Sarah Amponsah', email: 'sarah.am@example.com', plan: 'Basic Monthly', revenue: 75, commission: 15, status: 'Completed', date: 'Feb 17, 2026' },
-  { id: 3, customer: 'Akwasi Mensah', email: 'akwasi@network.com', plan: 'Standard Quarterly', revenue: 225, commission: 45, status: 'Pending', date: 'Feb 16, 2026' },
-  { id: 4, customer: 'Evelyn White', email: 'ev.white@gmail.com', plan: 'Premium Monthly', revenue: 150, commission: 30, status: 'Completed', date: 'Feb 15, 2026' },
-  { id: 5, customer: 'Michael Kojo', email: 'mkojo@yahoo.com', plan: 'Premium Yearly', revenue: 600, commission: 120, status: 'Completed', date: 'Feb 14, 2026' },
-  { id: 6, customer: 'Ama Serwaa', email: 'ama.s@test.com', plan: 'Standard Yearly', revenue: 450, commission: 90, status: 'Completed', date: 'Feb 12, 2026' },
-  { id: 7, customer: 'Kofi Owusu', email: 'kofi.oo@gmail.com', plan: 'Basic Monthly', revenue: 75, commission: 15, status: 'Completed', date: 'Feb 10, 2026' },
-  { id: 8, customer: 'Abena Mansa', email: 'abena.m@test.com', plan: 'Premium Quarterly', revenue: 300, commission: 60, status: 'Completed', date: 'Feb 08, 2026' },
-  { id: 9, customer: 'Yaw Boakye', email: 'yaw.b@gmail.com', plan: 'Basic Yearly', revenue: 300, commission: 60, status: 'Completed', date: 'Feb 05, 2026' },
-  { id: 10, customer: 'Efua Mensah', email: 'efua.m@test.com', plan: 'Standard Quarterly', revenue: 225, commission: 45, status: 'Completed', date: 'Feb 01, 2026' },
-])
+const commissions = ref(affiliateCommissions)
 </script>

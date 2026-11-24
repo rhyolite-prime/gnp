@@ -1,4 +1,4 @@
-import type { NewsPaper, Publication, Payment, CommercialPartner, AdminUser,UserGroup, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice, PartnerApiRequestLog, PartnerApiRequestLogQuery } from "~/models";
+import type { NewsPaper, Affiliate, Video, Publication, Payment, CommercialPartner, AdminUser,UserGroup, PartnerSubscriberSubscriptionSummary,Permission, Role, PartnerInvoiceStat, SubscriptionSummary, Subscriber, CommercialPartnerStat, NewsPaperIngestionResponse, BaseApiResponse, BasePaginationModel, CommercialPartnerApiKey, PartnerInvoice, PartnerApiRequestLog, PartnerApiRequestLogQuery } from "~/models";
 
 //publication setups
 
@@ -577,10 +577,50 @@ export async function assignSubscriptionToSubscriber(payload: object) {
 
 
 // affiliate
+
+export async function getAffiliateDashboardData(query: object) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<any>>('admin/get-affiliate-dashboard-data', "", { query });
+    return response.result;
+}
+
+
 export async function getAffiliates(query: object) {
  
-    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<object[]>>>('admin/get-all-subscription-plans', "", { query });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Affiliate[]>>>('admin/get-all-affiliates', "", { query });
     return response.result;
+}
+
+export async function getAffiliateDetail(query: object) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<Affiliate>>('admin/get-affiliate-details', "", { query });
+    return response.result;
+}
+
+/**
+ * Resolve a single affiliate from the paginated admin list.
+ *
+ * The backend currently exposes `admin/get-all-affiliates` but no dedicated
+ * `get-affiliate-details` endpoint, so we page through the list until the
+ * requested record is found. Swap this for a detail endpoint when one exists.
+ */
+export async function getAffiliateById(id: string): Promise<Affiliate | null> {
+    const pageSize = 100;
+    let pageNo = 1;
+    let totalPages = 1;
+
+    do {
+        const result = await getAffiliates({ pageNo, pageSize });
+        const match = (result.data ?? []).find(
+            (affiliate) => String(affiliate.id ?? affiliate.affiliateId) === String(id),
+        );
+        if (match) return match;
+
+        totalPages = result.totalPages || 1;
+        pageNo += 1;
+    } while (pageNo <= totalPages);
+
+    return null;
 }
 
 export async function getAffiliateApplicants(query: object) {
@@ -607,14 +647,53 @@ export async function updateAffiliate(payload: object) {
   return response.success;
 }
 
-export async function deleteAffiliate(query: object) {
+export async function deleteAffiliate(id: string) {
  
-    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/delete-affiliate', "", { query, method: "delete", });
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-affiliate/${id}`, "", { method: "delete" });
+    return response.success;
+}
+
+export async function resetAffiliatePassword(id: string) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/reset-affiliate-password/${id}`, "");
     return response.success;
 }
 
 export async function updateAffiliateAccountStatus(id: string, status:number) {
  
-    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-affiliate/${id}/${status}`, "");
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/update-affiliate-status/${id}/${status}`, "");
+    return response.success;
+}
+
+//videos
+
+export async function getAllVideos(query: object) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<BasePaginationModel<Video[]>>>('admin/get-all-videos', "", { query });
+    return response.result;
+}
+
+
+export async function createVideo(payload: object) {
+    
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>('admin/create-video', "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function updateVideo(payload: object, id: string) {
+    
+  const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/update-video/${id}`, "", {
+    method: "post",
+    body: payload,
+  });
+  return response.success;
+}
+
+export async function deleteVideo(userId: string) {
+ 
+    const response = await gnpAdminUserHttpClient<BaseApiResponse<object>>(`admin/delete-video/${userId}`, "", { method: "delete", });
     return response.success;
 }

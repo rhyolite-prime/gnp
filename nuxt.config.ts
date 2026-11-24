@@ -1,12 +1,61 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: false },
+
+  vite: {
+    server: {
+      allowedHosts: true,
+    },
+    optimizeDeps: {
+      entries: [
+        'app.vue',
+        'layouts/**/*.vue',
+        'pages/**/*.vue',
+        'components/**/*.vue',
+      ],
+      include: [
+        '@azure/msal-browser',
+        '@headlessui/vue',
+        '@heroicons/vue/24/outline',
+        '@heroicons/vue/24/solid',
+        '@vuepic/vue-datepicker',
+        'dayjs',
+        'echarts',
+        'jspdf',
+        'lodash',
+        'lodash-es',
+        'lucide-vue-next',
+        'numeral',
+        'uuid',
+        'v-money3',
+        'vue-countup-v3',
+        'vue-multiselect',
+        'vue3-toastify',
+        'xlsx',
+      ],
+    },
+    plugins: [
+      {
+        name: 'gnp-prevent-ws-reload-loop',
+        enforce: 'post',
+        transform(code: string, id: string) {
+          if (id.includes('vite/dist/client/client.mjs')) {
+            return code.replace(
+              /await waitForSuccessfulPing\([^)]+\);\s*location\.reload\(\);/g,
+              'return;'
+            );
+          }
+        },
+      },
+    ],
+  },
   
   modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt', '@vite-pwa/nuxt'],
   
   app: {
     head: {
       title: 'Graphic NewsPlus - Digital News Platform',
+      htmlAttrs: { lang: 'en' },
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -77,7 +126,7 @@ export default defineNuxtConfig({
       periodicSyncForUpdates: 3600
     },
     devOptions: {
-      enabled: true,
+      enabled: false,
       suppressWarnings: true,
       navigateFallbackAllowlist: [/^\/$/],
       type: 'module'
@@ -100,6 +149,8 @@ export default defineNuxtConfig({
     strict: true
   },
   runtimeConfig: {
+    // Identity backend adapter; kept private and disabled until a registration API is configured.
+    onboardingRegistrationUrl: process.env.NUXT_ONBOARDING_REGISTRATION_URL || '',
     public: {
       microsoftClientId: process.env.NUXT_MICROSOFT_CLIENT_ID || '',
       googleClientId: process.env.NUXT_GOOGLE_CLIENT_ID || '',

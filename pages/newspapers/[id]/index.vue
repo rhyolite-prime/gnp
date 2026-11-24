@@ -147,119 +147,38 @@
         </div>
         
         <!-- Suggested Articles Section -->
-        <SuggestedArticlesSection 
+        <!-- <SuggestedArticlesSection 
           :current-newspaper-id="newspaperId"
           class="mb-8"
-        />
+        /> -->
       </div>
     </div>
 
-    <!-- Subscription Modal -->
-<div 
-  v-if="showSubscriptionModal"
-  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
->
-  <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
+    <!-- Subscription Modal (shared checkout design with /pricing).
+         Signed-in readers get the no-form variant backed by subscription/user. -->
+    <BuySubscriptionModalAuthenticated
+      v-if="showSubscriptionModal && isSignedIn"
+      :plans="subscriptionModalPlans"
+      :initial-plan-id="initialSubscriptionPlanId"
+      :initial-billing-cycle="initialBillingCycle"
+      :context-note="subscriptionContextNote"
+      redirect-to-checkout
+      @close="closeSubscriptionModal"
+      @payment-started="handleSubscriptionPaymentStarted"
+    />
 
-    <!-- Close Button -->
-    <button @click="closeSubscriptionModal" class="absolute top-3 right-4 text-gray-600 hover:text-gray-900">
-      ✕
-    </button>
+    <BuySubscriptionModal
+      v-else-if="showSubscriptionModal"
+      :plans="subscriptionModalPlans"
+      :initial-plan-id="initialSubscriptionPlanId"
+      :initial-billing-cycle="initialBillingCycle"
+      :context-note="subscriptionContextNote"
+      redirect-to-checkout
+      @close="closeSubscriptionModal"
+      @payment-started="handleSubscriptionPaymentStarted"
+    />
 
-    <h2 class="text-2xl font-bold mb-4">Buy Subscription</h2>
-
-    <!-- Full Name -->
-    <div class="mb-4">
-      <label class="block text-sm font-medium mb-1">Full Name</label>
-      <input
-        v-model="fullName"
-        type="text"
-        class="w-full border rounded px-3 py-2"
-        placeholder="Enter your full name"
-      />
-    </div>
-
-    <!-- Email -->
-    <div class="mb-4">
-      <label class="block text-sm font-medium mb-1">Email</label>
-      <input
-        v-model="email"
-        type="email"
-        class="w-full border rounded px-3 py-2"
-        placeholder="you@graphicnewsplus.com"
-      />
-    </div>
-
-    <!-- Phone -->
-    <div class="mb-4">
-      <label class="block text-sm font-medium mb-1">Phone Number</label>
-      <input
-        v-model="phone"
-        type="tel"
-        class="w-full border rounded px-3 py-2"
-        placeholder="054xxxxxxx"
-      />
-    </div>
-
-    <!-- Subscription Cards -->
-    <label class="block text-sm font-medium mb-2">Choose a Plan</label>
-    <div class="grid grid-cols-2 gap-4 mb-6">
-      
-      <!-- Regular Card -->
-      <div
-        @click="activeSubscriptionType = 'regular'" class="border rounded p-4 cursor-pointer"
-        :class="activeSubscriptionType === 'regular' ? 'border-green-600 bg-green-50' : 'border-green-300'"
-      >
-        <h3 class="font-semibold mb-2">Single Copy</h3>
-        <p class="text-sm text-green-600">Standard subscription packages.</p>
-      </div>
-
-      <!-- Bundle Card -->
-      <div
-        @click="activeSubscriptionType = 'bundle'"
-        class="border rounded p-4 cursor-pointer"
-        :class="activeSubscriptionType === 'bundle' ? 'border-green-600 bg-green-50' : 'border-green-300'"
-      >
-        <h3 class="font-semibold mb-2">Bundle Subscrption</h3>
-        <p class="text-sm text-green-600">Combined multi-paper packages.</p>
-      </div>
-
-    </div>
-
-    <!-- Dropdown -->
-    <div class="mb-6">
-      <label class="block text-sm font-medium mb-2">Select Subscription</label>
-      <select
-        v-model="selectedSubscriptionId"
-        class="w-full border rounded px-3 py-2"
-      >
-        <option disabled value="">Select subscription</option>
-        <option
-          v-for="(option,index) in dynamicDropdownOptions"
-          :key="option.id"
-          :value="option.id"
-        >
-         ({{ index+1 }}) {{ option.name }} — GHS {{ option.price }}
-        </option>
-      </select>
-    </div>
-
-    <button 
-      class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded"
-      @click="handleContinueToPay"
-      :disabled="isProcessing"
-    >
-      <span v-if="!isProcessing">Continue to Pay</span>
-      <span v-else class="flex items-center justify-center gap-2">
-        <span class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
-        Processing...
-      </span>
-    </button>
-
-  </div>
-</div>
-
-<!-- One-Time Purchase Modal -->
+    <!-- One-Time Purchase Modal -->
 <div 
   v-if="showPurchaseModal"
   class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -508,7 +427,7 @@
 
 <script setup lang="ts">
 // Get the route params
-import type { NewsPaper, SubscriptionResponseModel } from "~/models";
+import type { NewsPaper, SubscriptionResponseModel, SubscriptionPlan } from "~/models";
 import { useBasicAuthStore } from '~/stores/basic-user-auth';
 import { 
   Facebook,
@@ -519,7 +438,9 @@ import {
   X,
   Share
 } from 'lucide-vue-next'
-import { useBiometrics } from '~/composables/useBiometrics';
+import { useBiometrics } from '~/composables/useBiometrics'
+import { getPlansForPublication } from '~/utils/pricingPlans';
+import { toBiometricUser, type SubscriptionIdentity } from '~/utils/subscriptionIdentity';
 
 const route = useRoute();
 const router = useRouter();
@@ -567,6 +488,8 @@ const showSubscriptionModal = ref(false);
 const showShareModal = ref(false);
 const showPaymentModal = ref(false);
 const showFingerprintModal = ref(false);
+// Identity from a subscription checkout, used by the express-login enrolment.
+const biometricUser = ref<{ id: string; email: string; name: string } | null>(null);
 const isBiometricAvailable = ref(false);
 const isRegisteringBiometric = ref(false);
 const purchaseType = ref<'ONE_TIME' | 'SHARE' | 'SUBSCRIPTION'>('ONE_TIME');
@@ -579,21 +502,6 @@ const recipientPhone = ref("");
 const recipientName = ref("");
 const errorMessage = ref("");
 
-
-// Subscription card selection
-const activeSubscriptionType = ref<"regular" | "bundle">("regular");
-
-// Options for each subscription type
-const subscriptionOptions = {
-  regular: [
-    { id: 1, name: "Daily Graphic - Regular", price: 25 },
-    { id: 2, name: "Business Graphic - Regular", price: 30 }
-  ],
-  bundle: [
-    { id: 3, name: "Daily Graphic + Showbiz Bundle", price: 50 },
-    { id: 4, name: "Mega Bundle - All Newspapers", price: 80 }
-  ]
-};
 
 // Info Modal State
 const showInfoModal = ref(false);
@@ -614,22 +522,109 @@ function closeInfoModal() {
   showInfoModal.value = false;
 }
 
-// Selected dropdown value
-const selectedSubscriptionId = ref(null);
+// Signed-in readers buy with subscription/user (no contact form). Read from the
+// store rather than the cookie so the flag is reactive right after sign-in.
+const isSignedIn = computed(() => Boolean(authStore.isAuthenticated && authStore.accessToken));
 
-// Computed dropdown options based on active card
-const dynamicDropdownOptions = computed(() => {
-  return subscriptionOptions[activeSubscriptionType.value];
+// ─── Subscription checkout ────────────────────────────────────────────────────
+// The modal is the same component the pricing page uses; it renders live plans
+// from news-papers/get-pricing-plans and calls subscription/guest itself.
+const {
+  plans: pricingPlans,
+  isLoading: isLoadingPlans,
+  refresh: refreshPricingPlans,
+} = usePricingPlans();
+
+const initialSubscriptionPlanId = ref('');
+const initialBillingCycle = ref('');
+
+// Plans that unlock this edition: the regular plan targeting the publication
+// first, bundles that include it after, then everything else for context.
+const subscriptionModalPlans = computed<SubscriptionPlan[]>(() => {
+  const publicationId = newsPaperDetail.value?.publicationId ?? '';
+  const forPublication = getPlansForPublication(pricingPlans.value, publicationId);
+  const matchingIds = new Set(forPublication.map((plan) => plan.id));
+  const others = pricingPlans.value.filter((plan) => !matchingIds.has(plan.id));
+  return [...forPublication, ...others];
 });
 
-// Open modal when button is clicked
+const subscriptionContextNote = computed(() => {
+  const title = newsPaperDetail.value?.title;
+  return title ? `Covers ${title} and the other publications included in the plan.` : '';
+});
+
+// Highlight the plan that unlocks this edition; fall back to the first plan.
+watch(
+  [subscriptionModalPlans, () => newsPaperDetail.value?.publicationId],
+  ([plans, publicationId]) => {
+    if (!plans.length) {
+      initialSubscriptionPlanId.value = '';
+      return;
+    }
+    const forPublication = getPlansForPublication(plans, publicationId);
+    initialSubscriptionPlanId.value = (forPublication[0] ?? plans[0]).id;
+  },
+  { immediate: true },
+);
+
+// Open modal when button is clicked (plans are fetched on demand; navigating
+// straight to the page may not have loaded them yet).
 function openSubscriptionModal() {
   showSubscriptionModal.value = true;
+  if (!pricingPlans.value.length && !isLoadingPlans.value) {
+    refreshPricingPlans().catch(() => {
+      $toast.error('Could not load subscription plans. Please try again.');
+    });
+  }
 }
 
 // Close modal
 function closeSubscriptionModal() {
   showSubscriptionModal.value = false;
+}
+
+// Checkout replaces the buy modal so the two dialogs never stack; the existing
+// payment overlay (shared with the one-time purchase flow) renders the iframe.
+const { signInFromCheckout } = useGnpUserSession();
+
+async function handleSubscriptionPaymentStarted(payment: SubscriptionResponseModel) {
+  showSubscriptionModal.value = false;
+  purchaseType.value = 'SUBSCRIPTION';
+
+  // Sign the buyer in with the identity token from checkout, then run the same
+  // express-login / entitlement follow-up as a guest one-time purchase.
+  // Signed-in buyers already have a session; re-signing them with a guest token
+  // would replace their identity mid-purchase.
+  const identity = isSignedIn.value ? null : signInFromCheckout(payment);
+  if (identity) {
+    await promptBiometricOrRefreshEntitlement(identity);
+  }
+
+  if (payment?.paymentUrl) {
+    paymentInfo.value = payment;
+    showPaymentModal.value = true;
+  } else {
+    showInfo({
+      type: 'error',
+      title: 'Payment could not be started',
+      message: identity
+        ? `Failed to initialize payment. Your account (${identity.email || identity.username}) is ready — please retry.`
+        : 'Failed to initialize payment. Please try again.',
+    });
+  }
+}
+
+// Offer express login when the device supports it, otherwise just refresh access.
+async function promptBiometricOrRefreshEntitlement(identity: SubscriptionIdentity) {
+  const available = await isBiometricsAvailable();
+  if (available) {
+    isBiometricAvailable.value = true;
+    biometricUser.value = toBiometricUser(identity);
+    showFingerprintModal.value = true;
+    return;
+  }
+
+  await retrieveNewsPaperEntitlement(newspaperId.value);
 }
 
 
@@ -747,55 +742,6 @@ const loadImageAsBlob = async (fileId: string) => {
          
       }    
 }
-
-const handleContinueToPay = async () =>  {
-  // Basic validation
-  if (!fullName.value || !email.value || !phone.value || !selectedSubscriptionId.value) {
-    alert("Please fill all fields and select a subscription plan.");
-    return;
-  }
-
-  // Split full name
-  const [firstName, ...rest] = fullName.value.trim().split(" ");
-  const lastName = rest.join(" ");
-
-  // Build payload
-  const payload = {
-    firstName,
-    lastName,
-    email: email.value,
-    phoneNumber: phone.value,
-    subscriptionType: activeSubscriptionType.value,
-    subscriptionPlanId: "cf92a6b0-d3f3-41bc-8abb-aedd8d1f40f6",
-  };
-
-  try {
-     
-    isProcessing.value = true;
-     
-    const result = await guestSubscription(payload);
-
-    // Redirect user to the payment URL returned by your API
-    if (result) {
-      console.log('result =>', result);
-      paymentInfo.value = result;
-      showPaymentModal.value = true;
-      showSubscriptionModal.value = false;
-
-    } else {
-      //alert("Payment initiation failed. Please try again.");
-    }
-  } catch (err) {
-    console.error("Payment error:", err);
-    //alert("Something went wrong while processing your payment.");
-  }
-  finally {
-
-    isProcessing.value = false;
-  }
-
-}
-
 
 const handleOneTimePurchase = async () => {
 
@@ -1096,18 +1042,17 @@ const handleLinkFingerprint = async () => {
       
       isRegisteringBiometric.value = true;
       
-      // Use current user details for enrollment
-      // In a real app we might want to ensure we have a persistent user ID from the response
-      const user = {
+      // Prefer the identity returned by checkout; fall back to the typed details.
+      const user = biometricUser.value ?? {
           id: paymentInfo.value?.userId || 'guest-user',
           email: email.value,
           name: fullName.value
       };
 
       const credential = await register(user);
-        
+
       // Send to backend..
-      await registerBiometric(credential, paymentInfo.value?.userId);
+      await registerBiometric(credential, paymentInfo.value?.userId || user.id);
 
       await retrieveNewsPaperEntitlement(newspaperId.value);
 
@@ -1125,6 +1070,7 @@ const handleLinkFingerprint = async () => {
 
 const skipFingerprint = async () => {
   showFingerprintModal.value = false;
+  biometricUser.value = null;
     await retrieveNewsPaperEntitlement(newspaperId.value)
 }
 </script>

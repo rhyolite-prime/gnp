@@ -1,30 +1,31 @@
 <template>
   <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-    <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-20 gap-8">
+    <div class="app-header-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16 sm:h-20 gap-2 xl:gap-8">
         <!-- Logo -->
         <div class="flex items-center">
-          <NuxtLink to="/" class="flex items-center group">
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform overflow-hidden">
+          <NuxtLink to="/" class="flex min-w-0 items-center group">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform overflow-hidden">
               <img 
                 src="/favicon-mag.png" 
                 alt="Graphic NewsPlus Logo" 
                 class="w-full h-full object-contain"
               />
             </div>
-            <div class="ml-3">
-              <h1 class="text-xl font-bold text-gray-900">Graphic NewsPlus</h1>
-              <p class="text-xs text-gray-500">Digital News Platform</p>
+            <div class="ml-2 sm:ml-3">
+              <h1 class="text-base sm:text-xl font-bold text-gray-900 whitespace-nowrap">Graphic NewsPlus</h1>
+              <p class="hidden sm:block text-xs text-gray-500">Digital News Platform</p>
             </div>
           </NuxtLink>
         </div>
 
         <!-- Desktop Navigation -->
-        <nav class="hidden md:flex items-center space-x-8">
+        <nav class="hidden xl:flex items-center space-x-5">
           <NuxtLink to="/" class="nav-link">Home</NuxtLink>
           <NuxtLink to="/newspapers" class="nav-link">Newspapers</NuxtLink>
           <!-- <a href="#magazines" class="nav-link">Magazines</a> -->
           <NuxtLink to="/archives" class="nav-link">Archives</NuxtLink>
+          <NuxtLink to="/discover" class="nav-link">Discover</NuxtLink>
           <NuxtLink v-if="false" to="/research-ai" class="nav-link flex items-center gap-1.5 !text-primary-600 font-semibold group">
             <span class="relative flex h-2 w-2">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
@@ -67,31 +68,60 @@
 
            
           <NuxtLink to="/pricing" class="nav-link">Pricing</NuxtLink>
-          <NuxtLink :to="authStore.isAuthenticated ? '/affiliates/dashboard' : '/affiliates'" class="nav-link">Affiliates</NuxtLink>
-          <NuxtLink :to="authStore.isAuthenticated ? '/partners/dashboard' : '/partners'" class="nav-link">Partners</NuxtLink>
+          <NuxtLink :to="isAffiliateSignedIn ? '/affiliates/dashboard' : '/affiliates' " class="nav-link">Affiliates</NuxtLink>
+          <NuxtLink :to="isPartnerSignedIn ? '/partners/dashboard' : '/partners' " class="nav-link">Partners</NuxtLink>
           <NuxtLink to="/about" class="nav-link">About</NuxtLink>
-          <NuxtLink to="/games" class="nav-link">Games</NuxtLink>
+          <NuxtLink v-if="false" to="/games" class="nav-link">Games</NuxtLink>
         </nav>
 
-        <!-- Search and Sign In -->
-        <div class="flex items-center space-x-4">
+        <!-- Search, Notifications & Sign In -->
+        <div class="flex shrink-0 items-center space-x-1 sm:space-x-3">
           <button 
             @click="isSearchOpen = true"
-            class="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg border border-primary-400 transition-colors"
+            class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg border border-primary-400 transition-colors cursor-pointer"
+            title="Search Graphic NewsPlus"
+            aria-label="Search Graphic NewsPlus"
           >
             <MagnifyingGlassIcon class="h-6 w-6" />
           </button>
+
+          <ClientOnly>
+            <button
+              v-if="authStore.isAuthenticated"
+              type="button"
+              title="Notifications"
+              class="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg border border-gray-200 transition-colors relative cursor-pointer"
+              @click="notificationStore.isCenterOpen = true"
+            >
+              <BellIcon class="h-6 w-6" />
+              <span
+                v-if="notificationStore.unreadCount > 0"
+                class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold"
+              >
+                {{ notificationStore.unreadCount }}
+              </span>
+            </button>
+          </ClientOnly>
           
+          <ClientOnly><AffiliateUserMenu v-if="isAffiliateSignedIn" /></ClientOnly>
+
           <!-- user auth button here-->
-           <div class="hidden md:flex items-center space-x-4">
-              <UserAuthButton :showSignInModal="() => showSignInModal = true" />
+           <div class="hidden xl:flex items-center space-x-4">
+              <ClientOnly>
+                <NuxtLink v-if="isPartnerSignedIn" to="/partners/dashboard" class="text-sm font-medium text-primary-700 hover:text-primary-800">Partner Dashboard</NuxtLink>
+                <UserAuthButton v-if="authStore.isAuthenticated || (!isAffiliateSignedIn && !isPartnerSignedIn)" :showSignInModal="() => showSignInModal = true" />
+              </ClientOnly>
            </div>
 
            <!-- Mobile Menu Button -->
-           <div class="md:hidden flex items-center">
-             <button 
+           <div class="xl:hidden flex items-center">
+             <button
+               type="button"
                @click="isMobileMenuOpen = true"
-               class="p-2 text-gray-500 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+               aria-label="Open navigation menu"
+               aria-controls="mobile-navigation"
+               :aria-expanded="isMobileMenuOpen"
+               class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center p-2 text-gray-500 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
              >
                <Bars3Icon class="h-6 w-6" />
              </button>
@@ -144,7 +174,7 @@
     leave-from-class="translate-x-0"
     leave-to-class="translate-x-full"
   >
-    <div v-if="isMobileMenuOpen" class="fixed inset-0 z-50 bg-white md:hidden">
+    <div v-if="isMobileMenuOpen" id="mobile-navigation" class="fixed inset-0 z-50 bg-white xl:hidden">
       <div class="p-4 flex justify-between items-center border-b border-gray-200">
          <div class="flex items-center">
             <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-2 overflow-hidden">
@@ -152,9 +182,11 @@
             </div>
             <span class="text-lg font-bold text-gray-900">Menu</span>
          </div>
-        <button 
+        <button
+          type="button"
           @click="closeMobileMenu"
-          class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="Close navigation menu"
+          class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
         >
           <XMarkIcon class="h-6 w-6" />
         </button>
@@ -165,13 +197,15 @@
           <NuxtLink to="/newspapers" class="mobile-nav-link" @click="closeMobileMenu">Newspapers</NuxtLink>
           <!-- <a href="#magazines" class="mobile-nav-link" @click="closeMobileMenu">Magazines</a> -->
           <NuxtLink to="/archives" class="mobile-nav-link" @click="closeMobileMenu">Archives</NuxtLink>
-          <NuxtLink to="/research-ai" class="mobile-nav-link !text-primary-600 font-bold flex items-center justify-between" @click="closeMobileMenu">
+          <NuxtLink to="/discover" class="mobile-nav-link" @click="closeMobileMenu">Discover · For you</NuxtLink>
+          <NuxtLink to="/interests" class="mobile-nav-link" @click="closeMobileMenu">Content interests</NuxtLink>
+          <!-- <NuxtLink to="/research-ai" class="mobile-nav-link !text-primary-600 font-bold flex items-center justify-between" @click="closeMobileMenu">
             <div class="flex items-center gap-2">
               <SparklesIcon class="w-5 h-5 text-primary-600" />
               <span>AI Research Studio</span>
             </div>
             <span class="bg-primary-100 text-primary-700 text-xs px-2 py-0.5 rounded-full font-bold">RAG</span>
-          </NuxtLink>
+          </NuxtLink> -->
           
           <!-- Mobile Originals Accordion -->
            <!-- <div>
@@ -205,13 +239,18 @@
 
           <NuxtLink to="/pricing" class="mobile-nav-link" @click="closeMobileMenu">Pricing</NuxtLink>
           
-          <NuxtLink :to="authStore.isAuthenticated ? '/affiliates/dashboard' : '/affiliates'" class="mobile-nav-link" @click="closeMobileMenu">Affiliates</NuxtLink>
-          <NuxtLink :to="authStore.isAuthenticated ? '/partners/dashboard' : '/partners'" class="mobile-nav-link" @click="closeMobileMenu">Partners</NuxtLink>
+          <NuxtLink :to="isAffiliateSignedIn ? '/affiliates/dashboard' : '/affiliates' " class="mobile-nav-link" @click="closeMobileMenu">Affiliates</NuxtLink>
+          <NuxtLink :to="isPartnerSignedIn ? '/partners/dashboard' : '/partners' " class="mobile-nav-link" @click="closeMobileMenu">Partners</NuxtLink>
           <NuxtLink to="/about" class="mobile-nav-link" @click="closeMobileMenu">About</NuxtLink>
-          <NuxtLink to="/games" class="mobile-nav-link" @click="closeMobileMenu">Games</NuxtLink>
+          <NuxtLink v-if="false" to="/games" class="mobile-nav-link" @click="closeMobileMenu">Games</NuxtLink>
 
           <div class="pt-4 border-t border-gray-100">
-             <UserAuthButton :showSignInModal="() => { showSignInModal = true; closeMobileMenu(); }" />
+             <ClientOnly>
+               <div class="flex flex-col items-start gap-4">
+                 <NuxtLink v-if="isPartnerSignedIn" to="/partners/dashboard" class="text-sm font-medium text-primary-700" @click="closeMobileMenu">Partner Dashboard</NuxtLink>
+                 <UserAuthButton v-if="authStore.isAuthenticated || (!isAffiliateSignedIn && !isPartnerSignedIn)" :showSignInModal="() => { showSignInModal = true; closeMobileMenu(); }" />
+               </div>
+             </ClientOnly>
           </div>
         </nav>
       </div>
@@ -239,13 +278,22 @@ import {
   RadioIcon,
   FilmIcon,
   BookOpenIcon,
-  SparklesIcon
+  SparklesIcon,
+  BellIcon
 } from '@heroicons/vue/24/outline'
 import { useBasicAuthStore } from '~/stores/basic-user-auth'
+import { useAffiliateAuthStore } from '~/stores/affiliate-auth'
+import { usePartnerAuthStore } from '~/stores/partner-auth'
+import { useNotificationStore } from '~/stores/notification'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useBasicAuthStore()
+const affiliateAuthStore = useAffiliateAuthStore()
+const partnerAuthStore = usePartnerAuthStore()
+const isAffiliateSignedIn = computed(() => !!(affiliateAuthStore.accessToken || affiliateAuthStore.gnpAffiliateUserIdentityCookie))
+const isPartnerSignedIn = computed(() => !!(partnerAuthStore.accessToken || partnerAuthStore.gnpPartnerUserIdentityCookie))
+const notificationStore = useNotificationStore()
 const searchQuery = ref('')
 const showSignInModal = useState('showSignInModal', () => false);
 const isSearchOpen = ref(false)
@@ -278,6 +326,13 @@ watch(isSearchOpen, (isOpen) => {
     nextTick(() => {
       searchInput.value?.focus()
     })
+  }
+})
+
+// Close reader notification drawer automatically if user logs out
+watch(() => authStore.isAuthenticated, (loggedIn) => {
+  if (!loggedIn && !route.path.startsWith('/admin')) {
+    notificationStore.isCenterOpen = false
   }
 })
 

@@ -1,121 +1,107 @@
 <template>
-  <div class="bg-gradient-to-br from-amber-500/10 via-white to-red-500/10 border border-amber-200/80 rounded-3xl p-6 sm:p-8 shadow-sm">
-    <!-- Header banner -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-amber-100">
-      <div class="flex items-start sm:items-center gap-3.5">
-        <div class="p-3 bg-gradient-to-tr from-amber-500 to-amber-400 text-white rounded-2xl shadow-md shadow-amber-200">
-          <Calendar class="w-7 h-7" />
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-amber-100 text-amber-800">
-              Daily Edition
-            </span>
-            <span class="text-xs font-mono font-bold text-gray-500">{{ dailyBoard?.date || todayDate }}</span>
-          </div>
-          <h2 class="text-xl sm:text-2xl font-black text-gray-900 tracking-tight mt-0.5">
-            Today's Publication Challenges
-          </h2>
-          <p class="text-xs sm:text-sm text-gray-600 mt-0.5">
-            Solve puzzles drawn from today's printed news stories. Every reader solves the exact same daily edition!
-          </p>
-        </div>
+  <div class="bg-stone-900 rounded-2xl p-7 sm:p-10 text-stone-100">
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-7 border-b border-white/10">
+      <div>
+        <p class="text-[11px] font-medium uppercase tracking-[0.28em] text-stone-400">
+          {{ formattedDate }}
+        </p>
+        <h2 class="font-display text-3xl sm:text-4xl text-[#f5f0e8] mt-3 leading-tight">Today&rsquo;s puzzles</h2>
+        <p class="text-sm text-stone-400 mt-2.5 leading-relaxed max-w-lg">
+          Four puzzles, all from today&rsquo;s papers. Finish them before midnight and bank the streak bonus.
+        </p>
       </div>
 
-      <!-- Bonus Badge -->
-      <div class="bg-white border border-amber-200 px-4 py-3 rounded-2xl shadow-sm flex items-center gap-3 self-start md:self-auto">
-        <Sparkles class="w-6 h-6 text-amber-500" />
+      <!-- Progress & Potential Bonus -->
+      <div class="flex items-center gap-8 self-start lg:self-auto">
         <div>
-          <div class="text-[10px] uppercase font-bold text-amber-600 tracking-wider">Bonus Reward</div>
-          <div class="text-lg font-black text-gray-900 leading-tight">+200 Points Each</div>
+          <div class="font-display text-3xl text-[#f5f0e8] leading-none">{{ completedCount }} of {{ list.length }}</div>
+          <div class="text-[10px] font-medium uppercase tracking-[0.22em] text-stone-400 mt-2">Done</div>
+        </div>
+        <div>
+          <div class="font-display text-3xl text-amber-400 leading-none">+200</div>
+          <div class="text-[10px] font-medium uppercase tracking-[0.22em] text-stone-400 mt-2">Bonus points each</div>
         </div>
       </div>
     </div>
 
-    <!-- Challenges Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Challenge Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-7">
       <div
-        v-for="item in dailyBoard?.challenges"
-        :key="item.id"
-        class="bg-white border border-gray-200 hover:border-amber-300 rounded-2xl p-5 shadow-sm transition-all flex flex-col justify-between group"
+        v-for="challenge in list"
+        :key="challenge.id"
+        class="border border-white/10 rounded-xl p-5 flex flex-col justify-between hover:border-white/25 transition-colors"
       >
         <div>
-          <div class="flex items-center justify-between mb-3">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="font-display text-lg text-[#f5f0e8] leading-snug">
+              {{ challenge.summary }}
+            </h3>
             <span
-              :class="getTypeBadgeClass(item.gameType)"
-              class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
+              v-if="challenge.completed"
+              class="text-xs text-amber-400 whitespace-nowrap pt-1"
             >
-              <component :is="getTypeIcon(item.gameType)" class="w-3.5 h-3.5" />
-              {{ getTypeName(item.gameType) }}
-            </span>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-              {{ item.difficulty }}
+              Done
             </span>
           </div>
 
-          <h3 class="font-bold text-gray-900 text-sm leading-snug group-hover:text-primary-600 transition-colors mb-2">
-            {{ item.summary }}
-          </h3>
+          <p class="text-xs text-stone-400 mt-2">
+            {{ getTypeName(challenge.gameType) }} &middot; {{ challenge.difficulty }}
+          </p>
 
-          <div class="text-xs text-gray-500 flex items-center gap-1 mb-4">
-            <Newspaper class="w-3.5 h-3.5 text-gray-400 shrink-0" />
-            <span class="truncate">{{ item.publication?.publicationName }}</span>
-            <span v-if="item.publication?.pageNumber" class="text-gray-400">• p.{{ item.publication.pageNumber }}</span>
-          </div>
+          <p class="text-xs text-stone-500 mt-2.5 leading-relaxed">
+            {{ challenge.publication?.publicationName }}<template v-if="challenge.publication?.pageNumber"> &middot; p.{{ challenge.publication?.pageNumber }}</template>
+          </p>
         </div>
 
-        <div>
-          <div v-if="item.completed" class="w-full py-2.5 px-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5">
-            <CheckCircle2 class="w-4 h-4 text-emerald-600" />
-            <span>Completed (+200 earned)</span>
-          </div>
+        <div class="mt-5">
           <button
-            v-else
-            @click="$emit('start-challenge', item.id, item.gameType)"
-            class="w-full py-2.5 px-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-95"
+            v-if="!challenge.completed"
+            @click="$emit('start-challenge', challenge.id, challenge.gameType)"
+            class="w-full py-2 bg-white hover:bg-stone-100 text-stone-900 rounded-full text-xs font-medium transition-colors"
           >
-            <Play class="w-3.5 h-3.5" />
-            <span>Play Daily Challenge</span>
+            Play
           </button>
+          <div v-else class="text-xs text-stone-400 py-2 text-center">
+            +{{ challenge.bonusEarned ?? challenge.bonus ?? 200 }} pts banked
+          </div>
         </div>
+      </div>
+
+      <div v-if="!list.length" class="col-span-full text-center text-sm text-stone-500 py-8">
+        Today&rsquo;s set isn&rsquo;t out yet. Check back shortly.
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { DailyBoard, GameType } from '~/models';
-import { Calendar, Sparkles, Newspaper, Grid, Search, FileText, HelpCircle, CheckCircle2, Play } from 'lucide-vue-next';
+import { computed } from 'vue';
+import type { DailyBoard } from '~/models/games';
 
-defineProps<{
+const props = defineProps<{
   dailyBoard?: DailyBoard | null;
 }>();
 
 defineEmits<{
-  (e: 'start-challenge', challengeId: string, gameType: GameType): void;
+  'start-challenge': [challengeId: string, gameType: string];
 }>();
 
-const todayDate = computed(() => new Date().toISOString().split('T')[0]);
+const formattedDate = computed(() => {
+  const d = props.dailyBoard?.date ? new Date(props.dailyBoard.date) : new Date();
+  return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+});
 
-function getTypeName(type: string): string {
-  if (type === 'sudoku') return 'Letter Sudoku';
-  if (type === 'word_search') return 'Word Search';
-  if (type === 'crossword') return 'Crossword';
-  if (type === 'riddle') return 'Riddles';
-  return 'Challenge';
-}
+const list = computed(() => props.dailyBoard?.challenges || []);
+const completedCount = computed(() => list.value.filter(c => c.completed).length);
 
-function getTypeIcon(type: string) {
-  if (type === 'sudoku') return Grid;
-  if (type === 'word_search') return Search;
-  if (type === 'crossword') return FileText;
-  return HelpCircle;
-}
-
-function getTypeBadgeClass(type: string): string {
-  if (type === 'sudoku') return 'bg-blue-50 text-blue-700';
-  if (type === 'word_search') return 'bg-emerald-50 text-emerald-700';
-  if (type === 'crossword') return 'bg-purple-50 text-purple-700';
-  return 'bg-amber-50 text-amber-700';
+function getTypeName(type: string) {
+  const map: Record<string, string> = {
+    sudoku: 'Sudoku',
+    word_search: 'Word search',
+    crossword: 'Crossword',
+    riddle: 'Riddles',
+  };
+  return map[type] || type;
 }
 </script>

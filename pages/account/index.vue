@@ -153,7 +153,8 @@
           </div>
 
           <!-- Express Login (Passkey) -->
-          <div class="bg-white rounded-lg shadow p-6">
+          <div id="express-login" class="bg-white rounded-lg shadow p-6" :class="setupExpressLogin ? 'ring-2 ring-red-500 ring-offset-4' : ''">
+            <p v-if="setupExpressLogin && !userProfile?.hasPasskey" role="status" class="mb-4 rounded-lg bg-red-50 p-3 text-sm leading-6 text-red-800">You opted in to Express Login. Select Enable Express Login below and confirm with your device security to finish setup. You can also skip this step.</p>
             <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
               <ScanFace class="w-5 h-5 mr-2 text-red-600" />
               Express Login
@@ -420,6 +421,8 @@ useHead({
   title: 'My Account - Graphic NewsPlus',
 });
 
+const accountRoute = useRoute();
+const setupExpressLogin = computed(() => accountRoute.query.setupExpressLogin === '1');
 const authStore = useBasicAuthStore();
 const { register, isBiometricsAvailable } = useBiometrics();
 // State
