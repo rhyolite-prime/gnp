@@ -1,5 +1,18 @@
 <template>
   <div class="bg-gray-50 min-h-screen pb-12">
+    <!-- Admin Subscriber View Banner -->
+    <div v-if="isAdminUser" class="bg-amber-600 text-white px-4 py-2 text-xs font-semibold shadow-xs">
+      <div class="max-w-9xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="rounded bg-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">Admin Subscriber Mode</span>
+          <span>Viewing publication as a regular subscriber with full administrator access.</span>
+        </div>
+        <NuxtLink to="/admin/content-management/newspapers" class="text-xs font-bold underline hover:text-amber-100">
+          Return to Admin Newspapers →
+        </NuxtLink>
+      </div>
+    </div>
+
     <div class="bg-white shadow-sm border-b border-gray-100">
       <div class="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <!-- Breadcrumb -->
@@ -108,6 +121,7 @@ import type {
 import { Lock, FileText, Search } from 'lucide-vue-next';
 import { useWindowSize } from '@vueuse/core';
 import { useBasicAuthStore } from '~/stores/basic-user-auth';
+import { getAdminNewsPaperDetails } from '~/services/admin';
 import {
   createPdfPageViewTracker,
   resolveEngagementDeviceType,
@@ -117,10 +131,15 @@ const route = useRoute();
 const router = useRouter();
 const { $toast } = useNuxtApp();
 const authStore = useBasicAuthStore();
+const adminAuthStore = useAdminAuthStore();
 const gnpUserAuthIdentity = useGnpUserAuthIdentity();
+const gnpAdminAuthIdentity = useGnpAdminUserAuthIdentity();
 const apiBase = useRuntimeConfig().public.proxyApiBaseURL;
 const activeAccessToken = computed(
-  () => gnpUserAuthIdentity.value || authStore.accessToken || '',
+  () => gnpUserAuthIdentity.value || authStore.accessToken || gnpAdminAuthIdentity.value || adminAuthStore.accessToken || '',
+);
+const isAdminUser = computed(
+  () => Boolean(gnpAdminAuthIdentity.value || adminAuthStore.accessToken || route.query.admin === '1'),
 );
 
 const newspaperId = route.params.id as string;
@@ -299,7 +318,16 @@ onMounted( async() => {
   //await getAllPublications();
 
   var response = await getRedactedNewsPaperDetailsViaUniqueId(newspaperId);
-  if (!response.success || !response.data)
+  let paper = response?.data;
+  if (!paper && isAdminUser.value) {
+    try {
+      paper = await getAdminNewsPaperDetails(newspaperId);
+    } catch {
+      /* continue */
+    }
+  }
+
+  if (!paper)
   { 
     accessGranted.value = false;
     // display a no access div in place of the iframe
@@ -308,10 +336,10 @@ onMounted( async() => {
 
   }
 
-  newsPaperDetail.value = response.data;
-  newspaperTitle.value = response.data.title;
-  selectedPublication.value = response.data.publicationId;
-  selectedDate.value = (response.data.publicationDate || '').split('T')[0];
+  newsPaperDetail.value = paper;
+  newspaperTitle.value = paper.title;
+  selectedPublication.value = paper.publicationId;
+  selectedDate.value = (paper.publicationDate || '').split('T')[0];
   accessGranted.value = true;
 
   // Build the proxy URL: the server handler validates the subscription

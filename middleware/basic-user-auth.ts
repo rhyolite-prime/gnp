@@ -13,6 +13,13 @@ export default defineNuxtRouteMiddleware((to, from) => {
     return
   }
 
+  // If an administrator is viewing a subscriber page, allow them through
+  const adminAuthStore = useAdminAuthStore()
+  const adminCookie = useCookie('gnp-admin-user-identity')
+  if (adminAuthStore.accessToken || adminCookie.value) {
+    return
+  }
+
   // If no token and no cookie, redirect to login
   // Avoid infinite redirect loop if we're already on the login page
   if (to.path !== '/newspapers') {

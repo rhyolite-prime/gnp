@@ -169,6 +169,16 @@
                             <MenuItem v-slot="{ active }">
                               <NuxtLink :to="`/admin/content-management/newspaper/${paper.id}`" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block w-full px-4 py-2 text-left text-sm']">View Details</NuxtLink>
                             </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                              <button
+                                type="button"
+                                @click="openSubscriberReader(paper)"
+                                :class="[active ? 'bg-primary-50 text-primary-700' : 'text-gray-700', 'flex items-center w-full px-4 py-2 text-left text-sm font-medium']"
+                              >
+                                <BookOpenIcon class="mr-2 h-4 w-4 text-primary-600" aria-hidden="true" />
+                                <span>Read as Subscriber</span>
+                              </button>
+                            </MenuItem>
                             <MenuItem v-if="!paper.isPublished" v-slot="{ active }">
                               <button @click="publishPaper(paper.id)" :class="[active ? 'bg-gray-100 text-green-700' : 'text-green-700', 'block w-full px-4 py-2 text-left text-sm']">Publish</button>
                             </MenuItem>
@@ -210,16 +220,149 @@
         </div>
       </div>
     </div>
-    
-    
+
+    <!-- Subscriber Reader Modal for Admins -->
+    <TransitionRoot appear :show="isReaderModalOpen" as="template">
+      <Dialog as="div" @close="closeSubscriberReader" class="relative z-50">
+        <TransitionChild
+          as="template"
+          enter="duration-200 ease-out"
+          enter-from="opacity-0"
+          enter-to="opacity-100"
+          leave="duration-150 ease-in"
+          leave-from="opacity-100"
+          leave-to="opacity-0"
+        >
+          <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-xs" />
+        </TransitionChild>
+
+        <div class="fixed inset-0 overflow-hidden">
+          <div class="flex h-full w-full items-center justify-center p-0 sm:p-3 md:p-5">
+            <TransitionChild
+              as="template"
+              enter="duration-200 ease-out"
+              enter-from="opacity-0 scale-98"
+              enter-to="opacity-100 scale-100"
+              leave="duration-150 ease-in"
+              leave-from="opacity-100 scale-100"
+              leave-to="opacity-0 scale-98"
+            >
+              <DialogPanel class="flex flex-col h-full w-full max-w-7xl rounded-none sm:rounded-2xl bg-white shadow-2xl overflow-hidden border border-gray-200">
+                <!-- Reader Top Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 py-3 sm:px-6 shadow-xs">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-red-600 text-white shadow-xs shrink-0">
+                      <BookOpenIcon class="h-5 w-5" />
+                    </div>
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-2">
+                        <DialogTitle class="text-base font-bold text-gray-900 truncate">
+                          {{ readingPaper?.title || 'Newspaper Reader' }}
+                        </DialogTitle>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200 shrink-0">
+                          <EyeIcon class="h-3 w-3" />
+                          Subscriber Mode
+                        </span>
+                        <span
+                          class="hidden sm:inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize shrink-0"
+                          :class="readingPaper?.isPublished ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-yellow-50 text-yellow-800 border border-yellow-200'"
+                        >
+                          {{ readingPaper?.isPublished ? 'Published' : 'Draft' }}
+                        </span>
+                      </div>
+                      <p class="text-xs text-gray-500 truncate">
+                        {{ readingPaper?.publicationName }} · {{ standardDateFormat(readingPaper?.publicationDate) }}
+                        <span v-if="readingPaper?.price">· {{ readingPaper?.isFree ? 'Free' : `₵${readingPaper?.price}` }}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Header Controls -->
+                  <div class="flex items-center gap-2 sm:gap-3">
+                    <a
+                      v-if="readingPaper?.id"
+                      :href="`/newspapers/${encodeURIComponent(readingPaper.id)}/open?admin=1`"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-2xs hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                    >
+                      <span>Open in Full Tab</span>
+                      <ArrowTopRightOnSquareIcon class="h-3.5 w-3.5 text-gray-400" />
+                    </a>
+                    <button
+                      type="button"
+                      @click="closeSubscriberReader"
+                      class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-600"
+                      aria-label="Close reader"
+                    >
+                      <XMarkIcon class="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Reader Container -->
+                <div class="relative flex-1 bg-stone-900 overflow-hidden flex flex-col">
+                  <div v-if="readerLoading" class="absolute inset-0 flex flex-col items-center justify-center bg-stone-900 text-stone-200 z-10">
+                    <div class="relative w-14 h-14 mb-4">
+                      <div class="absolute inset-0 border-4 border-stone-800 rounded-full"></div>
+                      <div class="absolute inset-0 border-4 border-red-500 rounded-full border-t-transparent animate-spin"></div>
+                    </div>
+                    <p class="text-sm font-semibold text-stone-100">Loading publication for subscriber reading…</p>
+                    <p class="text-xs text-stone-400 mt-1">Rendering digital newspaper edition</p>
+                  </div>
+
+                  <ClientOnly>
+                    <NewspaperReader
+                      v-if="readerPdfUrl"
+                      :key="readerPdfUrl"
+                      :pdf-url="readerPdfUrl"
+                      :title="readingPaper?.title || ''"
+                      class="w-full h-full border-0"
+                      @document-loaded="onReaderLoaded"
+                    />
+                    <template #fallback>
+                      <div class="flex h-full items-center justify-center text-sm text-stone-400">
+                        Preparing subscriber reader…
+                      </div>
+                    </template>
+                  </ClientOnly>
+                </div>
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </div>
+      </Dialog>
+    </TransitionRoot>
 
   </div>
 </template>
 
 <script setup lang="ts">
 
-import { MagnifyingGlassIcon, EyeIcon, ShoppingCartIcon, ChevronLeftIcon, ChevronRightIcon, EllipsisVerticalIcon, FunnelIcon } from '@heroicons/vue/24/outline'
-import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
+import {
+  MagnifyingGlassIcon,
+  EyeIcon,
+  ShoppingCartIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  EllipsisVerticalIcon,
+  FunnelIcon,
+  BookOpenIcon,
+  ArrowTopRightOnSquareIcon,
+  XMarkIcon,
+} from '@heroicons/vue/24/outline';
+import {
+  Menu,
+  MenuButton,
+  MenuItems,
+  MenuItem,
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  TransitionChild,
+  TransitionRoot,
+} from '@headlessui/vue';
+import { useAdminAuthStore } from '~/stores/admin-auth';
 
 import CountUp from 'vue-countup-v3'
 import { isEmpty, debounce } from "lodash-es";
@@ -228,6 +371,36 @@ const { $toast } = useNuxtApp();
 
 const router = useRouter();
 const route = useRoute();
+
+const adminAuthStore = useAdminAuthStore();
+const gnpAdminAuthIdentity = useGnpAdminUserAuthIdentity();
+
+const isReaderModalOpen = ref(false);
+const readingPaper = ref<NewsPaper | null>(null);
+const readerPdfUrl = ref('');
+const readerLoading = ref(true);
+
+const openSubscriberReader = (paper: NewsPaper) => {
+  readingPaper.value = paper;
+  readerLoading.value = true;
+  const token =
+    gnpAdminAuthIdentity.value ||
+    adminAuthStore.accessToken ||
+    useCookie('gnp-admin-user-identity').value ||
+    (import.meta.dev ? 'dev-preview-admin-jwt' : '');
+  readerPdfUrl.value = `/api/pdf?uniqueId=${encodeURIComponent(paper.id)}&accessToken=${encodeURIComponent(token)}`;
+  isReaderModalOpen.value = true;
+};
+
+const closeSubscriberReader = () => {
+  isReaderModalOpen.value = false;
+  readingPaper.value = null;
+  readerPdfUrl.value = '';
+};
+
+const onReaderLoaded = () => {
+  readerLoading.value = false;
+};
 
 const filters = reactive({
   query: '',
