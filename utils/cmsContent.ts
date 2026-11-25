@@ -44,6 +44,7 @@ export interface RememberWhenSlide {
   publicationName: string;
   headline: string;
   description: string;
+  keywords?: string[];
   imageUrl: string;
   archiveId: string;
   ctaLabel: string;
@@ -356,6 +357,11 @@ export function validateRememberWhenSlidePayload(
   const rawOrder = Number(input.displayOrder ?? existing?.displayOrder ?? 100);
   const displayOrder = Number.isFinite(rawOrder) && rawOrder >= 0 ? Math.round(rawOrder) : 100;
 
+  const rawKeywords = input.keywords ?? existing?.keywords;
+  const keywords = Array.isArray(rawKeywords)
+    ? Array.from(new Set(rawKeywords.map(k => feedText(k).slice(0, 60)).filter(Boolean))).slice(0, 25)
+    : [];
+
   if (errors.length) {
     return { valid: false, errors };
   }
@@ -369,6 +375,7 @@ export function validateRememberWhenSlidePayload(
       publicationName,
       headline,
       description,
+      keywords,
       imageUrl: imageUrl || '/images/explore-archives.jpg',
       archiveId,
       ctaLabel,

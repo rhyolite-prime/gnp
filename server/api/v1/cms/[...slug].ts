@@ -15,6 +15,10 @@ import {
   reorderRememberWhenSlides,
   updateRememberWhenSettings,
 } from '~/server/utils/cmsStore';
+import {
+  buildRememberWhenPrompt,
+  generateSimulatedRememberWhen,
+} from '~/utils/rememberWhenPrompt';
 
 export default defineEventHandler(async (event) => {
   const slugParam = event.context.params?.slug;
@@ -168,6 +172,44 @@ export default defineEventHandler(async (event) => {
     } catch (err: any) {
       throw createError({ statusCode: 400, statusMessage: err?.message || 'Invalid Remember When slide' });
     }
+  }
+
+  if (route === 'remember-when/ai-generate' && method === 'POST') {
+    const body = await readBody(event).catch(() => ({}));
+    const image = body?.image || body?.imageUrl || '';
+    const publicationNameHint = body?.publicationNameHint ? String(body.publicationNameHint) : undefined;
+    const dateHint = body?.dateHint ? String(body.dateHint) : undefined;
+    const storyFocusHint = body?.storyFocusHint ? String(body.storyFocusHint) : undefined;
+    const additionalContext = body?.additionalContext ? String(body.additionalContext) : undefined;
+    const provider = (body?.provider || 'generic') as any;
+
+    const promptBundle = buildRememberWhenPrompt({
+      image,
+      publicationNameHint,
+      dateHint,
+      storyFocusHint,
+      additionalContext,
+      provider,
+    });
+
+    const slideData = generateSimulatedRememberWhen({
+      image,
+      publicationNameHint,
+      dateHint,
+      storyFocusHint,
+      additionalContext,
+    });
+
+    return {
+      success: true,
+      message: 'Remember When slide details generated successfully.',
+      unAuthorizedRequest: false,
+      error: null,
+      result: {
+        slideData,
+        promptBundle,
+      },
+    };
   }
 
   if (route === 'remember-when/config' && method === 'PUT') {

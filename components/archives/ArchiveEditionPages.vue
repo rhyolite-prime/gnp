@@ -41,12 +41,13 @@
             :class="isCurrent(page) ? 'border-red-500 bg-red-50 ring-2 ring-red-500/30' : 'border-gray-200 bg-gray-50 hover:border-red-400'"
           >
             <div class="relative flex aspect-[3/4] items-center justify-center overflow-hidden rounded-lg bg-white">
-              <img v-if="thumbnail(page)" :src="thumbnail(page)" alt="" loading="lazy" decoding="async" class="h-full w-full object-contain" @error="handleThumbnailError(page.id)" />
+              <img v-if="thumbnail(page)" :src="thumbnail(page)" alt="" loading="lazy" decoding="async" class="h-full w-full object-contain" @error="handleThumbnailError(page)" />
               <div v-else-if="loadingThumbnails[page.id]" class="h-full w-full animate-pulse bg-gray-200" aria-hidden="true"></div>
               <ArchivePageThumbnail
                 v-else
                 :publication-name="page.publicationName || props.metadata?.publicationName || 'Archive'"
                 :date-label="formatArchivePublicationDate(page.publicationDate) || ''"
+                :thumbnail-url="archiveThumbnail(page.thumbnailId)"
                 accent="#b91c1c"
                 variant="mini"
               />
@@ -75,6 +76,7 @@ import { getArchiveThumbnail } from '~/services/archives';
 import { getRelatedArchivedContent } from '~/services/newsPapers';
 import type { KeepReadingPage } from '~/utils/archiveRecommendations';
 import {
+  archiveThumbnail,
   buildRelatedArchivePayload,
   currentArchivePage,
   editionPages,
@@ -101,7 +103,7 @@ const loading = ref(true);
 const error = ref('');
 const thumbnailUrls = reactive<Record<string, string>>({});
 const loadingThumbnails = reactive<Record<string, boolean>>({});
-const failedThumbnails = reactive<Record<string, boolean>>({});
+const failedThumbnails = reactive(new Set<string>());
 /** Records seen so far, by id: lets a page keep its thumbnail and number once it becomes the one being read. */
 const known = new Map<string, KeepReadingPage>();
 let generation = 0;
@@ -110,13 +112,13 @@ const title = computed(() => pages.value.every(page => page.sameEdition) ? 'Page
 
 function isCurrent(page: KeepReadingPage) { return isCurrentArchivePage(page, props.currentId, props.metadata); }
 function thumbnail(page: KeepReadingPage) {
-  if (failedThumbnails[page.id]) return '';
+  if (failedThumbnails.has(page.id)) return '';
   return thumbnailUrls[page.id] || '';
 }
 
 async function loadArchiveThumbnail(fileId: string) {
   if (!import.meta.client || !fileId) return;
-  if (thumbnailUrls[fileId] || loadingThumbnails[fileId] || failedThumbnails[fileId]) return;
+  if (thumbnailUrls[fileId] || loadingThumbnails[fileId] || failedThumbnails.has(fileId)) return;
 
   loadingThumbnails[fileId] = true;
   try {
@@ -124,20 +126,25 @@ async function loadArchiveThumbnail(fileId: string) {
     if (url) {
       thumbnailUrls[fileId] = url;
     } else {
-      failedThumbnails[fileId] = true;
+      failedThumbnails.add(fileId);
     }
   } catch (error) {
-    failedThumbnails[fileId] = true;
+    failedThumbnails.add(fileId);
     console.error('Failed to load archive thumbnail', error);
   } finally {
     loadingThumbnails[fileId] = false;
   }
 }
 
-function handleThumbnailError(fileId: string) {
-  if (!fileId) return;
-  delete thumbnailUrls[fileId];
-  failedThumbnails[fileId] = true;
+async function loadPageThumbnail(page: KeepReadingPage) {
+  if (!page?.id) return;
+  return loadArchiveThumbnail(page.id);
+}
+
+function handleThumbnailError(page: KeepReadingPage) {
+  if (!page?.id) return;
+  delete thumbnailUrls[page.id];
+  failedThumbnails.add(page.id);
 }
 function editionLabel(page: KeepReadingPage) { return [page.publicationName, formatArchivePublicationDate(page.publicationDate)].filter(Boolean).join(' · '); }
 function pageLabel(page: KeepReadingPage) {
@@ -226,7 +233,7 @@ watch(pages, (nextPages) => {
   if (!import.meta.client) return;
   for (const page of nextPages) {
     if (page.id) {
-      loadArchiveThumbnail(page.id);
+      loadPageThumbnail(page);
     }
   }
 }, { immediate: true });

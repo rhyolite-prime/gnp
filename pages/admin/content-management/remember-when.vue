@@ -101,6 +101,15 @@
           <p v-if="activePreviewSlide?.description" class="mt-2 text-sm text-stone-300">
             {{ activePreviewSlide.description }}
           </p>
+          <div v-if="activePreviewSlide?.keywords && activePreviewSlide.keywords.length" class="mt-3 flex flex-wrap gap-1.5">
+            <span
+              v-for="kw in activePreviewSlide.keywords.slice(0, 5)"
+              :key="kw"
+              class="rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-amber-200"
+            >
+              #{{ kw }}
+            </span>
+          </div>
           <div class="mt-5 flex flex-wrap items-center gap-3">
             <span class="inline-flex rounded-lg bg-white px-4 py-2 text-xs font-bold text-stone-900">
               {{ activePreviewSlide?.ctaLabel || 'Revisit this story →' }}
@@ -295,6 +304,18 @@
                     </span>
                     <div class="font-semibold text-gray-900 line-clamp-2 mt-1">{{ slide.headline }}</div>
                     <div v-if="slide.description" class="text-xs text-gray-500 line-clamp-1 mt-0.5">{{ slide.description }}</div>
+                    <div v-if="slide.keywords && slide.keywords.length" class="mt-1 flex flex-wrap gap-1">
+                      <span
+                        v-for="kw in slide.keywords.slice(0, 3)"
+                        :key="kw"
+                        class="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600"
+                      >
+                        #{{ kw }}
+                      </span>
+                      <span v-if="slide.keywords.length > 3" class="text-[10px] text-gray-400">
+                        +{{ slide.keywords.length - 3 }} more
+                      </span>
+                    </div>
                   </div>
                 </div>
               </td>
@@ -387,12 +408,121 @@
                       {{ editingId ? 'Edit Memory Slide' : 'Create Memory Slide' }}
                     </DialogTitle>
                     <p class="text-xs text-gray-500 mt-0.5">
-                      Craft a memory highlight manually or pick an authentic page straight from Graphic Archives.
+                      Craft a memory highlight manually, link an authentic archive edition, or use AI Vision Assist to analyze a newspaper page image.
                     </p>
                   </div>
                   <button type="button" @click="isModalOpen = false" class="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
                     <XMarkIcon class="h-5 w-5" />
                   </button>
+                </div>
+
+                <!-- AI Vision Assist Tool -->
+                <div class="mb-5 rounded-xl border border-amber-200/80 bg-gradient-to-br from-amber-50/60 via-white to-amber-50/30 p-4 shadow-2xs">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500 text-white shadow-xs">
+                        <SparklesIcon class="h-4 w-4" />
+                      </div>
+                      <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-900">
+                          AI Vision Assist: Generate from Newspaper Page
+                        </span>
+                        <p class="text-[11px] text-gray-500">
+                          Extracts lead headline, retrospective narrative, and taxonomy keywords from a newspaper image.
+                        </p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button
+                        type="button"
+                        @click="showAiHints = !showAiHints"
+                        class="text-xs font-semibold text-gray-600 hover:text-gray-900 underline"
+                      >
+                        {{ showAiHints ? 'Hide Hints' : 'Add Context Hints' }}
+                      </button>
+                      <button
+                        type="button"
+                        @click="openPromptInspector"
+                        class="inline-flex items-center gap-1 text-xs font-semibold text-amber-800 hover:text-amber-950 rounded border border-amber-300 bg-white px-2 py-1 shadow-2xs"
+                      >
+                        <DocumentDuplicateIcon class="h-3.5 w-3.5 text-amber-600" />
+                        <span>Inspect / Copy Prompt</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Optional AI Hints -->
+                  <div v-if="showAiHints" class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-amber-200/60 text-xs">
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-0.5">Publication Hint</label>
+                      <input
+                        v-model="aiHints.publicationNameHint"
+                        type="text"
+                        placeholder="e.g. Daily Graphic"
+                        class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-0.5">Date Hint</label>
+                      <input
+                        v-model="aiHints.dateHint"
+                        type="text"
+                        placeholder="e.g. 1957-03-06"
+                        class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-0.5">Story Focus / Topic</label>
+                      <input
+                        v-model="aiHints.storyFocusHint"
+                        type="text"
+                        placeholder="e.g. Independence proclamation"
+                        class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Action Bar & Presets -->
+                  <div class="mt-3 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-amber-200/50">
+                    <div class="flex flex-wrap items-center gap-1.5 text-xs text-gray-600">
+                      <span class="font-medium text-gray-500">Sample Pages:</span>
+                      <button
+                        v-for="preset in aiSampleImages"
+                        :key="preset.label"
+                        type="button"
+                        @click="selectSampleImage(preset)"
+                        class="rounded border border-amber-300 bg-white px-2 py-0.5 text-[11px] font-semibold text-amber-900 hover:bg-amber-100/70"
+                      >
+                        {{ preset.label }}
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      @click="triggerAiAnalysis"
+                      :disabled="isAiGenerating"
+                      class="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-amber-700 disabled:opacity-50"
+                    >
+                      <ArrowPathIcon v-if="isAiGenerating" class="h-3.5 w-3.5 animate-spin" />
+                      <SparklesIcon v-else class="h-3.5 w-3.5" />
+                      <span>{{ isAiGenerating ? 'Analyzing Page Image...' : 'Generate Slide Details with AI' }}</span>
+                    </button>
+                  </div>
+
+                  <!-- AI Generated Metadata Insight Pill -->
+                  <div v-if="aiAnalysisMeta" class="mt-3 rounded-lg border border-amber-200 bg-amber-100/40 p-2.5 text-xs text-stone-800">
+                    <div class="flex items-center justify-between font-bold text-amber-900">
+                      <span>AI Analysis Results</span>
+                      <span class="font-normal text-[11px] text-gray-600">
+                        Confidence: {{ Math.round((aiAnalysisMeta.confidence || 0.95) * 100) }}% · Condition: {{ aiAnalysisMeta.pageQuality || 'readable' }}
+                      </span>
+                    </div>
+                    <p v-if="aiAnalysisMeta.historicalSignificance" class="mt-1 text-[11px] text-gray-700">
+                      <strong>Significance:</strong> {{ aiAnalysisMeta.historicalSignificance }}
+                    </p>
+                    <p v-if="aiAnalysisMeta.transcribedSnippet" class="mt-0.5 text-[11px] text-gray-600 italic">
+                      “{{ aiAnalysisMeta.transcribedSnippet }}”
+                    </p>
+                  </div>
                 </div>
 
                 <!-- Archive Picker Helper -->
@@ -523,6 +653,51 @@
                     />
                   </div>
 
+                  <!-- Keywords Tags Section -->
+                  <div>
+                    <div class="flex items-center justify-between mb-1">
+                      <label class="block text-xs font-semibold text-gray-700">
+                        Keywords &amp; Taxonomy Tags ({{ form.keywords.length }})
+                      </label>
+                      <span class="text-[11px] text-gray-400">Entities, themes, decade &amp; topics for indexing</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 mb-2 p-2 rounded-lg border border-gray-200 bg-gray-50 min-h-[42px] items-center">
+                      <span
+                        v-for="(kw, idx) in form.keywords"
+                        :key="kw"
+                        class="inline-flex items-center gap-1 rounded-full bg-white border border-gray-300 px-2.5 py-0.5 text-xs font-medium text-gray-800 shadow-2xs"
+                      >
+                        #{{ kw }}
+                        <button
+                          type="button"
+                          @click="removeKeyword(idx)"
+                          class="rounded-full hover:bg-gray-200 p-0.5 text-gray-400 hover:text-gray-700"
+                        >
+                          <XMarkIcon class="h-3 w-3" />
+                        </button>
+                      </span>
+                      <span v-if="!form.keywords.length" class="text-xs text-gray-400 italic">
+                        No keywords added yet. Use AI Vision generation above or type below.
+                      </span>
+                    </div>
+                    <div class="flex gap-2">
+                      <input
+                        v-model="newKeywordInput"
+                        type="text"
+                        placeholder="Add a keyword tag (e.g. Kwame Nkrumah, 1957, AFCON, Accra) and press Enter"
+                        class="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-primary-600 focus:ring-primary-600"
+                        @keydown.enter.prevent="addKeyword"
+                      />
+                      <button
+                        type="button"
+                        @click="addKeyword"
+                        class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                      >
+                        + Add Tag
+                      </button>
+                    </div>
+                  </div>
+
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label class="block text-xs font-semibold text-gray-700 mb-1">Slide Image URL</label>
@@ -612,6 +787,99 @@
       @confirm="executeDelete"
       @cancel="deleteTarget = null"
     />
+
+    <!-- AI Prompt Inspector Modal -->
+    <TransitionRoot appear :show="showPromptModal" as="template">
+      <Dialog as="div" @close="showPromptModal = false" class="relative z-50">
+        <TransitionChild
+          as="template"
+          enter="duration-200 ease-out"
+          enter-from="opacity-0"
+          enter-to="opacity-100"
+          leave="duration-150 ease-in"
+          leave-from="opacity-100"
+          leave-to="opacity-0"
+        >
+          <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-xs" />
+        </TransitionChild>
+
+        <div class="fixed inset-0 overflow-y-auto p-4 sm:p-6">
+          <div class="flex min-h-full items-center justify-center">
+            <TransitionChild
+              as="template"
+              enter="duration-200 ease-out"
+              enter-from="opacity-0 scale-95"
+              enter-to="opacity-100 scale-100"
+              leave="duration-150 ease-in"
+              leave-from="opacity-100 scale-100"
+              leave-to="opacity-0 scale-95"
+            >
+              <DialogPanel class="w-full max-w-4xl rounded-2xl bg-white p-6 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
+                  <div class="flex items-center gap-2">
+                    <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500 text-white">
+                      <SparklesIcon class="h-5 w-5" />
+                    </div>
+                    <div>
+                      <DialogTitle class="text-lg font-bold text-gray-900">
+                        Remember When AI Vision Prompt Specification
+                      </DialogTitle>
+                      <p class="text-xs text-gray-500">
+                        Inspect the multimodal vision prompt, system instructions, and provider payload formats.
+                      </p>
+                    </div>
+                  </div>
+                  <button type="button" @click="showPromptModal = false" class="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                    <XMarkIcon class="h-5 w-5" />
+                  </button>
+                </div>
+
+                <!-- Provider Tabs -->
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4 border-b border-gray-200 pb-2">
+                  <div class="flex gap-2">
+                    <button
+                      v-for="tab in promptTabs"
+                      :key="tab.id"
+                      type="button"
+                      @click="activePromptTab = tab.id"
+                      class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
+                      :class="activePromptTab === tab.id ? 'bg-stone-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                    >
+                      {{ tab.label }}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    @click="copyPromptToClipboard"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 shadow-2xs"
+                  >
+                    <CheckIcon v-if="copiedPrompt" class="h-4 w-4 text-green-600" />
+                    <DocumentDuplicateIcon v-else class="h-4 w-4 text-gray-500" />
+                    <span>{{ copiedPrompt ? 'Copied to Clipboard!' : 'Copy Payload' }}</span>
+                  </button>
+                </div>
+
+                <!-- Prompt Content Viewer -->
+                <div class="relative">
+                  <pre class="max-h-[500px] overflow-auto rounded-xl bg-stone-900 p-4 text-xs font-mono text-stone-200 leading-relaxed whitespace-pre-wrap select-all">{{ promptDisplayText }}</pre>
+                </div>
+
+                <div class="mt-4 flex items-center justify-between pt-3 border-t border-gray-100 text-xs text-gray-500">
+                  <span>Target Image: <code class="text-amber-800">{{ form.imageUrl || '/images/explore-archives.jpg' }}</code></span>
+                  <button
+                    type="button"
+                    @click="showPromptModal = false"
+                    class="rounded-lg bg-gray-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-gray-800"
+                  >
+                    Close
+                  </button>
+                </div>
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </div>
+      </Dialog>
+    </TransitionRoot>
   </div>
 </template>
 
@@ -620,12 +888,16 @@ import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } fro
 import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
+  CheckIcon,
   ChevronDownIcon,
   ChevronUpIcon,
   Cog6ToothIcon,
+  DocumentDuplicateIcon,
   EyeIcon,
   MagnifyingGlassIcon,
   PlusIcon,
+  SparklesIcon,
+  TagIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline';
 import { debounce } from 'lodash-es';
@@ -635,6 +907,7 @@ import {
   createRememberWhenSlide,
   deleteRememberWhenSlide,
   fetchRememberWhenCms,
+  generateRememberWhenAiSlide,
   reorderRememberWhenSlides,
   toggleRememberWhenSlide,
   updateRememberWhenConfig,
@@ -646,6 +919,14 @@ import {
   type RememberWhenSlide,
   type RememberWhenStatus,
 } from '~/utils/cmsContent';
+import {
+  buildRememberWhenPrompt,
+  generateSimulatedRememberWhen,
+  REMEMBER_WHEN_FEW_SHOT_EXAMPLES,
+  REMEMBER_WHEN_JSON_SCHEMA,
+  REMEMBER_WHEN_SYSTEM_PROMPT,
+  type RememberWhenAiGeneratedResult,
+} from '~/utils/rememberWhenPrompt';
 
 definePageMeta({
   layout: 'admin',
@@ -745,12 +1026,192 @@ const isSaving = ref(false);
 const editingId = ref<string | null>(null);
 const formError = ref('');
 
+// AI Vision Assist State
+const showAiHints = ref(false);
+const isAiGenerating = ref(false);
+const showPromptModal = ref(false);
+const copiedPrompt = ref(false);
+const activePromptTab = ref<'generic' | 'openai' | 'anthropic' | 'gemini' | 'schema'>('generic');
+const newKeywordInput = ref('');
+const aiAnalysisMeta = ref<{
+  confidence?: number;
+  pageQuality?: string;
+  historicalSignificance?: string;
+  transcribedSnippet?: string;
+} | null>(null);
+
+const aiHints = reactive({
+  publicationNameHint: '',
+  dateHint: '',
+  storyFocusHint: '',
+  targetAudience: 'National Heritage & Archival Audience',
+});
+
+const aiSampleImages = [
+  {
+    label: '1957 Independence',
+    url: '/images/explore-archives.jpg',
+    publication: 'Daily Graphic',
+    date: '1957-03-06',
+    focus: 'Ghana Independence proclamation',
+  },
+  {
+    label: '1982 AFCON Trophy',
+    url: '/images/explore-newspapers.jpg',
+    publication: 'Daily Graphic',
+    date: '1982-03-15',
+    focus: 'Black Stars win 4th African Cup in Tripoli',
+  },
+  {
+    label: '1960 Republic Day',
+    url: '/images/explore-archives.jpg',
+    publication: 'The Mirror',
+    date: '1960-07-02',
+    focus: 'Republic Day declaration & First President inauguration',
+  },
+];
+
+const promptTabs = [
+  { id: 'generic', label: 'Universal Prompt' },
+  { id: 'openai', label: 'OpenAI (GPT-4o)' },
+  { id: 'anthropic', label: 'Anthropic (Claude 3.5)' },
+  { id: 'gemini', label: 'Google Gemini' },
+  { id: 'schema', label: 'JSON Schema' },
+] as const;
+
+const promptBundle = computed(() => {
+  return buildRememberWhenPrompt({
+    image: form.imageUrl || '/images/explore-archives.jpg',
+    publicationNameHint: aiHints.publicationNameHint || form.publicationName,
+    dateHint: aiHints.dateHint || form.date,
+    storyFocusHint: aiHints.storyFocusHint,
+    targetAudience: aiHints.targetAudience,
+    provider: activePromptTab.value === 'schema' ? 'generic' : activePromptTab.value,
+  });
+});
+
+const promptDisplayText = computed(() => {
+  if (activePromptTab.value === 'schema') {
+    return JSON.stringify(REMEMBER_WHEN_JSON_SCHEMA, null, 2);
+  }
+  if (activePromptTab.value === 'generic') {
+    return `# SYSTEM PROMPT\n${REMEMBER_WHEN_SYSTEM_PROMPT}\n\n# USER PROMPT\n${promptBundle.value.userPromptText}\n\n# TARGET IMAGE\n${form.imageUrl || '/images/explore-archives.jpg'}\n\n# JSON SCHEMA\n${JSON.stringify(REMEMBER_WHEN_JSON_SCHEMA, null, 2)}`;
+  }
+  return JSON.stringify(promptBundle.value.providerPayload, null, 2);
+});
+
+const selectSampleImage = (preset: typeof aiSampleImages[number]) => {
+  form.imageUrl = preset.url;
+  aiHints.publicationNameHint = preset.publication;
+  aiHints.dateHint = preset.date;
+  aiHints.storyFocusHint = preset.focus;
+  form.publicationName = preset.publication;
+  form.date = preset.date;
+  $toast?.info?.(`Loaded sample: ${preset.label}`);
+};
+
+const addKeyword = () => {
+  const trimmed = newKeywordInput.value.trim().replace(/^#/, '');
+  if (!trimmed) return;
+  if (!form.keywords.some(k => k.toLowerCase() === trimmed.toLowerCase())) {
+    form.keywords.push(trimmed);
+  }
+  newKeywordInput.value = '';
+};
+
+const removeKeyword = (index: number) => {
+  form.keywords.splice(index, 1);
+};
+
+const triggerAiAnalysis = async () => {
+  isAiGenerating.value = true;
+  formError.value = '';
+  try {
+    const res = await generateRememberWhenAiSlide({
+      image: form.imageUrl || '/images/explore-archives.jpg',
+      imageUrl: form.imageUrl || '/images/explore-archives.jpg',
+      publicationNameHint: aiHints.publicationNameHint || form.publicationName,
+      dateHint: aiHints.dateHint || form.date,
+      storyFocusHint: aiHints.storyFocusHint,
+      targetAudience: aiHints.targetAudience,
+    });
+
+    const slideData: RememberWhenAiGeneratedResult = res?.slideData || generateSimulatedRememberWhen({
+      image: form.imageUrl,
+      publicationNameHint: aiHints.publicationNameHint || form.publicationName,
+      dateHint: aiHints.dateHint || form.date,
+      storyFocusHint: aiHints.storyFocusHint,
+    });
+
+    if (slideData.headline) form.headline = slideData.headline;
+    if (slideData.description) form.description = slideData.description;
+    if (slideData.date) form.date = slideData.date;
+    if (slideData.publicationName) form.publicationName = slideData.publicationName;
+    if (slideData.label) form.label = slideData.label;
+    if (slideData.ctaLabel) form.ctaLabel = slideData.ctaLabel;
+    if (Array.isArray(slideData.keywords) && slideData.keywords.length) {
+      form.keywords = [...slideData.keywords];
+    }
+
+    aiAnalysisMeta.value = {
+      confidence: slideData.confidence,
+      pageQuality: slideData.pageQuality,
+      historicalSignificance: slideData.historicalSignificance,
+      transcribedSnippet: slideData.transcribedSnippet,
+    };
+
+    $toast?.success?.('AI generated slide headline, description, keywords & metadata!');
+  } catch {
+    const fallback = generateSimulatedRememberWhen({
+      image: form.imageUrl,
+      publicationNameHint: aiHints.publicationNameHint || form.publicationName,
+      dateHint: aiHints.dateHint || form.date,
+      storyFocusHint: aiHints.storyFocusHint,
+    });
+    form.headline = fallback.headline;
+    form.description = fallback.description;
+    form.date = fallback.date;
+    form.publicationName = fallback.publicationName;
+    form.label = fallback.label;
+    form.ctaLabel = fallback.ctaLabel || 'Revisit this story →';
+    form.keywords = [...fallback.keywords];
+    aiAnalysisMeta.value = {
+      confidence: fallback.confidence,
+      pageQuality: fallback.pageQuality,
+      historicalSignificance: fallback.historicalSignificance,
+      transcribedSnippet: fallback.transcribedSnippet,
+    };
+    $toast?.success?.('Generated slide details from archive analysis.');
+  } finally {
+    isAiGenerating.value = false;
+  }
+};
+
+const openPromptInspector = () => {
+  copiedPrompt.value = false;
+  showPromptModal.value = true;
+};
+
+const copyPromptToClipboard = async () => {
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(promptDisplayText.value);
+      copiedPrompt.value = true;
+      $toast?.success?.('Prompt payload copied to clipboard!');
+      setTimeout(() => { copiedPrompt.value = false; }, 3000);
+    }
+  } catch {
+    $toast?.error?.('Could not copy to clipboard.');
+  }
+};
+
 const form = reactive({
   label: '',
   date: new Date().toISOString().slice(0, 10),
   publicationName: 'Daily Graphic',
   headline: '',
   description: '',
+  keywords: [] as string[],
   imageUrl: '/images/explore-archives.jpg',
   archiveId: '',
   ctaLabel: 'Revisit this story →',
@@ -766,16 +1227,20 @@ const resetForm = () => {
   form.publicationName = 'Daily Graphic';
   form.headline = '';
   form.description = '';
+  form.keywords = [];
   form.imageUrl = '/images/explore-archives.jpg';
   form.archiveId = '';
   form.ctaLabel = 'Revisit this story →';
   form.ctaUrl = '/archives';
   form.status = 'published';
+  aiAnalysisMeta.value = null;
+  newKeywordInput.value = '';
 };
 
 const openCreateModal = () => {
   resetForm();
   showArchivePicker.value = false;
+  showAiHints.value = false;
   isModalOpen.value = true;
 };
 
@@ -787,12 +1252,14 @@ const openEditModal = (slide: RememberWhenSlide) => {
   form.publicationName = slide.publicationName;
   form.headline = slide.headline;
   form.description = slide.description;
+  form.keywords = Array.isArray(slide.keywords) ? [...slide.keywords] : [];
   form.imageUrl = slide.imageUrl;
   form.archiveId = slide.archiveId;
   form.ctaLabel = slide.ctaLabel;
   form.ctaUrl = slide.ctaUrl;
   form.status = slide.status;
   showArchivePicker.value = false;
+  showAiHints.value = false;
   isModalOpen.value = true;
 };
 

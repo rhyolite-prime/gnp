@@ -153,3 +153,24 @@ export async function updateRememberWhenConfig(config: Partial<RememberWhenConfi
   });
   return res.result;
 }
+
+export interface GenerateRememberWhenAiRequest {
+  image?: string;
+  imageUrl?: string;
+  publicationNameHint?: string;
+  dateHint?: string;
+  storyFocusHint?: string;
+  targetAudience?: string;
+  additionalContext?: string;
+  provider?: 'generic' | 'openai' | 'anthropic' | 'gemini';
+}
+
+export async function generateRememberWhenAiSlide(
+  payload: GenerateRememberWhenAiRequest,
+): Promise<any> {
+  const res = await $fetch<BaseApiResponse<any>>('/api/v1/cms/remember-when/ai-generate', {
+    method: 'POST',
+    body: payload,
+  });
+  return res.result;
+}

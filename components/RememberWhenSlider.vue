@@ -25,6 +25,15 @@
                     <p class="mt-5 text-xs font-semibold uppercase tracking-wider text-stone-400">From the archive · {{ current.publicationName || current.story?.publicationName }}</p>
                     <h3 class="mt-3 text-2xl font-semibold leading-snug sm:text-3xl">{{ current.headline || current.story?.snippet }}</h3>
                     <p v-if="current.description" class="mt-3 leading-7 text-stone-300">{{ current.description }}</p>
+                    <div v-if="current.keywords && current.keywords.length" class="mt-4 flex flex-wrap gap-1.5">
+                      <span
+                        v-for="kw in current.keywords.slice(0, 6)"
+                        :key="kw"
+                        class="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-medium text-amber-200"
+                      >
+                        #{{ kw }}
+                      </span>
+                    </div>
                     <NuxtLink :to="currentLink" class="mt-6 inline-flex rounded-lg bg-white px-5 py-3 text-sm font-bold text-stone-900 hover:bg-amber-100">{{ current.ctaLabel || 'Revisit this story →' }}</NuxtLink>
                   </template>
                   <template v-else>
@@ -67,6 +76,7 @@ type Memory = {
   publicationName?: string;
   headline?: string;
   description?: string;
+  keywords?: string[];
   imageUrl?: string;
   archiveId?: string;
   ctaLabel?: string;
@@ -128,6 +138,7 @@ onMounted(async () => {
         publicationName: slide.publicationName,
         headline: slide.headline,
         description: slide.description,
+        keywords: slide.keywords,
         imageUrl: slide.imageUrl,
         archiveId: slide.archiveId,
         ctaLabel: slide.ctaLabel,

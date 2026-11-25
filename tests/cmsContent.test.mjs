@@ -32,6 +32,7 @@ import {
   createRememberWhenSlide,
   fetchDiscoverCms,
   fetchRememberWhenCms,
+  generateRememberWhenAiSlide,
 } from '../services/cms.ts';
 
 test('validateDiscoverCmsPayload validates fields and blocks unsafe URLs', () => {
@@ -273,6 +274,7 @@ test('services/cms.ts calls the /api/v1/cms endpoints', async () => {
   await createDiscoverCmsItem({ title: 'Test', kind: 'story' });
   await fetchRememberWhenCms({ publishedOnly: true });
   await createRememberWhenSlide({ label: 'Today', date: '2026-11-24', headline: 'Headline' });
+  await generateRememberWhenAiSlide({ image: '/images/explore-archives.jpg' });
 
   assert.equal(calls[0].url, '/api/v1/cms/discover');
   assert.deepEqual(calls[0].options.query, { publishedOnly: true });
@@ -281,6 +283,8 @@ test('services/cms.ts calls the /api/v1/cms endpoints', async () => {
   assert.equal(calls[2].url, '/api/v1/cms/remember-when');
   assert.equal(calls[3].url, '/api/v1/cms/remember-when');
   assert.equal(calls[3].options.method, 'POST');
+  assert.equal(calls[4].url, '/api/v1/cms/remember-when/ai-generate');
+  assert.equal(calls[4].options.method, 'POST');
 });
 
 test('admin navigation and public components are wired to the Discover and Remember When CMS', async () => {
@@ -295,6 +299,8 @@ test('admin navigation and public components are wired to the Discover and Remem
   const rememberAdmin = await readFile(new URL('../pages/admin/content-management/remember-when.vue', import.meta.url), 'utf8');
   assert.match(rememberAdmin, /fetchRememberWhenCms/);
   assert.match(rememberAdmin, /createRememberWhenSlide/);
+  assert.match(rememberAdmin, /generateRememberWhenAiSlide/);
+  assert.match(rememberAdmin, /REMEMBER_WHEN_SYSTEM_PROMPT/);
 
   const discoverPage = await readFile(new URL('../pages/discover.vue', import.meta.url), 'utf8');
   assert.match(discoverPage, /fetchDiscoverCms/);
